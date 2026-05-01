@@ -8,6 +8,7 @@ Synaptome is a public openFrameworks runtime for live visual performance. These 
 - [Build environment](build_env.md)
 - [Validation playbook](dev_playbook.md)
 - [Contributing](contributing.md)
+- [Release policy](release_policy.md)
 
 ## Architecture
 

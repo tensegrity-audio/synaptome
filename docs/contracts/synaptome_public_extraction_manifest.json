@@ -35,6 +35,11 @@
       "required": true
     },
     {
+      "pattern": "VERSION",
+      "reason": "Public runtime version metadata.",
+      "required": true
+    },
+    {
       "pattern": "synaptome/Directory.Build.props",
       "reason": "Canonical Synaptome build-root contract.",
       "required": true
@@ -310,6 +315,11 @@
       "required": true
     },
     {
+      "pattern": "tools/validate_release_metadata.py",
+      "reason": "Public naming/version metadata validator.",
+      "required": true
+    },
+    {
       "pattern": "tools/validate_scene_persistence_contract.py",
       "reason": "Scene persistence contract validator.",
       "required": true
@@ -377,6 +387,11 @@
     {
       "pattern": "docs/dev_playbook.md",
       "reason": "Validation playbook.",
+      "required": true
+    },
+    {
+      "pattern": "docs/release_policy.md",
+      "reason": "Public naming and versioning policy.",
       "required": true
     },
     {

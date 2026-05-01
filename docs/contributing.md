@@ -8,6 +8,7 @@ Synaptome changes should keep the public openFrameworks runtime buildable, testa
 - Keep unrelated refactors out of migration and contract-hardening changes.
 - Update docs and fixtures when public behavior changes.
 - Do not commit generated build outputs, runtime logs, local Visual Studio user files, or app-written local state unless a fixture intentionally promotes them.
+- Keep product/repo naming and version metadata aligned with `docs/release_policy.md`.
 
 Suggested commit style:
 
@@ -23,6 +24,7 @@ Run the public validation ladder before publication or before asking for review 
 
 ```powershell
 python tools\validate_synaptome_extraction_manifest.py --check --strict-review
+python tools\validate_release_metadata.py
 python tools\validate_configs.py --public-app
 python tools\check_app_independence.py
 & 'C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\amd64\MSBuild.exe' `

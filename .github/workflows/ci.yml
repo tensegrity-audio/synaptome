@@ -26,6 +26,8 @@ jobs:
           python -m pip install --upgrade jsonschema
       - name: Validate extraction manifest
         run: python tools/validate_synaptome_extraction_manifest.py --check --strict-review
+      - name: Validate release metadata
+        run: python tools/validate_release_metadata.py
       - name: Validate public app contracts
         run: python tools/validate_configs.py --public-app
       - name: Check app independence

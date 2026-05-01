@@ -4,6 +4,7 @@
 # Enforce LF for source and config files
 .gitattributes text eol=lf
 .gitignore text eol=lf
+VERSION text eol=lf
 *.c text eol=lf
 *.h text eol=lf
 *.cpp text eol=lf

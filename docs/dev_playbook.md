@@ -8,6 +8,7 @@ Run from the repo root:
 
 ```powershell
 python tools\validate_synaptome_extraction_manifest.py --check --strict-review
+python tools\validate_release_metadata.py
 python tools\validate_configs.py --public-app
 python tools\check_app_independence.py
 & 'C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\amd64\MSBuild.exe' `
@@ -30,6 +31,7 @@ Expected signals:
 | Harness | Command | Coverage |
 | --- | --- | --- |
 | Public manifest | `python tools\validate_synaptome_extraction_manifest.py --check --strict-review` | Ensures only public runtime files are included in the extraction payload. |
+| Release metadata | `python tools\validate_release_metadata.py` | Checks `VERSION`, product/repo naming policy, and README version label. |
 | Public app contracts | `python tools\validate_configs.py --public-app` | Validates app-facing contracts: parameters, scenes, layer catalog, device maps, MIDI/OSC maps, HUD/Console fixtures. |
 | App independence | `python tools\check_app_independence.py` | Catches firmware/helper implementation references in public app source. |
 | BrowserFlowTest build | `msbuild synaptome\tests\BrowserFlowTest\BrowserFlowTest.vcxproj /p:Configuration=Release /p:Platform=x64` | Builds the native app-facing regression harness. |

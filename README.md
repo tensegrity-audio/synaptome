@@ -2,6 +2,8 @@
 
 Layer-based openFrameworks runtime for live modular visuals with MIDI/OSC mapping, audio/sensor reactivity, operator HUD and Browser controls, and projection output.
 
+Current public baseline: **Synaptome v0.1.0**.
+
 Synaptome is an openFrameworks live-performance runtime for building modular, parameterized, sensor-reactive visual scenes. The app source lives under `synaptome/`; the openFrameworks SDK stays outside this repo.
 
 ## Requirements
@@ -136,6 +138,7 @@ Expected current signals:
 - [Build Environment](docs/build_env.md)
 - [Validation Playbook](docs/dev_playbook.md)
 - [Contributing](docs/contributing.md)
+- [Release Policy](docs/release_policy.md)
 - [Artist SDK](docs/architecture/synaptome_artist_sdk.md)
 - [External Contracts](docs/architecture/synaptome_external_contracts.md)
 - [MIDI Mapping](docs/midi_mapping.md)
