@@ -1,0 +1,19 @@
+{
+  "clips": [
+    {
+      "id": "default-loop",
+      "label": "Default Loop",
+      "path": "../media/video/default-loop.mp4",
+      "prewarm": false,
+      "loop": true
+    }
+  ],
+  "layers": [
+    {
+      "id": "layer1",
+      "defaultClip": "default-loop",
+      "opacity": 1.0,
+      "blendMode": "alpha"
+    }
+  ]
+}

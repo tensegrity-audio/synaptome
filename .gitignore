@@ -1,0 +1,35 @@
+# Global ignores for PlatformIO and IDE build output
+.pio/
+.ccls-cache/
+.vscode/
+.synaptome-public-extract
+__pycache__/
+*.d
+*.o
+*.a
+*.elf
+*.bin
+*.map
+*.log
+*.tlog
+*.ipch
+
+# Visual Studio cache
+.vs/
+*.vcxproj.user
+
+# OS cruft
+Thumbs.db
+.DS_Store
+
+# Synaptome generated build output
+synaptome/bin/Synaptome.*
+synaptome/bin/oF_v2.*
+synaptome/bin/data/log.txt
+synaptome/bin/data/logs/
+synaptome/obj/
+synaptome/src/thirdparty/*.exp
+synaptome/tests/**/Debug/
+synaptome/tests/**/Release/
+synaptome/tests/**/x64/
+tests/artifacts/*.json

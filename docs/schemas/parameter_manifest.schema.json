@@ -1,0 +1,153 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Synaptome Parameter Manifest",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "status",
+    "generator",
+    "sources",
+    "counts",
+    "parameters",
+    "layerTemplates",
+    "consoleSlotTemplates"
+  ],
+  "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1 },
+    "status": { "type": "string" },
+    "generator": { "type": "string" },
+    "sourceStrategy": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "sources": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "counts": {
+      "type": "object",
+      "required": ["parameters", "layerTemplates", "consoleTemplates", "unresolvedAssets"],
+      "properties": {
+        "parameters": { "type": "integer", "minimum": 0 },
+        "layerTemplates": { "type": "integer", "minimum": 0 },
+        "consoleTemplates": { "type": "integer", "minimum": 0 },
+        "catalogAssetsWithoutLayerParameters": { "type": "integer", "minimum": 0 },
+        "unresolvedAssets": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "parameters": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/parameter" }
+    },
+    "layerTemplates": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/layerTemplate" }
+    },
+    "consoleSlotTemplates": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/consoleSlotTemplate" }
+    },
+    "commonSuffixes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["suffix", "count"],
+        "properties": {
+          "suffix": { "type": "string" },
+          "count": { "type": "integer", "minimum": 1 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "catalogAssetsWithoutLayerParameters": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/catalogAssetNote" }
+    },
+    "unresolvedAssets": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/catalogAssetNote" }
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "source": {
+      "type": "object",
+      "required": ["path", "line"],
+      "properties": {
+        "path": { "type": "string" },
+        "line": { "type": "integer", "minimum": 1 }
+      },
+      "additionalProperties": false
+    },
+    "parameter": {
+      "type": "object",
+      "required": ["id", "kind", "scope", "family", "units", "source"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)+$"
+        },
+        "kind": { "type": "string", "enum": ["float", "bool", "string"] },
+        "scope": { "type": "string" },
+        "family": { "type": "string" },
+        "units": { "type": "string" },
+        "assetId": { "type": "string" },
+        "layerType": { "type": "string" },
+        "template": { "type": "string" },
+        "default": {},
+        "defaultKind": { "type": "string" },
+        "source": { "$ref": "#/definitions/source" },
+        "sources": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/source" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "layerTemplate": {
+      "type": "object",
+      "required": ["layerType", "idPattern", "kind", "suffix", "source"],
+      "properties": {
+        "layerType": { "type": "string" },
+        "idPattern": { "type": "string" },
+        "kind": { "type": "string", "enum": ["float", "bool", "string"] },
+        "suffix": { "type": "string" },
+        "source": { "$ref": "#/definitions/source" },
+        "sourceClass": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "consoleSlotTemplate": {
+      "type": "object",
+      "required": ["idPattern", "kind", "suffix", "slotRange", "sourceLayerTypes"],
+      "properties": {
+        "idPattern": { "type": "string" },
+        "kind": { "type": "string", "enum": ["float", "bool", "string"] },
+        "suffix": { "type": "string" },
+        "slotRange": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "type": "integer" }
+        },
+        "sourceLayerTypes": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "catalogAssetNote": {
+      "type": "object",
+      "required": ["assetId", "type", "reason", "source"],
+      "properties": {
+        "assetId": { "type": "string" },
+        "type": { "type": "string" },
+        "reason": { "type": "string" },
+        "source": { "$ref": "#/definitions/source" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

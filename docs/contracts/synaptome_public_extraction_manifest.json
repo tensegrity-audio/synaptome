@@ -1,0 +1,696 @@
+{
+  "schema_version": 1,
+  "status": "draft-boundaries-locked",
+  "public_repo_name": "synaptome",
+  "purpose": "Classify tracked files and drive staging-side scratch extraction before creating the public Synaptome repo.",
+  "include": [
+    {
+      "pattern": ".gitattributes",
+      "reason": "Repository text/binary normalization.",
+      "required": true
+    },
+    {
+      "pattern": ".gitignore",
+      "reason": "Repository ignore policy for local build outputs.",
+      "required": true
+    },
+    {
+      "pattern": ".github/workflows/ci.yml",
+      "reason": "App-only public Synaptome CI workflow.",
+      "required": true
+    },
+    {
+      "pattern": "README.md",
+      "reason": "Public quickstart.",
+      "required": true
+    },
+    {
+      "pattern": "synaptome/Directory.Build.props",
+      "reason": "Canonical Synaptome build-root contract.",
+      "required": true
+    },
+    {
+      "pattern": "synaptome/Synaptome.sln",
+      "reason": "Windows Visual Studio app solution.",
+      "required": true
+    },
+    {
+      "pattern": "synaptome/Synaptome.vcxproj",
+      "reason": "Windows Visual Studio app project.",
+      "required": true
+    },
+    {
+      "pattern": "synaptome/Synaptome.vcxproj.filters",
+      "reason": "Visual Studio source grouping.",
+      "required": true
+    },
+    {
+      "pattern": "synaptome/addons.make",
+      "reason": "openFrameworks addon list.",
+      "required": true
+    },
+    {
+      "pattern": "synaptome/config.make",
+      "reason": "openFrameworks make/project configuration.",
+      "required": true
+    },
+    {
+      "pattern": "synaptome/icon.rc",
+      "reason": "Windows resource file.",
+      "required": true
+    },
+    {
+      "pattern": "synaptome/src/**",
+      "reason": "Synaptome runtime and public app source.",
+      "required": true
+    },
+    {
+      "pattern": "synaptome/tests/**",
+      "reason": "App-native Visual Studio test projects.",
+      "required": true
+    },
+    {
+      "pattern": "synaptome/bin/data/config/audio.json",
+      "reason": "Default host audio/local sensor configuration.",
+      "required": true
+    },
+    {
+      "pattern": "synaptome/bin/data/config/hotkeys.json",
+      "reason": "Public default hotkey configuration.",
+      "required": true
+    },
+    {
+      "pattern": "synaptome/bin/data/config/midi-map.json",
+      "reason": "Public default MIDI mapping example.",
+      "required": true
+    },
+    {
+      "pattern": "synaptome/bin/data/config/osc-channels.txt",
+      "reason": "Public OSC source hint list.",
+      "required": true
+    },
+    {
+      "pattern": "synaptome/bin/data/config/osc-map.json",
+      "reason": "Public default OSC mapping example.",
+      "required": true
+    },
+    {
+      "pattern": "synaptome/bin/data/config/videos.json",
+      "reason": "Public media catalog example; actual media-file packaging remains a follow-up content policy.",
+      "required": true
+    },
+    {
+      "pattern": "synaptome/bin/data/config/ui/slot_assignments.json",
+      "reason": "Empty public slot-assignment default.",
+      "required": true
+    },
+    {
+      "pattern": "synaptome/bin/data/device_maps/MIDI Mix 0.json",
+      "reason": "Public controller-map example and device-map contract fixture.",
+      "required": true
+    },
+    {
+      "pattern": "synaptome/bin/data/fonts/**",
+      "reason": "Runtime fonts and generated public font atlas assets.",
+      "required": true
+    },
+    {
+      "pattern": "synaptome/bin/data/layers/fx/**",
+      "reason": "Public FX layer catalog assets.",
+      "required": true
+    },
+    {
+      "pattern": "synaptome/bin/data/layers/generative/**",
+      "reason": "Public generative layer catalog assets.",
+      "required": true
+    },
+    {
+      "pattern": "synaptome/bin/data/layers/geometry/**",
+      "reason": "Public geometry layer catalog assets.",
+      "required": true
+    },
+    {
+      "pattern": "synaptome/bin/data/layers/hud/**",
+      "reason": "Public HUD widget layer catalog assets.",
+      "required": true
+    },
+    {
+      "pattern": "synaptome/bin/data/layers/media/**",
+      "reason": "Public media layer catalog assets.",
+      "required": true
+    },
+    {
+      "pattern": "synaptome/bin/data/layers/text.layer.json",
+      "reason": "Public text layer catalog asset.",
+      "required": true
+    },
+    {
+      "pattern": "synaptome/bin/data/layers/scenes/ascii-cam-scope.json",
+      "reason": "Public webcam/FX/audio-reactive scene example.",
+      "required": true
+    },
+    {
+      "pattern": "synaptome/bin/data/layers/scenes/default.json",
+      "reason": "Public default startup scene.",
+      "required": true
+    },
+    {
+      "pattern": "synaptome/bin/data/layers/scenes/hello world.json",
+      "reason": "Public text/generative scene example.",
+      "required": true
+    },
+    {
+      "pattern": "synaptome/bin/data/layers/scenes/oscilloscope.json",
+      "reason": "Public oscilloscope scene example.",
+      "required": true
+    },
+    {
+      "pattern": "synaptome/bin/data/layers/scenes/perlin-smooth.json",
+      "reason": "Public procedural scene example.",
+      "required": true
+    },
+    {
+      "pattern": "synaptome/bin/data/layers/scenes/slime-bloom.json",
+      "reason": "Public procedural scene example.",
+      "required": true
+    },
+    {
+      "pattern": "synaptome/bin/data/models/**",
+      "reason": "Bundled STL examples referenced by the current public geometry layer catalog; future content-pack split must update catalog fixtures with it.",
+      "required": false
+    },
+    {
+      "pattern": "thirdparty/**",
+      "reason": "Third-party headers required by the app.",
+      "required": true
+    },
+    {
+      "pattern": "schemas/asset_subtypes.schema.json",
+      "reason": "Public app schema used by docs and validators.",
+      "required": true
+    },
+    {
+      "pattern": "schemas/menu.schema.json",
+      "reason": "Public app schema used by docs and validators.",
+      "required": true
+    },
+    {
+      "pattern": "test/test_browser_flow/**",
+      "reason": "Browser Flow legacy/native source fixture used by app validation.",
+      "required": true
+    },
+    {
+      "pattern": "tests/browser_flow_native_main.cpp",
+      "reason": "BrowserFlowTest entry point.",
+      "required": true
+    },
+    {
+      "pattern": "tests/control_mapping_hub_flow.cpp",
+      "reason": "Browser/Console/MIDI/OSC/webcam regression source.",
+      "required": true
+    },
+    {
+      "pattern": "tests/hotkey_manager_tests.cpp",
+      "reason": "App-native hotkey regression source.",
+      "required": true
+    },
+    {
+      "pattern": "tests/menu_controller_tests.cpp",
+      "reason": "App-native menu/controller regression source.",
+      "required": true
+    },
+    {
+      "pattern": "tests/modifier_evaluator_tests.cpp",
+      "reason": "Modifier evaluator regression source.",
+      "required": true
+    },
+    {
+      "pattern": "tests/stubs/**",
+      "reason": "Dependency-light app test stubs.",
+      "required": true
+    },
+    {
+      "pattern": "tools/ascii_supersample_atlas/**",
+      "reason": "Public font-atlas generation helper.",
+      "required": true
+    },
+    {
+      "pattern": "tools/check_app_independence.py",
+      "reason": "Public extraction guard.",
+      "required": true
+    },
+    {
+      "pattern": "tools/device_map_regression.py",
+      "reason": "Device-map logical-slot regression.",
+      "required": true
+    },
+    {
+      "pattern": "tools/gen_parameter_manifest.py",
+      "reason": "Parameter manifest generator/checker.",
+      "required": true
+    },
+    {
+      "pattern": "tools/layer_catalog_regression.py",
+      "reason": "Layer catalog regression.",
+      "required": true
+    },
+    {
+      "pattern": "tools/list_webcam_devices.py",
+      "reason": "Runtime webcam inventory helper.",
+      "required": false
+    },
+    {
+      "pattern": "tools/run_control_hub_flow.py",
+      "reason": "BrowserFlowTest runner and artifact summarizer.",
+      "required": true
+    },
+    {
+      "pattern": "tools/validate_artist_sdk_example.py",
+      "reason": "Artist SDK example validator.",
+      "required": true
+    },
+    {
+      "pattern": "tools/validate_configs.py",
+      "reason": "Config/contract validator with public app-only extraction mode.",
+      "required": true
+    },
+    {
+      "pattern": "tools/validate_console_layout_contract.py",
+      "reason": "Console/display contract validator.",
+      "required": true
+    },
+    {
+      "pattern": "tools/validate_hud_layout_contract.py",
+      "reason": "HUD layout/feed contract validator.",
+      "required": true
+    },
+    {
+      "pattern": "tools/validate_parameter_targets.py",
+      "reason": "Strict parameter target validator.",
+      "required": true
+    },
+    {
+      "pattern": "tools/validate_scene_display_transaction.py",
+      "reason": "Scene/display source-level transaction guard.",
+      "required": true
+    },
+    {
+      "pattern": "tools/validate_synaptome_extraction_manifest.py",
+      "reason": "Public extraction manifest validator.",
+      "required": true
+    },
+    {
+      "pattern": "tools/validate_scene_persistence_contract.py",
+      "reason": "Scene persistence contract validator.",
+      "required": true
+    },
+    {
+      "pattern": "tools/testdata/artist_sdk/**",
+      "reason": "Artist SDK expected fixture.",
+      "required": true
+    },
+    {
+      "pattern": "tools/testdata/console_layout/**",
+      "reason": "Console/display golden fixture.",
+      "required": true
+    },
+    {
+      "pattern": "tools/testdata/device_maps/**",
+      "reason": "Device-map fixtures.",
+      "required": true
+    },
+    {
+      "pattern": "tools/testdata/hud_layout/**",
+      "reason": "HUD golden fixture.",
+      "required": true
+    },
+    {
+      "pattern": "tools/testdata/layer_catalog/**",
+      "reason": "Layer catalog golden fixture.",
+      "required": true
+    },
+    {
+      "pattern": "tools/testdata/runtime_state/**",
+      "reason": "Committed runtime-state fixtures used by strict app contracts.",
+      "required": true
+    },
+    {
+      "pattern": "tools/testdata/scene_persistence/**",
+      "reason": "Scene persistence expected fixture.",
+      "required": true
+    },
+    {
+      "pattern": "docs/architecture/synaptome_*.md",
+      "reason": "Synaptome architecture docs.",
+      "required": true
+    },
+    {
+      "pattern": "docs/contracts/**",
+      "reason": "Public contract index, fixtures, vocabulary, and this extraction manifest.",
+      "required": true
+    },
+    {
+      "pattern": "docs/schemas/**",
+      "reason": "Public JSON schemas used by docs, examples, and validators.",
+      "required": true
+    },
+    {
+      "pattern": "docs/examples/**",
+      "reason": "Public examples and artist SDK fixture.",
+      "required": true
+    },
+    {
+      "pattern": "docs/build_env.md",
+      "reason": "Build environment guide.",
+      "required": true
+    },
+    {
+      "pattern": "docs/dev_playbook.md",
+      "reason": "Validation playbook.",
+      "required": true
+    },
+    {
+      "pattern": "docs/readme.md",
+      "reason": "System overview.",
+      "required": true
+    },
+    {
+      "pattern": "docs/contributing.md",
+      "reason": "Public contribution guide candidate.",
+      "required": false
+    },
+    {
+      "pattern": "docs/midi_mapping.md",
+      "reason": "MIDI mapping guide candidate.",
+      "required": false
+    },
+    {
+      "pattern": "docs/osc_catalog.md",
+      "reason": "OSC catalog guide candidate.",
+      "required": false
+    }
+  ],
+  "exclude": [
+    {
+      "pattern": ".github/**",
+      "reason": "Current CI still has firmware/helper jobs; public Synaptome CI needs a dedicated workflow."
+    },
+    {
+      "pattern": ".pio/**",
+      "reason": "PlatformIO build output."
+    },
+    {
+      "pattern": ".vscode/**",
+      "reason": "Generated/local editor state."
+    },
+    {
+      "pattern": "common/**",
+      "reason": "Shared radio/firmware contract candidate, not app runtime source."
+    },
+    {
+      "pattern": "platformio.ini",
+      "reason": "Current root PlatformIO config is firmware/helper validation, not public app validation."
+    },
+    {
+      "pattern": "tensegrity_gateway/**",
+      "reason": "Gateway implementation belongs in a helper repo."
+    },
+    {
+      "pattern": "tensegrity_matrixportal/**",
+      "reason": "Firmware implementation belongs outside public app runtime."
+    },
+    {
+      "pattern": "tensegrity_cyberdeck/**",
+      "reason": "Firmware implementation belongs outside public app runtime."
+    },
+    {
+      "pattern": "tensegrity_cardputer/**",
+      "reason": "Firmware implementation belongs outside public app runtime."
+    },
+    {
+      "pattern": "tensegrity_memento/**",
+      "reason": "Firmware/camera implementation belongs outside public app runtime."
+    },
+    {
+      "pattern": "media/**",
+      "reason": "Show/private media candidate, not core runtime."
+    },
+    {
+      "pattern": "nw_wrld/**",
+      "reason": "Unrelated experiment/content candidate."
+    },
+    {
+      "pattern": "docs/cardputer/**",
+      "reason": "Device-specific docs outside public app runtime."
+    },
+    {
+      "pattern": "docs/matrixportal/**",
+      "reason": "Device-specific docs outside public app runtime."
+    },
+    {
+      "pattern": "docs/memento/**",
+      "reason": "Device-specific docs outside public app runtime."
+    },
+    {
+      "pattern": "docs/mesh/**",
+      "reason": "Mesh/helper docs outside public app runtime."
+    },
+    {
+      "pattern": "docs/printer/**",
+      "reason": "Printer/device docs outside public app runtime."
+    },
+    {
+      "pattern": "docs/legacy/**",
+      "reason": "Historical docs."
+    },
+    {
+      "pattern": "docs/governance/**",
+      "reason": "Internal governance system unless generalized later."
+    },
+    {
+      "pattern": "docs/reports/**",
+      "reason": "Historical audit reports. Curate public excerpts separately."
+    },
+    {
+      "pattern": "docs/roadmap/**",
+      "reason": "Roadmap history. Curate public excerpts separately."
+    },
+    {
+      "pattern": "docs/DEVICE_DOCS_INDEX.md",
+      "reason": "Device-doc index outside public app runtime."
+    },
+    {
+      "pattern": "docs/DOC_MIGRATION_MAP_2026-02-27.md",
+      "reason": "Internal migration history."
+    },
+    {
+      "pattern": "docs/architecture.md",
+      "reason": "Mixed-system architecture. Public Synaptome architecture uses docs/architecture/synaptome_*.md."
+    },
+    {
+      "pattern": "docs/docops.md",
+      "reason": "Internal DocOps process."
+    },
+    {
+      "pattern": "schemas/docops_request_state.schema.json",
+      "reason": "Internal DocOps state schema."
+    },
+    {
+      "pattern": "docs/radio_protocol.md",
+      "reason": "Historical radio protocol doc until regenerated as a helper contract."
+    },
+    {
+      "pattern": "docs/matrixportal_eeg.md",
+      "reason": "Device-specific doc outside public app runtime."
+    },
+    {
+      "pattern": "synaptome/Synaptome.vcxproj.user",
+      "reason": "Local Visual Studio user state."
+    },
+    {
+      "pattern": "synaptome/src/thirdparty/*.exp",
+      "reason": "Generated linker export artifact; public source keeps third-party headers only."
+    },
+    {
+      "pattern": "synaptome/tests/BrowserFlowTest/BrowserFlowTest.vcxproj.user",
+      "reason": "Local Visual Studio user state."
+    },
+    {
+      "pattern": "synaptome/tests/BrowserFlowTest/BrowserFlowTest/x64/**",
+      "reason": "Generated test build output."
+    },
+    {
+      "pattern": "synaptome/tests/BrowserFlowTest/x64/**",
+      "reason": "Generated test build output."
+    },
+    {
+      "pattern": "synaptome/tests/HotkeyTest/HotkeyTest/x64/**",
+      "reason": "Generated test build output."
+    },
+    {
+      "pattern": "synaptome/tests/HotkeyTest/x64/**",
+      "reason": "Generated test build output."
+    },
+    {
+      "pattern": "synaptome/legacy_vs_identity/**",
+      "reason": "Rename rollback/archive files, not active public build identity."
+    },
+    {
+      "pattern": "synaptome/bin/*.exe",
+      "reason": "Generated binary output."
+    },
+    {
+      "pattern": "synaptome/bin/*.exp",
+      "reason": "Generated linker output."
+    },
+    {
+      "pattern": "synaptome/bin/*.lib",
+      "reason": "Generated linker output."
+    },
+    {
+      "pattern": "synaptome/bin/*.pdb",
+      "reason": "Generated debug symbols."
+    },
+    {
+      "pattern": "synaptome/bin/data/log.txt",
+      "reason": "Runtime log."
+    },
+    {
+      "pattern": "synaptome/bin/data/logs/**",
+      "reason": "Runtime logs and local device inventory."
+    },
+    {
+      "pattern": "synaptome/bin/data/config/console.json",
+      "reason": "App-written Console/display/operator layout state; regenerate locally or export as a fixture."
+    },
+    {
+      "pattern": "synaptome/bin/data/config/control_hub_prefs.json",
+      "reason": "App-written Browser/HUD operator preference state."
+    },
+    {
+      "pattern": "synaptome/bin/data/config/netmap.json",
+      "reason": "Radio/deployment config source; move with helper/radio contract package."
+    },
+    {
+      "pattern": "synaptome/bin/data/config/profiles.json",
+      "reason": "Legacy radio/video sync profile, not public app runtime default."
+    },
+    {
+      "pattern": "synaptome/bin/data/config/scene-last.json",
+      "reason": "App-written latest-scene state; public examples live under layers/scenes."
+    },
+    {
+      "pattern": "synaptome/bin/data/config/ui/control_hub.json",
+      "reason": "Legacy app-written Browser preference state."
+    },
+    {
+      "pattern": "synaptome/bin/data/layers/scenes/flimsy-steve.json",
+      "reason": "Named/local scene staged out of the public example set."
+    },
+    {
+      "pattern": "synaptome/bin/data/layers/scenes/unabletoeven.json",
+      "reason": "Named/local scene staged out of the public example set."
+    },
+    {
+      "pattern": "synaptome/bin/data/presets/**",
+      "reason": "Operator-local preset state until default/private config policy is locked."
+    },
+    {
+      "pattern": "synaptome/obj/**",
+      "reason": "Generated build output."
+    },
+    {
+      "pattern": "synaptome/x64/**",
+      "reason": "Generated build output."
+    },
+    {
+      "pattern": "tests/artifacts/**",
+      "reason": "Runtime/generated test artifacts except curated fixtures."
+    },
+    {
+      "pattern": "tools/docops",
+      "reason": "Internal DocOps helper marker."
+    },
+    {
+      "pattern": "tools/docops_*.py",
+      "reason": "Internal DocOps tooling."
+    },
+    {
+      "pattern": "tools/git-hooks/**",
+      "reason": "Internal workflow hooks until public contributor workflow is locked."
+    },
+    {
+      "pattern": "tools/gen_radio_config.py",
+      "reason": "Radio/helper contract generator; split with helper contract package."
+    },
+    {
+      "pattern": "tools/osc_regression.py",
+      "reason": "Gateway/radio regression until external contract package is split."
+    },
+    {
+      "pattern": "tools/osc_sniffer.py",
+      "reason": "Gateway/radio debugging helper."
+    },
+    {
+      "pattern": "tools/radio_ui_catalog_regression.py",
+      "reason": "Firmware UI catalog regression until helper contract package is split."
+    },
+    {
+      "pattern": "tools/validate_governance_contract.py",
+      "reason": "Internal governance validator."
+    },
+    {
+      "pattern": "tools/validate_legacy_payload_quarantine.py",
+      "reason": "Firmware legacy-quarantine validator."
+    },
+    {
+      "pattern": "tools/validate_tiny_screen_ui_contract.py",
+      "reason": "Embedded UI validator outside public app runtime."
+    },
+    {
+      "pattern": "tools/testdata/osc_regression/**",
+      "reason": "Gateway/radio fixtures until helper contract package is split."
+    },
+    {
+      "pattern": "tools/testdata/radio_ui_catalog/**",
+      "reason": "Firmware UI catalog fixtures until helper contract package is split."
+    },
+    {
+      "pattern": "*",
+      "reason": "Default: outside the current public Synaptome allowlist."
+    }
+  ],
+  "review": [],
+  "never_public": [
+    "common/**",
+    "platformio.ini",
+    "tensegrity_gateway/**",
+    "tensegrity_matrixportal/**",
+    "tensegrity_cyberdeck/**",
+    "tensegrity_cardputer/**",
+    "tensegrity_memento/**",
+    "synaptome/legacy_vs_identity/**",
+    "synaptome/src/thirdparty/*.exp",
+    "synaptome/tests/BrowserFlowTest/BrowserFlowTest.vcxproj.user",
+    "synaptome/tests/BrowserFlowTest/BrowserFlowTest/x64/**",
+    "synaptome/tests/BrowserFlowTest/x64/**",
+    "synaptome/tests/HotkeyTest/HotkeyTest/x64/**",
+    "synaptome/tests/HotkeyTest/x64/**",
+    "synaptome/bin/*.exe",
+    "synaptome/bin/*.exp",
+    "synaptome/bin/*.lib",
+    "synaptome/bin/*.pdb",
+    "synaptome/bin/data/log.txt",
+    "synaptome/bin/data/logs/**",
+    "synaptome/obj/**",
+    "synaptome/x64/**"
+  ],
+  "required_validation_before_publication": [
+    "python tools\\validate_synaptome_extraction_manifest.py --check --strict-review",
+    "python tools\\validate_configs.py --public-app",
+    "python tools\\check_app_independence.py",
+    "msbuild synaptome\\tests\\BrowserFlowTest\\BrowserFlowTest.vcxproj /p:Configuration=Release /p:Platform=x64",
+    "python tools\\run_control_hub_flow.py --dual-screen-phase2"
+  ],
+  "known_pre_extraction_gaps": []
+}

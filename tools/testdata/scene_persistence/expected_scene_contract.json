@@ -1,0 +1,108 @@
+{
+  "layerAssetCount": 39,
+  "sceneCount": 3,
+  "scenes": [
+    {
+      "activeSlotCount": 4,
+      "bankTargets": [],
+      "coverageModes": [],
+      "effectKeys": [
+        "ascii",
+        "crt",
+        "dither"
+      ],
+      "globalKeys": [
+        "camera.dist",
+        "fx.master",
+        "globals.speed",
+        "transport.bpm",
+        "ui.hud"
+      ],
+      "hash": "d7eb94a5a5b7d3cffc462ae3fa4a7853b4ff61cb6513d6a2180cf33a6896080e",
+      "path": "tools/testdata/runtime_state/layers/scenes/default.json",
+      "slotAssets": [
+        "geometry.grid",
+        "geometry.geodesic",
+        "generative.perlin",
+        "generative.gameOfLife"
+      ],
+      "slotCount": 4,
+      "slotParameterCount": 5,
+      "topLevelKeys": [
+        "console",
+        "effects",
+        "globals"
+      ]
+    },
+    {
+      "activeSlotCount": 3,
+      "bankTargets": [
+        "fx.master",
+        "transport.bpm"
+      ],
+      "coverageModes": [],
+      "effectKeys": [
+        "ascii",
+        "crt",
+        "dither"
+      ],
+      "globalKeys": [
+        "camera.dist",
+        "fx.master",
+        "globals.speed",
+        "overlay.text.content",
+        "transport.bpm"
+      ],
+      "hash": "5f5f0f902c8223ad08aa4025ac6290c8622ffc6bb2db21ca5028716c37b51c77",
+      "path": "tools/testdata/runtime_state/layers/scenes/stl-demo.json",
+      "slotAssets": [
+        "generative.antTunnels",
+        "text.layer",
+        "geometry.stl_foot"
+      ],
+      "slotCount": 3,
+      "slotParameterCount": 4,
+      "topLevelKeys": [
+        "banks",
+        "console",
+        "effects",
+        "globals",
+        "mappings",
+        "scene"
+      ]
+    },
+    {
+      "activeSlotCount": 4,
+      "bankTargets": [],
+      "coverageModes": [],
+      "effectKeys": [
+        "ascii",
+        "crt",
+        "dither"
+      ],
+      "globalKeys": [
+        "camera.dist",
+        "fx.master",
+        "globals.speed",
+        "transport.bpm",
+        "ui.hud"
+      ],
+      "hash": "d7eb94a5a5b7d3cffc462ae3fa4a7853b4ff61cb6513d6a2180cf33a6896080e",
+      "path": "tools/testdata/runtime_state/config/scene-last.json",
+      "slotAssets": [
+        "geometry.grid",
+        "geometry.geodesic",
+        "generative.perlin",
+        "generative.gameOfLife"
+      ],
+      "slotCount": 4,
+      "slotParameterCount": 5,
+      "topLevelKeys": [
+        "console",
+        "effects",
+        "globals"
+      ]
+    }
+  ],
+  "version": 1
+}

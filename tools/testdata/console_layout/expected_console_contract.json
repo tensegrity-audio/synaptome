@@ -1,0 +1,246 @@
+{
+  "schemaVersion": 1,
+  "sourceStrategy": "Static Console/display persistence contract. Slot shape, asset references, overlay flags, display preference types, and HUD placement shape are validated. Local monitor coordinates, timestamps, and sensor warm-start snapshots are intentionally excluded from the golden fixture.",
+  "sources": [
+    "tools/testdata/runtime_state/config/console.json",
+    "tools/testdata/runtime_state/config/ui/slot_assignments.json",
+    "synaptome/src/io/ConsoleStore.h",
+    "tools/testdata/layer_catalog/expected_catalog.json",
+    "synaptome/bin/data/layers/hud"
+  ],
+  "policies": {
+    "slotCount": 8,
+    "dualDisplayModes": [
+      "dual",
+      "single"
+    ],
+    "layoutTargets": [
+      "controller",
+      "projector"
+    ],
+    "widgetTargets": [
+      "both",
+      "controller",
+      "projector"
+    ],
+    "bands": [
+      "console",
+      "hud",
+      "workbench"
+    ],
+    "localOnlyFields": [
+      "overlayLayouts.lastSyncMs",
+      "overlayLayouts.*.capturedAtMs",
+      "secondaryDisplay.monitorId",
+      "secondaryDisplay.x",
+      "secondaryDisplay.y",
+      "secondaryDisplay.width",
+      "secondaryDisplay.height",
+      "sensors"
+    ]
+  },
+  "counts": {
+    "validLayerAssets": 39,
+    "hudWidgets": 6,
+    "consoleLayers": 8,
+    "slotAssignments": 0
+  },
+  "console": {
+    "version": 3,
+    "layers": [
+      {
+        "index": 1,
+        "assetId": "generative.perlin",
+        "active": true,
+        "opacity": 1.0,
+        "label": "Perlin Noise",
+        "displayName": "Perlin Noise"
+      },
+      {
+        "index": 2,
+        "assetId": "generative.murmuration",
+        "active": true,
+        "opacity": 1.0,
+        "label": "Murmuration",
+        "displayName": "Murmuration"
+      },
+      {
+        "index": 3,
+        "assetId": "generative.oscilloscope",
+        "active": true,
+        "opacity": 1.0,
+        "label": "Oscilloscope",
+        "displayName": "Oscilloscope"
+      },
+      {
+        "index": 4,
+        "assetId": "text.layer",
+        "active": true,
+        "opacity": 1.0,
+        "label": "Text Layer",
+        "displayName": "Text Layer"
+      },
+      {
+        "index": 5,
+        "assetId": "",
+        "active": false,
+        "opacity": 1.0
+      },
+      {
+        "index": 6,
+        "assetId": "",
+        "active": false,
+        "opacity": 1.0
+      },
+      {
+        "index": 7,
+        "assetId": "",
+        "active": false,
+        "opacity": 1.0
+      },
+      {
+        "index": 8,
+        "assetId": "",
+        "active": false,
+        "opacity": 1.0
+      }
+    ],
+    "overlays": {
+      "hudVisible": false,
+      "consoleVisible": false,
+      "controlHubVisible": false,
+      "menuVisible": false
+    },
+    "dualDisplay": {
+      "mode": "dual"
+    },
+    "secondaryDisplay": {
+      "fields": [
+        "background",
+        "dpiScale",
+        "enabled",
+        "followPrimary",
+        "height",
+        "monitorId",
+        "vsync",
+        "width",
+        "x",
+        "y"
+      ],
+      "backgroundFormat": "#RRGGBB",
+      "coordinatePolicy": "local-machine-values-validated-but-not-golden"
+    },
+    "controllerFocus": {
+      "consolePreferred": true
+    },
+    "overlayLayouts": {
+      "activeTarget": "controller",
+      "targets": {
+        "controller": [
+          {
+            "id": "hud.controls",
+            "column": 0,
+            "visible": true,
+            "collapsed": false,
+            "band": "hud",
+            "target": "projector"
+          },
+          {
+            "id": "hud.layers",
+            "column": 1,
+            "visible": true,
+            "collapsed": false,
+            "band": "hud",
+            "target": "projector"
+          },
+          {
+            "id": "hud.menu",
+            "column": 1,
+            "visible": true,
+            "collapsed": false,
+            "band": "hud",
+            "target": "projector"
+          },
+          {
+            "id": "hud.sensors",
+            "column": 1,
+            "visible": true,
+            "collapsed": false,
+            "band": "hud",
+            "target": "projector"
+          },
+          {
+            "id": "hud.status",
+            "column": 0,
+            "visible": true,
+            "collapsed": false,
+            "band": "hud",
+            "target": "projector"
+          },
+          {
+            "id": "hud.telemetry",
+            "column": 0,
+            "visible": true,
+            "collapsed": false,
+            "band": "hud",
+            "target": "projector"
+          }
+        ],
+        "projector": [
+          {
+            "id": "hud.controls",
+            "column": 0,
+            "visible": true,
+            "collapsed": false,
+            "band": "hud",
+            "target": "projector"
+          },
+          {
+            "id": "hud.layers",
+            "column": 1,
+            "visible": true,
+            "collapsed": false,
+            "band": "hud",
+            "target": "projector"
+          },
+          {
+            "id": "hud.menu",
+            "column": 1,
+            "visible": true,
+            "collapsed": false,
+            "band": "hud",
+            "target": "projector"
+          },
+          {
+            "id": "hud.sensors",
+            "column": 1,
+            "visible": true,
+            "collapsed": false,
+            "band": "hud",
+            "target": "projector"
+          },
+          {
+            "id": "hud.status",
+            "column": 0,
+            "visible": true,
+            "collapsed": false,
+            "band": "hud",
+            "target": "projector"
+          },
+          {
+            "id": "hud.telemetry",
+            "column": 0,
+            "visible": true,
+            "collapsed": false,
+            "band": "hud",
+            "target": "projector"
+          }
+        ]
+      },
+      "timestampPolicy": "lastSyncMs-and-capturedAtMs-validated-but-not-golden"
+    }
+  },
+  "slotAssignments": {
+    "assignments": []
+  }
+}

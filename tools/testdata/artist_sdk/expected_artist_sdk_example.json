@@ -1,0 +1,153 @@
+{
+  "schemaVersion": 1,
+  "sourceStrategy": "Static public SDK fixture for a source-registered Layer, Browser catalog metadata, and saved scene usage.",
+  "sources": [
+    "docs/examples/artist_sdk/SignalBloomLayer.h",
+    "docs/examples/artist_sdk/SignalBloomLayer.cpp",
+    "docs/examples/artist_sdk/register_signal_bloom.cpp",
+    "docs/examples/artist_sdk/signal_bloom.layer.json",
+    "docs/examples/artist_sdk/signal_bloom.scene.json"
+  ],
+  "asset": {
+    "id": "examples.signal_bloom",
+    "label": "Signal Bloom",
+    "category": "Examples",
+    "type": "example.signalBloom",
+    "registryPrefix": "examples.signal_bloom"
+  },
+  "sdk": {
+    "level": "parametric-cataloged-layer",
+    "factoryRegistration": "docs/examples/artist_sdk/register_signal_bloom.cpp",
+    "noHeavySetupSideEffects": true,
+    "templates": [
+      "global_transport",
+      "layer_local_basics",
+      "layer_local_color",
+      "media_playback_pairing",
+      "osc_routes",
+      "scene_persistence",
+      "sensor_modifiers"
+    ]
+  },
+  "parameters": [
+    {
+      "suffix": "alpha",
+      "type": "float"
+    },
+    {
+      "suffix": "bgColorB",
+      "type": "float"
+    },
+    {
+      "suffix": "bgColorG",
+      "type": "float"
+    },
+    {
+      "suffix": "bgColorR",
+      "type": "float"
+    },
+    {
+      "suffix": "bpmMultiplier",
+      "type": "float"
+    },
+    {
+      "suffix": "bpmSync",
+      "type": "bool"
+    },
+    {
+      "suffix": "colorB",
+      "type": "float"
+    },
+    {
+      "suffix": "colorG",
+      "type": "float"
+    },
+    {
+      "suffix": "colorR",
+      "type": "float"
+    },
+    {
+      "suffix": "gain",
+      "type": "float"
+    },
+    {
+      "suffix": "lineOpacity",
+      "type": "float"
+    },
+    {
+      "suffix": "rotationDeg",
+      "type": "float"
+    },
+    {
+      "suffix": "scale",
+      "type": "float"
+    },
+    {
+      "suffix": "speed",
+      "type": "float"
+    },
+    {
+      "suffix": "speedInput",
+      "type": "float"
+    },
+    {
+      "suffix": "visible",
+      "type": "bool"
+    },
+    {
+      "suffix": "xInput",
+      "type": "float"
+    },
+    {
+      "suffix": "yInput",
+      "type": "float"
+    }
+  ],
+  "scene": {
+    "schemaVersion": 2,
+    "slotAssetIds": [
+      "examples.signal_bloom",
+      "media.clip.default"
+    ],
+    "signalBloomSlotParameterSuffixes": [
+      "alpha",
+      "bgColorB",
+      "bgColorG",
+      "bgColorR",
+      "bpmMultiplier",
+      "bpmSync",
+      "colorB",
+      "colorG",
+      "colorR",
+      "gain",
+      "lineOpacity",
+      "rotationDeg",
+      "scale",
+      "speed",
+      "speedInput",
+      "visible",
+      "xInput",
+      "yInput"
+    ],
+    "mediaSlotParameterSuffixes": [
+      "clip",
+      "gain",
+      "loop",
+      "mirror",
+      "visible"
+    ],
+    "targets": [
+      "console.layer1.colorR",
+      "console.layer1.gain",
+      "console.layer1.speed",
+      "console.layer1.speedInput",
+      "console.layer1.xInput",
+      "console.layer1.yInput",
+      "console.layer2.gain",
+      "console.layer2.loop",
+      "fx.master",
+      "globals.speed",
+      "transport.bpm"
+    ]
+  }
+}

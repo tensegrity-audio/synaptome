@@ -1,0 +1,67 @@
+{
+  "console": {
+    "slots": [
+      {
+        "active": true,
+        "assetId": "geometry.grid",
+        "index": 1,
+        "opacity": 1.0
+      },
+      {
+        "active": true,
+        "assetId": "geometry.geodesic",
+        "index": 2,
+        "opacity": 1.0
+      },
+      {
+        "active": true,
+        "assetId": "generative.perlin",
+        "index": 3,
+        "opacity": 1.0,
+        "parameters": {
+          "console.layer3.palette": 3.0,
+          "console.layer3.paletteRate": 0.25,
+          "console.layer3.scale": 4.0,
+          "console.layer3.speed": 0.3
+        }
+      },
+      {
+        "active": true,
+        "assetId": "generative.gameOfLife",
+        "index": 4,
+        "opacity": 1.0,
+        "parameters": {
+          "console.layer4.preset": 2.0
+        }
+      }
+    ]
+  },
+  "effects": {
+    "ascii": {
+      "aspect": 0.0,
+      "block": 8.0,
+      "characterSet": 2.0,
+      "colorMode": 0.0,
+      "gamma": 1.0,
+      "jitter": 0.0,
+      "padding": 0.0,
+      "route": 0.0
+    },
+    "crt": {
+      "bleed": 0.15,
+      "route": 0.0,
+      "scanline": 0.4,
+      "vignette": 0.25
+    },
+    "dither": {
+      "route": 0.0
+    }
+  },
+  "globals": {
+    "camera.dist": 700.0,
+    "fx.master": 0.0,
+    "globals.speed": 1.0,
+    "transport.bpm": 120.0,
+    "ui.hud": true
+  }
+}

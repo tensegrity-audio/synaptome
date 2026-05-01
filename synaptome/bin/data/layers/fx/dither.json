@@ -1,0 +1,16 @@
+{
+  "id": "fx.dither",
+  "label": "Dither",
+  "category": "FX",
+  "type": "fx.dither",
+  "registryPrefix": "effects.dither",
+  "coverage": {
+    "mode": "upstream",
+    "columns": 0
+  },
+  "opacity": 1.0,
+  "defaults": {
+    "mode": 1,
+    "cellSize": 3
+  }
+}

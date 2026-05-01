@@ -1,0 +1,67 @@
+{
+  "globals": {
+    "transport.bpm": 120.0,
+    "globals.speed": 1.0,
+    "fx.master": 0.0,
+    "camera.dist": 700.0,
+    "ui.hud": true
+  },
+  "effects": {
+    "dither": {
+      "route": 0
+    },
+    "ascii": {
+      "route": 0,
+      "block": 8.0,
+      "colorMode": 0.0,
+      "characterSet": 2.0,
+      "aspect": 0.0,
+      "padding": 0.0,
+      "gamma": 1.0,
+      "jitter": 0.0
+    },
+    "crt": {
+      "route": 0,
+      "scanline": 0.4,
+      "vignette": 0.25,
+      "bleed": 0.15
+    }
+  },
+  "console": {
+    "slots": [
+      {
+        "index": 1,
+        "assetId": "geometry.grid",
+        "active": true,
+        "opacity": 1.0
+      },
+      {
+        "index": 2,
+        "assetId": "geometry.geodesic",
+        "active": true,
+        "opacity": 1.0
+      },
+      {
+        "index": 3,
+        "assetId": "generative.perlin",
+        "active": true,
+        "opacity": 1.0,
+        "parameters": {
+          "console.layer3.scale": 4.0,
+          "console.layer3.speed": 0.3,
+          "console.layer3.palette": 3.0,
+          "console.layer3.paletteRate": 0.25
+        }
+      },
+      {
+        "index": 4,
+        "assetId": "generative.gameOfLife",
+        "active": true,
+        "opacity": 1.0,
+        "parameters": {
+          "console.layer4.preset": 2.0
+        }
+      }
+    ]
+  }
+}

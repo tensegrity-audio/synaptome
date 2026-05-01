@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "bank": "default",
+  "mappings": [
+    {
+      "device": "Launchpad Pro",
+      "channel": 1,
+      "type": "cc",
+      "number": 14,
+      "param": "fx.depth",
+      "range": [0, 1],
+      "curve": "linear",
+      "toggle": false,
+      "pickup": true,
+      "browser": {
+        "section": "FX",
+        "captureHint": "Twist Macro A",
+        "preferredInput": "midi"
+      }
+    },
+    {
+      "device": "KeyLab 61",
+      "channel": 1,
+      "type": "note",
+      "number": 60,
+      "param": "ui.toggle.hud",
+      "toggle": true,
+      "browser": {
+        "section": "UI",
+        "tags": ["safety"],
+        "notes": "Toggles HUD overlay"
+      }
+    }
+  ]
+}

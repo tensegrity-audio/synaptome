@@ -1,0 +1,8 @@
+{
+  "id": "geometry.geodesic",
+  "label": "Geodesic Sphere",
+  "category": "Geometry",
+  "type": "geodesic",
+  "registryPrefix": "geometry.geodesic",
+  "opacity": 1.0
+}

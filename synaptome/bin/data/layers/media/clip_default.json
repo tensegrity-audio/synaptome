@@ -1,0 +1,14 @@
+{
+  "id": "media.clip.default",
+  "label": "Clip (Default Loop)",
+  "category": "Media",
+  "type": "media.clip",
+  "registryPrefix": "media.clip.default",
+  "opacity": 1.0,
+  "defaults": {
+    "clipId": "default-loop",
+    "gain": 1.0,
+    "mirror": false,
+    "loop": true
+  }
+}

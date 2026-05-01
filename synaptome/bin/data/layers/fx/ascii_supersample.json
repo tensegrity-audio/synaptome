@@ -1,0 +1,12 @@
+{
+  "id": "fx.ascii_supersample",
+  "label": "ASCII Supersample",
+  "category": "FX",
+  "type": "fx.ascii_supersample",
+  "registryPrefix": "effects.asciiSupersample",
+  "coverage": {
+    "mode": "upstream",
+    "columns": 0
+  },
+  "opacity": 1.0
+}

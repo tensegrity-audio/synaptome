@@ -1,0 +1,12 @@
+{
+  "id": "fx.motion_extract",
+  "label": "Motion Extract",
+  "category": "FX",
+  "type": "fx.motion_extract",
+  "registryPrefix": "effects.motion",
+  "coverage": {
+    "mode": "upstream",
+    "columns": 0
+  },
+  "opacity": 1.0
+}

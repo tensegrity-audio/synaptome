@@ -1,0 +1,176 @@
+{
+  "banks": {
+    "global": [
+      {
+        "controls": [
+          {
+            "description": "Master effects macro",
+            "id": "masterFx",
+            "label": "FX Macro",
+            "target": "fx.master"
+          },
+          {
+            "description": "Global animation speed",
+            "id": "speed",
+            "label": "Speed",
+            "target": "globals.speed"
+          },
+          {
+            "description": "Session tempo",
+            "id": "bpm",
+            "label": "Tempo",
+            "target": "transport.bpm"
+          },
+          {
+            "description": "Toggle HUD visibility",
+            "id": "hud",
+            "label": "HUD Visible",
+            "target": "ui.hud"
+          },
+          {
+            "description": "Camera distance",
+            "id": "camDist",
+            "label": "Camera Distance",
+            "target": "camera.dist"
+          }
+        ],
+        "id": "home",
+        "label": "Home"
+      }
+    ]
+  },
+  "console": {
+    "slots": [
+      {
+        "active": true,
+        "assetId": "generative.antTunnels",
+        "index": 1,
+        "label": "Ant Tunnels",
+        "opacity": 1.0,
+        "parameters": {
+          "console.layer1.agentCount": 400.0,
+          "console.layer1.alpha": 1.0,
+          "console.layer1.autoReseed": false,
+          "console.layer1.autoReseedEveryBeats": 144.0,
+          "console.layer1.backgroundAlpha": 0.75,
+          "console.layer1.bgB": 0.019999999552965164,
+          "console.layer1.bgG": 1.0,
+          "console.layer1.bgR": 0.10000000149011612,
+          "console.layer1.bpmMultiplier": 1.0,
+          "console.layer1.bpmSync": false,
+          "console.layer1.decay": 0.009999999776482582,
+          "console.layer1.deposit": 0.5,
+          "console.layer1.diffuse": 0.05000000074505806,
+          "console.layer1.mode": 2.0,
+          "console.layer1.reseed": false,
+          "console.layer1.resetCoverage": 0.41999998688697815,
+          "console.layer1.sensorAngle": 0.699999988079071,
+          "console.layer1.sensorDistance": 2.0,
+          "console.layer1.speed": 32.0,
+          "console.layer1.stepSize": 0.550000011920929,
+          "console.layer1.trailAlpha": 1.0,
+          "console.layer1.trailB": 1.0,
+          "console.layer1.trailBoost": 2.0,
+          "console.layer1.trailG": 1.0,
+          "console.layer1.trailR": 1.0,
+          "console.layer1.turnRate": 1.0
+        }
+      },
+      {
+        "active": true,
+        "assetId": "text.layer",
+        "index": 2,
+        "label": "Text Layer",
+        "opacity": 1.0
+      }
+    ]
+  },
+  "effects": {
+    "ascii": {
+      "aspect": 1.0,
+      "block": 12.0,
+      "characterSet": 23.0,
+      "colorMode": 2.0,
+      "gamma": 1.0,
+      "jitter": 0.0,
+      "padding": 0.0,
+      "route": 0.0
+    },
+    "asciiSupersample": {
+      "block": 12.0,
+      "characterSet": 0.0,
+      "colorMode": 2.0,
+      "gamma": 0.0,
+      "jitter": 0.0,
+      "route": 0.0
+    },
+    "crt": {
+      "bleed": 1.0,
+      "glow": 2.0,
+      "headSwitch": 0.0,
+      "lumaNoise": 0.0,
+      "perChannelOffset": 0.0,
+      "rgbMisalignment": 0.0,
+      "route": 0.0,
+      "scanline": 0.0,
+      "scanlineJitter": 0.10000000149011612,
+      "softness": 10.0,
+      "subpixelAspect": 4.0,
+      "subpixelDensity": 9.0,
+      "subpixelPadding": 0.0,
+      "syncTear": 0.20000000298023224,
+      "trackingWobble": 0.10000000149011612,
+      "vignette": 0.5
+    },
+    "dither": {
+      "cellSize": 6.0,
+      "route": 0.0
+    },
+    "motion": {
+      "alphaMix": 1.0,
+      "blur": 1.0,
+      "boost": 8.0,
+      "fadeBeats": 32.0,
+      "mix": 0.0,
+      "route": 0.0,
+      "softness": 8.0,
+      "threshold": 0.5
+    }
+  },
+  "globals": {
+    "camera.dist": 385.0415344238281,
+    "fx.master": {
+      "base": 1.0,
+      "modifiers": []
+    },
+    "globals.speed": 2.0,
+    "overlay.text.color.b": 255.0,
+    "overlay.text.color.g": 0.0,
+    "overlay.text.color.r": 255.0,
+    "overlay.text.content": "hello world",
+    "overlay.text.font": "VCR_OSD_MONO_1.001.ttf",
+    "overlay.text.size": 144.0,
+    "transport.bpm": 132.0
+  },
+  "mappings": {
+    "router": {
+      "cc": []
+    },
+    "slotAssignments": {
+      "assignments": []
+    }
+  },
+  "scene": {
+    "savedAt": "2026-04-22T00:18:44-0400",
+    "schemaVersion": 2,
+    "source": {
+      "name": "hello world",
+      "path": "layers/scenes/hello world.json"
+    },
+    "storage": {
+      "kind": "named",
+      "name": "hello world",
+      "path": "layers/scenes/hello world.json"
+    }
+  }
+}

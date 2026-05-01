@@ -1,0 +1,164 @@
+{
+  "schemaVersion": 1,
+  "maps": [
+    {
+      "path": "synaptome/bin/data/device_maps/MIDI Mix 0.json",
+      "deviceId": "MIDI Mix 0",
+      "name": "MIDI Mix 0",
+      "model": "MIDI Mix 0",
+      "portHints": [
+        "MIDI Mix 0"
+      ],
+      "columnCount": 8,
+      "slotCount": 48,
+      "roleCounts": {
+        "button": 16,
+        "fader": 8,
+        "knob": 24
+      },
+      "bindingTypes": {
+        "cc": 32,
+        "note": 16
+      },
+      "columns": [
+        {
+          "id": "column1",
+          "name": "Column 1",
+          "slots": [
+            "K1:knob:cc:1:16",
+            "K2:knob:cc:1:17",
+            "K3:knob:cc:1:18",
+            "F:fader:cc:1:19",
+            "B1:button:note:1:1",
+            "B2:button:note:1:3"
+          ]
+        },
+        {
+          "id": "column2",
+          "name": "Column 2",
+          "slots": [
+            "K1:knob:cc:1:20",
+            "K2:knob:cc:1:21",
+            "K3:knob:cc:1:22",
+            "F:fader:cc:1:23",
+            "B1:button:note:1:4",
+            "B2:button:note:1:6"
+          ]
+        },
+        {
+          "id": "column3",
+          "name": "Column 3",
+          "slots": [
+            "K1:knob:cc:1:24",
+            "K2:knob:cc:1:25",
+            "K3:knob:cc:1:26",
+            "F:fader:cc:1:27",
+            "B1:button:note:1:7",
+            "B2:button:note:1:9"
+          ]
+        },
+        {
+          "id": "column4",
+          "name": "Column 4",
+          "slots": [
+            "K1:knob:cc:1:28",
+            "K2:knob:cc:1:29",
+            "K3:knob:cc:1:30",
+            "F:fader:cc:1:31",
+            "B1:button:note:1:10",
+            "B2:button:note:1:12"
+          ]
+        },
+        {
+          "id": "column5",
+          "name": "Column 5",
+          "slots": [
+            "K1:knob:cc:1:46",
+            "K2:knob:cc:1:47",
+            "K3:knob:cc:1:48",
+            "F:fader:cc:1:49",
+            "B1:button:note:1:13",
+            "B2:button:note:1:15"
+          ]
+        },
+        {
+          "id": "column6",
+          "name": "Column 6",
+          "slots": [
+            "K1:knob:cc:1:50",
+            "K2:knob:cc:1:51",
+            "K3:knob:cc:1:52",
+            "F:fader:cc:1:53",
+            "B1:button:note:1:16",
+            "B2:button:note:1:18"
+          ]
+        },
+        {
+          "id": "column7",
+          "name": "Column 7",
+          "slots": [
+            "K1:knob:cc:1:54",
+            "K2:knob:cc:1:55",
+            "K3:knob:cc:1:56",
+            "F:fader:cc:1:57",
+            "B1:button:note:1:19",
+            "B2:button:note:1:21"
+          ]
+        },
+        {
+          "id": "column8",
+          "name": "Column 8",
+          "slots": [
+            "K1:knob:cc:1:58",
+            "K2:knob:cc:1:59",
+            "K3:knob:cc:1:60",
+            "F:fader:cc:1:61",
+            "B1:button:note:1:22",
+            "B2:button:note:1:24"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "tools/testdata/device_maps/synthetic_controller.json",
+      "deviceId": "synthetic-two-bank-controller",
+      "name": "Synthetic Two-Bank Controller",
+      "model": "Synthetic Controller",
+      "portHints": [
+        "Synthetic Controller"
+      ],
+      "columnCount": 2,
+      "slotCount": 5,
+      "roleCounts": {
+        "button": 1,
+        "fader": 1,
+        "knob": 1,
+        "macro": 1,
+        "shift": 1
+      },
+      "bindingTypes": {
+        "cc": 3,
+        "note": 2
+      },
+      "columns": [
+        {
+          "id": "column1",
+          "name": "Scene Controls",
+          "slots": [
+            "F:fader:cc:2:10",
+            "K1:knob:cc:2:11",
+            "B1:button:note:2:40"
+          ]
+        },
+        {
+          "id": "column2",
+          "name": "Performance Macros",
+          "slots": [
+            "M1:macro:cc:3:20",
+            "S1:shift:note:3:41"
+          ]
+        }
+      ]
+    }
+  ]
+}

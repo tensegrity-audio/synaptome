@@ -1,0 +1,87 @@
+{
+  "hudControllerWidgets": [
+    {
+      "band": "hud",
+      "collapsed": false,
+      "column": 0,
+      "id": "hud.controls"
+    },
+    {
+      "band": "hud",
+      "collapsed": false,
+      "column": 1,
+      "id": "hud.layers"
+    },
+    {
+      "band": "hud",
+      "collapsed": false,
+      "column": 1,
+      "id": "hud.menu"
+    },
+    {
+      "band": "hud",
+      "collapsed": false,
+      "column": 1,
+      "id": "hud.sensors"
+    },
+    {
+      "band": "hud",
+      "collapsed": false,
+      "column": 0,
+      "id": "hud.status"
+    },
+    {
+      "band": "hud",
+      "collapsed": false,
+      "column": 0,
+      "id": "hud.telemetry"
+    }
+  ],
+  "hudLayoutTarget": "controller",
+  "hudStateMigrated": true,
+  "hudVisible": true,
+  "hudWidgets": [
+    {
+      "band": "hud",
+      "collapsed": false,
+      "column": 0,
+      "id": "hud.controls",
+      "visible": true
+    },
+    {
+      "band": "hud",
+      "collapsed": false,
+      "column": 1,
+      "id": "hud.layers",
+      "visible": true
+    },
+    {
+      "band": "hud",
+      "collapsed": false,
+      "column": 1,
+      "id": "hud.menu",
+      "visible": true
+    },
+    {
+      "band": "hud",
+      "collapsed": false,
+      "column": 1,
+      "id": "hud.sensors",
+      "visible": true
+    },
+    {
+      "band": "hud",
+      "collapsed": false,
+      "column": 0,
+      "id": "hud.status",
+      "visible": true
+    },
+    {
+      "band": "hud",
+      "collapsed": false,
+      "column": 0,
+      "id": "hud.telemetry",
+      "visible": true
+    }
+  ]
+}

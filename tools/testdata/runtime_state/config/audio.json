@@ -1,0 +1,9 @@
+{
+  "localMic": {
+    "modifier": {
+      "blend": "scale",
+      "enabled": true,
+      "target": "fx.master"
+    }
+  }
+}

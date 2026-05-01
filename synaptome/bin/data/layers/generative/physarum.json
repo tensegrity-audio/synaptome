@@ -1,0 +1,32 @@
+{
+  "id": "generative.physarum",
+  "label": "Physarum",
+  "category": "Generative",
+  "type": "agentField",
+  "registryPrefix": "generative.physarum",
+  "opacity": 1.0,
+  "defaults": {
+    "mode": 2,
+    "speed": 10.0,
+    "bpmSync": true,
+    "bpmMultiplier": 2.0,
+    "alpha": 1.0,
+    "autoReseed": false,
+    "autoReseedEveryBeats": 16.0,
+    "agentCount": 64,
+    "stepSize": 0.9,
+    "turnRate": 0.22,
+    "sensorAngle": 0.6,
+    "sensorDistance": 2.2,
+    "deposit": 0.22,
+    "decay": 0.003,
+    "diffuse": 0.24,
+    "trailBoost": 1.9,
+    "backgroundAlpha": 0.0,
+    "trailAlpha": 1.0,
+    "resetCoverage": 0.62,
+    "backgroundColor": [0.01, 0.03, 0.02],
+    "trailColor": [0.20, 0.95, 0.45]
+  },
+  "textureSize": [192, 108]
+}

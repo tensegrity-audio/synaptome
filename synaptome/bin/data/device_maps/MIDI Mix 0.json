@@ -1,0 +1,578 @@
+{
+    "columns": {
+        "column1": {
+            "name": "Column 1",
+            "slots": [
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 16,
+                        "type": "cc"
+                    },
+                    "id": "K1",
+                    "label": "Knob 1",
+                    "role": "knob",
+                    "sensitivity": 1.0
+                },
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 17,
+                        "type": "cc"
+                    },
+                    "id": "K2",
+                    "label": "Knob 2",
+                    "role": "knob",
+                    "sensitivity": 1.0
+                },
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 18,
+                        "type": "cc"
+                    },
+                    "id": "K3",
+                    "label": "Knob 3",
+                    "role": "knob",
+                    "sensitivity": 1.0
+                },
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 19,
+                        "type": "cc"
+                    },
+                    "id": "F",
+                    "label": "Fader",
+                    "role": "fader",
+                    "sensitivity": 1.0
+                },
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 1,
+                        "type": "note"
+                    },
+                    "id": "B1",
+                    "label": "Button 1",
+                    "role": "button",
+                    "sensitivity": 1.0
+                },
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 3,
+                        "type": "note"
+                    },
+                    "id": "B2",
+                    "label": "Button 2",
+                    "role": "button",
+                    "sensitivity": 1.0
+                }
+            ]
+        },
+        "column2": {
+            "name": "Column 2",
+            "slots": [
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 20,
+                        "type": "cc"
+                    },
+                    "id": "K1",
+                    "label": "Knob 1",
+                    "role": "knob",
+                    "sensitivity": 1.0
+                },
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 21,
+                        "type": "cc"
+                    },
+                    "id": "K2",
+                    "label": "Knob 2",
+                    "role": "knob",
+                    "sensitivity": 1.0
+                },
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 22,
+                        "type": "cc"
+                    },
+                    "id": "K3",
+                    "label": "Knob 3",
+                    "role": "knob",
+                    "sensitivity": 1.0
+                },
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 23,
+                        "type": "cc"
+                    },
+                    "id": "F",
+                    "label": "Fader",
+                    "role": "fader",
+                    "sensitivity": 1.0
+                },
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 4,
+                        "type": "note"
+                    },
+                    "id": "B1",
+                    "label": "Button 1",
+                    "role": "button",
+                    "sensitivity": 1.0
+                },
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 6,
+                        "type": "note"
+                    },
+                    "id": "B2",
+                    "label": "Button 2",
+                    "role": "button",
+                    "sensitivity": 1.0
+                }
+            ]
+        },
+        "column3": {
+            "name": "Column 3",
+            "slots": [
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 24,
+                        "type": "cc"
+                    },
+                    "id": "K1",
+                    "label": "Knob 1",
+                    "role": "knob",
+                    "sensitivity": 1.0
+                },
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 25,
+                        "type": "cc"
+                    },
+                    "id": "K2",
+                    "label": "Knob 2",
+                    "role": "knob",
+                    "sensitivity": 1.0
+                },
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 26,
+                        "type": "cc"
+                    },
+                    "id": "K3",
+                    "label": "Knob 3",
+                    "role": "knob",
+                    "sensitivity": 1.0
+                },
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 27,
+                        "type": "cc"
+                    },
+                    "id": "F",
+                    "label": "Fader",
+                    "role": "fader",
+                    "sensitivity": 1.0
+                },
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 7,
+                        "type": "note"
+                    },
+                    "id": "B1",
+                    "label": "Button 1",
+                    "role": "button",
+                    "sensitivity": 1.0
+                },
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 9,
+                        "type": "note"
+                    },
+                    "id": "B2",
+                    "label": "Button 2",
+                    "role": "button",
+                    "sensitivity": 1.0
+                }
+            ]
+        },
+        "column4": {
+            "name": "Column 4",
+            "slots": [
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 28,
+                        "type": "cc"
+                    },
+                    "id": "K1",
+                    "label": "Knob 1",
+                    "role": "knob",
+                    "sensitivity": 1.0
+                },
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 29,
+                        "type": "cc"
+                    },
+                    "id": "K2",
+                    "label": "Knob 2",
+                    "role": "knob",
+                    "sensitivity": 1.0
+                },
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 30,
+                        "type": "cc"
+                    },
+                    "id": "K3",
+                    "label": "Knob 3",
+                    "role": "knob",
+                    "sensitivity": 1.0
+                },
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 31,
+                        "type": "cc"
+                    },
+                    "id": "F",
+                    "label": "Fader",
+                    "role": "fader",
+                    "sensitivity": 1.0
+                },
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 10,
+                        "type": "note"
+                    },
+                    "id": "B1",
+                    "label": "Button 1",
+                    "role": "button",
+                    "sensitivity": 1.0
+                },
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 12,
+                        "type": "note"
+                    },
+                    "id": "B2",
+                    "label": "Button 2",
+                    "role": "button",
+                    "sensitivity": 1.0
+                }
+            ]
+        },
+        "column5": {
+            "name": "Column 5",
+            "slots": [
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 46,
+                        "type": "cc"
+                    },
+                    "id": "K1",
+                    "label": "Knob 1",
+                    "role": "knob",
+                    "sensitivity": 1.0
+                },
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 47,
+                        "type": "cc"
+                    },
+                    "id": "K2",
+                    "label": "Knob 2",
+                    "role": "knob",
+                    "sensitivity": 1.0
+                },
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 48,
+                        "type": "cc"
+                    },
+                    "id": "K3",
+                    "label": "Knob 3",
+                    "role": "knob",
+                    "sensitivity": 1.0
+                },
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 49,
+                        "type": "cc"
+                    },
+                    "id": "F",
+                    "label": "Fader",
+                    "role": "fader",
+                    "sensitivity": 1.0
+                },
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 13,
+                        "type": "note"
+                    },
+                    "id": "B1",
+                    "label": "Button 1",
+                    "role": "button",
+                    "sensitivity": 1.0
+                },
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 15,
+                        "type": "note"
+                    },
+                    "id": "B2",
+                    "label": "Button 2",
+                    "role": "button",
+                    "sensitivity": 1.0
+                }
+            ]
+        },
+        "column6": {
+            "name": "Column 6",
+            "slots": [
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 50,
+                        "type": "cc"
+                    },
+                    "id": "K1",
+                    "label": "Knob 1",
+                    "role": "knob",
+                    "sensitivity": 1.0
+                },
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 51,
+                        "type": "cc"
+                    },
+                    "id": "K2",
+                    "label": "Knob 2",
+                    "role": "knob",
+                    "sensitivity": 1.0
+                },
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 52,
+                        "type": "cc"
+                    },
+                    "id": "K3",
+                    "label": "Knob 3",
+                    "role": "knob",
+                    "sensitivity": 1.0
+                },
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 53,
+                        "type": "cc"
+                    },
+                    "id": "F",
+                    "label": "Fader",
+                    "role": "fader",
+                    "sensitivity": 1.0
+                },
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 16,
+                        "type": "note"
+                    },
+                    "id": "B1",
+                    "label": "Button 1",
+                    "role": "button",
+                    "sensitivity": 1.0
+                },
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 18,
+                        "type": "note"
+                    },
+                    "id": "B2",
+                    "label": "Button 2",
+                    "role": "button",
+                    "sensitivity": 1.0
+                }
+            ]
+        },
+        "column7": {
+            "name": "Column 7",
+            "slots": [
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 54,
+                        "type": "cc"
+                    },
+                    "id": "K1",
+                    "label": "Knob 1",
+                    "role": "knob",
+                    "sensitivity": 1.0
+                },
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 55,
+                        "type": "cc"
+                    },
+                    "id": "K2",
+                    "label": "Knob 2",
+                    "role": "knob",
+                    "sensitivity": 1.0
+                },
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 56,
+                        "type": "cc"
+                    },
+                    "id": "K3",
+                    "label": "Knob 3",
+                    "role": "knob",
+                    "sensitivity": 1.0
+                },
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 57,
+                        "type": "cc"
+                    },
+                    "id": "F",
+                    "label": "Fader",
+                    "role": "fader",
+                    "sensitivity": 1.0
+                },
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 19,
+                        "type": "note"
+                    },
+                    "id": "B1",
+                    "label": "Button 1",
+                    "role": "button",
+                    "sensitivity": 1.0
+                },
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 21,
+                        "type": "note"
+                    },
+                    "id": "B2",
+                    "label": "Button 2",
+                    "role": "button",
+                    "sensitivity": 1.0
+                }
+            ]
+        },
+        "column8": {
+            "name": "Column 8",
+            "slots": [
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 58,
+                        "type": "cc"
+                    },
+                    "id": "K1",
+                    "label": "Knob 1",
+                    "role": "knob",
+                    "sensitivity": 1.0
+                },
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 59,
+                        "type": "cc"
+                    },
+                    "id": "K2",
+                    "label": "Knob 2",
+                    "role": "knob",
+                    "sensitivity": 1.0
+                },
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 60,
+                        "type": "cc"
+                    },
+                    "id": "K3",
+                    "label": "Knob 3",
+                    "role": "knob",
+                    "sensitivity": 1.0
+                },
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 61,
+                        "type": "cc"
+                    },
+                    "id": "F",
+                    "label": "Fader",
+                    "role": "fader",
+                    "sensitivity": 1.0
+                },
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 22,
+                        "type": "note"
+                    },
+                    "id": "B1",
+                    "label": "Button 1",
+                    "role": "button",
+                    "sensitivity": 1.0
+                },
+                {
+                    "binding": {
+                        "channel": 1,
+                        "number": 24,
+                        "type": "note"
+                    },
+                    "id": "B2",
+                    "label": "Button 2",
+                    "role": "button",
+                    "sensitivity": 1.0
+                }
+            ]
+        }
+    },
+    "deviceId": "MIDI Mix 0",
+    "model": "MIDI Mix 0",
+    "name": "MIDI Mix 0",
+    "portHints": [
+        "MIDI Mix 0"
+    ]
+}

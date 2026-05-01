@@ -1,0 +1,30 @@
+{
+  "id": "fx.crt",
+  "label": "CRT",
+  "category": "FX",
+  "type": "fx.crt",
+  "registryPrefix": "effects.crt",
+  "coverage": {
+    "mode": "upstream",
+    "columns": 0
+  },
+  "opacity": 1.0,
+  "defaults": {
+    "route": 1,
+    "scanline": 0.4,
+    "vignette": 0.25,
+    "bleed": 0.15,
+    "softness": 0.0,
+    "glow": 0.0,
+    "perChannelOffset": 0.0,
+    "scanlineJitter": 0.0,
+    "subpixelDensity": 0.0,
+    "subpixelAspect": 2.0,
+    "subpixelPadding": 0.0,
+    "rgbMisalignment": 0.0,
+    "syncTear": 0.0,
+    "trackingWobble": 0.0,
+    "lumaNoise": 0.0,
+    "headSwitch": 0.0
+  }
+}

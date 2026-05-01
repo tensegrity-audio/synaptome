@@ -1,0 +1,29 @@
+{
+  "id": "generative.murmuration",
+  "label": "Murmuration",
+  "category": "Generative",
+  "type": "flocking",
+  "registryPrefix": "generative.murmuration",
+  "opacity": 1.0,
+  "defaults": {
+    "mode": 0,
+    "speed": 14.0,
+    "bpmSync": true,
+    "bpmMultiplier": 4.0,
+    "alpha": 1.0,
+    "boidCount": 42,
+    "predatorCount": 0,
+    "cohesion": 0.008,
+    "alignment": 0.025,
+    "separation": 0.002,
+    "noise": 0.006,
+    "trailFade": 0.035,
+    "trailDeposit": 0.16,
+    "pointSize": 2.0,
+    "backgroundAlpha": 0.0,
+    "trailAlpha": 0.75,
+    "preyAlpha": 1.0,
+    "predAlpha": 1.0
+  },
+  "textureSize": [192, 108]
+}

@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "OSC mapping schema (Browser aware)",
+  "type": "object",
+  "definitions": {
+    "browser": {
+      "type": "object",
+      "description": "Metadata consumed by the Browser for OSC routes.",
+      "properties": {
+        "section": { "type": "string", "description": "Display section label" },
+        "tags": { "type": "array", "items": { "type": "string" }, "description": "Filter tags" },
+        "captureHint": { "type": "string", "description": "Hint for capturing OSC source" },
+        "preferredInput": { "type": "string", "enum": ["key", "midi", "osc", "any"], "description": "Preferred surface" },
+        "notes": { "type": "string", "description": "Operator note" }
+      },
+      "additionalProperties": false
+    },
+    "controlHub": {
+      "$ref": "#/definitions/browser",
+      "description": "Deprecated alias for browser metadata."
+    }
+  },
+  "properties": {
+    "version": { "type": "integer", "description": "Schema version" },
+    "mappings": {
+      "type": "array",
+      "description": "Array of OSC -> parameter routes",
+      "items": {
+        "type": "object",
+        "properties": {
+          "osc": { "type": "string", "description": "OSC address (must start with /)", "pattern": "^/.*" },
+          "param": { "type": "string", "description": "Parameter path in registry" },
+          "in": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2, "description": "input range" },
+          "out": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2, "description": "output range" },
+          "transform": { "type": "object", "description": "optional transform object (legacy)" },
+          "rateLimitHz": { "type": "number", "description": "optional rate limit in Hz" },
+          "smooth": { "type": "number", "description": "smoothing amount" },
+          "deadband": { "type": "number", "description": "deadband threshold" },
+          "mode": { "type": "string", "enum": ["replace", "add", "multiply"], "description": "how incoming value affects the parameter" },
+          "browser": { "$ref": "#/definitions/browser" },
+          "controlHub": {
+            "$ref": "#/definitions/browser",
+            "description": "Deprecated alias for browser metadata."
+          }
+        },
+        "required": ["osc", "param"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["version", "mappings"],
+  "additionalProperties": false
+}

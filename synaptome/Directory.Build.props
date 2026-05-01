@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <PropertyGroup Label="SynaptomeCanonicalBuildRoots">
+    <SynaptomeRepoRoot Condition="'$(SynaptomeRepoRoot)'=='' and '$(SYNAPTOME_REPO_ROOT)'!=''">$(SYNAPTOME_REPO_ROOT)</SynaptomeRepoRoot>
+    <SynaptomeRepoRoot Condition="'$(SynaptomeRepoRoot)'=='' and '$(TensegrityRepoRoot)'!=''">$(TensegrityRepoRoot)</SynaptomeRepoRoot>
+    <SynaptomeRepoRoot Condition="'$(SynaptomeRepoRoot)'=='' and '$(TENSEGRITY_REPO_ROOT)'!=''">$(TENSEGRITY_REPO_ROOT)</SynaptomeRepoRoot>
+    <SynaptomeRepoRoot Condition="'$(SynaptomeRepoRoot)'=='' and Exists('$(MSBuildThisFileDirectory)..\tests\browser_flow_native_main.cpp')">$(MSBuildThisFileDirectory)..</SynaptomeRepoRoot>
+    <SynaptomeRepoRoot Condition="'$(SynaptomeRepoRoot)'=='' and Exists('$(USERPROFILE)\Documents\Tensegrity\tensegrity\tests\browser_flow_native_main.cpp')">$(USERPROFILE)\Documents\Tensegrity\tensegrity</SynaptomeRepoRoot>
+    <SynaptomeRepoRoot Condition="'$(SynaptomeRepoRoot)'==''">$(MSBuildThisFileDirectory)..</SynaptomeRepoRoot>
+    <OF_ROOT Condition="'$(OF_ROOT)'=='' and '$(SynaptomeOpenFrameworksRoot)'!=''">$(SynaptomeOpenFrameworksRoot)</OF_ROOT>
+    <OF_ROOT Condition="'$(OF_ROOT)'=='' and '$(TensegrityOpenFrameworksRoot)'!=''">$(TensegrityOpenFrameworksRoot)</OF_ROOT>
+    <OF_ROOT Condition="'$(OF_ROOT)'=='' and '$(OPENFRAMEWORKS_ROOT)'!=''">$(OPENFRAMEWORKS_ROOT)</OF_ROOT>
+    <OF_ROOT Condition="'$(OF_ROOT)'=='' and Exists('$(MSBuildThisFileDirectory)..\..\..\libs\glm\include\glm\vec3.hpp')">$(MSBuildThisFileDirectory)..\..\..</OF_ROOT>
+    <OF_ROOT Condition="'$(OF_ROOT)'=='' and Exists('$(USERPROFILE)\Documents\openFrameworks\libs\glm\include\glm\vec3.hpp')">$(USERPROFILE)\Documents\openFrameworks</OF_ROOT>
+    <SynaptomeAppRoot Condition="'$(SynaptomeAppRoot)'==''">$(SynaptomeRepoRoot)\synaptome</SynaptomeAppRoot>
+    <OpenFrameworksAppRoot Condition="'$(OpenFrameworksAppRoot)'==''">$(SynaptomeAppRoot)</OpenFrameworksAppRoot>
+    <SynaptomeOpenFrameworksRoot Condition="'$(SynaptomeOpenFrameworksRoot)'==''">$(OF_ROOT)</SynaptomeOpenFrameworksRoot>
+    <SynaptomeThirdPartyRoot Condition="'$(SynaptomeThirdPartyRoot)'==''">$(SynaptomeRepoRoot)\thirdparty</SynaptomeThirdPartyRoot>
+    <SynaptomeTestRoot Condition="'$(SynaptomeTestRoot)'==''">$(SynaptomeRepoRoot)\tests</SynaptomeTestRoot>
+    <SynaptomeUnityTestRoot Condition="'$(SynaptomeUnityTestRoot)'==''">$(SynaptomeRepoRoot)\test</SynaptomeUnityTestRoot>
+
+    <TensegrityRepoRoot Condition="'$(TensegrityRepoRoot)'==''">$(SynaptomeRepoRoot)</TensegrityRepoRoot>
+    <TensegrityAppRoot Condition="'$(TensegrityAppRoot)'==''">$(SynaptomeAppRoot)</TensegrityAppRoot>
+    <TensegrityOpenFrameworksRoot Condition="'$(TensegrityOpenFrameworksRoot)'==''">$(SynaptomeOpenFrameworksRoot)</TensegrityOpenFrameworksRoot>
+    <TensegrityThirdPartyRoot Condition="'$(TensegrityThirdPartyRoot)'==''">$(SynaptomeThirdPartyRoot)</TensegrityThirdPartyRoot>
+    <TensegrityTestRoot Condition="'$(TensegrityTestRoot)'==''">$(SynaptomeTestRoot)</TensegrityTestRoot>
+    <TensegrityUnityTestRoot Condition="'$(TensegrityUnityTestRoot)'==''">$(SynaptomeUnityTestRoot)</TensegrityUnityTestRoot>
+  </PropertyGroup>
+</Project>

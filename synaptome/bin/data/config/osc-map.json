@@ -1,0 +1,18 @@
+{
+  "defaults": {
+    "rateLimitHz": 30,
+    "smooth": 0.15,
+    "deadband": 0.01
+  },
+  "routes": [
+    {
+      "pattern": "/control/fx/master",
+      "target": "fx.master",
+      "browser": {
+        "section": "FX",
+        "preferredInput": "osc",
+        "notes": "Public baseline route for external OSC control of master effect depth"
+      }
+    }
+  ]
+}

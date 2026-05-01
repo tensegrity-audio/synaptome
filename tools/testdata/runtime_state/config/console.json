@@ -1,0 +1,195 @@
+{
+  "controllerFocus": {
+    "consolePreferred": true
+  },
+  "dualDisplay": {
+    "mode": "dual"
+  },
+  "layers": [
+    {
+      "active": true,
+      "assetId": "generative.perlin",
+      "displayName": "Perlin Noise",
+      "index": 1,
+      "label": "Perlin Noise",
+      "opacity": 1.0
+    },
+    {
+      "active": true,
+      "assetId": "generative.murmuration",
+      "displayName": "Murmuration",
+      "index": 2,
+      "label": "Murmuration",
+      "opacity": 1.0
+    },
+    {
+      "active": true,
+      "assetId": "generative.oscilloscope",
+      "displayName": "Oscilloscope",
+      "index": 3,
+      "label": "Oscilloscope",
+      "opacity": 1.0
+    },
+    {
+      "active": true,
+      "assetId": "text.layer",
+      "displayName": "Text Layer",
+      "index": 4,
+      "label": "Text Layer",
+      "opacity": 1.0
+    },
+    {
+      "active": false,
+      "assetId": "",
+      "index": 5,
+      "opacity": 1.0
+    },
+    {
+      "active": false,
+      "assetId": "",
+      "index": 6,
+      "opacity": 1.0
+    },
+    {
+      "active": false,
+      "assetId": "",
+      "index": 7,
+      "opacity": 1.0
+    },
+    {
+      "active": false,
+      "assetId": "",
+      "index": 8,
+      "opacity": 1.0
+    }
+  ],
+  "overlayLayouts": {
+    "activeTarget": "controller",
+    "controller": {
+      "capturedAtMs": 0,
+      "widgets": [
+        {
+          "band": "hud",
+          "collapsed": false,
+          "column": 0,
+          "id": "hud.controls",
+          "target": "projector",
+          "visible": true
+        },
+        {
+          "band": "hud",
+          "collapsed": false,
+          "column": 1,
+          "id": "hud.layers",
+          "target": "projector",
+          "visible": true
+        },
+        {
+          "band": "hud",
+          "collapsed": false,
+          "column": 1,
+          "id": "hud.menu",
+          "target": "projector",
+          "visible": true
+        },
+        {
+          "band": "hud",
+          "collapsed": false,
+          "column": 1,
+          "id": "hud.sensors",
+          "target": "projector",
+          "visible": true
+        },
+        {
+          "band": "hud",
+          "collapsed": false,
+          "column": 0,
+          "id": "hud.status",
+          "target": "projector",
+          "visible": true
+        },
+        {
+          "band": "hud",
+          "collapsed": false,
+          "column": 0,
+          "id": "hud.telemetry",
+          "target": "projector",
+          "visible": true
+        }
+      ]
+    },
+    "lastSyncMs": 0,
+    "projector": {
+      "capturedAtMs": 0,
+      "widgets": [
+        {
+          "band": "hud",
+          "collapsed": false,
+          "column": 0,
+          "id": "hud.controls",
+          "target": "projector",
+          "visible": true
+        },
+        {
+          "band": "hud",
+          "collapsed": false,
+          "column": 1,
+          "id": "hud.layers",
+          "target": "projector",
+          "visible": true
+        },
+        {
+          "band": "hud",
+          "collapsed": false,
+          "column": 1,
+          "id": "hud.menu",
+          "target": "projector",
+          "visible": true
+        },
+        {
+          "band": "hud",
+          "collapsed": false,
+          "column": 1,
+          "id": "hud.sensors",
+          "target": "projector",
+          "visible": true
+        },
+        {
+          "band": "hud",
+          "collapsed": false,
+          "column": 0,
+          "id": "hud.status",
+          "target": "projector",
+          "visible": true
+        },
+        {
+          "band": "hud",
+          "collapsed": false,
+          "column": 0,
+          "id": "hud.telemetry",
+          "target": "projector",
+          "visible": true
+        }
+      ]
+    }
+  },
+  "overlays": {
+    "consoleVisible": false,
+    "controlHubVisible": false,
+    "hudVisible": false,
+    "menuVisible": false
+  },
+  "secondaryDisplay": {
+    "background": "#000000",
+    "dpiScale": 1.0,
+    "enabled": true,
+    "followPrimary": false,
+    "height": 720,
+    "monitorId": "",
+    "vsync": true,
+    "width": 1280,
+    "x": 0,
+    "y": 0
+  },
+  "version": 3
+}

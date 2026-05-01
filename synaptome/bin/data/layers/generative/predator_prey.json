@@ -1,0 +1,31 @@
+{
+  "id": "generative.predatorPrey",
+  "label": "Predator / Prey",
+  "category": "Generative",
+  "type": "flocking",
+  "registryPrefix": "generative.predatorPrey",
+  "opacity": 1.0,
+  "defaults": {
+    "mode": 1,
+    "speed": 14.0,
+    "bpmSync": true,
+    "bpmMultiplier": 4.0,
+    "alpha": 1.0,
+    "boidCount": 40,
+    "predatorCount": 6,
+    "cohesion": 0.006,
+    "alignment": 0.020,
+    "separation": 0.001,
+    "chase": 0.008,
+    "evade": 0.012,
+    "noise": 0.000,
+    "trailFade": 0.045,
+    "trailDeposit": 0.18,
+    "pointSize": 2.2,
+    "backgroundAlpha": 0.0,
+    "trailAlpha": 0.75,
+    "preyAlpha": 1.0,
+    "predAlpha": 1.0
+  },
+  "textureSize": [192, 108]
+}

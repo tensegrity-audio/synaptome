@@ -1,0 +1,213 @@
+{
+  "banks": {
+    "global": [
+      {
+        "id": "home",
+        "label": "Home",
+        "controls": [
+          {
+            "id": "bpm",
+            "label": "Tempo",
+            "target": "transport.bpm",
+            "description": "Global transport tempo shared by the example layer."
+          },
+          {
+            "id": "speed",
+            "label": "Global Speed",
+            "target": "globals.speed",
+            "description": "Runtime speed multiplier."
+          },
+          {
+            "id": "masterFx",
+            "label": "FX Macro",
+            "target": "fx.master",
+            "description": "Global post-effect macro."
+          }
+        ]
+      }
+    ],
+    "layers": {
+      "examples.signal_bloom": [
+        {
+          "id": "motion",
+          "label": "Signal Bloom Motion",
+          "controls": [
+            {
+              "id": "speed",
+              "label": "Speed",
+              "target": "console.layer1.speed"
+            },
+            {
+              "id": "sensorGain",
+              "label": "Sensor Gain",
+              "target": "console.layer1.gain"
+            },
+            {
+              "id": "xInput",
+              "label": "X Input",
+              "target": "console.layer1.xInput"
+            }
+          ]
+        }
+      ],
+      "media.clip.default": [
+        {
+          "id": "media",
+          "label": "Media Playback",
+          "controls": [
+            {
+              "id": "gain",
+              "label": "Clip Gain",
+              "target": "console.layer2.gain"
+            },
+            {
+              "id": "loop",
+              "label": "Clip Loop",
+              "target": "console.layer2.loop"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "globals": {
+    "transport.bpm": 124.0,
+    "globals.speed": 1.0,
+    "fx.master": 0.18
+  },
+  "console": {
+    "slots": [
+      {
+        "index": 1,
+        "assetId": "examples.signal_bloom",
+        "label": "Signal Bloom",
+        "active": true,
+        "opacity": 0.9,
+        "parameters": {
+          "console.layer1.visible": true,
+          "console.layer1.speed": 0.65,
+          "console.layer1.bpmSync": true,
+          "console.layer1.bpmMultiplier": 1.0,
+          "console.layer1.scale": 0.82,
+          "console.layer1.rotationDeg": 0.0,
+          "console.layer1.alpha": 0.86,
+          "console.layer1.gain": 0.62,
+          "console.layer1.lineOpacity": 0.72,
+          "console.layer1.colorR": 0.12,
+          "console.layer1.colorG": 0.78,
+          "console.layer1.colorB": 1.0,
+          "console.layer1.bgColorR": 0.02,
+          "console.layer1.bgColorG": 0.04,
+          "console.layer1.bgColorB": 0.08,
+          "console.layer1.xInput": {
+            "base": 0.5,
+            "modifiers": []
+          },
+          "console.layer1.yInput": {
+            "base": 0.5,
+            "modifiers": []
+          },
+          "console.layer1.speedInput": {
+            "base": 0.0,
+            "modifiers": []
+          }
+        }
+      },
+      {
+        "index": 2,
+        "assetId": "media.clip.default",
+        "label": "Clip (Default Loop)",
+        "active": true,
+        "opacity": 0.55,
+        "parameters": {
+          "console.layer2.visible": true,
+          "console.layer2.gain": 0.8,
+          "console.layer2.mirror": false,
+          "console.layer2.loop": true,
+          "console.layer2.clip": 0.0
+        }
+      }
+    ]
+  },
+  "mappings": {
+    "router": {
+      "cc": [
+        {
+          "bank": "home",
+          "channel": 1,
+          "num": 21,
+          "target": "console.layer1.speed",
+          "out": [
+            0.0,
+            4.0
+          ]
+        },
+        {
+          "bank": "home",
+          "channel": 1,
+          "num": 22,
+          "target": "console.layer1.colorR",
+          "out": [
+            0.0,
+            1.0
+          ]
+        }
+      ],
+      "osc": [
+        {
+          "bank": "home",
+          "pattern": "/synaptome/example/signal/x",
+          "target": "console.layer1.xInput"
+        },
+        {
+          "bank": "home",
+          "pattern": "/synaptome/example/signal/y",
+          "target": "console.layer1.yInput"
+        },
+        {
+          "bank": "home",
+          "pattern": "/sensor/host/localmic/mic-level",
+          "target": "console.layer1.speedInput"
+        },
+        {
+          "bank": "home",
+          "pattern": "/synaptome/example/media/gain",
+          "target": "console.layer2.gain"
+        }
+      ],
+      "oscSources": [
+        {
+          "pattern": "/sensor/host/localmic/mic-level",
+          "relative": true,
+          "blend": "scale",
+          "in": [
+            0.0,
+            0.25
+          ],
+          "out": [
+            0.0,
+            1.0
+          ],
+          "smooth": 0.18,
+          "deadband": 0.01
+        }
+      ]
+    },
+    "slotAssignments": {
+      "assignments": []
+    }
+  },
+  "scene": {
+    "schemaVersion": 2,
+    "savedAt": "2026-04-28T12:00:00-0400",
+    "source": {
+      "name": "artist-sdk-signal-bloom",
+      "path": "docs/examples/artist_sdk/signal_bloom.scene.json"
+    },
+    "storage": {
+      "kind": "example",
+      "name": "artist-sdk-signal-bloom",
+      "path": "docs/examples/artist_sdk/signal_bloom.scene.json"
+    }
+  }
+}

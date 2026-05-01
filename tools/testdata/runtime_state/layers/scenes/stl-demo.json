@@ -1,0 +1,114 @@
+{
+  "banks": {
+    "global": [
+      {
+        "controls": [
+          {
+            "id": "masterFx",
+            "label": "FX Macro",
+            "target": "fx.master"
+          },
+          {
+            "id": "bpm",
+            "label": "Tempo",
+            "target": "transport.bpm"
+          }
+        ],
+        "id": "home",
+        "label": "Home"
+      }
+    ]
+  },
+  "console": {
+    "slots": [
+      {
+        "active": true,
+        "assetId": "generative.antTunnels",
+        "index": 1,
+        "label": "Ant Tunnels",
+        "opacity": 1.0,
+        "parameters": {
+          "console.layer1.agentCount": 72.0,
+          "console.layer1.trailBoost": {
+            "base": 1.0,
+            "modifiers": []
+          }
+        }
+      },
+      {
+        "active": true,
+        "assetId": "text.layer",
+        "index": 3,
+        "label": "Text Layer",
+        "opacity": 1.0
+      },
+      {
+        "active": true,
+        "assetId": "geometry.stl_foot",
+        "index": 4,
+        "label": "Foot STL",
+        "opacity": 1.0,
+        "parameters": {
+          "console.layer4.scale": {
+            "base": 200.0,
+            "modifiers": []
+          },
+          "console.layer4.spin": 20.0
+        }
+      }
+    ]
+  },
+  "effects": {
+    "ascii": {
+      "aspect": 0.0,
+      "block": 16.0,
+      "route": 0.0
+    },
+    "crt": {
+      "route": 0.0,
+      "softness": {
+        "base": 10.0,
+        "modifiers": []
+      }
+    },
+    "dither": {
+      "route": 0.0
+    }
+  },
+  "globals": {
+    "camera.dist": 700.0,
+    "fx.master": 0.0,
+    "globals.speed": 1.0,
+    "overlay.text.content": "stl demo",
+    "transport.bpm": 120.0
+  },
+  "mappings": {
+    "router": {
+      "osc": [
+        {
+          "pattern": "/sensor/host/localmic/mic-level",
+          "target": "effects.crt.softness"
+        },
+        {
+          "pattern": "/sensor/host/localmic/mic-level",
+          "target": "console.layer1.trailBoost"
+        },
+        {
+          "pattern": "/sensor/host/localmic/mic-level",
+          "target": "console.layer4.scale"
+        }
+      ],
+      "oscSources": []
+    },
+    "slotAssignments": {
+      "assignments": []
+    }
+  },
+  "scene": {
+    "schemaVersion": 2,
+    "source": {
+      "name": "stl-demo",
+      "path": "layers/scenes/stl-demo.json"
+    }
+  }
+}

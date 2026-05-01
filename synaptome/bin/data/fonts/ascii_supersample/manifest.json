@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "generated_at": "2026-02-03T23:08:55.674673+00:00",
+  "fonts": [
+    {
+      "id": "VCR_OSD_MONO_1_001",
+      "label": "VCR_OSD_MONO_1.001",
+      "source": "fonts/VCR_OSD_MONO_1.001.ttf",
+      "glyph_count": 95,
+      "descriptor_taps": 6,
+      "descriptor_grid": {
+        "columns": 2,
+        "rows": 3
+      },
+      "atlas_cell": [
+        48,
+        64
+      ],
+      "atlas_grid": {
+        "columns": 16,
+        "rows": 6
+      },
+      "atlas": "fonts/ascii_supersample/prebaked/VCR_OSD_MONO_1_001/atlas.png",
+      "lut": "fonts/ascii_supersample/prebaked/VCR_OSD_MONO_1_001/atlas.lut.json",
+      "checksums": {
+        "atlas_sha256": "828296e8efdefc5a3631bc20e33158d0d73d4dea47b0bab18a44eadc2297904c",
+        "lut_sha256": "baa90f8490074aee379bfabf219a8b2bd443cdf1168dc94383f2e2630845cf14"
+      },
+      "glyph_uniqueness": {
+        "unique_descriptor_vectors": 95,
+        "duplicate_groups": []
+      },
+      "generated_at": "2026-02-03T23:08:55.605130+00:00"
+    }
+  ]
+}

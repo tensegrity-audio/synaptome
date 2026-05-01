@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Synaptome Device Map",
+  "description": "Permissive G0 schema for logical controller/device slot maps.",
+  "type": "object",
+  "required": ["deviceId", "name", "columns"],
+  "additionalProperties": true,
+  "properties": {
+    "deviceId": { "type": "string", "minLength": 1 },
+    "model": { "type": "string" },
+    "name": { "type": "string", "minLength": 1 },
+    "portHints": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "columns": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": { "$ref": "#/definitions/column" }
+    }
+  },
+  "definitions": {
+    "column": {
+      "type": "object",
+      "required": ["slots"],
+      "additionalProperties": true,
+      "properties": {
+        "name": { "type": "string" },
+        "slots": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/slot" }
+        }
+      }
+    },
+    "slot": {
+      "type": "object",
+      "required": ["id", "binding"],
+      "additionalProperties": true,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "label": { "type": "string" },
+        "role": { "type": "string" },
+        "sensitivity": { "type": "number" },
+        "binding": { "$ref": "#/definitions/binding" }
+      }
+    },
+    "binding": {
+      "type": "object",
+      "required": ["type", "number"],
+      "additionalProperties": true,
+      "properties": {
+        "type": { "type": "string" },
+        "channel": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 16
+        },
+        "number": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 127
+        }
+      }
+    }
+  }
+}

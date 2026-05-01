@@ -1,0 +1,15 @@
+{
+  "id": "hud.layers",
+  "label": "Layer Summary",
+  "category": "HUD",
+  "type": "ui.hud.widget",
+  "registryPrefix": "hud.layers",
+  "description": "Console slot summary with FX routes and opacity hints.",
+  "hudWidget": {
+    "module": "layers",
+    "toggleId": "hud.layers",
+    "defaultBand": "hud",
+    "defaultColumn": 1,
+    "telemetry": ["slots", "fxRoutes"]
+  }
+}

@@ -1,0 +1,148 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Control Hub Asset Metadata",
+  "oneOf": [
+    { "$ref": "#/definitions/shader" },
+    { "$ref": "#/definitions/vector2d" },
+    { "$ref": "#/definitions/vector3d" },
+    { "$ref": "#/definitions/textOverlay" },
+    { "$ref": "#/definitions/webcam" },
+    { "$ref": "#/definitions/videoLoop" },
+    { "$ref": "#/definitions/audioReactive" },
+    { "$ref": "#/definitions/automation" }
+  ],
+  "definitions": {
+    "base": {
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "const": "asset" },
+        "subtype": { "type": "string" },
+        "label": { "type": "string" },
+        "icon": { "type": "string" },
+        "default_acp": { "type": "string" },
+        "capabilities": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "parameters": {
+          "type": "object",
+          "patternProperties": {
+            ".+": {
+              "type": "object",
+              "properties": {
+                "label": { "type": "string" },
+                "group": { "type": "string" },
+                "type": { "type": "string" },
+                "default": {},
+                "min": { "type": "number" },
+                "max": { "type": "number" },
+                "step": { "type": "number" },
+                "options": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                }
+              },
+              "required": ["label", "group", "type", "default"]
+            }
+          }
+        }
+      },
+      "required": ["type", "subtype", "label", "parameters"]
+    },
+    "shader": {
+      "allOf": [
+        { "$ref": "#/definitions/base" },
+        {
+          "properties": {
+            "subtype": { "const": "shader" },
+            "capabilities": {
+              "contains": { "const": "needs_depth" }
+            }
+          }
+        }
+      ]
+    },
+    "vector2d": {
+      "allOf": [
+        { "$ref": "#/definitions/base" },
+        {
+          "properties": {
+            "subtype": { "const": "vector2d" }
+          }
+        }
+      ]
+    },
+    "vector3d": {
+      "allOf": [
+        { "$ref": "#/definitions/base" },
+        {
+          "properties": {
+            "subtype": { "const": "vector3d" }
+          }
+        }
+      ]
+    },
+    "textOverlay": {
+      "allOf": [
+        { "$ref": "#/definitions/base" },
+        {
+          "properties": {
+            "subtype": { "const": "text_overlay" },
+            "capabilities": {
+              "contains": { "const": "supports_text" }
+            },
+            "parameters": {
+              "required": ["overlay.text.content", "overlay.text.font", "overlay.text.size"]
+            }
+          }
+        }
+      ]
+    },
+    "webcam": {
+      "allOf": [
+        { "$ref": "#/definitions/base" },
+        {
+          "properties": {
+            "subtype": { "const": "webcam" },
+            "capabilities": {
+              "contains": { "const": "needs_video_device" }
+            }
+          }
+        }
+      ]
+    },
+    "videoLoop": {
+      "allOf": [
+        { "$ref": "#/definitions/base" },
+        {
+          "properties": {
+            "subtype": { "const": "video_loop" }
+          }
+        }
+      ]
+    },
+    "audioReactive": {
+      "allOf": [
+        { "$ref": "#/definitions/base" },
+        {
+          "properties": {
+            "subtype": { "const": "audio_reactive" },
+            "capabilities": {
+              "contains": { "const": "needs_audio" }
+            }
+          }
+        }
+      ]
+    },
+    "automation": {
+      "allOf": [
+        { "$ref": "#/definitions/base" },
+        {
+          "properties": {
+            "subtype": { "const": "automation" }
+          }
+        }
+      ]
+    }
+  }
+}

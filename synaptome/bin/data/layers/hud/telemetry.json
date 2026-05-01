@@ -1,0 +1,15 @@
+{
+  "id": "hud.telemetry",
+  "label": "HUD Telemetry",
+  "category": "HUD",
+  "type": "ui.hud.widget",
+  "registryPrefix": "hud.telemetry",
+  "description": "Frame rate and GPU usage snapshot.",
+  "hudWidget": {
+    "module": "telemetry",
+    "toggleId": "hud.telemetry",
+    "defaultBand": "hud",
+    "defaultColumn": 1,
+    "telemetry": ["fps", "gpu"]
+  }
+}

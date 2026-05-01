@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "bindings": {
+    "ui.open.parameters": {
+      "key": 112,
+      "label": "F1",
+      "scope": "global",
+      "displayName": "Open Parameters",
+      "learnable": true,
+      "browser": {
+        "section": "Navigation",
+        "tags": ["featured"],
+        "preferredInput": "key"
+      }
+    },
+    "ui.toggle.hud": {
+      "key": 104,
+      "label": "h",
+      "scope": "global",
+      "displayName": "Toggle HUD",
+      "learnable": true,
+      "browser": {
+        "section": "Overlay",
+        "notes": "Operator safety toggle"
+      }
+    }
+  }
+}

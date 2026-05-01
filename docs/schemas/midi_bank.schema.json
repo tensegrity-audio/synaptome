@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MIDI bank mapping schema (Browser ready)",
+  "type": "object",
+  "definitions": {
+    "browser": {
+      "type": "object",
+      "description": "Metadata consumed by the Browser.",
+      "properties": {
+        "section": { "type": "string", "description": "Display section label" },
+        "tags": { "type": "array", "items": { "type": "string" }, "description": "Filter tags" },
+        "captureHint": { "type": "string", "description": "Hint describing how to capture this control" },
+        "preferredInput": {
+          "type": "string",
+          "enum": ["key", "midi", "osc", "any"],
+          "description": "Preferred routing surface"
+        },
+        "notes": { "type": "string", "description": "Operator note" },
+        "transform": {
+          "type": "object",
+          "description": "Suggested transform metadata",
+          "properties": {
+            "curve": { "type": "string" },
+            "units": { "type": "string" },
+            "min": { "type": "number" },
+            "max": { "type": "number" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "controlHub": {
+      "$ref": "#/definitions/browser",
+      "description": "Deprecated alias for browser metadata."
+    }
+  },
+  "properties": {
+    "version": { "type": "integer" },
+    "bank": { "type": "string" },
+    "mappings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "device": { "type": "string", "description": "Optional device name filter" },
+          "channel": { "type": "integer", "minimum": 1, "maximum": 16, "description": "MIDI channel (1-16)" },
+          "type": { "type": "string", "enum": ["cc", "note"], "description": "Control type" },
+          "number": { "type": "integer", "minimum": 0, "maximum": 127, "description": "CC or note number" },
+          "param": { "type": "string", "description": "Parameter path to control" },
+          "range": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2, "description": "[min, max] mapping" },
+          "curve": { "type": "string", "description": "Optional curve name (e.g., linear, exp)" },
+          "toggle": { "type": "boolean", "description": "If true, note toggles target" },
+          "pickup": { "type": "boolean", "description": "soft-takeover pickup enabled" },
+          "browser": { "$ref": "#/definitions/browser" },
+          "controlHub": {
+            "$ref": "#/definitions/browser",
+            "description": "Deprecated alias for browser metadata."
+          }
+        },
+        "required": ["device", "channel", "type", "number", "param"]
+      }
+    }
+  },
+  "required": ["version", "bank", "mappings"],
+  "additionalProperties": false
+}

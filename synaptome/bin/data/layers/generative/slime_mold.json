@@ -1,0 +1,32 @@
+{
+  "id": "generative.slimeMold",
+  "label": "Slime Mold",
+  "category": "Generative",
+  "type": "agentField",
+  "registryPrefix": "generative.slimeMold",
+  "opacity": 1.0,
+  "defaults": {
+    "mode": 1,
+    "speed": 12.0,
+    "bpmSync": true,
+    "bpmMultiplier": 3.0,
+    "alpha": 1.0,
+    "autoReseed": false,
+    "autoReseedEveryBeats": 16.0,
+    "agentCount": 56,
+    "stepSize": 1.0,
+    "turnRate": 0.35,
+    "sensorAngle": 0.75,
+    "sensorDistance": 2.5,
+    "deposit": 0.24,
+    "decay": 0.004,
+    "diffuse": 0.28,
+    "trailBoost": 1.9,
+    "backgroundAlpha": 0.0,
+    "trailAlpha": 1.0,
+    "resetCoverage": 0.58,
+    "backgroundColor": [0.01, 0.04, 0.01],
+    "trailColor": [0.55, 1.00, 0.45]
+  },
+  "textureSize": [192, 108]
+}

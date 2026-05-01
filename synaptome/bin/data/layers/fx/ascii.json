@@ -1,0 +1,12 @@
+{
+  "id": "fx.ascii",
+  "label": "ASCII",
+  "category": "FX",
+  "type": "fx.ascii",
+  "registryPrefix": "effects.ascii",
+  "coverage": {
+    "mode": "upstream",
+    "columns": 0
+  },
+  "opacity": 1.0
+}

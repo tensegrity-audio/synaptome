@@ -1,0 +1,23 @@
+{
+    "bindings": {
+        "menu.hudTools": {
+            "key": 16777320,
+            "label": "Ctrl+H",
+            "name": "HUD Tools",
+            "scope": "Global"
+        },
+        "ui.menu.keymap": {
+            "key": 107,
+            "label": "k",
+            "name": "Key Mapping Menu",
+            "scope": "Global"
+        },
+        "ui.menu.parameters": {
+            "key": 112,
+            "label": "p",
+            "name": "Parameter Menu",
+            "scope": "Global"
+        }
+    },
+    "version": 1
+}

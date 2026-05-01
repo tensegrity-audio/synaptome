@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "mappings": [
+    {
+      "osc": "/control/button1",
+      "param": "ui.toggle.hud",
+      "browser": {
+        "section": "Overlay",
+        "captureHint": "Deck AUX Button 1",
+        "preferredInput": "osc"
+      }
+    },
+    {
+      "osc": "/param/fx_depth",
+      "param": "fx.depth",
+      "transform": { "scale": 1.0, "offset": 0.0 },
+      "browser": {
+        "section": "FX",
+        "tags": ["sensor"],
+        "notes": "Maps wrist IMU to FX depth"
+      }
+    }
+  ]
+}

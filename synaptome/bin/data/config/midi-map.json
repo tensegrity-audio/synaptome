@@ -1,0 +1,53 @@
+{
+    "cc": [],
+    "osc": [
+        {
+            "bank": "home",
+            "pattern": "/sensor/host/localmic/mic-level",
+            "target": "effects.crt.softness"
+        },
+        {
+            "bank": "home",
+            "pattern": "/sensor/host/localmic/mic-level",
+            "target": "console.layer3.freqY"
+        },
+        {
+            "bank": "home",
+            "pattern": "/sensor/host/localmic/mic-level",
+            "target": "console.layer3.radialAmount"
+        },
+        {
+            "bank": "home",
+            "pattern": "/sensor/host/localmic/mic-level",
+            "target": "console.layer3.morph"
+        }
+    ],
+    "oscSources": [
+        {
+            "blend": "scale",
+            "in": [
+                0.0,
+                0.800000011920929
+            ],
+            "out": [
+                0.0,
+                4.0
+            ],
+            "pattern": "/sensor/host/localmic/mic-level",
+            "relative": true
+        },
+        {
+            "blend": "scale",
+            "in": [
+                0.0,
+                1.0
+            ],
+            "out": [
+                0.0,
+                1.0
+            ],
+            "pattern": "/sensor/host/localmic/mic-peak",
+            "relative": true
+        }
+    ]
+}

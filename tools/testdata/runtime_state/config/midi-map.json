@@ -1,0 +1,20 @@
+{
+  "buttons": [
+    {
+      "num": 1,
+      "target": "ui.hud",
+      "type": "toggle"
+    }
+  ],
+  "cc": [
+    {
+      "num": 16,
+      "out": [
+        0.0,
+        1.0
+      ],
+      "target": "fx.master"
+    }
+  ],
+  "osc": []
+}

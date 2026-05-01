@@ -1,0 +1,38 @@
+{
+  "id": "generative.gameOfLife",
+  "label": "Game of Life",
+  "category": "Generative",
+  "type": "gameOfLife",
+  "registryPrefix": "generative.gameOfLife",
+  "opacity": 1.0,
+  "defaults": {
+    "speed": 6.0,
+    "bpmSync": true,
+    "bpmMultiplier": 4.0,
+    "wrap": true,
+    "alpha": 1.0,
+    "fadeFrames": 6.0,
+    "aliveColor": [
+      0.9,
+      0.9,
+      0.9
+    ],
+    "deadColor": [
+      0.05,
+      0.05,
+      0.05
+    ],
+    "paused": false,
+    "seedDensity": 0.4,
+    "preset": 1,
+    "reseedQuantizeBeats": 4.0,
+    "autoReseed": false,
+    "autoReseedEveryBeats": 16.0,
+    "aliveAlpha": 1.0,
+    "deadAlpha": 0.0
+  },
+  "gridSize": [
+    192,
+    108
+  ]
+}

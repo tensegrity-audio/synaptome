@@ -1,0 +1,15 @@
+{
+  "id": "hud.menu",
+  "label": "Menu Mirror",
+  "category": "HUD",
+  "type": "ui.hud.widget",
+  "registryPrefix": "hud.menu",
+  "description": "Breadcrumb + hotkey mirror for the active MenuController scope.",
+  "hudWidget": {
+    "module": "menu",
+    "toggleId": "hud.menu",
+    "defaultBand": "hud",
+    "defaultColumn": 1,
+    "telemetry": ["breadcrumbs", "hotkeys"]
+  }
+}

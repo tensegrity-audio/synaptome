@@ -1,0 +1,13 @@
+{
+  "defaults": {
+    "deadband": 0.01,
+    "rateLimitHz": 30,
+    "smooth": 0.15
+  },
+  "routes": [
+    {
+      "pattern": "/control/fx/master",
+      "target": "fx.master"
+    }
+  ]
+}

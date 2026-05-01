@@ -1,0 +1,155 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.local/schemas/menu.schema.json",
+  "title": "Menu / StateView schema",
+  "description": "Schema for menu metadata files used to generate MenuController StateView and editor UIs. Validates entries, hotkeys, and defaults.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "type": "integer",
+      "minimum": 1,
+      "default": 1,
+      "description": "Schema/data version. Increment when making incompatible changes."
+    },
+    "id": {
+      "type": "string",
+      "description": "Optional top-level id for the menu collection."
+    },
+    "label": {
+      "type": "string",
+      "description": "Human-facing label for the menu or collection (Title Case)."
+    },
+    "scope": {
+      "type": "string",
+      "description": "Optional scope string used for hotkey scoping (e.g. 'Browser')."
+    },
+    "breadcrumbs": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Optional breadcrumb labels to show in the editor UI."
+    },
+    "entries": {
+      "type": "array",
+      "minItems": 0,
+      "description": "List of menu entries (maps to MenuController::EntryView).",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id","label"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9_\\-]+(?:\\.[a-z0-9_\\-]+)*$",
+            "description": "Stable programmatic id (lowercase, dot-separated segments)."
+          },
+          "label": { "type": "string", "description": "Human label (Title Case)." },
+          "description": { "type": "string", "description": "Secondary text or group path." },
+          "selectable": { "type": "boolean", "default": true },
+          "selected": { "type": "boolean", "default": false },
+          "modifierCount": { "type": "integer", "minimum": 0, "default": 0 },
+          "pendingChanges": { "type": "boolean", "default": false },
+          "widget": { "type": "string", "enum": ["slider","dropdown","toggle","button","number","text"], "description": "Suggested editor widget for the entry (optional)." },
+          "default": { "description": "Optional default value for parameter entries.", "anyOf": [ { "type": "number" }, { "type": "string" }, { "type": "boolean" }, { "type": "array" } ] },
+          "enum": { "type": "array", "items": { "type": "string" }, "description": "Enumerated option labels (use with widget=dropdown)." },
+          "min": { "type": "number", "description": "Minimum value (for numeric widgets)." },
+          "max": { "type": "number", "description": "Maximum value (for numeric widgets)." },
+          "step": { "type": "number", "description": "Step value for numeric widgets." }
+        }
+      }
+    },
+    "hotkeys": {
+      "type": "array",
+      "description": "Optional list of hotkey hints / bindings to display.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["key","label"],
+        "properties": {
+          "id": { "type": "string", "description": "Optional stable id for the hotkey." },
+          "key": { "description": "Single char string or numeric key code.", "anyOf": [ { "type": "string", "minLength": 1, "maxLength": 2 }, { "type": "integer" } ] },
+          "label": { "type": "string" },
+          "description": { "type": "string" }
+        }
+      }
+    },
+    "defaults": {
+      "type": "object",
+      "description": "Optional map of parameter id -> default value. Useful for editor defaults.",
+      "additionalProperties": { "anyOf": [ { "type": "number" }, { "type": "string" }, { "type": "boolean" }, { "type": "array" } ] }
+    },
+    "hudWidgets": {
+      "type": "array",
+      "description": "Optional catalog of HUD widget templates (phase 5). Describes module, toggle id, and placement hints so CMH can treat widgets as assets.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id","module"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Stable unique id for the HUD widget asset (usually matches registryPrefix)."
+          },
+          "label": {
+            "type": "string",
+            "description": "Human-friendly label for the HUD widget."
+          },
+          "module": {
+            "type": "string",
+            "description": "Implementation module/factory key (e.g. 'controls', 'status', 'telemetry')."
+          },
+          "toggleId": {
+            "type": "string",
+            "description": "Optional bool parameter / HudRegistry toggle controlling visibility."
+          },
+          "defaultBand": {
+            "type": "string",
+            "enum": ["hud","console","workbench"],
+            "default": "hud",
+            "description": "Preferred band when rendering inside the shared HUD layout."
+          },
+          "defaultColumn": {
+            "type": "integer",
+            "minimum": 0,
+            "default": 0,
+            "description": "Preferred column index for the widget."
+          },
+          "telemetry": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Hints about telemetry feeds or diagnostics surfaced by the widget."
+          }
+        }
+      }
+    }
+  },
+  "required": ["entries"],
+  "examples": [
+    {
+      "version": 1,
+      "id": "fx.dither",
+      "label": "Dither",
+      "scope": "Effects",
+      "entries": [
+        { "id": "effects.dither.cellSize", "label": "Cell Size", "description": "Pixel block size for dithering", "widget": "number", "default": 3, "min": 1, "max": 16 },
+        { "id": "effects.dither.mode", "label": "Dither Mode", "description": "Bayer matrix size", "widget": "dropdown", "enum": ["2x2","4x4","8x8"], "default": "4x4" },
+        { "id": "effects.ascii.coverage", "label": "FX Coverage", "description": "Columns to the left processed (0 = All Upstream)", "widget": "number", "default": 0, "min": 0, "max": 8, "step": 1 }
+      ],
+      "hotkeys": [
+        { "key": "m", "label": "Toggle Menu", "description": "Open / close the main menu" }
+      ],
+      "defaults": { "effects.dither.cellSize": 3, "effects.dither.mode": 1 }
+    },
+    {
+      "version": 1,
+      "id": "sensors.bioamp",
+      "label": "BioAmp Metrics",
+      "scope": "Sensors",
+      "entries": [
+        { "id": "sensors.bioamp.raw", "label": "Raw", "description": "Live BioAmp raw value (read-only)", "widget": "number", "min": -2.0, "max": 2.0, "step": 0.001 },
+        { "id": "sensors.bioamp.signal", "label": "Filtered", "description": "Filtered BioAmp signal", "widget": "number", "min": -2.0, "max": 2.0, "step": 0.001 },
+        { "id": "sensors.bioamp.dom_hz", "label": "Dominant Frequency", "description": "Dominant BioAmp frequency in Hz", "widget": "number", "min": 0.0, "max": 60.0, "step": 0.01 }
+      ]
+    }
+  ]
+}

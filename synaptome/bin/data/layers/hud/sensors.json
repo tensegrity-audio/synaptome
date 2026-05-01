@@ -1,0 +1,15 @@
+{
+  "id": "hud.sensors",
+  "label": "Sensor Telemetry",
+  "category": "HUD",
+  "type": "ui.hud.widget",
+  "registryPrefix": "hud.sensors",
+  "description": "Matrix and deck sensor heartbeat + OSC feed monitor.",
+  "hudWidget": {
+    "module": "sensors",
+    "toggleId": "hud.sensors",
+    "defaultBand": "hud",
+    "defaultColumn": 1,
+    "telemetry": ["imu", "mic", "osc"]
+  }
+}

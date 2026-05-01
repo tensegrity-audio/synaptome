@@ -1,0 +1,82 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Synaptome Scene",
+  "description": "Permissive G0 schema for persisted scene snapshots. Runtime transaction semantics are defined separately.",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "banks": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "globals": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "effects": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "console": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "slots": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/slot" }
+        }
+      }
+    },
+    "mappings": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "scene": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "schemaVersion": { "type": "integer" },
+        "savedAt": { "type": "string" },
+        "source": { "$ref": "#/definitions/sceneRef" },
+        "storage": { "$ref": "#/definitions/sceneRef" }
+      }
+    }
+  },
+  "definitions": {
+    "slot": {
+      "type": "object",
+      "required": ["index", "assetId"],
+      "additionalProperties": true,
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "assetId": { "type": "string", "minLength": 1 },
+        "label": { "type": "string" },
+        "active": { "type": "boolean" },
+        "opacity": {
+          "type": "number",
+          "minimum": 0
+        },
+        "coverage": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "sceneRef": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "kind": { "type": "string" },
+        "name": { "type": "string" },
+        "path": { "type": "string" }
+      }
+    }
+  }
+}

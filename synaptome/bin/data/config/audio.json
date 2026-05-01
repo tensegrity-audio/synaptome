@@ -1,0 +1,35 @@
+{
+  "localMic": {
+    "enabled": true,
+    "deviceIndex": -1,
+    "deviceNameContains": "",
+    "sampleRate": 48000,
+    "bufferSize": 256,
+    "channels": 1,
+    "ingest": {
+      "enabled": true,
+      "addressPrefix": "/sensor/host/localmic",
+      "rateLimitHz": 60.0,
+      "deadband": 0.01
+    },
+    "osc": {
+      "enabled": false,
+      "host": "127.0.0.1",
+      "port": 9001
+    },
+    "modifier": {
+      "enabled": true,
+      "target": "fx.master",
+      "blend": "scale",
+      "inputRange": {
+        "min": 0.02,
+        "max": 0.4
+      },
+      "outputRange": {
+        "min": 0.0,
+        "max": 1.0,
+        "relativeToBase": false
+      }
+    }
+  }
+}

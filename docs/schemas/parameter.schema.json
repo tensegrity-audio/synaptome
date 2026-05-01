@@ -1,0 +1,95 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Parameter schema (scene / registry, Browser aware)",
+  "type": "object",
+  "definitions": {
+    "browser": {
+      "type": "object",
+      "description": "Metadata consumed by the Browser (Control Panel launcher).",
+      "properties": {
+        "category": { "type": "string", "description": "UI category override" },
+        "subcategory": { "type": "string", "description": "UI subcategory override" },
+        "section": { "type": "string", "description": "Column grouping hint" },
+        "tags": {
+          "type": "array",
+          "description": "Filter tags used by the Browser",
+          "items": { "type": "string" }
+        },
+        "captureHint": { "type": "string", "description": "Hint displayed when arming learn/capture" },
+        "preferredInput": {
+          "type": "string",
+          "enum": ["key", "midi", "osc", "any"],
+          "description": "Preferred routing surface"
+        },
+        "notes": { "type": "string", "description": "Operator notes surfaced in the Browser" },
+        "transform": {
+          "type": "object",
+          "description": "Suggested transform metadata for range visualizations.",
+          "properties": {
+            "curve": { "type": "string" },
+            "units": { "type": "string" },
+            "min": { "type": "number" },
+            "max": { "type": "number" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "controlHub": {
+      "$ref": "#/definitions/browser",
+      "description": "Deprecated alias for browser metadata; prefer the 'browser' field."
+    }
+  },
+  "properties": {
+    "version": { "type": "integer", "description": "Schema version" },
+    "parameters": {
+      "type": "object",
+      "description": "Map of parameter path -> value or parameter object",
+      "patternProperties": {
+        "^.*$": {
+          "oneOf": [
+            { "type": "number", "description": "shorthand for base value" },
+            {
+              "type": "object",
+              "properties": {
+                "base": { "type": "number", "description": "base value" },
+                "min": { "type": "number", "description": "minimum allowed value" },
+                "max": { "type": "number", "description": "maximum allowed value" },
+                "mods": { "type": "array", "items": { "type": "string" }, "description": "modifier sources (ids)" },
+                "unit": { "type": "string", "description": "optional unit, e.g. percent, hz" },
+                "browser": { "$ref": "#/definitions/browser" },
+                "controlHub": {
+                  "$ref": "#/definitions/browser",
+                  "description": "Deprecated alias for browser metadata."
+                }
+              },
+              "required": ["base"],
+              "additionalProperties": false
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": ["version", "parameters"],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "version": 2,
+      "parameters": {
+        "effects.ascii.coverage": {
+          "base": 0,
+          "min": 0,
+          "max": 8,
+          "browser": {
+            "category": "Effects",
+            "section": "Console Routing",
+            "notes": "0 applies to all upstream columns; increase to limit the coverage window."
+          }
+        }
+      }
+    }
+  ]
+}

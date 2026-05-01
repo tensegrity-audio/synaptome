@@ -1,0 +1,17 @@
+{
+  "id": "geometry.stl_tetra",
+  "label": "STL Tetra",
+  "category": "Geometry",
+  "type": "stlModel",
+  "registryPrefix": "geometry.stl_tetra",
+  "opacity": 1.0,
+  "assetPath": "models/lowpoly_tetra.stl",
+  "defaults": {
+    "visible": true,
+    "spin": 18.0,
+    "hover": 16.0,
+    "scale": 220.0,
+    "faceOpacity": 0.18
+  },
+  "color": "#FF8C00"
+}

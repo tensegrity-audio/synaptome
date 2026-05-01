@@ -1,0 +1,72 @@
+name: Synaptome Public CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  public-contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install tooling
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --upgrade jsonschema
+      - name: Validate extraction manifest
+        run: python tools/validate_synaptome_extraction_manifest.py --check --strict-review
+      - name: Validate public app contracts
+        run: python tools/validate_configs.py --public-app
+      - name: Check app independence
+        run: python tools/check_app_independence.py
+      - name: Check whitespace
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            git diff --check "${{ github.event.pull_request.base.sha }}" HEAD
+          elif [[ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]]; then
+            git diff --check "${{ github.event.before }}" "${{ github.sha }}"
+          else
+            git diff --check HEAD
+          fi
+
+  browser-flow-harness:
+    runs-on: windows-latest
+    needs: public-contracts
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Set up MSBuild
+        uses: microsoft/setup-msbuild@v2
+      - name: Build BrowserFlowTest
+        run: |
+          msbuild synaptome\tests\BrowserFlowTest\BrowserFlowTest.vcxproj /p:Configuration=Release /p:Platform=x64 /m /v:minimal /clp:Summary
+      - name: Run Browser Flow harness
+        run: |
+          python tools\run_control_hub_flow.py --dual-screen-phase2
+      - name: Upload Browser Flow artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-flow-artifacts
+          path: |
+            tests/artifacts/browser_flow.json
+            tests/artifacts/midi_mapping_flow.json
+            tests/artifacts/osc_ingest_flow.json
+            tests/artifacts/webcam_replay_flow.json
+            tests/artifacts/dual_screen_phase2.json

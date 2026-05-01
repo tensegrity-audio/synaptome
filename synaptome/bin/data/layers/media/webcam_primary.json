@@ -1,0 +1,30 @@
+{
+    "id": "media.webcam.primary",
+    "label": "Webcam (Primary)",
+    "category": "Media",
+    "type": "media.webcam",
+    "registryPrefix": "media.webcam.primary",
+    "opacity": 1.0,
+    "defaults": {
+        "deviceName": "Integrated",
+        "gain": 1.0,
+        "mirror": true,
+        "width": 960,
+        "height": 540,
+        "fps": 30,
+        "resolutionIndex": 2,
+        "deferOpen": true,
+        "deferredOpenDelayMs": 120,
+        "deferredOpenFrames": 2
+    },
+    "resolutionBase": [
+        192,
+        108
+    ],
+    "resolutionMultipliers": [
+        3,
+        4,
+        5,
+        6
+    ]
+}

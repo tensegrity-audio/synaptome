@@ -1,0 +1,25 @@
+{
+  "id": "geometry.stl_skull",
+  "label": "Skull STL",
+  "category": "Geometry",
+  "type": "stlModel",
+  "registryPrefix": "geometry.stl_skull",
+  "opacity": 1.0,
+  "assetPath": "models/skull.stl",
+  "defaults": {
+    "visible": true,
+    "spin": 10.0,
+    "hover": 8.0,
+    "baseHeight": 15.0,
+    "orbitRadius": 0.0,
+    "orbitSpeed": 0.0,
+    "rotateX": 0.0,
+    "rotateY": 0.0,
+    "rotateZ": 0.0,
+    "color": [255.0, 140.0, 0.0],
+    "scale": 220.0,
+    "lineOpacity": 1.0,
+    "faceOpacity": 0.22
+  },
+  "color": "#FF8C00"
+}

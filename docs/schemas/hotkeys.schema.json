@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Hotkeys map schema (Browser aware)",
+  "type": "object",
+  "definitions": {
+    "browser": {
+      "type": "object",
+      "description": "Metadata consumed by the Browser for key rows.",
+      "properties": {
+        "section": { "type": "string", "description": "UI section grouping" },
+        "tags": { "type": "array", "items": { "type": "string" }, "description": "Filter tags" },
+        "preferredInput": { "type": "string", "enum": ["key", "midi", "osc", "any"], "description": "Preferred surface" },
+        "notes": { "type": "string", "description": "Operator note" }
+      },
+      "additionalProperties": false
+    },
+    "controlHub": {
+      "$ref": "#/definitions/browser",
+      "description": "Deprecated alias for browser metadata."
+    }
+  },
+  "properties": {
+    "version": { "type": "integer", "description": "Schema version" },
+    "bindings": {
+      "type": "object",
+      "description": "Mapping from binding id -> binding object",
+      "patternProperties": {
+        "^.*$": {
+          "type": "object",
+          "properties": {
+            "key": { "type": "integer", "description": "numeric key code or scan code" , "minimum": 0},
+            "label": { "type": "string", "description": "human readable label (optional)" },
+            "scope": { "type": "string", "description": "scope of the binding" },
+            "displayName": { "type": "string", "description": "display name for UI" },
+            "learnable": { "type": "boolean", "description": "can be learned in UI" },
+            "browser": { "$ref": "#/definitions/browser" },
+            "controlHub": {
+              "$ref": "#/definitions/browser",
+              "description": "Deprecated alias for browser metadata."
+            }
+          },
+          "required": ["key"],
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": ["version", "bindings"],
+  "additionalProperties": false
+}

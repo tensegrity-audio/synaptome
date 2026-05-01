@@ -1,0 +1,208 @@
+{
+  "banks": {
+    "global": [
+      {
+        "controls": [
+          {
+            "description": "Master effects macro",
+            "id": "masterFx",
+            "label": "FX Macro",
+            "target": "fx.master"
+          },
+          {
+            "description": "Global animation speed",
+            "id": "speed",
+            "label": "Speed",
+            "target": "globals.speed"
+          },
+          {
+            "description": "Session tempo",
+            "id": "bpm",
+            "label": "Tempo",
+            "target": "transport.bpm"
+          },
+          {
+            "description": "Toggle HUD visibility",
+            "id": "hud",
+            "label": "HUD Visible",
+            "target": "ui.hud"
+          },
+          {
+            "description": "Camera distance",
+            "id": "camDist",
+            "label": "Camera Distance",
+            "target": "camera.dist"
+          }
+        ],
+        "id": "home",
+        "label": "Home"
+      }
+    ]
+  },
+  "console": {
+    "slots": [
+      {
+        "active": true,
+        "assetId": "generative.perlin",
+        "index": 1,
+        "label": "Perlin Noise",
+        "opacity": 0.4000000059604645,
+        "parameters": {
+          "console.layer1.alpha": 1.0,
+          "console.layer1.brightness": 2.0,
+          "console.layer1.colorB": {
+            "base": 0.10000000149011612,
+            "modifiers": []
+          },
+          "console.layer1.colorG": 0.5,
+          "console.layer1.colorR": 0.5,
+          "console.layer1.contrast": 2.0,
+          "console.layer1.lacunarity": 2.0,
+          "console.layer1.octaves": 0.5,
+          "console.layer1.palette": 0.0,
+          "console.layer1.paletteRate": 0.0,
+          "console.layer1.persistence": 0.550000011920929,
+          "console.layer1.scale": 2.0,
+          "console.layer1.speed": 0.25,
+          "console.layer1.texelZoom": 0.5
+        }
+      }
+    ]
+  },
+  "effects": {
+    "ascii": {
+      "aspect": 0.0,
+      "block": 16.0,
+      "characterSet": 0.0,
+      "colorMode": 1.0,
+      "gamma": 1.0,
+      "jitter": 0.0,
+      "padding": 32.0,
+      "route": 0.0
+    },
+    "asciiSupersample": {
+      "block": 24.0,
+      "characterSet": 2.0,
+      "colorMode": 2.0,
+      "gamma": 8.0,
+      "jitter": 0.10000000149011612,
+      "route": 0.0
+    },
+    "crt": {
+      "bleed": 0.15000000596046448,
+      "glow": 2.0,
+      "headSwitch": 0.0,
+      "lumaNoise": 0.0,
+      "perChannelOffset": 0.0,
+      "rgbMisalignment": 0.0,
+      "route": 0.0,
+      "scanline": 0.4000000059604645,
+      "scanlineJitter": 0.10000000149011612,
+      "softness": {
+        "base": 10.0,
+        "modifiers": []
+      },
+      "subpixelAspect": 4.0,
+      "subpixelDensity": 9.0,
+      "subpixelPadding": 0.0,
+      "syncTear": 0.20000000298023224,
+      "trackingWobble": 0.10000000149011612,
+      "vignette": 0.25
+    },
+    "dither": {
+      "cellSize": 24.0,
+      "route": 0.0
+    },
+    "motion": {
+      "alphaMix": 1.0,
+      "blur": 8.0,
+      "boost": 8.0,
+      "fadeBeats": 8.0,
+      "mix": 0.0,
+      "route": 0.0,
+      "softness": 16.0,
+      "threshold": 0.8999999761581421
+    }
+  },
+  "globals": {
+    "camera.dist": 700.0,
+    "fx.master": {
+      "base": 0.0,
+      "modifiers": []
+    },
+    "globals.speed": 1.0,
+    "overlay.text.color.b": 255.0,
+    "overlay.text.color.g": 0.0,
+    "overlay.text.color.r": 255.0,
+    "overlay.text.content": "hello world",
+    "overlay.text.font": "VCR_OSD_MONO_1.001.ttf",
+    "overlay.text.size": 144.0,
+    "transport.bpm": 120.0
+  },
+  "mappings": {
+    "router": {
+      "cc": [],
+      "osc": [
+        {
+          "bank": "home",
+          "pattern": "/sensor/host/localmic/mic-level",
+          "target": "effects.crt.softness"
+        },
+        {
+          "bank": "home",
+          "pattern": "/sensor/host/localmic/mic-level",
+          "target": "console.layer1.colorB"
+        },
+        {
+          "bank": "home",
+          "pattern": "/sensor/host/localmic/mic-level",
+          "target": "console.layer1.opacity"
+        }
+      ],
+      "oscSources": [
+        {
+          "blend": "scale",
+          "in": [
+            0.0,
+            0.10000000149011612
+          ],
+          "out": [
+            0.0,
+            3.0
+          ],
+          "pattern": "/sensor/host/localmic/mic-level",
+          "relative": true
+        },
+        {
+          "blend": "scale",
+          "in": [
+            0.0,
+            1.0
+          ],
+          "out": [
+            0.0,
+            1.0
+          ],
+          "pattern": "/sensor/host/localmic/mic-peak",
+          "relative": true
+        }
+      ]
+    },
+    "slotAssignments": {
+      "assignments": []
+    }
+  },
+  "scene": {
+    "savedAt": "2026-04-23T13:02:46-0400",
+    "schemaVersion": 2,
+    "source": {
+      "name": "perlin-smooth",
+      "path": "layers/scenes/perlin-smooth.json"
+    },
+    "storage": {
+      "kind": "named",
+      "name": "perlin-smooth",
+      "path": "layers/scenes/perlin-smooth.json"
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "id": "generative.antTunnels",
+  "label": "Ant Tunnels",
+  "category": "Generative",
+  "type": "agentField",
+  "registryPrefix": "generative.antTunnels",
+  "opacity": 1.0,
+  "defaults": {
+    "mode": 0,
+    "speed": 14.0,
+    "bpmSync": true,
+    "bpmMultiplier": 4.0,
+    "alpha": 1.0,
+    "autoReseed": false,
+    "autoReseedEveryBeats": 16.0,
+    "agentCount": 36,
+    "stepSize": 1.0,
+    "turnRate": 0.45,
+    "sensorAngle": 0.7,
+    "sensorDistance": 2.0,
+    "deposit": 0.28,
+    "decay": 0.002,
+    "diffuse": 0.03,
+    "trailBoost": 2.0,
+    "backgroundAlpha": 0.0,
+    "trailAlpha": 1.0,
+    "resetCoverage": 0.42,
+    "backgroundColor": [0.10, 0.05, 0.02],
+    "trailColor": [0.20, 0.45, 1.00]
+  },
+  "textureSize": [192, 108]
+}

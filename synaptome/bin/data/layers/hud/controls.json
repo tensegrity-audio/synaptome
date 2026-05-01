@@ -1,0 +1,15 @@
+{
+  "id": "hud.controls",
+  "label": "Control Hints",
+  "category": "HUD",
+  "type": "ui.hud.widget",
+  "registryPrefix": "hud.controls",
+  "description": "Keyboard and mouse quick reference mirrored from CMH scopes.",
+  "hudWidget": {
+    "module": "controls",
+    "toggleId": "hud.controls",
+    "defaultBand": "hud",
+    "defaultColumn": 0,
+    "telemetry": ["hotkeys", "conflicts"]
+  }
+}

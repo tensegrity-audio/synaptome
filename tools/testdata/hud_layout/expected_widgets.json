@@ -1,0 +1,325 @@
+{
+  "schemaVersion": 1,
+  "sourceStrategy": "Static HUD contract for widget catalog, placement preferences, layout snapshots, and declared feed IDs. Dynamic feed payloads, timestamps, display geometry, and Browser selection state are intentionally excluded.",
+  "sources": [
+    "synaptome/bin/data/layers/hud",
+    "tools/testdata/runtime_state/config/control_hub_prefs.json",
+    "tools/testdata/runtime_state/config/console.json",
+    "synaptome/src/ui/ControlMappingHubState.h",
+    "synaptome/src/ui/HudRegistry.cpp",
+    "synaptome/src/ui/HudFeedRegistry.cpp",
+    "synaptome/src/ui/overlays/OverlayWidget.h"
+  ],
+  "allowedBands": [
+    "console",
+    "hud",
+    "workbench"
+  ],
+  "allowedLayoutTargets": [
+    "controller",
+    "projector"
+  ],
+  "allowedWidgetTargets": [
+    "both",
+    "controller",
+    "projector"
+  ],
+  "hudColumnCount": 4,
+  "counts": {
+    "hudWidgets": 6,
+    "feedIds": 13,
+    "controlPrefsWidgets": 6,
+    "controllerPrefsWidgets": 6,
+    "consoleLayoutTargets": 2,
+    "consoleLayoutWidgets": 12
+  },
+  "hudWidgets": [
+    {
+      "id": "hud.controls",
+      "label": "Control Hints",
+      "module": "controls",
+      "toggleId": "hud.controls",
+      "defaultBand": "hud",
+      "defaultColumn": 0,
+      "telemetryFeeds": [
+        "hotkeys",
+        "conflicts"
+      ],
+      "path": "synaptome/bin/data/layers/hud/controls.json"
+    },
+    {
+      "id": "hud.layers",
+      "label": "Layer Summary",
+      "module": "layers",
+      "toggleId": "hud.layers",
+      "defaultBand": "hud",
+      "defaultColumn": 1,
+      "telemetryFeeds": [
+        "slots",
+        "fxRoutes"
+      ],
+      "path": "synaptome/bin/data/layers/hud/layers.json"
+    },
+    {
+      "id": "hud.menu",
+      "label": "Menu Mirror",
+      "module": "menu",
+      "toggleId": "hud.menu",
+      "defaultBand": "hud",
+      "defaultColumn": 1,
+      "telemetryFeeds": [
+        "breadcrumbs",
+        "hotkeys"
+      ],
+      "path": "synaptome/bin/data/layers/hud/menu.json"
+    },
+    {
+      "id": "hud.sensors",
+      "label": "Sensor Telemetry",
+      "module": "sensors",
+      "toggleId": "hud.sensors",
+      "defaultBand": "hud",
+      "defaultColumn": 1,
+      "telemetryFeeds": [
+        "imu",
+        "mic",
+        "osc"
+      ],
+      "path": "synaptome/bin/data/layers/hud/sensors.json"
+    },
+    {
+      "id": "hud.status",
+      "label": "HUD Status",
+      "module": "status",
+      "toggleId": "hud.status",
+      "defaultBand": "hud",
+      "defaultColumn": 0,
+      "telemetryFeeds": [
+        "midi",
+        "collector",
+        "timing"
+      ],
+      "path": "synaptome/bin/data/layers/hud/status.json"
+    },
+    {
+      "id": "hud.telemetry",
+      "label": "HUD Telemetry",
+      "module": "telemetry",
+      "toggleId": "hud.telemetry",
+      "defaultBand": "hud",
+      "defaultColumn": 1,
+      "telemetryFeeds": [
+        "fps",
+        "gpu"
+      ],
+      "path": "synaptome/bin/data/layers/hud/telemetry.json"
+    }
+  ],
+  "feedIds": [
+    "breadcrumbs",
+    "collector",
+    "conflicts",
+    "fps",
+    "fxRoutes",
+    "gpu",
+    "hotkeys",
+    "imu",
+    "mic",
+    "midi",
+    "osc",
+    "slots",
+    "timing"
+  ],
+  "controlHubPrefs": {
+    "hudLayoutTarget": "controller",
+    "hudVisible": true,
+    "hudStateMigrated": true,
+    "hudWidgets": [
+      {
+        "id": "hud.controls",
+        "column": 0,
+        "band": "hud",
+        "collapsed": false,
+        "visible": true
+      },
+      {
+        "id": "hud.layers",
+        "column": 1,
+        "band": "hud",
+        "collapsed": false,
+        "visible": true
+      },
+      {
+        "id": "hud.menu",
+        "column": 1,
+        "band": "hud",
+        "collapsed": false,
+        "visible": true
+      },
+      {
+        "id": "hud.sensors",
+        "column": 1,
+        "band": "hud",
+        "collapsed": false,
+        "visible": true
+      },
+      {
+        "id": "hud.status",
+        "column": 0,
+        "band": "hud",
+        "collapsed": false,
+        "visible": true
+      },
+      {
+        "id": "hud.telemetry",
+        "column": 0,
+        "band": "hud",
+        "collapsed": false,
+        "visible": true
+      }
+    ],
+    "hudControllerWidgets": [
+      {
+        "id": "hud.controls",
+        "column": 0,
+        "band": "hud",
+        "collapsed": false
+      },
+      {
+        "id": "hud.layers",
+        "column": 1,
+        "band": "hud",
+        "collapsed": false
+      },
+      {
+        "id": "hud.menu",
+        "column": 1,
+        "band": "hud",
+        "collapsed": false
+      },
+      {
+        "id": "hud.sensors",
+        "column": 1,
+        "band": "hud",
+        "collapsed": false
+      },
+      {
+        "id": "hud.status",
+        "column": 0,
+        "band": "hud",
+        "collapsed": false
+      },
+      {
+        "id": "hud.telemetry",
+        "column": 0,
+        "band": "hud",
+        "collapsed": false
+      }
+    ]
+  },
+  "consoleOverlayLayouts": {
+    "activeTarget": "controller",
+    "targets": {
+      "controller": [
+        {
+          "id": "hud.controls",
+          "column": 0,
+          "band": "hud",
+          "collapsed": false,
+          "visible": true,
+          "target": "projector"
+        },
+        {
+          "id": "hud.layers",
+          "column": 1,
+          "band": "hud",
+          "collapsed": false,
+          "visible": true,
+          "target": "projector"
+        },
+        {
+          "id": "hud.menu",
+          "column": 1,
+          "band": "hud",
+          "collapsed": false,
+          "visible": true,
+          "target": "projector"
+        },
+        {
+          "id": "hud.sensors",
+          "column": 1,
+          "band": "hud",
+          "collapsed": false,
+          "visible": true,
+          "target": "projector"
+        },
+        {
+          "id": "hud.status",
+          "column": 0,
+          "band": "hud",
+          "collapsed": false,
+          "visible": true,
+          "target": "projector"
+        },
+        {
+          "id": "hud.telemetry",
+          "column": 0,
+          "band": "hud",
+          "collapsed": false,
+          "visible": true,
+          "target": "projector"
+        }
+      ],
+      "projector": [
+        {
+          "id": "hud.controls",
+          "column": 0,
+          "band": "hud",
+          "collapsed": false,
+          "visible": true,
+          "target": "projector"
+        },
+        {
+          "id": "hud.layers",
+          "column": 1,
+          "band": "hud",
+          "collapsed": false,
+          "visible": true,
+          "target": "projector"
+        },
+        {
+          "id": "hud.menu",
+          "column": 1,
+          "band": "hud",
+          "collapsed": false,
+          "visible": true,
+          "target": "projector"
+        },
+        {
+          "id": "hud.sensors",
+          "column": 1,
+          "band": "hud",
+          "collapsed": false,
+          "visible": true,
+          "target": "projector"
+        },
+        {
+          "id": "hud.status",
+          "column": 0,
+          "band": "hud",
+          "collapsed": false,
+          "visible": true,
+          "target": "projector"
+        },
+        {
+          "id": "hud.telemetry",
+          "column": 0,
+          "band": "hud",
+          "collapsed": false,
+          "visible": true,
+          "target": "projector"
+        }
+      ]
+    }
+  }
+}

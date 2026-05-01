@@ -1,0 +1,75 @@
+{
+  "deviceId": "synthetic-two-bank-controller",
+  "model": "Synthetic Controller",
+  "name": "Synthetic Two-Bank Controller",
+  "portHints": [
+    "Synthetic Controller"
+  ],
+  "columns": {
+    "column1": {
+      "name": "Scene Controls",
+      "slots": [
+        {
+          "id": "F",
+          "label": "Layer Opacity",
+          "role": "fader",
+          "sensitivity": 1.0,
+          "binding": {
+            "type": "cc",
+            "channel": 2,
+            "number": 10
+          }
+        },
+        {
+          "id": "K1",
+          "label": "Primary Amount",
+          "role": "knob",
+          "sensitivity": 0.75,
+          "binding": {
+            "type": "cc",
+            "channel": 2,
+            "number": 11
+          }
+        },
+        {
+          "id": "B1",
+          "label": "Toggle Active",
+          "role": "button",
+          "sensitivity": 1.0,
+          "binding": {
+            "type": "note",
+            "channel": 2,
+            "number": 40
+          }
+        }
+      ]
+    },
+    "column2": {
+      "name": "Performance Macros",
+      "slots": [
+        {
+          "id": "M1",
+          "label": "Macro One",
+          "role": "macro",
+          "sensitivity": 1.5,
+          "binding": {
+            "type": "cc",
+            "channel": 3,
+            "number": 20
+          }
+        },
+        {
+          "id": "S1",
+          "label": "Shift Layer",
+          "role": "shift",
+          "sensitivity": 1.0,
+          "binding": {
+            "type": "note",
+            "channel": 3,
+            "number": 41
+          }
+        }
+      ]
+    }
+  }
+}

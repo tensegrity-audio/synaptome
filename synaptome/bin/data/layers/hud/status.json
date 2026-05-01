@@ -1,0 +1,15 @@
+{
+  "id": "hud.status",
+  "label": "HUD Status",
+  "category": "HUD",
+  "type": "ui.hud.widget",
+  "registryPrefix": "hud.status",
+  "description": "MIDI, collector, and takeover diagnostics with timing telemetry.",
+  "hudWidget": {
+    "module": "status",
+    "toggleId": "hud.status",
+    "defaultBand": "hud",
+    "defaultColumn": 0,
+    "telemetry": ["midi", "collector", "timing"]
+  }
+}

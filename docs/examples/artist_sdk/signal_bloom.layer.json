@@ -1,0 +1,47 @@
+{
+  "id": "examples.signal_bloom",
+  "label": "Signal Bloom",
+  "category": "Examples",
+  "type": "example.signalBloom",
+  "registryPrefix": "examples.signal_bloom",
+  "description": "Public SDK example layer showing transport-aware motion, shared color parameters, sensor inputs, and scene persistence.",
+  "opacity": 1.0,
+  "defaults": {
+    "visible": true,
+    "speed": 0.65,
+    "bpmSync": true,
+    "bpmMultiplier": 1.0,
+    "scale": 0.82,
+    "rotationDeg": 0.0,
+    "alpha": 0.86,
+    "gain": 0.62,
+    "lineOpacity": 0.72,
+    "xInput": 0.5,
+    "yInput": 0.5,
+    "speedInput": 0.0,
+    "color": [
+      0.12,
+      0.78,
+      1.0
+    ],
+    "backgroundColor": [
+      0.02,
+      0.04,
+      0.08
+    ]
+  },
+  "sdk": {
+    "level": "parametric-cataloged-layer",
+    "factoryRegistration": "docs/examples/artist_sdk/register_signal_bloom.cpp",
+    "noHeavySetupSideEffects": true,
+    "templates": [
+      "global_transport",
+      "layer_local_basics",
+      "layer_local_color",
+      "media_playback_pairing",
+      "osc_routes",
+      "sensor_modifiers",
+      "scene_persistence"
+    ]
+  }
+}

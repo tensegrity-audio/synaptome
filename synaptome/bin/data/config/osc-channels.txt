@@ -1,0 +1,8 @@
+# One OSC address per line
+# Example entries for MatrixPortal device 0x0101
+/sensor/matrix/0x0101/mic-level
+/sensor/matrix/0x0101/mic-peak
+/sensor/matrix/0x0101/mic-gain
+# Example entries for the host laptop mic
+/sensor/host/localmic/mic-level
+/sensor/host/localmic/mic-peak

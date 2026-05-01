@@ -1,0 +1,8 @@
+{
+  "id": "geometry.grid",
+  "label": "Grid Waves",
+  "category": "Geometry",
+  "type": "grid",
+  "registryPrefix": "geometry.grid",
+  "opacity": 1.0
+}

@@ -1,0 +1,81 @@
+{
+  "globals": {
+    "transport.bpm": 120.0,
+    "globals.speed": 1.0,
+    "fx.master": 0.0,
+    "camera.dist": 700.0,
+    "ui.hud": true
+  },
+  "effects": {
+    "dither": {
+      "route": 0
+    },
+    "ascii": {
+      "route": 0,
+      "block": 8.0,
+      "colorMode": 0.0,
+      "characterSet": 2.0,
+      "aspect": 0.0,
+      "padding": 0.0,
+      "gamma": 1.0,
+      "jitter": 0.0
+    },
+    "crt": {
+      "route": 0,
+      "scanline": 0.4,
+      "vignette": 0.25,
+      "bleed": 0.15
+    }
+  },
+  "console": {
+    "slots": [
+      {
+        "index": 1,
+        "assetId": "generative.oscilloscope",
+        "active": true,
+        "opacity": 1.0,
+        "parameters": {
+          "console.layer1.pattern": 2.0,
+          "console.layer1.modMode": 1.0,
+          "console.layer1.xInput": 0.0,
+          "console.layer1.yInput": 0.0,
+          "console.layer1.speedInput": 0.0,
+          "console.layer1.baseAmount": 1.0,
+          "console.layer1.modAmount": 0.55,
+          "console.layer1.radialAmount": 0.5,
+          "console.layer1.wiggleAmount": 0.25,
+          "console.layer1.amplitude": 0.85,
+          "console.layer1.speed": 1.0,
+          "console.layer1.speedModAmount": 0.8,
+          "console.layer1.freqX": 0.8,
+          "console.layer1.freqY": 1.2,
+          "console.layer1.phaseOffsetDeg": 90.0,
+          "console.layer1.morph": 0.45,
+          "console.layer1.showGrid": true,
+          "console.layer1.showCrosshair": true,
+          "console.layer1.showGlow": true,
+          "console.layer1.gridDivisions": 4.0,
+          "console.layer1.gridAlpha": 0.18,
+          "console.layer1.glowAlpha": 0.18,
+          "console.layer1.glowRadius": 1.05,
+          "console.layer1.glowFalloff": 0.65,
+          "console.layer1.xScale": 1.0,
+          "console.layer1.yScale": 1.0,
+          "console.layer1.historySize": 384.0,
+          "console.layer1.sampleDensity": 6.0,
+          "console.layer1.thickness": 4.0,
+          "console.layer1.alpha": 0.95,
+          "console.layer1.decay": 0.75,
+          "console.layer1.intensity": 1.0,
+          "console.layer1.pointSize": 3.0,
+          "console.layer1.colorR": 0.25,
+          "console.layer1.colorG": 1.0,
+          "console.layer1.colorB": 0.55,
+          "console.layer1.bgColorR": 0.02,
+          "console.layer1.bgColorG": 0.08,
+          "console.layer1.bgColorB": 0.05
+        }
+      }
+    ]
+  }
+}

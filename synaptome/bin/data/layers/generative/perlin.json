@@ -1,0 +1,30 @@
+{
+  "id": "generative.perlin",
+  "label": "Perlin Noise",
+  "category": "Generative",
+  "type": "perlin",
+  "registryPrefix": "generative.perlin",
+  "opacity": 1.0,
+  "defaults": {
+    "scale": 1.8,
+    "speed": 0.25,
+    "brightness": 0.8,
+    "contrast": 1.0,
+    "alpha": 1.0,
+    "color": [
+      0.1,
+      0.6,
+      1.0
+    ],
+    "octaves": 4,
+    "lacunarity": 2.0,
+    "persistence": 0.55,
+    "palette": 2,
+    "paletteRate": 0.2,
+    "texelZoom": 0.6
+  },
+  "textureSize": [
+    192,
+    108
+  ]
+}
