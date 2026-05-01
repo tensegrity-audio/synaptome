@@ -27,6 +27,8 @@ synaptome/bin/Synaptome.*
 synaptome/bin/oF_v2.*
 synaptome/bin/data/log.txt
 synaptome/bin/data/logs/
+synaptome/bin/data/config/console.json
+synaptome/bin/data/config/scene-last.json
 synaptome/obj/
 synaptome/src/thirdparty/*.exp
 synaptome/tests/**/Debug/
