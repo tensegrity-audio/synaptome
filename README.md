@@ -1,4 +1,6 @@
-# Synaptome Setup Guide (Windows)
+# Synaptome
+
+Layer-based openFrameworks runtime for live modular visuals with MIDI/OSC mapping, audio/sensor reactivity, operator HUD and Browser controls, and projection output.
 
 Synaptome is an openFrameworks live-performance runtime for building modular, parameterized, sensor-reactive visual scenes. The app source lives under `synaptome/`; the openFrameworks SDK stays outside this repo.
 
@@ -138,6 +140,12 @@ Expected current signals:
 - [External Contracts](docs/architecture/synaptome_external_contracts.md)
 - [MIDI Mapping](docs/midi_mapping.md)
 - [OSC Catalog](docs/osc_catalog.md)
+
+## License
+
+Synaptome source code and documentation are licensed under the MIT License. See [LICENSE](LICENSE).
+
+Bundled third-party libraries and asset notes are tracked in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 ## Troubleshooting
 

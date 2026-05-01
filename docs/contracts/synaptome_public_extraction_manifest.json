@@ -25,6 +25,16 @@
       "required": true
     },
     {
+      "pattern": "LICENSE",
+      "reason": "Public MIT license for Synaptome source code and documentation.",
+      "required": true
+    },
+    {
+      "pattern": "THIRD_PARTY_NOTICES.md",
+      "reason": "Bundled dependency and asset license/provenance notes.",
+      "required": true
+    },
+    {
       "pattern": "synaptome/Directory.Build.props",
       "reason": "Canonical Synaptome build-root contract.",
       "required": true
