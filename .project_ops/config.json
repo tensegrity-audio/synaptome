@@ -7,13 +7,14 @@
     "description": "Public openFrameworks runtime for live modular visuals, operator controls, and projection output."
   },
   "paths": {
-    "roadmap": "docs/roadmap/roadmap.md",
-    "inProgress": "docs/roadmap/in_progress",
-    "completed": "docs/roadmap/completed",
-    "reports": "docs/reports",
-    "changelog": "docs/reports/changelog.md",
-    "governance": "docs/governance",
-    "requestTemplate": "docs/roadmap/in_progress/_REQUEST_TEMPLATE.md"
+    "roadmap": "docs/project_ops/roadmap.md",
+    "inProgress": "docs/project_ops/in_progress",
+    "completed": "docs/project_ops/completed",
+    "reports": "docs/project_ops/reports",
+    "changelog": "docs/project_ops/reports/changelog.md",
+    "governance": "docs/project_ops/governance",
+    "requestTemplate": "docs/project_ops/in_progress/_REQUEST_TEMPLATE.md",
+    "projectOpsContract": "docs/project_ops/README.md"
   },
   "scopeLabels": [
     "runtime",
@@ -32,6 +33,12 @@
     "docs/release_policy.md",
     "docs/build_env.md",
     "docs/dev_playbook.md",
+    "docs/project_ops/README.md",
+    "docs/project_ops/roadmap.md",
+    "docs/project_ops/in_progress/_REQUEST_TEMPLATE.md",
+    "docs/project_ops/reports/changelog.md",
+    "docs/project_ops/governance/README.md",
+    "docs/project_ops/completed/README.md",
     "docs/architecture/synaptome_system_architecture.md",
     "docs/architecture/synaptome_subsystem_anatomy.md",
     "docs/architecture/synaptome_external_contracts.md",
@@ -48,8 +55,8 @@
     ]
   },
   "validation": {
-    "requireChangelog": false,
-    "requireRoadmapParity": false,
+    "requireChangelog": true,
+    "requireRoadmapParity": true,
     "allowEmptyRoadmap": true,
     "dryRunByDefault": true,
     "commands": [
@@ -85,24 +92,29 @@
       "LICENSE",
       "docs/contributing.md",
       "docs/release_policy.md",
+      "docs/project_ops/README.md",
+      "docs/project_ops/roadmap.md",
+      "docs/project_ops/in_progress/_REQUEST_TEMPLATE.md",
+      "docs/project_ops/reports/changelog.md",
+      "docs/project_ops/governance/README.md",
       ".project_ops/config.json"
     ],
-    "recommendedFiles": [
-      "docs/roadmap/roadmap.md",
-      "docs/reports/changelog.md",
-      "docs/governance/README.md"
-    ],
+    "recommendedFiles": [],
     "initialDirectories": [
       "docs/architecture",
       "docs/contracts",
-      "docs/examples"
+      "docs/examples",
+      "docs/project_ops/in_progress",
+      "docs/project_ops/completed",
+      "docs/project_ops/reports",
+      "docs/project_ops/governance"
     ]
   },
   "adoption": {
-    "mode": "audit-only",
+    "mode": "manual-templates",
     "frameworkRepo": "https://github.com/tensegrity-audio/project_ops",
     "frameworkRepoName": "project_ops",
     "frameworkProductName": "Project Ops",
-    "pilotNotes": "Config-only pilot. Synaptome keeps product docs local and does not adopt Project Ops roadmap/changelog structure yet."
+    "pilotNotes": "Synaptome adopts Project Ops roadmap, changelog, governance, and request-template surfaces while keeping product architecture and validation evidence local to the public runtime repo."
   }
 }

@@ -9,6 +9,8 @@ Synaptome changes should keep the public openFrameworks runtime buildable, testa
 - Update docs and fixtures when public behavior changes.
 - Do not commit generated build outputs, runtime logs, local Visual Studio user files, or app-written local state unless a fixture intentionally promotes them.
 - Keep product/repo naming and version metadata aligned with `docs/release_policy.md`.
+- Use `docs/project_ops/in_progress/_REQUEST_TEMPLATE.md` for substantial runtime, contract, release, validation, or docs work.
+- Keep Project Ops state mirrored in `docs/project_ops/roadmap.md` and `docs/project_ops/reports/changelog.md` when a request changes project direction or public behavior.
 
 Suggested commit style:
 
@@ -27,6 +29,7 @@ python tools\validate_synaptome_extraction_manifest.py --check --strict-review
 python tools\validate_release_metadata.py
 python tools\validate_configs.py --public-app
 python tools\check_app_independence.py
+python ..\project_ops\tools\project_ops_audit.py --repo .
 & 'C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\amd64\MSBuild.exe' `
   'synaptome\tests\BrowserFlowTest\BrowserFlowTest.vcxproj' `
   /p:Configuration=Release /p:Platform=x64 /m /v:minimal /clp:Summary
