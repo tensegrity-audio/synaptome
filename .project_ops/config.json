@@ -1,0 +1,108 @@
+{
+  "$schema": "https://tensegrity-audio.github.io/project_ops/schemas/project_config.schema.json",
+  "project": {
+    "id": "synaptome",
+    "name": "Synaptome",
+    "role": "public-runtime",
+    "description": "Public openFrameworks runtime for live modular visuals, operator controls, and projection output."
+  },
+  "paths": {
+    "roadmap": "docs/roadmap/roadmap.md",
+    "inProgress": "docs/roadmap/in_progress",
+    "completed": "docs/roadmap/completed",
+    "reports": "docs/reports",
+    "changelog": "docs/reports/changelog.md",
+    "governance": "docs/governance",
+    "requestTemplate": "docs/roadmap/in_progress/_REQUEST_TEMPLATE.md"
+  },
+  "scopeLabels": [
+    "runtime",
+    "contracts",
+    "docs",
+    "release",
+    "tests",
+    "governance"
+  ],
+  "requiredDocs": [
+    "README.md",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md",
+    "VERSION",
+    "docs/contributing.md",
+    "docs/release_policy.md",
+    "docs/build_env.md",
+    "docs/dev_playbook.md",
+    "docs/architecture/synaptome_system_architecture.md",
+    "docs/architecture/synaptome_subsystem_anatomy.md",
+    "docs/architecture/synaptome_external_contracts.md",
+    "docs/contracts/README.md"
+  ],
+  "privacy": {
+    "defaultVisibility": "public",
+    "publicExamplesRequireSanitization": true,
+    "privateHistoryPaths": [
+      ".local/**",
+      "docs/private/**",
+      "synaptome/bin/data/local/**",
+      "synaptome/bin/data/config/private/**"
+    ]
+  },
+  "validation": {
+    "requireChangelog": false,
+    "requireRoadmapParity": false,
+    "allowEmptyRoadmap": true,
+    "dryRunByDefault": true,
+    "commands": [
+      {
+        "name": "manifest",
+        "command": "python tools/validate_synaptome_extraction_manifest.py --check --strict-review",
+        "required": true,
+        "description": "Check public extraction boundaries."
+      },
+      {
+        "name": "release-metadata",
+        "command": "python tools/validate_release_metadata.py",
+        "required": true,
+        "description": "Check Synaptome version and release metadata."
+      },
+      {
+        "name": "public-contracts",
+        "command": "python tools/validate_configs.py --public-app",
+        "required": true,
+        "description": "Check public runtime contracts and fixtures."
+      },
+      {
+        "name": "app-independence",
+        "command": "python tools/check_app_independence.py",
+        "required": true,
+        "description": "Check that the public runtime does not depend on the umbrella workspace."
+      }
+    ]
+  },
+  "bootstrap": {
+    "requiredFiles": [
+      "README.md",
+      "LICENSE",
+      "docs/contributing.md",
+      "docs/release_policy.md",
+      ".project_ops/config.json"
+    ],
+    "recommendedFiles": [
+      "docs/roadmap/roadmap.md",
+      "docs/reports/changelog.md",
+      "docs/governance/README.md"
+    ],
+    "initialDirectories": [
+      "docs/architecture",
+      "docs/contracts",
+      "docs/examples"
+    ]
+  },
+  "adoption": {
+    "mode": "audit-only",
+    "frameworkRepo": "https://github.com/tensegrity-audio/project_ops",
+    "frameworkRepoName": "project_ops",
+    "frameworkProductName": "Project Ops",
+    "pilotNotes": "Config-only pilot. Synaptome keeps product docs local and does not adopt Project Ops roadmap/changelog structure yet."
+  }
+}
