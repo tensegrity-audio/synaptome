@@ -509,9 +509,16 @@ CONTRACT_ENTRIES: tuple[ContractEntry, ...] = (
     ContractEntry(
         name="App OSC map",
         status="validated",
-        sources=(Path("synaptome/bin/data/config/osc-map.json"),),
-        validator_command="python tools\\validate_configs.py synaptome/bin/data/config/osc-map.json",
+        sources=(
+            Path("synaptome/bin/data/config/osc-map.json"),
+            Path("synaptome/src/ofApp.cpp"),
+            Path("synaptome/src/io/OscParameterRouter.cpp"),
+            Path("tools/validate_osc_route_patterns.py"),
+        ),
+        validator_command="python tools\\validate_configs.py synaptome/bin/data/config/osc-map.json; python tools\\validate_osc_route_patterns.py",
         fixtures=(Path("docs/examples/osc_map_example.json"),),
+        notes="Includes a built-in route glob regression for mesh-style OSC inputs such as /sensor/matrix/0x0101/mic-level.",
+        check_command=(sys.executable, "tools/validate_osc_route_patterns.py"),
         public_app=True,
     ),
     ContractEntry(

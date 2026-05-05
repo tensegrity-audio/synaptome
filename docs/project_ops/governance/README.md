@@ -28,6 +28,7 @@ Required checks for runtime-facing changes:
 ```powershell
 python tools\validate_synaptome_extraction_manifest.py --check --strict-review
 python tools\validate_release_metadata.py
+python tools\validate_osc_route_patterns.py
 python tools\validate_configs.py --public-app
 python tools\check_app_independence.py
 python ..\project_ops\tools\project_ops_audit.py --repo .

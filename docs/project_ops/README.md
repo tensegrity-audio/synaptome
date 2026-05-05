@@ -2,7 +2,7 @@
 
 Synaptome uses Project Ops for project administration, request tracking, roadmap hygiene, and validation handoff.
 
-Project Ops provides reusable operating structure; Synaptome pins the reusable framework at `v0.1.1`. Synaptome owns its public runtime architecture, release policy, contracts, roadmap, changelog, and validation evidence.
+Project Ops provides reusable operating structure; Synaptome pins the reusable framework at `v0.1.2`. Synaptome owns its public runtime architecture, release policy, contracts, roadmap, changelog, and validation evidence.
 
 ## Local Operating Files
 

@@ -10,7 +10,7 @@ Extraction scope is tracked separately in [`synaptome_public_extraction_manifest
 
 | Contract | Fixture Path | Validator | Coverage | Status |
 | --- | --- | --- | --- | --- |
-| App OSC map | `docs/examples/osc_map_example.json`, `synaptome/bin/data/config/osc-map.json` | `python tools\validate_configs.py --public-app` | Schema and current app route validation. | Current |
+| App OSC map | `docs/examples/osc_map_example.json`, `synaptome/bin/data/config/osc-map.json`, `tools/validate_osc_route_patterns.py` | `python tools\validate_configs.py --public-app`, `python tools\validate_osc_route_patterns.py` | Schema, current app route validation, and built-in mesh route glob matching. | Current |
 | Parameter ID manifest | `docs/contracts/parameter_manifest.json`, `docs/examples/parameter_example.json` | `python tools\gen_parameter_manifest.py --check`, `python tools\validate_configs.py --public-app` | Generated static snapshot of core, sensor, effect, layer asset, and console slot parameter ID patterns. | Current |
 | Parameter target references | `tools/testdata/runtime_state/config/*.json`, `tools/testdata/runtime_state/layers/scenes/*.json`, `tools/testdata/device_maps/*.json` | `python tools\validate_parameter_targets.py --strict --contract-fixtures`, `python tools\validate_configs.py --public-app` | Strict semantic scan for committed runtime-state target IDs against the generated parameter manifest, Console slot templates, and layer catalog IDs. | Current |
 | MIDI mapping persistence | `docs/examples/midi_bank_example.json`, `synaptome/bin/data/config/midi-map.json` | `python tools\validate_configs.py --public-app` | Schema and current MIDI route validation. | Current |

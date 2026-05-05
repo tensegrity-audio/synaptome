@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://example.local/schemas/menu.schema.json",
+  "$id": "https://tensegrity-audio.github.io/synaptome/schemas/v0.1.0/menu.schema.json",
   "title": "Menu / StateView schema",
   "description": "Schema for menu metadata files used to generate MenuController StateView and editor UIs. Validates entries, hotkeys, and defaults.",
   "type": "object",

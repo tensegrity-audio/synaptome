@@ -1,5 +1,5 @@
 {
-  "$schema": "https://raw.githubusercontent.com/tensegrity-audio/project_ops/v0.1.1/schemas/project_config.schema.json",
+  "$schema": "https://tensegrity-audio.github.io/project_ops/schemas/v0.1.2/project_config.schema.json",
   "project": {
     "id": "synaptome",
     "name": "Synaptome",
@@ -85,6 +85,12 @@
         "description": "Check Synaptome version and release metadata."
       },
       {
+        "name": "osc-route-patterns",
+        "command": "python tools/validate_osc_route_patterns.py",
+        "required": true,
+        "description": "Check built-in OSC route glob patterns against mesh-style sample addresses."
+      },
+      {
         "name": "public-contracts",
         "command": "python tools/validate_configs.py --public-app",
         "required": true,
@@ -126,7 +132,7 @@
     "mode": "manual-templates",
     "frameworkRepo": "https://github.com/tensegrity-audio/project_ops",
     "frameworkRepoName": "project_ops",
-    "frameworkVersion": "v0.1.1",
+    "frameworkVersion": "v0.1.2",
     "frameworkProductName": "Project Ops",
     "pilotNotes": "Synaptome adopts Project Ops roadmap, changelog, governance, and request-template surfaces while keeping product architecture and validation evidence local to the public runtime repo."
   }

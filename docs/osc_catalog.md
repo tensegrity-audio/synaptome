@@ -20,6 +20,7 @@ Validate with:
 
 ```powershell
 python tools\validate_configs.py --public-app
+python tools\validate_osc_route_patterns.py
 python tools\validate_parameter_targets.py --strict --contract-fixtures
 ```
 
@@ -33,10 +34,14 @@ Typical app-facing families:
 /parameter/<parameter-id>
 /sensor/host/localmic/<metric>
 /sensor/bioamp/<metric>
+/sensor/matrix/<device-id>/mic-level
+/sensor/matrix/<device-id>/mic-peak
+/sensor/deck/<device-id>/deck-scene
 /control/<action>
 ```
 
 The exact accepted routes are owned by `synaptome/src/io/OscParameterRouter.*` and the committed OSC map fixtures.
+Built-in route patterns use `OscParameterRouter` glob syntax. Use `*` for a wildcard path segment; regex-looking `.*` is treated as a literal dot plus wildcard and will not match normal mesh device IDs such as `0x0101`.
 
 ## Public Boundary
 

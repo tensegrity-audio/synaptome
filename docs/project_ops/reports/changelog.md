@@ -2,6 +2,22 @@
 
 This changelog records Project Ops and administrative workflow changes. Product release versioning remains governed by `docs/release_policy.md`.
 
+## 2026-05-05 - contracts - osc_route_glob_regression
+- Phase / Milestone: OSC contract hardening
+- Summary: Added the OSC route glob validator to Synaptome's Project Ops validation ladder so built-in mesh-style OSC route coverage is part of the local administrative gate, not only the public contract report.
+- Request Doc: `docs/project_ops/roadmap.md`
+- Roadmap Entry: `docs/project_ops/roadmap.md`
+- Validation: `python tools\validate_osc_route_patterns.py`; `python tools\validate_configs.py --public-app`
+- Follow-Up Actions: Keep route-pattern checks in sync with future mesh OSC contract revisions.
+
+## 2026-05-05 - governance - schema_ownership_cleanup
+- Phase / Milestone: Project Ops compatibility hardening
+- Summary: Replaced Synaptome's Project Ops adapter schema reference and local menu schema ID with repo-owned, versioned schema namespace IDs. Synaptome now consumes the Project Ops `v0.1.2` schema namespace while keeping Synaptome-owned schemas under the Synaptome `v0.1.0` namespace; Synaptome workflows and adapter metadata are pinned to Project Ops `v0.1.2`.
+- Request Doc: `docs/project_ops/completed/project_ops_compatibility.md`
+- Roadmap Entry: `docs/project_ops/roadmap.md`
+- Validation: `python -m json.tool .project_ops\config.json`; `python -m json.tool schemas\menu.schema.json`; `python ..\project_ops\tools\project_ops_audit.py --repo .`; `python ..\project_ops\tools\project_ops_request_audit.py --repo . --request-id project_ops_compatibility`; `python tools\validate_configs.py --public-app`; repository-wide schema host scan passed with no raw GitHub or placeholder-local IDs; `git diff --check -- .project_ops/config.json schemas/menu.schema.json docs/project_ops/reports/changelog.md`.
+- Follow-Up Actions: Keep future schema identity changes on repo-owned, versioned namespaces; do not reintroduce raw GitHub branch URLs or placeholder local schema hosts.
+
 ## 2026-05-05 - governance - project_ops_v0_1_1_pin
 - Phase / Milestone: Project Ops compatibility hardening
 - Summary: Pinned Synaptome's Project Ops workflow checkouts, adapter schema URL, and adapter metadata to Project Ops `v0.1.1` instead of moving `main`.

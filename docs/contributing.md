@@ -27,6 +27,7 @@ Run the public validation ladder before publication or before asking for review 
 ```powershell
 python tools\validate_synaptome_extraction_manifest.py --check --strict-review
 python tools\validate_release_metadata.py
+python tools\validate_osc_route_patterns.py
 python tools\validate_configs.py --public-app
 python tools\check_app_independence.py
 python ..\project_ops\tools\project_ops_audit.py --repo .
@@ -68,7 +69,7 @@ Please include:
 
 Public CI runs:
 
-- Project Ops adapter and changed-request audits through the external `tensegrity-audio/project_ops` repo pinned at `v0.1.1`
+- Project Ops adapter and changed-request audits through the external `tensegrity-audio/project_ops` repo pinned at `v0.1.2`
 - strict extraction manifest validation
 - public app contract validation
 - app-independence audit
