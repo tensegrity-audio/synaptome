@@ -3483,7 +3483,7 @@ void ofApp::rebuildDynamicOscRoutes() {
 void ofApp::setupOscRoutes() {
     OscParameterRouter::FloatRouteConfig cfg;
 
-    cfg.pattern = "/sensor/hr/.*/bpm";
+    cfg.pattern = "/sensor/hr/*/bpm";
     cfg.target = &param_speed;
     cfg.inMin = 40.0f;
     cfg.inMax = 180.0f;
@@ -3494,7 +3494,7 @@ void ofApp::setupOscRoutes() {
     oscRouter.addFloatRoute(cfg);
 
     if (geodesicLayer) {
-        cfg.pattern = "/sensor/matrix/.*/mic-level";
+        cfg.pattern = "/sensor/matrix/*/mic-level";
         cfg.target = geodesicLayer->hoverParamPtr();
         cfg.inMin = 0.0f;
         cfg.inMax = 1.0f;
@@ -3504,7 +3504,7 @@ void ofApp::setupOscRoutes() {
         cfg.deadband = 0.5f;
         oscRouter.addFloatRoute(cfg);
 
-        cfg.pattern = "/sensor/matrix/.*/mic-peak";
+        cfg.pattern = "/sensor/matrix/*/mic-peak";
         cfg.target = geodesicLayer->spinParamPtr();
         cfg.inMin = 0.0f;
         cfg.inMax = 1.0f;
@@ -3516,7 +3516,8 @@ void ofApp::setupOscRoutes() {
     }
 
     if (gridLayer) {
-        oscRouter.addBoolRoute("/sensor/deck/.*/scene", gridLayer->enabledParamPtr(), 0.5f);
+        oscRouter.addBoolRoute("/sensor/deck/*/deck-scene", gridLayer->enabledParamPtr(), 0.5f);
+        oscRouter.addBoolRoute("/sensor/deck/*/scene", gridLayer->enabledParamPtr(), 0.5f);
     }
 }
 
