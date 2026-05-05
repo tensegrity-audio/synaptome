@@ -16,6 +16,8 @@ Public extraction planning:
 
 Boundary decision: first public Synaptome owns app-facing contracts and examples. Hardware decode, embedded firmware, generated radio headers, private deployment netmaps, helper implementation source, and legacy payload quarantine are outside the public runtime payload unless rewritten as app-facing examples.
 
+External producer note: Synaptome Mesh's first producer contract is `synaptome-mesh-osc v0.1.0`, owned outside this repo. Synaptome remains compatible with it by accepting app-facing OSC input routes; this repo must not import Synaptome Mesh firmware, gateway, generated config, or private deployment identity.
+
 Architecture contract drafts:
 - [Synaptome External Contracts](../architecture/synaptome_external_contracts.md) maps MIDI, OSC, helper repos, microphones, webcams, media files, displays, and hotkeys as outside-world boundaries.
 - [Synaptome Artist SDK And Compatibility Layer](../architecture/synaptome_artist_sdk.md) maps the public layer/parameter/catalog surface for openFrameworks artists.

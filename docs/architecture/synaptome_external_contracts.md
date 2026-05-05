@@ -132,6 +132,13 @@ Current implementation anchors:
 - `synaptome/src/io/OscParameterRouter.*`
 - Future helper package fixtures for hardware decode and app-facing OSC output
 
+External producer compatibility:
+
+- `synaptome-mesh-osc v0.1.0` is an external producer contract owned by Synaptome Mesh / Tensegrity.
+- Synaptome should treat it like any other OSC-producing helper: compatible through app-facing OSC messages, not through firmware headers, generated radio config, PlatformIO projects, or gateway source.
+- The current Synaptome Mesh compatibility profile is optional and numeric-only. It maps selected mesh output events into Synaptome-facing routes; it is not a required runtime dependency.
+- Equivalent OSC from TouchDesigner, Max/MSP, Python scripts, or other hardware bridges should remain valid when it targets the same Synaptome app-facing routes.
+
 Contract boundary:
 
 ```text
