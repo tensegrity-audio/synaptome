@@ -1,5 +1,5 @@
 {
-  "$schema": "https://tensegrity-audio.github.io/project_ops/schemas/project_config.schema.json",
+  "$schema": "https://raw.githubusercontent.com/tensegrity-audio/project_ops/main/schemas/project_config.schema.json",
   "project": {
     "id": "synaptome",
     "name": "Synaptome",

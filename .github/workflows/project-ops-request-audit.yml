@@ -48,7 +48,12 @@ jobs:
             head="${{ github.sha }}"
           fi
 
-          mapfile -t files < <(git diff --name-only "$base" "$head" | grep -E '^docs/project_ops/(in_progress|completed)/.*\.md$' || true)
+          mapfile -t files < <(
+            git diff --name-only --diff-filter=ACMR "$base" "$head" \
+              | grep -E '^docs/project_ops/(in_progress|completed)/.*\.md$' \
+              | grep -v '/_REQUEST_TEMPLATE\.md$' \
+              || true
+          )
 
           if [[ ${#files[@]} -eq 0 ]]; then
             echo "count=0" >> "$GITHUB_OUTPUT"
@@ -68,6 +73,7 @@ jobs:
           set -euo pipefail
           while IFS= read -r request_doc; do
             [[ -z "$request_doc" ]] && continue
+            [[ -f "$request_doc" ]] || continue
             echo "::group::Project Ops request audit - $request_doc"
             python3 project_ops/tools/project_ops_request_audit.py --repo . --request "$request_doc"
             echo "::endgroup::"
