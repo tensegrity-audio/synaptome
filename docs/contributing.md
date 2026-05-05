@@ -68,7 +68,7 @@ Please include:
 
 Public CI runs:
 
-- Project Ops adapter and changed-request audits through the external `tensegrity-audio/project_ops` repo
+- Project Ops adapter and changed-request audits through the external `tensegrity-audio/project_ops` repo pinned at `v0.1.1`
 - strict extraction manifest validation
 - public app contract validation
 - app-independence audit

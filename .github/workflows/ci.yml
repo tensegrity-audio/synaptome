@@ -20,6 +20,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: tensegrity-audio/project_ops
+          ref: v0.1.1
           path: project_ops
       - name: Set up Python
         uses: actions/setup-python@v5

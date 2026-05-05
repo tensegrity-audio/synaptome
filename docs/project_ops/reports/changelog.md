@@ -2,6 +2,14 @@
 
 This changelog records Project Ops and administrative workflow changes. Product release versioning remains governed by `docs/release_policy.md`.
 
+## 2026-05-05 - governance - project_ops_v0_1_1_pin
+- Phase / Milestone: Project Ops compatibility hardening
+- Summary: Pinned Synaptome's Project Ops workflow checkouts, adapter schema URL, and adapter metadata to Project Ops `v0.1.1` instead of moving `main`.
+- Request Doc: `docs/project_ops/completed/project_ops_compatibility.md`
+- Roadmap Entry: `docs/project_ops/roadmap.md`
+- Validation: `python ..\project_ops\tools\project_ops_audit.py --repo .`; `python ..\project_ops\tools\project_ops_request_audit.py --repo . --request-id project_ops_compatibility`; `git diff --check`.
+- Follow-Up Actions: Cut a new Project Ops tag before changing reusable audit/schema behavior consumed by Synaptome.
+
 ## 2026-05-05 - governance - project_ops_remote_request_audit
 - Phase / Milestone: Project Ops compatibility hardening
 - Summary: Added a Synaptome Project Ops changed-request audit workflow that checks out `tensegrity-audio/project_ops` on GitHub Actions and runs `project_ops_request_audit.py` against changed `docs/project_ops/(in_progress|completed)/*.md` records. Added Project Ops request audit to contributor/local validation and pruned stale Tensegrity process-contract entries from Synaptome's full contract report so `validate_configs.py --contracts` is public-runtime-owned.
