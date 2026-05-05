@@ -1,0 +1,74 @@
+name: Project Ops Request Audit
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'docs/project_ops/**'
+      - '.project_ops/config.json'
+  push:
+    branches: [ main ]
+    paths:
+      - 'docs/project_ops/**'
+      - '.project_ops/config.json'
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check out Project Ops
+        uses: actions/checkout@v4
+        with:
+          repository: tensegrity-audio/project_ops
+          path: project_ops
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Collect changed Project Ops request docs
+        id: changed
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            base="${{ github.event.pull_request.base.sha }}"
+            head="${{ github.event.pull_request.head.sha }}"
+          else
+            base="${{ github.event.before }}"
+            head="${{ github.sha }}"
+          fi
+
+          mapfile -t files < <(git diff --name-only "$base" "$head" | grep -E '^docs/project_ops/(in_progress|completed)/.*\.md$' || true)
+
+          if [[ ${#files[@]} -eq 0 ]]; then
+            echo "count=0" >> "$GITHUB_OUTPUT"
+            echo "No Project Ops request docs changed."
+            exit 0
+          fi
+
+          printf '%s\n' "${files[@]}" > changed_request_docs.txt
+          echo "count=${#files[@]}" >> "$GITHUB_OUTPUT"
+          echo "Changed Project Ops request docs:"
+          cat changed_request_docs.txt
+
+      - name: Run Project Ops request audit on changed requests
+        if: steps.changed.outputs.count != '0'
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r request_doc; do
+            [[ -z "$request_doc" ]] && continue
+            echo "::group::Project Ops request audit - $request_doc"
+            python3 project_ops/tools/project_ops_request_audit.py --repo . --request "$request_doc"
+            echo "::endgroup::"
+          done < changed_request_docs.txt

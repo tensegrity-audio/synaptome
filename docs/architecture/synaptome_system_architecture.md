@@ -183,7 +183,7 @@ These should be outside the Synaptome public runtime, even if they currently liv
 | Product firmware | External firmware packages | Producers/controllers that speak shared contracts. |
 | Radio schema package | External shared package | Shared contract package candidate, not app runtime source. |
 | Specific show content | Current bespoke scenes, models, videos, style-specific assets | Examples or separate content packs unless intentionally bundled. |
-| Governance framework | `docs/governance/`, `docs/docops.md` | Process scaffolding; useful internally, not the app itself. |
+| Project Ops framework | External `tensegrity-audio/project_ops` repo plus local `docs/project_ops/**` adapter docs | Process scaffolding; useful internally, not the app itself. |
 | Historical payloads | Legacy firmware payload headers | Quarantined migration material. |
 
 The rule remains:

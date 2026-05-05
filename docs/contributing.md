@@ -30,6 +30,7 @@ python tools\validate_release_metadata.py
 python tools\validate_configs.py --public-app
 python tools\check_app_independence.py
 python ..\project_ops\tools\project_ops_audit.py --repo .
+python ..\project_ops\tools\project_ops_request_audit.py --repo . --request-id project_ops_compatibility
 & 'C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\amd64\MSBuild.exe' `
   'synaptome\tests\BrowserFlowTest\BrowserFlowTest.vcxproj' `
   /p:Configuration=Release /p:Platform=x64 /m /v:minimal /clp:Summary
@@ -67,6 +68,7 @@ Please include:
 
 Public CI runs:
 
+- Project Ops adapter and changed-request audits through the external `tensegrity-audio/project_ops` repo
 - strict extraction manifest validation
 - public app contract validation
 - app-independence audit

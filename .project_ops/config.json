@@ -61,6 +61,18 @@
     "dryRunByDefault": true,
     "commands": [
       {
+        "name": "project-ops-adapter",
+        "command": "python ../project_ops/tools/project_ops_audit.py --repo .",
+        "required": true,
+        "description": "Check Synaptome can consume the reusable Project Ops adapter from the external Project Ops repo."
+      },
+      {
+        "name": "project-ops-compatibility-request",
+        "command": "python ../project_ops/tools/project_ops_request_audit.py --repo . --request-id project_ops_compatibility",
+        "required": true,
+        "description": "Check the Synaptome Project Ops compatibility request remains synchronized with its roadmap and changelog."
+      },
+      {
         "name": "manifest",
         "command": "python tools/validate_synaptome_extraction_manifest.py --check --strict-review",
         "required": true,
