@@ -11,6 +11,8 @@ State Summary
 - Primary Scope: governance
 - Secondary Scopes: docs, release, tests
 - Blocking Issues / Unknowns: None.
+- Impact / Priority Notes: Gives Synaptome a Project Ops-compatible administrative surface without importing Tensegrity history or replacing public runtime docs.
+- Project Ops / Roadmap Updates (timestamped): 2026-05-04 - Added namespaced Project Ops operating surface and passed adapter audit. 2026-05-05 - Synaptome CI now checks out the external Project Ops repo before public runtime validation.
 - Resume From: Complete; future work starts from a new request artifact.
 
 ## Milestone Synthesis
