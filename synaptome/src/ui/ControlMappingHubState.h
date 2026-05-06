@@ -3114,11 +3114,20 @@ inline std::string ControlMappingHubState::summarizeHudLayersFeed(const ofJson& 
         const auto& summary = payload["summary"];
         if (summary.contains("grid")) {
             const auto& grid = summary["grid"];
-            parts.push_back("Grid seg " + ofToString(grid.value("segments", 0)));
+            std::string gridSummary = "Grid seg " + ofToString(grid.value("segments", 0));
+            const std::string modes = grid.value("deformationSummary", std::string("flat"));
+            if (modes != "flat") {
+                gridSummary += " " + modes;
+            }
+            parts.push_back(std::move(gridSummary));
         }
         if (summary.contains("geodesic")) {
             const auto& sphere = summary["geodesic"];
-            parts.push_back("Sphere r=" + ofToString(sphere.value("radius", 0.0f), 1));
+            std::string sphereSummary = "Sphere r=" + ofToString(sphere.value("radius", 0.0f), 1);
+            if (sphere.value("deform", false)) {
+                sphereSummary += " deform";
+            }
+            parts.push_back(std::move(sphereSummary));
         }
     }
     if (payload.contains("slots") && payload["slots"].is_array()) {

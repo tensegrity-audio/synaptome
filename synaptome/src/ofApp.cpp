@@ -1285,6 +1285,7 @@ void ofApp::setup() {
     factory.registerType("gameOfLife", []() { return std::make_unique<GameOfLifeLayer>(); });
     factory.registerType("agentField", []() { return std::make_unique<AgentFieldLayer>(); });
     factory.registerType("flocking", []() { return std::make_unique<FlockingLayer>(); });
+    factory.registerType("flowField", []() { return std::make_unique<FlowFieldLayer>(); });
     factory.registerType("media.webcam", []() { return std::make_unique<VideoGrabberLayer>(); });
     factory.registerType("media.clip", []() { return std::make_unique<VideoClipLayer>(); });
     factory.registerType("text", []() { return std::make_unique<TextLayer>(); });
@@ -2375,6 +2376,7 @@ std::string ofApp::composeHudLayerSummary() const {
     std::ostringstream out;
     if (gridLayer) {
         out << "\nGrid segments: " << ofToString(static_cast<int>(*gridLayer->segmentsParamPtr()))
+            << "   modes: " << gridLayer->deformationSummary()
             << "   faces: " << ofToString(*gridLayer->faceOpacityParamPtr(), 2)
             << "   visible: " << (gridLayer->isEnabled() ? "yes" : "no");
     }
@@ -2385,6 +2387,7 @@ std::string ofApp::composeHudLayerSummary() const {
             << "   orbitR: " << ofToString(*geodesicLayer->orbitRadiusParamPtr(), 1)
             << "   orbitSpd: " << ofToString(*geodesicLayer->orbitSpeedParamPtr(), 1)
             << "   radius: " << ofToString(*geodesicLayer->radiusParamPtr(), 1)
+            << "   deform: " << (*geodesicLayer->deformParamPtr() ? ofToString(*geodesicLayer->deformAmountParamPtr(), 1) : "off")
             << "   faces: " << ofToString(*geodesicLayer->faceOpacityParamPtr(), 2)
             << "   visible: " << (geodesicLayer->isEnabled() ? "yes" : "no");
     }
@@ -2481,6 +2484,26 @@ std::string ofApp::composeHudLayers() const {
     if (gridLayer) {
         ofJson grid;
         grid["segments"] = static_cast<int>(*gridLayer->segmentsParamPtr());
+        grid["wave"] = *gridLayer->waveParamPtr();
+        grid["waveAmount"] = *gridLayer->waveAmountParamPtr();
+        grid["waveFrequency"] = *gridLayer->waveFrequencyParamPtr();
+        grid["waveSpeed"] = *gridLayer->waveSpeedParamPtr();
+        grid["bend"] = *gridLayer->bendParamPtr();
+        grid["bendAmount"] = *gridLayer->bendAmountParamPtr();
+        grid["bendFrequency"] = *gridLayer->bendFrequencyParamPtr();
+        grid["bendSpeed"] = *gridLayer->bendSpeedParamPtr();
+        grid["deform"] = *gridLayer->deformParamPtr();
+        grid["deformAmount"] = *gridLayer->deformAmountParamPtr();
+        grid["deformScale"] = *gridLayer->deformScaleParamPtr();
+        grid["deformSpeed"] = *gridLayer->deformSpeedParamPtr();
+        grid["twist"] = *gridLayer->twistParamPtr();
+        grid["twistAmount"] = *gridLayer->twistAmountParamPtr();
+        grid["twistSpeed"] = *gridLayer->twistSpeedParamPtr();
+        grid["bulge"] = *gridLayer->bulgeParamPtr();
+        grid["bulgeAmount"] = *gridLayer->bulgeAmountParamPtr();
+        grid["bulgeRadius"] = *gridLayer->bulgeRadiusParamPtr();
+        grid["bulgeSpeed"] = *gridLayer->bulgeSpeedParamPtr();
+        grid["deformationSummary"] = gridLayer->deformationSummary();
         grid["faceOpacity"] = *gridLayer->faceOpacityParamPtr();
         grid["visible"] = gridLayer->isEnabled();
         summaryJson["grid"] = std::move(grid);
@@ -2493,6 +2516,10 @@ std::string ofApp::composeHudLayers() const {
         sphere["orbitRadius"] = *geodesicLayer->orbitRadiusParamPtr();
         sphere["orbitSpeed"] = *geodesicLayer->orbitSpeedParamPtr();
         sphere["radius"] = *geodesicLayer->radiusParamPtr();
+        sphere["deform"] = *geodesicLayer->deformParamPtr();
+        sphere["deformAmount"] = *geodesicLayer->deformAmountParamPtr();
+        sphere["deformScale"] = *geodesicLayer->deformScaleParamPtr();
+        sphere["deformSpeed"] = *geodesicLayer->deformSpeedParamPtr();
         sphere["faceOpacity"] = *geodesicLayer->faceOpacityParamPtr();
         sphere["visible"] = geodesicLayer->isEnabled();
         summaryJson["geodesic"] = std::move(sphere);

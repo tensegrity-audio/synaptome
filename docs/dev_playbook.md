@@ -9,6 +9,7 @@ Run from the repo root:
 ```powershell
 python tools\validate_synaptome_extraction_manifest.py --check --strict-review
 python tools\validate_release_metadata.py
+python tools\validate_osc_route_patterns.py
 python tools\validate_configs.py --public-app
 python tools\check_app_independence.py
 & 'C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\amd64\MSBuild.exe' `
@@ -20,6 +21,7 @@ python tools\run_control_hub_flow.py --dual-screen-phase2
 Expected signals:
 
 - extraction manifest has 0 review-gated and 0 unclassified files
+- built-in OSC route globs match mesh-style sample addresses
 - public app contracts pass
 - app independence reports no firmware implementation references
 - BrowserFlowTest builds with 0 errors
@@ -32,6 +34,7 @@ Expected signals:
 | --- | --- | --- |
 | Public manifest | `python tools\validate_synaptome_extraction_manifest.py --check --strict-review` | Ensures only public runtime files are included in the extraction payload. |
 | Release metadata | `python tools\validate_release_metadata.py` | Checks `VERSION`, product/repo naming policy, and README version label. |
+| OSC route globs | `python tools\validate_osc_route_patterns.py` | Proves built-in mesh-style OSC routes use router glob syntax and match sample device addresses. |
 | Public app contracts | `python tools\validate_configs.py --public-app` | Validates app-facing contracts: parameters, scenes, layer catalog, device maps, MIDI/OSC maps, HUD/Console fixtures. |
 | App independence | `python tools\check_app_independence.py` | Catches firmware/helper implementation references in public app source. |
 | BrowserFlowTest build | `msbuild synaptome\tests\BrowserFlowTest\BrowserFlowTest.vcxproj /p:Configuration=Release /p:Platform=x64` | Builds the native app-facing regression harness. |

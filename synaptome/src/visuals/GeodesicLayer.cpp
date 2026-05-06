@@ -1,7 +1,9 @@
 #include "GeodesicLayer.h"
 #include "ofGraphics.h"
 #include "ofMath.h"
+#include <algorithm>
 #include <cmath>
+#include <cstddef>
 
 namespace {
     const ofColor kGeodesicLineColor(255, 140, 0);
@@ -75,6 +77,36 @@ void GeodesicLayer::setup(ParameterRegistry& registry) {
     radiusMeta.range.step = 1.0f;
     registry.addFloat(prefix + ".radius", &paramRadius_, paramRadius_, radiusMeta);
 
+    ParameterRegistry::Descriptor deformMeta;
+    deformMeta.label = "Sphere Deform";
+    deformMeta.group = "Sphere";
+    deformMeta.description = "Enable irregular Perlin noise deformation.";
+    registry.addBool(prefix + ".deform", &paramDeform_, paramDeform_, deformMeta);
+
+    ParameterRegistry::Descriptor deformAmountMeta;
+    deformAmountMeta.label = "Sphere Deform Amount";
+    deformAmountMeta.group = "Sphere";
+    deformAmountMeta.range.min = 0.0f;
+    deformAmountMeta.range.max = 160.0f;
+    deformAmountMeta.range.step = 1.0f;
+    registry.addFloat(prefix + ".deformAmount", &paramDeformAmount_, paramDeformAmount_, deformAmountMeta);
+
+    ParameterRegistry::Descriptor deformScaleMeta;
+    deformScaleMeta.label = "Sphere Deform Scale";
+    deformScaleMeta.group = "Sphere";
+    deformScaleMeta.range.min = 0.1f;
+    deformScaleMeta.range.max = 8.0f;
+    deformScaleMeta.range.step = 0.05f;
+    registry.addFloat(prefix + ".deformScale", &paramDeformScale_, paramDeformScale_, deformScaleMeta);
+
+    ParameterRegistry::Descriptor deformSpeedMeta;
+    deformSpeedMeta.label = "Sphere Deform Speed";
+    deformSpeedMeta.group = "Sphere";
+    deformSpeedMeta.range.min = 0.0f;
+    deformSpeedMeta.range.max = 4.0f;
+    deformSpeedMeta.range.step = 0.01f;
+    registry.addFloat(prefix + ".deformSpeed", &paramDeformSpeed_, paramDeformSpeed_, deformSpeedMeta);
+
     ParameterRegistry::Descriptor lineMeta;
     lineMeta.label = "Sphere Line Opacity";
     lineMeta.group = "Sphere";
@@ -95,8 +127,6 @@ void GeodesicLayer::setup(ParameterRegistry& registry) {
 }
 
 void GeodesicLayer::update(const LayerUpdateParams& params) {
-    (void)params;
-
     enabled_ = paramEnabled_;
 
     float clampedSpin = ofClamp(paramSpinDeg_, -360.0f, 360.0f);
@@ -136,6 +166,26 @@ void GeodesicLayer::update(const LayerUpdateParams& params) {
     if (std::abs(clampedRadius - radius_) > 0.5f) {
         radius_ = clampedRadius;
         rebuildGeodesic();
+    }
+
+    deform_ = paramDeform_;
+
+    float clampedDeformAmount = ofClamp(paramDeformAmount_, 0.0f, 160.0f);
+    if (paramDeformAmount_ != clampedDeformAmount) paramDeformAmount_ = clampedDeformAmount;
+    deformAmount_ = clampedDeformAmount;
+
+    float clampedDeformScale = ofClamp(paramDeformScale_, 0.1f, 8.0f);
+    if (paramDeformScale_ != clampedDeformScale) paramDeformScale_ = clampedDeformScale;
+    deformScale_ = clampedDeformScale;
+
+    float clampedDeformSpeed = ofClamp(paramDeformSpeed_, 0.0f, 4.0f);
+    if (paramDeformSpeed_ != clampedDeformSpeed) paramDeformSpeed_ = clampedDeformSpeed;
+    deformSpeed_ = clampedDeformSpeed;
+
+    if (deform_ && deformAmount_ > 0.01f) {
+        applyDeformation(params.time);
+    } else if (meshDeformed_) {
+        restoreBaseMesh();
     }
 
     float clampedLine = ofClamp(paramLineOpacity_, 0.0f, 1.0f);
@@ -211,5 +261,44 @@ void GeodesicLayer::setExternalEnabled(bool enabled) {
 
 void GeodesicLayer::rebuildGeodesic() {
     ico_ = ofIcoSpherePrimitive(radius_, subdivisions_);
-    mesh_ = ico_.getMesh();
+    baseMesh_ = ico_.getMesh();
+    restoreBaseMesh();
+}
+
+void GeodesicLayer::applyDeformation(float time) {
+    if (baseMesh_.getNumVertices() == 0) {
+        return;
+    }
+
+    mesh_ = baseMesh_;
+    const auto& baseVertices = baseMesh_.getVertices();
+    const float scaledTime = time * deformSpeed_;
+    const float minRadius = std::max(1.0f, radius_ * 0.2f);
+    const auto vertexCount = static_cast<ofIndexType>(baseVertices.size());
+
+    for (ofIndexType i = 0; i < vertexCount; ++i) {
+        const glm::vec3 baseVertex = baseVertices[static_cast<std::size_t>(i)];
+        const float baseLength = glm::length(baseVertex);
+        if (baseLength <= 0.0001f) {
+            continue;
+        }
+
+        const glm::vec3 direction = baseVertex / baseLength;
+        const float coarse = ofNoise(direction.x * deformScale_ + 17.31f,
+                                     direction.y * deformScale_ - 23.79f,
+                                     direction.z * deformScale_ + scaledTime);
+        const float detail = ofNoise(direction.x * deformScale_ * 2.37f - 41.13f,
+                                     direction.y * deformScale_ * 2.37f + scaledTime * 1.67f,
+                                     direction.z * deformScale_ * 2.37f + 9.47f);
+        const float centeredNoise = ((coarse * 0.72f + detail * 0.28f) - 0.5f) * 2.0f;
+        const float displacedRadius = std::max(minRadius, baseLength + centeredNoise * deformAmount_);
+        mesh_.setVertex(i, direction * displacedRadius);
+    }
+
+    meshDeformed_ = true;
+}
+
+void GeodesicLayer::restoreBaseMesh() {
+    mesh_ = baseMesh_;
+    meshDeformed_ = false;
 }

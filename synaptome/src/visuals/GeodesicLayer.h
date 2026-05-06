@@ -24,6 +24,10 @@ public:
     float* rotateYParamPtr() { return &paramRotateYDeg_; }
     float* rotateZParamPtr() { return &paramRotateZDeg_; }
     float* radiusParamPtr() { return &paramRadius_; }
+    bool* deformParamPtr() { return &paramDeform_; }
+    float* deformAmountParamPtr() { return &paramDeformAmount_; }
+    float* deformScaleParamPtr() { return &paramDeformScale_; }
+    float* deformSpeedParamPtr() { return &paramDeformSpeed_; }
     float* lineOpacityParamPtr() { return &paramLineOpacity_; }
     float* faceOpacityParamPtr() { return &paramFaceOpacity_; }
 
@@ -31,6 +35,8 @@ public:
 
 private:
     void rebuildGeodesic();
+    void applyDeformation(float time);
+    void restoreBaseMesh();
 
     bool paramEnabled_ = true;
     float paramSpinDeg_ = 25.0f;
@@ -42,6 +48,10 @@ private:
     float paramRotateYDeg_ = 0.0f;
     float paramRotateZDeg_ = 0.0f;
     float paramRadius_ = 140.0f;
+    bool paramDeform_ = false;
+    float paramDeformAmount_ = 28.0f;
+    float paramDeformScale_ = 1.6f;
+    float paramDeformSpeed_ = 0.35f;
     float paramLineOpacity_ = 1.0f;
     float paramFaceOpacity_ = 0.0f;
 
@@ -55,10 +65,16 @@ private:
     float rotateYDeg_ = 0.0f;
     float rotateZDeg_ = 0.0f;
     float radius_ = 140.0f;
+    bool deform_ = false;
+    float deformAmount_ = 28.0f;
+    float deformScale_ = 1.6f;
+    float deformSpeed_ = 0.35f;
     float lineOpacity_ = 1.0f;
     float faceOpacity_ = 0.0f;
     int subdivisions_ = 2;
+    bool meshDeformed_ = false;
 
     ofIcoSpherePrimitive ico_;
+    ofVboMesh baseMesh_;
     ofVboMesh mesh_;
 };

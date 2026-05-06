@@ -115,6 +115,7 @@ From the repo root:
 
 ```powershell
 python tools\validate_synaptome_extraction_manifest.py --check --strict-review
+python tools\validate_osc_route_patterns.py
 python tools\validate_configs.py --public-app
 python tools\check_app_independence.py
 & 'C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\amd64\MSBuild.exe' `
@@ -126,6 +127,7 @@ python tools\run_control_hub_flow.py --dual-screen-phase2
 Expected current signals:
 
 - Public extraction manifest reports no review-gated or unclassified files.
+- Built-in OSC route globs match mesh-style sample addresses.
 - Public app contracts report `validated=10`.
 - App independence audit reports no firmware implementation references.
 - BrowserFlowTest builds with warnings tracked as cleanup, but 0 errors.

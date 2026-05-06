@@ -174,6 +174,17 @@ def parse_source_templates(source_path: Path, class_name: str | None = None) -> 
             }
         )
 
+    helper_direct = re.compile(r"\bregister(Float|Bool|String)\s*\(\s*registry\s*,\s*prefix\s*\+\s*\"(\.[^\"]+)\"")
+    for match in helper_direct.finditer(text):
+        kind = match.group(1).lower()
+        templates.append(
+            {
+                "suffix": match.group(2),
+                "kind": "string" if kind == "string" else kind,
+                "source": source_ref(source_path, line_for(text, match.start())),
+            }
+        )
+
     via_variable = re.compile(r"registry\.add(Float|Bool|String)\s*\(\s*(\w+_?)\s*,")
     for match in via_variable.finditer(text):
         variable = match.group(2)

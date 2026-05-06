@@ -28,6 +28,7 @@
 #include "visuals/GameOfLifeLayer.h"
 #include "visuals/AgentFieldLayer.h"
 #include "visuals/FlockingLayer.h"
+#include "visuals/FlowFieldLayer.h"
 #include "visuals/VideoGrabberLayer.h"
 #include "visuals/VideoClipLayer.h"
 #include "visuals/TextLayer.h"

@@ -300,6 +300,11 @@
       "required": true
     },
     {
+      "pattern": "tools/validate_osc_route_patterns.py",
+      "reason": "Built-in OSC route glob regression.",
+      "required": true
+    },
+    {
       "pattern": "tools/validate_parameter_targets.py",
       "reason": "Strict parameter target validator.",
       "required": true

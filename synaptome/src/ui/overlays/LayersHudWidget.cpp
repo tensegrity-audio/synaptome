@@ -17,6 +17,7 @@ std::string composeLayersFromFeed(const ofJson& payload) {
         if (summary.contains("grid")) {
             const auto& grid = summary["grid"];
             out << "\nGrid segments: " << grid.value("segments", 0)
+                << "   modes: " << grid.value("deformationSummary", std::string("flat"))
                 << "   faces: " << ofToString(grid.value("faceOpacity", 0.0f), 2)
                 << "   visible: " << (grid.value("visible", false) ? "yes" : "no");
         }
@@ -25,6 +26,7 @@ std::string composeLayersFromFeed(const ofJson& payload) {
             out << "\nSphere spin: " << ofToString(geo.value("spin", 0.0f), 1)
                 << "   hover: " << ofToString(geo.value("hover", 0.0f), 1)
                 << "   radius: " << ofToString(geo.value("radius", 0.0f), 1)
+                << "   deform: " << (geo.value("deform", false) ? ofToString(geo.value("deformAmount", 0.0f), 1) : "off")
                 << "   faces: " << ofToString(geo.value("faceOpacity", 0.0f), 2)
                 << "   visible: " << (geo.value("visible", false) ? "yes" : "no");
         }

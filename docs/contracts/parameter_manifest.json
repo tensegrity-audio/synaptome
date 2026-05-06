@@ -13,9 +13,9 @@
     "synaptome/bin/data/layers/**/*.json"
   ],
   "counts": {
-    "parameters": 578,
-    "layerTemplates": 170,
-    "consoleTemplates": 121,
+    "parameters": 648,
+    "layerTemplates": 239,
+    "consoleTemplates": 167,
     "catalogAssetsWithoutLayerParameters": 12,
     "unresolvedAssets": 0
   },
@@ -1214,6 +1214,754 @@
       "template": "{registryPrefix}.visible",
       "source": {
         "path": "synaptome/bin/data/layers/generative/ant_tunnels.json",
+        "line": 1
+      }
+    },
+    {
+      "id": "generative.flowField.alpha",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "normalized",
+      "assetId": "generative.flowField",
+      "layerType": "flowField",
+      "template": "{registryPrefix}.alpha",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/flow_field.json",
+        "line": 1
+      },
+      "default": 1.0,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.flowField.autoReseed",
+      "kind": "bool",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.flowField",
+      "layerType": "flowField",
+      "template": "{registryPrefix}.autoReseed",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/flow_field.json",
+        "line": 1
+      },
+      "default": false,
+      "defaultKind": "bool"
+    },
+    {
+      "id": "generative.flowField.autoReseedEveryBeats",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "beats",
+      "assetId": "generative.flowField",
+      "layerType": "flowField",
+      "template": "{registryPrefix}.autoReseedEveryBeats",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/flow_field.json",
+        "line": 1
+      },
+      "default": 32,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.flowField.backgroundAlpha",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "normalized",
+      "assetId": "generative.flowField",
+      "layerType": "flowField",
+      "template": "{registryPrefix}.backgroundAlpha",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/flow_field.json",
+        "line": 1
+      },
+      "default": 0.0,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.flowField.bgB",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.flowField",
+      "layerType": "flowField",
+      "template": "{registryPrefix}.bgB",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/flow_field.json",
+        "line": 1
+      },
+      "default": 0.03,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.flowField.bgG",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.flowField",
+      "layerType": "flowField",
+      "template": "{registryPrefix}.bgG",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/flow_field.json",
+        "line": 1
+      },
+      "default": 0.015,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.flowField.bgR",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.flowField",
+      "layerType": "flowField",
+      "template": "{registryPrefix}.bgR",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/flow_field.json",
+        "line": 1
+      },
+      "default": 0.01,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.flowField.bpmMultiplier",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.flowField",
+      "layerType": "flowField",
+      "template": "{registryPrefix}.bpmMultiplier",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/flow_field.json",
+        "line": 1
+      },
+      "default": 6.0,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.flowField.bpmSync",
+      "kind": "bool",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.flowField",
+      "layerType": "flowField",
+      "template": "{registryPrefix}.bpmSync",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/flow_field.json",
+        "line": 1
+      },
+      "default": true,
+      "defaultKind": "bool"
+    },
+    {
+      "id": "generative.flowField.centerPull",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.flowField",
+      "layerType": "flowField",
+      "template": "{registryPrefix}.centerPull",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/flow_field.json",
+        "line": 1
+      },
+      "default": 0.0,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.flowField.colorAB",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.flowField",
+      "layerType": "flowField",
+      "template": "{registryPrefix}.colorAB",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/flow_field.json",
+        "line": 1
+      },
+      "default": 1.0,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.flowField.colorAG",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.flowField",
+      "layerType": "flowField",
+      "template": "{registryPrefix}.colorAG",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/flow_field.json",
+        "line": 1
+      },
+      "default": 0.75,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.flowField.colorAR",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.flowField",
+      "layerType": "flowField",
+      "template": "{registryPrefix}.colorAR",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/flow_field.json",
+        "line": 1
+      },
+      "default": 0.1,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.flowField.colorBB",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.flowField",
+      "layerType": "flowField",
+      "template": "{registryPrefix}.colorBB",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/flow_field.json",
+        "line": 1
+      },
+      "default": 0.85,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.flowField.colorBG",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.flowField",
+      "layerType": "flowField",
+      "template": "{registryPrefix}.colorBG",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/flow_field.json",
+        "line": 1
+      },
+      "default": 0.35,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.flowField.colorBR",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.flowField",
+      "layerType": "flowField",
+      "template": "{registryPrefix}.colorBR",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/flow_field.json",
+        "line": 1
+      },
+      "default": 1.0,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.flowField.colorBias",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.flowField",
+      "layerType": "flowField",
+      "template": "{registryPrefix}.colorBias",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/flow_field.json",
+        "line": 1
+      },
+      "default": 0.5,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.flowField.curlAmount",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.flowField",
+      "layerType": "flowField",
+      "template": "{registryPrefix}.curlAmount",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/flow_field.json",
+        "line": 1
+      },
+      "default": 0.65,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.flowField.driftX",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.flowField",
+      "layerType": "flowField",
+      "template": "{registryPrefix}.driftX",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/flow_field.json",
+        "line": 1
+      },
+      "default": 0.0,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.flowField.driftY",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.flowField",
+      "layerType": "flowField",
+      "template": "{registryPrefix}.driftY",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/flow_field.json",
+        "line": 1
+      },
+      "default": 0.0,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.flowField.edgeWrap",
+      "kind": "bool",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.flowField",
+      "layerType": "flowField",
+      "template": "{registryPrefix}.edgeWrap",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/flow_field.json",
+        "line": 1
+      },
+      "default": true,
+      "defaultKind": "bool"
+    },
+    {
+      "id": "generative.flowField.fieldScale",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.flowField",
+      "layerType": "flowField",
+      "template": "{registryPrefix}.fieldScale",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/flow_field.json",
+        "line": 1
+      },
+      "default": 2.8,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.flowField.fieldStrength",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.flowField",
+      "layerType": "flowField",
+      "template": "{registryPrefix}.fieldStrength",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/flow_field.json",
+        "line": 1
+      },
+      "default": 1.0,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.flowField.flowSpeed",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.flowField",
+      "layerType": "flowField",
+      "template": "{registryPrefix}.flowSpeed",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/flow_field.json",
+        "line": 1
+      },
+      "default": 0.18,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.flowField.inertia",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.flowField",
+      "layerType": "flowField",
+      "template": "{registryPrefix}.inertia",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/flow_field.json",
+        "line": 1
+      },
+      "default": 0.55,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.flowField.mirrorX",
+      "kind": "bool",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.flowField",
+      "layerType": "flowField",
+      "template": "{registryPrefix}.mirrorX",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/flow_field.json",
+        "line": 1
+      },
+      "default": false,
+      "defaultKind": "bool"
+    },
+    {
+      "id": "generative.flowField.mirrorY",
+      "kind": "bool",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.flowField",
+      "layerType": "flowField",
+      "template": "{registryPrefix}.mirrorY",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/flow_field.json",
+        "line": 1
+      },
+      "default": false,
+      "defaultKind": "bool"
+    },
+    {
+      "id": "generative.flowField.opacity",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "normalized",
+      "assetId": "generative.flowField",
+      "layerType": "flowField",
+      "template": "{registryPrefix}.opacity",
+      "default": 1.0,
+      "defaultKind": "float",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/flow_field.json",
+        "line": 1
+      }
+    },
+    {
+      "id": "generative.flowField.paletteRate",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.flowField",
+      "layerType": "flowField",
+      "template": "{registryPrefix}.paletteRate",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/flow_field.json",
+        "line": 1
+      },
+      "default": 0.0,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.flowField.particleCount",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.flowField",
+      "layerType": "flowField",
+      "template": "{registryPrefix}.particleCount",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/flow_field.json",
+        "line": 1
+      },
+      "default": 900,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.flowField.particleLife",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.flowField",
+      "layerType": "flowField",
+      "template": "{registryPrefix}.particleLife",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/flow_field.json",
+        "line": 1
+      },
+      "default": 420,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.flowField.pointSize",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "px",
+      "assetId": "generative.flowField",
+      "layerType": "flowField",
+      "template": "{registryPrefix}.pointSize",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/flow_field.json",
+        "line": 1
+      },
+      "default": 1.0,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.flowField.reseed",
+      "kind": "bool",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.flowField",
+      "layerType": "flowField",
+      "template": "{registryPrefix}.reseed",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/flow_field.json",
+        "line": 1
+      }
+    },
+    {
+      "id": "generative.flowField.respawnRate",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.flowField",
+      "layerType": "flowField",
+      "template": "{registryPrefix}.respawnRate",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/flow_field.json",
+        "line": 1
+      },
+      "default": 0.01,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.flowField.spawnRadius",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.flowField",
+      "layerType": "flowField",
+      "template": "{registryPrefix}.spawnRadius",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/flow_field.json",
+        "line": 1
+      },
+      "default": 1.0,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.flowField.speed",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.flowField",
+      "layerType": "flowField",
+      "template": "{registryPrefix}.speed",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/flow_field.json",
+        "line": 1
+      },
+      "default": 18.0,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.flowField.stepSize",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.flowField",
+      "layerType": "flowField",
+      "template": "{registryPrefix}.stepSize",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/flow_field.json",
+        "line": 1
+      },
+      "default": 1.0,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.flowField.trailAlpha",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "normalized",
+      "assetId": "generative.flowField",
+      "layerType": "flowField",
+      "template": "{registryPrefix}.trailAlpha",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/flow_field.json",
+        "line": 1
+      },
+      "default": 0.9,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.flowField.trailBoost",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.flowField",
+      "layerType": "flowField",
+      "template": "{registryPrefix}.trailBoost",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/flow_field.json",
+        "line": 1
+      },
+      "default": 1.3,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.flowField.trailDeposit",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.flowField",
+      "layerType": "flowField",
+      "template": "{registryPrefix}.trailDeposit",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/flow_field.json",
+        "line": 1
+      },
+      "default": 0.16,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.flowField.trailFade",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.flowField",
+      "layerType": "flowField",
+      "template": "{registryPrefix}.trailFade",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/flow_field.json",
+        "line": 1
+      },
+      "default": 0.035,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.flowField.turbulence",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.flowField",
+      "layerType": "flowField",
+      "template": "{registryPrefix}.turbulence",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/flow_field.json",
+        "line": 1
+      },
+      "default": 0.35,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.flowField.vectorAlpha",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "normalized",
+      "assetId": "generative.flowField",
+      "layerType": "flowField",
+      "template": "{registryPrefix}.vectorAlpha",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/flow_field.json",
+        "line": 1
+      },
+      "default": 0.28,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.flowField.vectorOverlay",
+      "kind": "bool",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.flowField",
+      "layerType": "flowField",
+      "template": "{registryPrefix}.vectorOverlay",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/flow_field.json",
+        "line": 1
+      },
+      "default": false,
+      "defaultKind": "bool"
+    },
+    {
+      "id": "generative.flowField.vectorScale",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.flowField",
+      "layerType": "flowField",
+      "template": "{registryPrefix}.vectorScale",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/flow_field.json",
+        "line": 1
+      },
+      "default": 0.45,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.flowField.vectorSpacing",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.flowField",
+      "layerType": "flowField",
+      "template": "{registryPrefix}.vectorSpacing",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/flow_field.json",
+        "line": 1
+      },
+      "default": 18.0,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.flowField.visible",
+      "kind": "bool",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.flowField",
+      "layerType": "flowField",
+      "template": "{registryPrefix}.visible",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/flow_field.json",
         "line": 1
       }
     },
@@ -4150,6 +4898,62 @@
       }
     },
     {
+      "id": "geometry.geodesic.deform",
+      "kind": "bool",
+      "scope": "layer_asset",
+      "family": "geometry",
+      "units": "",
+      "assetId": "geometry.geodesic",
+      "layerType": "geodesic",
+      "template": "{registryPrefix}.deform",
+      "source": {
+        "path": "synaptome/bin/data/layers/geometry/geodesic.json",
+        "line": 1
+      }
+    },
+    {
+      "id": "geometry.geodesic.deformAmount",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "geometry",
+      "units": "",
+      "assetId": "geometry.geodesic",
+      "layerType": "geodesic",
+      "template": "{registryPrefix}.deformAmount",
+      "source": {
+        "path": "synaptome/bin/data/layers/geometry/geodesic.json",
+        "line": 1
+      }
+    },
+    {
+      "id": "geometry.geodesic.deformScale",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "geometry",
+      "units": "",
+      "assetId": "geometry.geodesic",
+      "layerType": "geodesic",
+      "template": "{registryPrefix}.deformScale",
+      "source": {
+        "path": "synaptome/bin/data/layers/geometry/geodesic.json",
+        "line": 1
+      }
+    },
+    {
+      "id": "geometry.geodesic.deformSpeed",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "geometry",
+      "units": "",
+      "assetId": "geometry.geodesic",
+      "layerType": "geodesic",
+      "template": "{registryPrefix}.deformSpeed",
+      "source": {
+        "path": "synaptome/bin/data/layers/geometry/geodesic.json",
+        "line": 1
+      }
+    },
+    {
       "id": "geometry.geodesic.faceOpacity",
       "kind": "float",
       "scope": "layer_asset",
@@ -4320,6 +5124,174 @@
       }
     },
     {
+      "id": "geometry.grid.bend",
+      "kind": "bool",
+      "scope": "layer_asset",
+      "family": "geometry",
+      "units": "",
+      "assetId": "geometry.grid",
+      "layerType": "grid",
+      "template": "{registryPrefix}.bend",
+      "source": {
+        "path": "synaptome/bin/data/layers/geometry/grid.json",
+        "line": 1
+      }
+    },
+    {
+      "id": "geometry.grid.bendAmount",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "geometry",
+      "units": "",
+      "assetId": "geometry.grid",
+      "layerType": "grid",
+      "template": "{registryPrefix}.bendAmount",
+      "source": {
+        "path": "synaptome/bin/data/layers/geometry/grid.json",
+        "line": 1
+      }
+    },
+    {
+      "id": "geometry.grid.bendFrequency",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "geometry",
+      "units": "",
+      "assetId": "geometry.grid",
+      "layerType": "grid",
+      "template": "{registryPrefix}.bendFrequency",
+      "source": {
+        "path": "synaptome/bin/data/layers/geometry/grid.json",
+        "line": 1
+      }
+    },
+    {
+      "id": "geometry.grid.bendSpeed",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "geometry",
+      "units": "",
+      "assetId": "geometry.grid",
+      "layerType": "grid",
+      "template": "{registryPrefix}.bendSpeed",
+      "source": {
+        "path": "synaptome/bin/data/layers/geometry/grid.json",
+        "line": 1
+      }
+    },
+    {
+      "id": "geometry.grid.bulge",
+      "kind": "bool",
+      "scope": "layer_asset",
+      "family": "geometry",
+      "units": "",
+      "assetId": "geometry.grid",
+      "layerType": "grid",
+      "template": "{registryPrefix}.bulge",
+      "source": {
+        "path": "synaptome/bin/data/layers/geometry/grid.json",
+        "line": 1
+      }
+    },
+    {
+      "id": "geometry.grid.bulgeAmount",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "geometry",
+      "units": "",
+      "assetId": "geometry.grid",
+      "layerType": "grid",
+      "template": "{registryPrefix}.bulgeAmount",
+      "source": {
+        "path": "synaptome/bin/data/layers/geometry/grid.json",
+        "line": 1
+      }
+    },
+    {
+      "id": "geometry.grid.bulgeRadius",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "geometry",
+      "units": "",
+      "assetId": "geometry.grid",
+      "layerType": "grid",
+      "template": "{registryPrefix}.bulgeRadius",
+      "source": {
+        "path": "synaptome/bin/data/layers/geometry/grid.json",
+        "line": 1
+      }
+    },
+    {
+      "id": "geometry.grid.bulgeSpeed",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "geometry",
+      "units": "",
+      "assetId": "geometry.grid",
+      "layerType": "grid",
+      "template": "{registryPrefix}.bulgeSpeed",
+      "source": {
+        "path": "synaptome/bin/data/layers/geometry/grid.json",
+        "line": 1
+      }
+    },
+    {
+      "id": "geometry.grid.deform",
+      "kind": "bool",
+      "scope": "layer_asset",
+      "family": "geometry",
+      "units": "",
+      "assetId": "geometry.grid",
+      "layerType": "grid",
+      "template": "{registryPrefix}.deform",
+      "source": {
+        "path": "synaptome/bin/data/layers/geometry/grid.json",
+        "line": 1
+      }
+    },
+    {
+      "id": "geometry.grid.deformAmount",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "geometry",
+      "units": "",
+      "assetId": "geometry.grid",
+      "layerType": "grid",
+      "template": "{registryPrefix}.deformAmount",
+      "source": {
+        "path": "synaptome/bin/data/layers/geometry/grid.json",
+        "line": 1
+      }
+    },
+    {
+      "id": "geometry.grid.deformScale",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "geometry",
+      "units": "",
+      "assetId": "geometry.grid",
+      "layerType": "grid",
+      "template": "{registryPrefix}.deformScale",
+      "source": {
+        "path": "synaptome/bin/data/layers/geometry/grid.json",
+        "line": 1
+      }
+    },
+    {
+      "id": "geometry.grid.deformSpeed",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "geometry",
+      "units": "",
+      "assetId": "geometry.grid",
+      "layerType": "grid",
+      "template": "{registryPrefix}.deformSpeed",
+      "source": {
+        "path": "synaptome/bin/data/layers/geometry/grid.json",
+        "line": 1
+      }
+    },
+    {
       "id": "geometry.grid.faceOpacity",
       "kind": "float",
       "scope": "layer_asset",
@@ -4364,6 +5336,48 @@
       }
     },
     {
+      "id": "geometry.grid.twist",
+      "kind": "bool",
+      "scope": "layer_asset",
+      "family": "geometry",
+      "units": "",
+      "assetId": "geometry.grid",
+      "layerType": "grid",
+      "template": "{registryPrefix}.twist",
+      "source": {
+        "path": "synaptome/bin/data/layers/geometry/grid.json",
+        "line": 1
+      }
+    },
+    {
+      "id": "geometry.grid.twistAmount",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "geometry",
+      "units": "",
+      "assetId": "geometry.grid",
+      "layerType": "grid",
+      "template": "{registryPrefix}.twistAmount",
+      "source": {
+        "path": "synaptome/bin/data/layers/geometry/grid.json",
+        "line": 1
+      }
+    },
+    {
+      "id": "geometry.grid.twistSpeed",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "geometry",
+      "units": "",
+      "assetId": "geometry.grid",
+      "layerType": "grid",
+      "template": "{registryPrefix}.twistSpeed",
+      "source": {
+        "path": "synaptome/bin/data/layers/geometry/grid.json",
+        "line": 1
+      }
+    },
+    {
       "id": "geometry.grid.visible",
       "kind": "bool",
       "scope": "layer_asset",
@@ -4372,6 +5386,62 @@
       "assetId": "geometry.grid",
       "layerType": "grid",
       "template": "{registryPrefix}.visible",
+      "source": {
+        "path": "synaptome/bin/data/layers/geometry/grid.json",
+        "line": 1
+      }
+    },
+    {
+      "id": "geometry.grid.wave",
+      "kind": "bool",
+      "scope": "layer_asset",
+      "family": "geometry",
+      "units": "",
+      "assetId": "geometry.grid",
+      "layerType": "grid",
+      "template": "{registryPrefix}.wave",
+      "source": {
+        "path": "synaptome/bin/data/layers/geometry/grid.json",
+        "line": 1
+      }
+    },
+    {
+      "id": "geometry.grid.waveAmount",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "geometry",
+      "units": "",
+      "assetId": "geometry.grid",
+      "layerType": "grid",
+      "template": "{registryPrefix}.waveAmount",
+      "source": {
+        "path": "synaptome/bin/data/layers/geometry/grid.json",
+        "line": 1
+      }
+    },
+    {
+      "id": "geometry.grid.waveFrequency",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "geometry",
+      "units": "",
+      "assetId": "geometry.grid",
+      "layerType": "grid",
+      "template": "{registryPrefix}.waveFrequency",
+      "source": {
+        "path": "synaptome/bin/data/layers/geometry/grid.json",
+        "line": 1
+      }
+    },
+    {
+      "id": "geometry.grid.waveSpeed",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "geometry",
+      "units": "",
+      "assetId": "geometry.grid",
+      "layerType": "grid",
+      "template": "{registryPrefix}.waveSpeed",
       "source": {
         "path": "synaptome/bin/data/layers/geometry/grid.json",
         "line": 1
@@ -8216,7 +9286,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1341
+        "line": 1342
       }
     },
     {
@@ -8227,7 +9297,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1343
+        "line": 1344
       }
     },
     {
@@ -8238,7 +9308,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1345
+        "line": 1346
       }
     },
     {
@@ -8249,7 +9319,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1344
+        "line": 1345
       }
     },
     {
@@ -8260,7 +9330,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1342
+        "line": 1343
       }
     },
     {
@@ -9221,6 +10291,512 @@
       "sourceClass": "FlockingLayer"
     },
     {
+      "layerType": "flowField",
+      "idPattern": "{registryPrefix}.alpha",
+      "kind": "float",
+      "suffix": "alpha",
+      "source": {
+        "path": "synaptome/src/visuals/FlowFieldLayer.cpp",
+        "line": 137
+      },
+      "sourceClass": "FlowFieldLayer"
+    },
+    {
+      "layerType": "flowField",
+      "idPattern": "{registryPrefix}.autoReseed",
+      "kind": "bool",
+      "suffix": "autoReseed",
+      "source": {
+        "path": "synaptome/src/visuals/FlowFieldLayer.cpp",
+        "line": 147
+      },
+      "sourceClass": "FlowFieldLayer"
+    },
+    {
+      "layerType": "flowField",
+      "idPattern": "{registryPrefix}.autoReseedEveryBeats",
+      "kind": "float",
+      "suffix": "autoReseedEveryBeats",
+      "source": {
+        "path": "synaptome/src/visuals/FlowFieldLayer.cpp",
+        "line": 149
+      },
+      "sourceClass": "FlowFieldLayer"
+    },
+    {
+      "layerType": "flowField",
+      "idPattern": "{registryPrefix}.backgroundAlpha",
+      "kind": "float",
+      "suffix": "backgroundAlpha",
+      "source": {
+        "path": "synaptome/src/visuals/FlowFieldLayer.cpp",
+        "line": 179
+      },
+      "sourceClass": "FlowFieldLayer"
+    },
+    {
+      "layerType": "flowField",
+      "idPattern": "{registryPrefix}.bgB",
+      "kind": "float",
+      "suffix": "bgB",
+      "source": {
+        "path": "synaptome/src/visuals/FlowFieldLayer.cpp",
+        "line": 198
+      },
+      "sourceClass": "FlowFieldLayer"
+    },
+    {
+      "layerType": "flowField",
+      "idPattern": "{registryPrefix}.bgG",
+      "kind": "float",
+      "suffix": "bgG",
+      "source": {
+        "path": "synaptome/src/visuals/FlowFieldLayer.cpp",
+        "line": 197
+      },
+      "sourceClass": "FlowFieldLayer"
+    },
+    {
+      "layerType": "flowField",
+      "idPattern": "{registryPrefix}.bgR",
+      "kind": "float",
+      "suffix": "bgR",
+      "source": {
+        "path": "synaptome/src/visuals/FlowFieldLayer.cpp",
+        "line": 196
+      },
+      "sourceClass": "FlowFieldLayer"
+    },
+    {
+      "layerType": "flowField",
+      "idPattern": "{registryPrefix}.bpmMultiplier",
+      "kind": "float",
+      "suffix": "bpmMultiplier",
+      "source": {
+        "path": "synaptome/src/visuals/FlowFieldLayer.cpp",
+        "line": 135
+      },
+      "sourceClass": "FlowFieldLayer"
+    },
+    {
+      "layerType": "flowField",
+      "idPattern": "{registryPrefix}.bpmSync",
+      "kind": "bool",
+      "suffix": "bpmSync",
+      "source": {
+        "path": "synaptome/src/visuals/FlowFieldLayer.cpp",
+        "line": 133
+      },
+      "sourceClass": "FlowFieldLayer"
+    },
+    {
+      "layerType": "flowField",
+      "idPattern": "{registryPrefix}.centerPull",
+      "kind": "float",
+      "suffix": "centerPull",
+      "source": {
+        "path": "synaptome/src/visuals/FlowFieldLayer.cpp",
+        "line": 172
+      },
+      "sourceClass": "FlowFieldLayer"
+    },
+    {
+      "layerType": "flowField",
+      "idPattern": "{registryPrefix}.colorAB",
+      "kind": "float",
+      "suffix": "colorAB",
+      "source": {
+        "path": "synaptome/src/visuals/FlowFieldLayer.cpp",
+        "line": 201
+      },
+      "sourceClass": "FlowFieldLayer"
+    },
+    {
+      "layerType": "flowField",
+      "idPattern": "{registryPrefix}.colorAG",
+      "kind": "float",
+      "suffix": "colorAG",
+      "source": {
+        "path": "synaptome/src/visuals/FlowFieldLayer.cpp",
+        "line": 200
+      },
+      "sourceClass": "FlowFieldLayer"
+    },
+    {
+      "layerType": "flowField",
+      "idPattern": "{registryPrefix}.colorAR",
+      "kind": "float",
+      "suffix": "colorAR",
+      "source": {
+        "path": "synaptome/src/visuals/FlowFieldLayer.cpp",
+        "line": 199
+      },
+      "sourceClass": "FlowFieldLayer"
+    },
+    {
+      "layerType": "flowField",
+      "idPattern": "{registryPrefix}.colorBB",
+      "kind": "float",
+      "suffix": "colorBB",
+      "source": {
+        "path": "synaptome/src/visuals/FlowFieldLayer.cpp",
+        "line": 204
+      },
+      "sourceClass": "FlowFieldLayer"
+    },
+    {
+      "layerType": "flowField",
+      "idPattern": "{registryPrefix}.colorBG",
+      "kind": "float",
+      "suffix": "colorBG",
+      "source": {
+        "path": "synaptome/src/visuals/FlowFieldLayer.cpp",
+        "line": 203
+      },
+      "sourceClass": "FlowFieldLayer"
+    },
+    {
+      "layerType": "flowField",
+      "idPattern": "{registryPrefix}.colorBR",
+      "kind": "float",
+      "suffix": "colorBR",
+      "source": {
+        "path": "synaptome/src/visuals/FlowFieldLayer.cpp",
+        "line": 202
+      },
+      "sourceClass": "FlowFieldLayer"
+    },
+    {
+      "layerType": "flowField",
+      "idPattern": "{registryPrefix}.colorBias",
+      "kind": "float",
+      "suffix": "colorBias",
+      "source": {
+        "path": "synaptome/src/visuals/FlowFieldLayer.cpp",
+        "line": 192
+      },
+      "sourceClass": "FlowFieldLayer"
+    },
+    {
+      "layerType": "flowField",
+      "idPattern": "{registryPrefix}.curlAmount",
+      "kind": "float",
+      "suffix": "curlAmount",
+      "source": {
+        "path": "synaptome/src/visuals/FlowFieldLayer.cpp",
+        "line": 168
+      },
+      "sourceClass": "FlowFieldLayer"
+    },
+    {
+      "layerType": "flowField",
+      "idPattern": "{registryPrefix}.driftX",
+      "kind": "float",
+      "suffix": "driftX",
+      "source": {
+        "path": "synaptome/src/visuals/FlowFieldLayer.cpp",
+        "line": 173
+      },
+      "sourceClass": "FlowFieldLayer"
+    },
+    {
+      "layerType": "flowField",
+      "idPattern": "{registryPrefix}.driftY",
+      "kind": "float",
+      "suffix": "driftY",
+      "source": {
+        "path": "synaptome/src/visuals/FlowFieldLayer.cpp",
+        "line": 174
+      },
+      "sourceClass": "FlowFieldLayer"
+    },
+    {
+      "layerType": "flowField",
+      "idPattern": "{registryPrefix}.edgeWrap",
+      "kind": "bool",
+      "suffix": "edgeWrap",
+      "source": {
+        "path": "synaptome/src/visuals/FlowFieldLayer.cpp",
+        "line": 159
+      },
+      "sourceClass": "FlowFieldLayer"
+    },
+    {
+      "layerType": "flowField",
+      "idPattern": "{registryPrefix}.fieldScale",
+      "kind": "float",
+      "suffix": "fieldScale",
+      "source": {
+        "path": "synaptome/src/visuals/FlowFieldLayer.cpp",
+        "line": 165
+      },
+      "sourceClass": "FlowFieldLayer"
+    },
+    {
+      "layerType": "flowField",
+      "idPattern": "{registryPrefix}.fieldStrength",
+      "kind": "float",
+      "suffix": "fieldStrength",
+      "source": {
+        "path": "synaptome/src/visuals/FlowFieldLayer.cpp",
+        "line": 166
+      },
+      "sourceClass": "FlowFieldLayer"
+    },
+    {
+      "layerType": "flowField",
+      "idPattern": "{registryPrefix}.flowSpeed",
+      "kind": "float",
+      "suffix": "flowSpeed",
+      "source": {
+        "path": "synaptome/src/visuals/FlowFieldLayer.cpp",
+        "line": 167
+      },
+      "sourceClass": "FlowFieldLayer"
+    },
+    {
+      "layerType": "flowField",
+      "idPattern": "{registryPrefix}.inertia",
+      "kind": "float",
+      "suffix": "inertia",
+      "source": {
+        "path": "synaptome/src/visuals/FlowFieldLayer.cpp",
+        "line": 171
+      },
+      "sourceClass": "FlowFieldLayer"
+    },
+    {
+      "layerType": "flowField",
+      "idPattern": "{registryPrefix}.mirrorX",
+      "kind": "bool",
+      "suffix": "mirrorX",
+      "source": {
+        "path": "synaptome/src/visuals/FlowFieldLayer.cpp",
+        "line": 161
+      },
+      "sourceClass": "FlowFieldLayer"
+    },
+    {
+      "layerType": "flowField",
+      "idPattern": "{registryPrefix}.mirrorY",
+      "kind": "bool",
+      "suffix": "mirrorY",
+      "source": {
+        "path": "synaptome/src/visuals/FlowFieldLayer.cpp",
+        "line": 163
+      },
+      "sourceClass": "FlowFieldLayer"
+    },
+    {
+      "layerType": "flowField",
+      "idPattern": "{registryPrefix}.paletteRate",
+      "kind": "float",
+      "suffix": "paletteRate",
+      "source": {
+        "path": "synaptome/src/visuals/FlowFieldLayer.cpp",
+        "line": 194
+      },
+      "sourceClass": "FlowFieldLayer"
+    },
+    {
+      "layerType": "flowField",
+      "idPattern": "{registryPrefix}.particleCount",
+      "kind": "float",
+      "suffix": "particleCount",
+      "source": {
+        "path": "synaptome/src/visuals/FlowFieldLayer.cpp",
+        "line": 150
+      },
+      "sourceClass": "FlowFieldLayer"
+    },
+    {
+      "layerType": "flowField",
+      "idPattern": "{registryPrefix}.particleLife",
+      "kind": "float",
+      "suffix": "particleLife",
+      "source": {
+        "path": "synaptome/src/visuals/FlowFieldLayer.cpp",
+        "line": 151
+      },
+      "sourceClass": "FlowFieldLayer"
+    },
+    {
+      "layerType": "flowField",
+      "idPattern": "{registryPrefix}.pointSize",
+      "kind": "float",
+      "suffix": "pointSize",
+      "source": {
+        "path": "synaptome/src/visuals/FlowFieldLayer.cpp",
+        "line": 181
+      },
+      "sourceClass": "FlowFieldLayer"
+    },
+    {
+      "layerType": "flowField",
+      "idPattern": "{registryPrefix}.reseed",
+      "kind": "bool",
+      "suffix": "reseed",
+      "source": {
+        "path": "synaptome/src/visuals/FlowFieldLayer.cpp",
+        "line": 143
+      },
+      "sourceClass": "FlowFieldLayer"
+    },
+    {
+      "layerType": "flowField",
+      "idPattern": "{registryPrefix}.respawnRate",
+      "kind": "float",
+      "suffix": "respawnRate",
+      "source": {
+        "path": "synaptome/src/visuals/FlowFieldLayer.cpp",
+        "line": 152
+      },
+      "sourceClass": "FlowFieldLayer"
+    },
+    {
+      "layerType": "flowField",
+      "idPattern": "{registryPrefix}.spawnRadius",
+      "kind": "float",
+      "suffix": "spawnRadius",
+      "source": {
+        "path": "synaptome/src/visuals/FlowFieldLayer.cpp",
+        "line": 153
+      },
+      "sourceClass": "FlowFieldLayer"
+    },
+    {
+      "layerType": "flowField",
+      "idPattern": "{registryPrefix}.speed",
+      "kind": "float",
+      "suffix": "speed",
+      "source": {
+        "path": "synaptome/src/visuals/FlowFieldLayer.cpp",
+        "line": 126
+      },
+      "sourceClass": "FlowFieldLayer"
+    },
+    {
+      "layerType": "flowField",
+      "idPattern": "{registryPrefix}.stepSize",
+      "kind": "float",
+      "suffix": "stepSize",
+      "source": {
+        "path": "synaptome/src/visuals/FlowFieldLayer.cpp",
+        "line": 170
+      },
+      "sourceClass": "FlowFieldLayer"
+    },
+    {
+      "layerType": "flowField",
+      "idPattern": "{registryPrefix}.trailAlpha",
+      "kind": "float",
+      "suffix": "trailAlpha",
+      "source": {
+        "path": "synaptome/src/visuals/FlowFieldLayer.cpp",
+        "line": 180
+      },
+      "sourceClass": "FlowFieldLayer"
+    },
+    {
+      "layerType": "flowField",
+      "idPattern": "{registryPrefix}.trailBoost",
+      "kind": "float",
+      "suffix": "trailBoost",
+      "source": {
+        "path": "synaptome/src/visuals/FlowFieldLayer.cpp",
+        "line": 178
+      },
+      "sourceClass": "FlowFieldLayer"
+    },
+    {
+      "layerType": "flowField",
+      "idPattern": "{registryPrefix}.trailDeposit",
+      "kind": "float",
+      "suffix": "trailDeposit",
+      "source": {
+        "path": "synaptome/src/visuals/FlowFieldLayer.cpp",
+        "line": 177
+      },
+      "sourceClass": "FlowFieldLayer"
+    },
+    {
+      "layerType": "flowField",
+      "idPattern": "{registryPrefix}.trailFade",
+      "kind": "float",
+      "suffix": "trailFade",
+      "source": {
+        "path": "synaptome/src/visuals/FlowFieldLayer.cpp",
+        "line": 176
+      },
+      "sourceClass": "FlowFieldLayer"
+    },
+    {
+      "layerType": "flowField",
+      "idPattern": "{registryPrefix}.turbulence",
+      "kind": "float",
+      "suffix": "turbulence",
+      "source": {
+        "path": "synaptome/src/visuals/FlowFieldLayer.cpp",
+        "line": 169
+      },
+      "sourceClass": "FlowFieldLayer"
+    },
+    {
+      "layerType": "flowField",
+      "idPattern": "{registryPrefix}.vectorAlpha",
+      "kind": "float",
+      "suffix": "vectorAlpha",
+      "source": {
+        "path": "synaptome/src/visuals/FlowFieldLayer.cpp",
+        "line": 191
+      },
+      "sourceClass": "FlowFieldLayer"
+    },
+    {
+      "layerType": "flowField",
+      "idPattern": "{registryPrefix}.vectorOverlay",
+      "kind": "bool",
+      "suffix": "vectorOverlay",
+      "source": {
+        "path": "synaptome/src/visuals/FlowFieldLayer.cpp",
+        "line": 187
+      },
+      "sourceClass": "FlowFieldLayer"
+    },
+    {
+      "layerType": "flowField",
+      "idPattern": "{registryPrefix}.vectorScale",
+      "kind": "float",
+      "suffix": "vectorScale",
+      "source": {
+        "path": "synaptome/src/visuals/FlowFieldLayer.cpp",
+        "line": 190
+      },
+      "sourceClass": "FlowFieldLayer"
+    },
+    {
+      "layerType": "flowField",
+      "idPattern": "{registryPrefix}.vectorSpacing",
+      "kind": "float",
+      "suffix": "vectorSpacing",
+      "source": {
+        "path": "synaptome/src/visuals/FlowFieldLayer.cpp",
+        "line": 189
+      },
+      "sourceClass": "FlowFieldLayer"
+    },
+    {
+      "layerType": "flowField",
+      "idPattern": "{registryPrefix}.visible",
+      "kind": "bool",
+      "suffix": "visible",
+      "source": {
+        "path": "synaptome/src/visuals/FlowFieldLayer.cpp",
+        "line": 124
+      },
+      "sourceClass": "FlowFieldLayer"
+    },
+    {
       "layerType": "gameOfLife",
       "idPattern": "{registryPrefix}.aliveAlpha",
       "kind": "float",
@@ -9469,7 +11045,51 @@
       "suffix": "baseHeight",
       "source": {
         "path": "synaptome/src/visuals/GeodesicLayer.cpp",
-        "line": 40
+        "line": 42
+      },
+      "sourceClass": "GeodesicLayer"
+    },
+    {
+      "layerType": "geodesic",
+      "idPattern": "{registryPrefix}.deform",
+      "kind": "bool",
+      "suffix": "deform",
+      "source": {
+        "path": "synaptome/src/visuals/GeodesicLayer.cpp",
+        "line": 84
+      },
+      "sourceClass": "GeodesicLayer"
+    },
+    {
+      "layerType": "geodesic",
+      "idPattern": "{registryPrefix}.deformAmount",
+      "kind": "float",
+      "suffix": "deformAmount",
+      "source": {
+        "path": "synaptome/src/visuals/GeodesicLayer.cpp",
+        "line": 92
+      },
+      "sourceClass": "GeodesicLayer"
+    },
+    {
+      "layerType": "geodesic",
+      "idPattern": "{registryPrefix}.deformScale",
+      "kind": "float",
+      "suffix": "deformScale",
+      "source": {
+        "path": "synaptome/src/visuals/GeodesicLayer.cpp",
+        "line": 100
+      },
+      "sourceClass": "GeodesicLayer"
+    },
+    {
+      "layerType": "geodesic",
+      "idPattern": "{registryPrefix}.deformSpeed",
+      "kind": "float",
+      "suffix": "deformSpeed",
+      "source": {
+        "path": "synaptome/src/visuals/GeodesicLayer.cpp",
+        "line": 108
       },
       "sourceClass": "GeodesicLayer"
     },
@@ -9480,7 +11100,7 @@
       "suffix": "faceOpacity",
       "source": {
         "path": "synaptome/src/visuals/GeodesicLayer.cpp",
-        "line": 92
+        "line": 124
       },
       "sourceClass": "GeodesicLayer"
     },
@@ -9491,7 +11111,7 @@
       "suffix": "hover",
       "source": {
         "path": "synaptome/src/visuals/GeodesicLayer.cpp",
-        "line": 32
+        "line": 34
       },
       "sourceClass": "GeodesicLayer"
     },
@@ -9502,7 +11122,7 @@
       "suffix": "lineOpacity",
       "source": {
         "path": "synaptome/src/visuals/GeodesicLayer.cpp",
-        "line": 84
+        "line": 116
       },
       "sourceClass": "GeodesicLayer"
     },
@@ -9513,7 +11133,7 @@
       "suffix": "orbitRadius",
       "source": {
         "path": "synaptome/src/visuals/GeodesicLayer.cpp",
-        "line": 48
+        "line": 50
       },
       "sourceClass": "GeodesicLayer"
     },
@@ -9524,7 +11144,7 @@
       "suffix": "orbitSpeed",
       "source": {
         "path": "synaptome/src/visuals/GeodesicLayer.cpp",
-        "line": 56
+        "line": 58
       },
       "sourceClass": "GeodesicLayer"
     },
@@ -9535,7 +11155,7 @@
       "suffix": "radius",
       "source": {
         "path": "synaptome/src/visuals/GeodesicLayer.cpp",
-        "line": 76
+        "line": 78
       },
       "sourceClass": "GeodesicLayer"
     },
@@ -9546,7 +11166,7 @@
       "suffix": "rotateX",
       "source": {
         "path": "synaptome/src/visuals/GeodesicLayer.cpp",
-        "line": 64
+        "line": 66
       },
       "sourceClass": "GeodesicLayer"
     },
@@ -9557,7 +11177,7 @@
       "suffix": "rotateY",
       "source": {
         "path": "synaptome/src/visuals/GeodesicLayer.cpp",
-        "line": 66
+        "line": 68
       },
       "sourceClass": "GeodesicLayer"
     },
@@ -9568,7 +11188,7 @@
       "suffix": "rotateZ",
       "source": {
         "path": "synaptome/src/visuals/GeodesicLayer.cpp",
-        "line": 68
+        "line": 70
       },
       "sourceClass": "GeodesicLayer"
     },
@@ -9579,7 +11199,7 @@
       "suffix": "spin",
       "source": {
         "path": "synaptome/src/visuals/GeodesicLayer.cpp",
-        "line": 24
+        "line": 26
       },
       "sourceClass": "GeodesicLayer"
     },
@@ -9590,9 +11210,141 @@
       "suffix": "visible",
       "source": {
         "path": "synaptome/src/visuals/GeodesicLayer.cpp",
-        "line": 16
+        "line": 18
       },
       "sourceClass": "GeodesicLayer"
+    },
+    {
+      "layerType": "grid",
+      "idPattern": "{registryPrefix}.bend",
+      "kind": "bool",
+      "suffix": "bend",
+      "source": {
+        "path": "synaptome/src/visuals/GridLayer.cpp",
+        "line": 61
+      },
+      "sourceClass": "GridLayer"
+    },
+    {
+      "layerType": "grid",
+      "idPattern": "{registryPrefix}.bendAmount",
+      "kind": "float",
+      "suffix": "bendAmount",
+      "source": {
+        "path": "synaptome/src/visuals/GridLayer.cpp",
+        "line": 69
+      },
+      "sourceClass": "GridLayer"
+    },
+    {
+      "layerType": "grid",
+      "idPattern": "{registryPrefix}.bendFrequency",
+      "kind": "float",
+      "suffix": "bendFrequency",
+      "source": {
+        "path": "synaptome/src/visuals/GridLayer.cpp",
+        "line": 77
+      },
+      "sourceClass": "GridLayer"
+    },
+    {
+      "layerType": "grid",
+      "idPattern": "{registryPrefix}.bendSpeed",
+      "kind": "float",
+      "suffix": "bendSpeed",
+      "source": {
+        "path": "synaptome/src/visuals/GridLayer.cpp",
+        "line": 85
+      },
+      "sourceClass": "GridLayer"
+    },
+    {
+      "layerType": "grid",
+      "idPattern": "{registryPrefix}.bulge",
+      "kind": "bool",
+      "suffix": "bulge",
+      "source": {
+        "path": "synaptome/src/visuals/GridLayer.cpp",
+        "line": 144
+      },
+      "sourceClass": "GridLayer"
+    },
+    {
+      "layerType": "grid",
+      "idPattern": "{registryPrefix}.bulgeAmount",
+      "kind": "float",
+      "suffix": "bulgeAmount",
+      "source": {
+        "path": "synaptome/src/visuals/GridLayer.cpp",
+        "line": 152
+      },
+      "sourceClass": "GridLayer"
+    },
+    {
+      "layerType": "grid",
+      "idPattern": "{registryPrefix}.bulgeRadius",
+      "kind": "float",
+      "suffix": "bulgeRadius",
+      "source": {
+        "path": "synaptome/src/visuals/GridLayer.cpp",
+        "line": 160
+      },
+      "sourceClass": "GridLayer"
+    },
+    {
+      "layerType": "grid",
+      "idPattern": "{registryPrefix}.bulgeSpeed",
+      "kind": "float",
+      "suffix": "bulgeSpeed",
+      "source": {
+        "path": "synaptome/src/visuals/GridLayer.cpp",
+        "line": 168
+      },
+      "sourceClass": "GridLayer"
+    },
+    {
+      "layerType": "grid",
+      "idPattern": "{registryPrefix}.deform",
+      "kind": "bool",
+      "suffix": "deform",
+      "source": {
+        "path": "synaptome/src/visuals/GridLayer.cpp",
+        "line": 91
+      },
+      "sourceClass": "GridLayer"
+    },
+    {
+      "layerType": "grid",
+      "idPattern": "{registryPrefix}.deformAmount",
+      "kind": "float",
+      "suffix": "deformAmount",
+      "source": {
+        "path": "synaptome/src/visuals/GridLayer.cpp",
+        "line": 99
+      },
+      "sourceClass": "GridLayer"
+    },
+    {
+      "layerType": "grid",
+      "idPattern": "{registryPrefix}.deformScale",
+      "kind": "float",
+      "suffix": "deformScale",
+      "source": {
+        "path": "synaptome/src/visuals/GridLayer.cpp",
+        "line": 107
+      },
+      "sourceClass": "GridLayer"
+    },
+    {
+      "layerType": "grid",
+      "idPattern": "{registryPrefix}.deformSpeed",
+      "kind": "float",
+      "suffix": "deformSpeed",
+      "source": {
+        "path": "synaptome/src/visuals/GridLayer.cpp",
+        "line": 115
+      },
+      "sourceClass": "GridLayer"
     },
     {
       "layerType": "grid",
@@ -9601,7 +11353,7 @@
       "suffix": "faceOpacity",
       "source": {
         "path": "synaptome/src/visuals/GridLayer.cpp",
-        "line": 32
+        "line": 176
       },
       "sourceClass": "GridLayer"
     },
@@ -9612,7 +11364,40 @@
       "suffix": "segments",
       "source": {
         "path": "synaptome/src/visuals/GridLayer.cpp",
-        "line": 24
+        "line": 25
+      },
+      "sourceClass": "GridLayer"
+    },
+    {
+      "layerType": "grid",
+      "idPattern": "{registryPrefix}.twist",
+      "kind": "bool",
+      "suffix": "twist",
+      "source": {
+        "path": "synaptome/src/visuals/GridLayer.cpp",
+        "line": 121
+      },
+      "sourceClass": "GridLayer"
+    },
+    {
+      "layerType": "grid",
+      "idPattern": "{registryPrefix}.twistAmount",
+      "kind": "float",
+      "suffix": "twistAmount",
+      "source": {
+        "path": "synaptome/src/visuals/GridLayer.cpp",
+        "line": 130
+      },
+      "sourceClass": "GridLayer"
+    },
+    {
+      "layerType": "grid",
+      "idPattern": "{registryPrefix}.twistSpeed",
+      "kind": "float",
+      "suffix": "twistSpeed",
+      "source": {
+        "path": "synaptome/src/visuals/GridLayer.cpp",
+        "line": 138
       },
       "sourceClass": "GridLayer"
     },
@@ -9623,7 +11408,51 @@
       "suffix": "visible",
       "source": {
         "path": "synaptome/src/visuals/GridLayer.cpp",
-        "line": 16
+        "line": 17
+      },
+      "sourceClass": "GridLayer"
+    },
+    {
+      "layerType": "grid",
+      "idPattern": "{registryPrefix}.wave",
+      "kind": "bool",
+      "suffix": "wave",
+      "source": {
+        "path": "synaptome/src/visuals/GridLayer.cpp",
+        "line": 31
+      },
+      "sourceClass": "GridLayer"
+    },
+    {
+      "layerType": "grid",
+      "idPattern": "{registryPrefix}.waveAmount",
+      "kind": "float",
+      "suffix": "waveAmount",
+      "source": {
+        "path": "synaptome/src/visuals/GridLayer.cpp",
+        "line": 39
+      },
+      "sourceClass": "GridLayer"
+    },
+    {
+      "layerType": "grid",
+      "idPattern": "{registryPrefix}.waveFrequency",
+      "kind": "float",
+      "suffix": "waveFrequency",
+      "source": {
+        "path": "synaptome/src/visuals/GridLayer.cpp",
+        "line": 47
+      },
+      "sourceClass": "GridLayer"
+    },
+    {
+      "layerType": "grid",
+      "idPattern": "{registryPrefix}.waveSpeed",
+      "kind": "float",
+      "suffix": "waveSpeed",
+      "source": {
+        "path": "synaptome/src/visuals/GridLayer.cpp",
+        "line": 55
       },
       "sourceClass": "GridLayer"
     },
@@ -10648,6 +12477,7 @@
       "sourceLayerTypes": [
         "agentField",
         "flocking",
+        "flowField",
         "gameOfLife",
         "oscilloscope",
         "perlin"
@@ -10675,6 +12505,7 @@
       ],
       "sourceLayerTypes": [
         "agentField",
+        "flowField",
         "gameOfLife"
       ]
     },
@@ -10688,6 +12519,7 @@
       ],
       "sourceLayerTypes": [
         "agentField",
+        "flowField",
         "gameOfLife"
       ]
     },
@@ -10701,7 +12533,8 @@
       ],
       "sourceLayerTypes": [
         "agentField",
-        "flocking"
+        "flocking",
+        "flowField"
       ]
     },
     {
@@ -10730,6 +12563,54 @@
       ]
     },
     {
+      "idPattern": "console.layer{slot}.bend",
+      "kind": "bool",
+      "suffix": "bend",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "grid"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.bendAmount",
+      "kind": "float",
+      "suffix": "bendAmount",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "grid"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.bendFrequency",
+      "kind": "float",
+      "suffix": "bendFrequency",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "grid"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.bendSpeed",
+      "kind": "float",
+      "suffix": "bendSpeed",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "grid"
+      ]
+    },
+    {
       "idPattern": "console.layer{slot}.bgB",
       "kind": "float",
       "suffix": "bgB",
@@ -10738,7 +12619,8 @@
         8
       ],
       "sourceLayerTypes": [
-        "agentField"
+        "agentField",
+        "flowField"
       ]
     },
     {
@@ -10786,7 +12668,8 @@
         8
       ],
       "sourceLayerTypes": [
-        "agentField"
+        "agentField",
+        "flowField"
       ]
     },
     {
@@ -10798,7 +12681,8 @@
         8
       ],
       "sourceLayerTypes": [
-        "agentField"
+        "agentField",
+        "flowField"
       ]
     },
     {
@@ -10824,6 +12708,7 @@
       "sourceLayerTypes": [
         "agentField",
         "flocking",
+        "flowField",
         "gameOfLife"
       ]
     },
@@ -10838,6 +12723,7 @@
       "sourceLayerTypes": [
         "agentField",
         "flocking",
+        "flowField",
         "gameOfLife"
       ]
     },
@@ -10851,6 +12737,66 @@
       ],
       "sourceLayerTypes": [
         "perlin"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.bulge",
+      "kind": "bool",
+      "suffix": "bulge",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "grid"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.bulgeAmount",
+      "kind": "float",
+      "suffix": "bulgeAmount",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "grid"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.bulgeRadius",
+      "kind": "float",
+      "suffix": "bulgeRadius",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "grid"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.bulgeSpeed",
+      "kind": "float",
+      "suffix": "bulgeSpeed",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "grid"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.centerPull",
+      "kind": "float",
+      "suffix": "centerPull",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "flowField"
       ]
     },
     {
@@ -10890,6 +12836,42 @@
       ]
     },
     {
+      "idPattern": "console.layer{slot}.colorAB",
+      "kind": "float",
+      "suffix": "colorAB",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "flowField"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.colorAG",
+      "kind": "float",
+      "suffix": "colorAG",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "flowField"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.colorAR",
+      "kind": "float",
+      "suffix": "colorAR",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "flowField"
+      ]
+    },
+    {
       "idPattern": "console.layer{slot}.colorB",
       "kind": "float",
       "suffix": "colorB",
@@ -10901,6 +12883,54 @@
         "oscilloscope",
         "perlin",
         "stlModel"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.colorBB",
+      "kind": "float",
+      "suffix": "colorBB",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "flowField"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.colorBG",
+      "kind": "float",
+      "suffix": "colorBG",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "flowField"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.colorBR",
+      "kind": "float",
+      "suffix": "colorBR",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "flowField"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.colorBias",
+      "kind": "float",
+      "suffix": "colorBias",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "flowField"
       ]
     },
     {
@@ -10941,6 +12971,18 @@
       ],
       "sourceLayerTypes": [
         "perlin"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.curlAmount",
+      "kind": "float",
+      "suffix": "curlAmount",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "flowField"
       ]
     },
     {
@@ -11005,6 +13047,58 @@
       ]
     },
     {
+      "idPattern": "console.layer{slot}.deform",
+      "kind": "bool",
+      "suffix": "deform",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "geodesic",
+        "grid"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.deformAmount",
+      "kind": "float",
+      "suffix": "deformAmount",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "geodesic",
+        "grid"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.deformScale",
+      "kind": "float",
+      "suffix": "deformScale",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "geodesic",
+        "grid"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.deformSpeed",
+      "kind": "float",
+      "suffix": "deformSpeed",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "geodesic",
+        "grid"
+      ]
+    },
+    {
       "idPattern": "console.layer{slot}.density",
       "kind": "float",
       "suffix": "density",
@@ -11065,6 +13159,42 @@
       ]
     },
     {
+      "idPattern": "console.layer{slot}.driftX",
+      "kind": "float",
+      "suffix": "driftX",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "flowField"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.driftY",
+      "kind": "float",
+      "suffix": "driftY",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "flowField"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.edgeWrap",
+      "kind": "bool",
+      "suffix": "edgeWrap",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "flowField"
+      ]
+    },
+    {
       "idPattern": "console.layer{slot}.evade",
       "kind": "float",
       "suffix": "evade",
@@ -11100,6 +13230,42 @@
       ],
       "sourceLayerTypes": [
         "gameOfLife"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.fieldScale",
+      "kind": "float",
+      "suffix": "fieldScale",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "flowField"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.fieldStrength",
+      "kind": "float",
+      "suffix": "fieldStrength",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "flowField"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.flowSpeed",
+      "kind": "float",
+      "suffix": "flowSpeed",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "flowField"
       ]
     },
     {
@@ -11225,6 +13391,18 @@
       ]
     },
     {
+      "idPattern": "console.layer{slot}.inertia",
+      "kind": "float",
+      "suffix": "inertia",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "flowField"
+      ]
+    },
+    {
       "idPattern": "console.layer{slot}.intensity",
       "kind": "float",
       "suffix": "intensity",
@@ -11284,6 +13462,30 @@
       "sourceLayerTypes": [
         "media.clip",
         "media.webcam"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.mirrorX",
+      "kind": "bool",
+      "suffix": "mirrorX",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "flowField"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.mirrorY",
+      "kind": "bool",
+      "suffix": "mirrorY",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "flowField"
       ]
     },
     {
@@ -11406,7 +13608,32 @@
         8
       ],
       "sourceLayerTypes": [
+        "flowField",
         "perlin"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.particleCount",
+      "kind": "float",
+      "suffix": "particleCount",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "flowField"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.particleLife",
+      "kind": "float",
+      "suffix": "particleLife",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "flowField"
       ]
     },
     {
@@ -11467,6 +13694,7 @@
       ],
       "sourceLayerTypes": [
         "flocking",
+        "flowField",
         "oscilloscope"
       ]
     },
@@ -11553,6 +13781,7 @@
       "sourceLayerTypes": [
         "agentField",
         "flocking",
+        "flowField",
         "gameOfLife"
       ]
     },
@@ -11590,6 +13819,18 @@
       ],
       "sourceLayerTypes": [
         "media.webcam"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.respawnRate",
+      "kind": "float",
+      "suffix": "respawnRate",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "flowField"
       ]
     },
     {
@@ -11753,6 +13994,18 @@
       ]
     },
     {
+      "idPattern": "console.layer{slot}.spawnRadius",
+      "kind": "float",
+      "suffix": "spawnRadius",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "flowField"
+      ]
+    },
+    {
       "idPattern": "console.layer{slot}.speed",
       "kind": "float",
       "suffix": "speed",
@@ -11763,6 +14016,7 @@
       "sourceLayerTypes": [
         "agentField",
         "flocking",
+        "flowField",
         "gameOfLife",
         "oscilloscope",
         "perlin"
@@ -11814,7 +14068,8 @@
         8
       ],
       "sourceLayerTypes": [
-        "agentField"
+        "agentField",
+        "flowField"
       ]
     },
     {
@@ -11851,7 +14106,8 @@
       ],
       "sourceLayerTypes": [
         "agentField",
-        "flocking"
+        "flocking",
+        "flowField"
       ]
     },
     {
@@ -11875,7 +14131,8 @@
         8
       ],
       "sourceLayerTypes": [
-        "agentField"
+        "agentField",
+        "flowField"
       ]
     },
     {
@@ -11887,7 +14144,8 @@
         8
       ],
       "sourceLayerTypes": [
-        "flocking"
+        "flocking",
+        "flowField"
       ]
     },
     {
@@ -11899,7 +14157,8 @@
         8
       ],
       "sourceLayerTypes": [
-        "flocking"
+        "flocking",
+        "flowField"
       ]
     },
     {
@@ -11927,6 +14186,18 @@
       ]
     },
     {
+      "idPattern": "console.layer{slot}.turbulence",
+      "kind": "float",
+      "suffix": "turbulence",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "flowField"
+      ]
+    },
+    {
       "idPattern": "console.layer{slot}.turnRate",
       "kind": "float",
       "suffix": "turnRate",
@@ -11936,6 +14207,90 @@
       ],
       "sourceLayerTypes": [
         "agentField"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.twist",
+      "kind": "bool",
+      "suffix": "twist",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "grid"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.twistAmount",
+      "kind": "float",
+      "suffix": "twistAmount",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "grid"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.twistSpeed",
+      "kind": "float",
+      "suffix": "twistSpeed",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "grid"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.vectorAlpha",
+      "kind": "float",
+      "suffix": "vectorAlpha",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "flowField"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.vectorOverlay",
+      "kind": "bool",
+      "suffix": "vectorOverlay",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "flowField"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.vectorScale",
+      "kind": "float",
+      "suffix": "vectorScale",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "flowField"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.vectorSpacing",
+      "kind": "float",
+      "suffix": "vectorSpacing",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "flowField"
       ]
     },
     {
@@ -11949,6 +14304,7 @@
       "sourceLayerTypes": [
         "agentField",
         "flocking",
+        "flowField",
         "gameOfLife",
         "geodesic",
         "grid",
@@ -11957,6 +14313,54 @@
         "oscilloscope",
         "perlin",
         "stlModel"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.wave",
+      "kind": "bool",
+      "suffix": "wave",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "grid"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.waveAmount",
+      "kind": "float",
+      "suffix": "waveAmount",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "grid"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.waveFrequency",
+      "kind": "float",
+      "suffix": "waveFrequency",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "grid"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.waveSpeed",
+      "kind": "float",
+      "suffix": "waveSpeed",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "grid"
       ]
     },
     {
@@ -12059,11 +14463,11 @@
   "commonSuffixes": [
     {
       "suffix": "visible",
-      "count": 30
+      "count": 31
     },
     {
       "suffix": "opacity",
-      "count": 27
+      "count": 28
     },
     {
       "suffix": "colorB",
@@ -12123,30 +14527,42 @@
     },
     {
       "suffix": "speed",
-      "count": 9
+      "count": 10
     },
     {
       "suffix": "alpha",
-      "count": 8
+      "count": 9
+    },
+    {
+      "suffix": "bpmMultiplier",
+      "count": 7
+    },
+    {
+      "suffix": "bpmSync",
+      "count": 7
     },
     {
       "suffix": "mode",
       "count": 7
     },
     {
-      "suffix": "bpmMultiplier",
-      "count": 6
-    },
-    {
-      "suffix": "bpmSync",
-      "count": 6
-    },
-    {
       "suffix": "reseed",
-      "count": 6
+      "count": 7
     },
     {
       "suffix": "backgroundAlpha",
+      "count": 6
+    },
+    {
+      "suffix": "trailAlpha",
+      "count": 6
+    },
+    {
+      "suffix": "autoReseed",
+      "count": 5
+    },
+    {
+      "suffix": "autoReseedEveryBeats",
       "count": 5
     },
     {
@@ -12162,15 +14578,15 @@
       "count": 5
     },
     {
-      "suffix": "trailAlpha",
-      "count": 5
-    },
-    {
-      "suffix": "autoReseed",
+      "suffix": "bgB",
       "count": 4
     },
     {
-      "suffix": "autoReseedEveryBeats",
+      "suffix": "bgG",
+      "count": 4
+    },
+    {
+      "suffix": "bgR",
       "count": 4
     },
     {
@@ -12178,19 +14594,19 @@
       "count": 4
     },
     {
+      "suffix": "pointSize",
+      "count": 4
+    },
+    {
+      "suffix": "stepSize",
+      "count": 4
+    },
+    {
+      "suffix": "trailBoost",
+      "count": 4
+    },
+    {
       "suffix": "agentCount",
-      "count": 3
-    },
-    {
-      "suffix": "bgB",
-      "count": 3
-    },
-    {
-      "suffix": "bgG",
-      "count": 3
-    },
-    {
-      "suffix": "bgR",
       "count": 3
     },
     {
@@ -12199,10 +14615,6 @@
     },
     {
       "suffix": "diffuse",
-      "count": 3
-    },
-    {
-      "suffix": "pointSize",
       "count": 3
     },
     {
@@ -12218,15 +14630,15 @@
       "count": 3
     },
     {
-      "suffix": "stepSize",
-      "count": 3
-    },
-    {
       "suffix": "trailB",
       "count": 3
     },
     {
-      "suffix": "trailBoost",
+      "suffix": "trailDeposit",
+      "count": 3
+    },
+    {
+      "suffix": "trailFade",
       "count": 3
     },
     {

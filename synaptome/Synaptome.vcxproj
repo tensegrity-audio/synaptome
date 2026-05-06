@@ -506,6 +506,7 @@
 		<ClCompile Include="src\visuals\GameOfLifeLayer.cpp" />
 		<ClCompile Include="src\visuals\AgentFieldLayer.cpp" />
 		<ClCompile Include="src\visuals\FlockingLayer.cpp" />
+		<ClCompile Include="src\visuals\FlowFieldLayer.cpp" />
 		<ClCompile Include="src\visuals\VideoClipLayer.cpp" />
 		<ClCompile Include="src\visuals\VideoGrabberLayer.cpp" />
 		<ClCompile Include="src\visuals\TextLayer.cpp" />
@@ -677,6 +678,7 @@
 		<ClInclude Include="src\visuals\GameOfLifeLayer.h" />
 		<ClInclude Include="src\visuals\AgentFieldLayer.h" />
 		<ClInclude Include="src\visuals\FlockingLayer.h" />
+		<ClInclude Include="src\visuals\FlowFieldLayer.h" />
 		<ClInclude Include="src\visuals\VideoClipLayer.h" />
 		<ClInclude Include="src\visuals\VideoGrabberLayer.h" />
 		<ClInclude Include="src\visuals\TextLayer.h" />

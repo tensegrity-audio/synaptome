@@ -201,6 +201,9 @@
 		<ns0:ClCompile Include="src\visuals\FlockingLayer.cpp">
 			<ns0:Filter>src</ns0:Filter>
 		</ns0:ClCompile>
+		<ns0:ClCompile Include="src\visuals\FlowFieldLayer.cpp">
+			<ns0:Filter>src</ns0:Filter>
+		</ns0:ClCompile>
 
 
 
@@ -4648,6 +4651,9 @@
 			<ns0:Filter>src</ns0:Filter>
 		</ns0:ClInclude>
 		<ns0:ClInclude Include="src\visuals\FlockingLayer.h">
+			<ns0:Filter>src</ns0:Filter>
+		</ns0:ClInclude>
+		<ns0:ClInclude Include="src\visuals\FlowFieldLayer.h">
 			<ns0:Filter>src</ns0:Filter>
 		</ns0:ClInclude>
 
