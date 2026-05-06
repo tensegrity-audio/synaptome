@@ -3,8 +3,23 @@
     "osc": [
         {
             "bank": "home",
-            "pattern": "/sensor/matrix/0x0101/mic-level",
-            "target": "console.layer1.colorBB"
+            "pattern": "/sensor/deck/0x0201/heart-bpm",
+            "target": "console.layer1.speed"
+        },
+        {
+            "bank": "home",
+            "pattern": "/sensor/deck/0x0201/imu-gyro-x",
+            "target": "console.layer2.rotateX"
+        },
+        {
+            "bank": "home",
+            "pattern": "/sensor/deck/0x0201/imu-gyro-y",
+            "target": "console.layer2.rotateY"
+        },
+        {
+            "bank": "home",
+            "pattern": "/sensor/deck/0x0201/imu-accel-z",
+            "target": "console.layer2.baseHeight"
         }
     ],
     "oscSources": [
@@ -19,6 +34,58 @@
                 1.0
             ],
             "pattern": "/sensor/matrix/0x0101/mic-level",
+            "relative": true
+        },
+        {
+            "blend": "scale",
+            "in": [
+                89.0,
+                130.0
+            ],
+            "out": [
+                0.0,
+                4.0
+            ],
+            "pattern": "/sensor/deck/0x0201/heart-bpm",
+            "relative": true
+        },
+        {
+            "blend": "scale",
+            "in": [
+                0.0,
+                1.0
+            ],
+            "out": [
+                0.0,
+                1.0
+            ],
+            "pattern": "/sensor/deck/0x0201/imu-gyro-x",
+            "relative": true
+        },
+        {
+            "blend": "scale",
+            "in": [
+                0.0,
+                1.0
+            ],
+            "out": [
+                0.0,
+                1.0
+            ],
+            "pattern": "/sensor/deck/0x0201/imu-gyro-y",
+            "relative": true
+        },
+        {
+            "blend": "scale",
+            "in": [
+                -10.0,
+                0.0
+            ],
+            "out": [
+                0.0,
+                10.0
+            ],
+            "pattern": "/sensor/deck/0x0201/imu-accel-z",
             "relative": true
         }
     ]
