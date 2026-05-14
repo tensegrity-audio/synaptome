@@ -143,6 +143,7 @@ Expected current signals:
 - [Release Policy](docs/release_policy.md)
 - [Artist SDK](docs/architecture/synaptome_artist_sdk.md)
 - [External Contracts](docs/architecture/synaptome_external_contracts.md)
+- [Signal Control Integration](docs/contracts/signal_control_integration.md)
 - [MIDI Mapping](docs/midi_mapping.md)
 - [OSC Catalog](docs/osc_catalog.md)
 

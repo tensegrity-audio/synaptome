@@ -1,0 +1,30 @@
+{
+  "id": "sensors.audio.waveform",
+  "label": "Audio Waveform",
+  "category": "Sensors",
+  "type": "audioWaveform",
+  "registryPrefix": "sensors.audio.waveform",
+  "opacity": 1.0,
+  "defaults": {
+    "visible": true,
+    "showBands": true,
+    "gain": 3.0,
+    "verticalScale": 0.85,
+    "lineThickness": 3.0,
+    "alpha": 0.9,
+    "smoothing": 0.35,
+    "bandHeight": 0.16,
+    "bandAlpha": 0.75,
+    "bgAlpha": 0.12,
+    "color": [
+      0.1,
+      0.9,
+      0.72
+    ],
+    "backgroundColor": [
+      0.01,
+      0.02,
+      0.03
+    ]
+  }
+}

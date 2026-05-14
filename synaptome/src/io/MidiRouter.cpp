@@ -39,6 +39,7 @@ namespace {
                       "bioamp-sample-rate", "bioamp-window",
                       "battery-soc", "battery-volt", "rssi" } },
         { "deck",   { "deck-intensity", "deck-scene", "deck_paramx", "battery-soc", "battery-volt", "rssi" } },
+        { "host",   { "mic-level", "mic-peak", "mic-bass", "mic-mids", "mic-highs" } },
         { "hr",     { "heart-bpm", "hr-conf", "battery-soc", "battery-volt", "rssi" } },
         { "eeg",    { "eeg-alpha", "eeg-beta", "eeg-gamma", "battery-soc", "battery-volt", "rssi" } },
         { "env",    { "battery-soc", "battery-volt", "rssi" } }

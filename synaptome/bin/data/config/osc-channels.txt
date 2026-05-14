@@ -6,3 +6,6 @@
 # Example entries for the host laptop mic
 /sensor/host/localmic/mic-level
 /sensor/host/localmic/mic-peak
+/sensor/host/localmic/mic-bass
+/sensor/host/localmic/mic-mids
+/sensor/host/localmic/mic-highs

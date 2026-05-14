@@ -7,11 +7,11 @@
     "synaptome/src/ofApp.cpp"
   ],
   "counts": {
-    "entries": 40,
+    "entries": 41,
     "skipped": 0,
-    "categories": 6,
-    "types": 18,
-    "factoryTypes": 12,
+    "categories": 7,
+    "types": 19,
+    "factoryTypes": 13,
     "duplicateIds": 0,
     "unresolvedRuntimeTypes": 0
   },
@@ -21,15 +21,17 @@
     "Geometry": 17,
     "HUD": 6,
     "Media": 2,
+    "Sensors": 1,
     "Utility": 1
   },
   "kinds": {
     "hud-widget": 6,
     "post-effect": 5,
-    "runtime-layer": 29
+    "runtime-layer": 30
   },
   "types": {
     "agentField": 3,
+    "audioWaveform": 1,
     "flocking": 2,
     "flowField": 1,
     "fx.ascii": 1,
@@ -50,6 +52,7 @@
   },
   "factoryTypes": {
     "agentField": "AgentFieldLayer",
+    "audioWaveform": "AudioWaveformLayer",
     "flocking": "FlockingLayer",
     "flowField": "FlowFieldLayer",
     "gameOfLife": "GameOfLifeLayer",
@@ -1072,6 +1075,31 @@
       ]
     },
     {
+      "id": "sensors.audio.waveform",
+      "label": "Audio Waveform",
+      "category": "Sensors",
+      "type": "audioWaveform",
+      "kind": "runtime-layer",
+      "registryPrefix": "sensors.audio.waveform",
+      "opacity": 1.0,
+      "path": "synaptome/bin/data/layers/sensors/audio_waveform.json",
+      "factoryClass": "AudioWaveformLayer",
+      "defaultKeys": [
+        "alpha",
+        "backgroundColor",
+        "bandAlpha",
+        "bandHeight",
+        "bgAlpha",
+        "color",
+        "gain",
+        "lineThickness",
+        "showBands",
+        "smoothing",
+        "verticalScale",
+        "visible"
+      ]
+    },
+    {
       "id": "text.layer",
       "label": "Text Layer",
       "category": "Utility",
@@ -1082,10 +1110,15 @@
       "path": "synaptome/bin/data/layers/text.layer.json",
       "factoryClass": "TextLayer",
       "defaultKeys": [
+        "bottomLeft",
+        "bottomRight",
         "color",
         "content",
+        "cornerSize",
         "font",
-        "size"
+        "size",
+        "topLeft",
+        "topRight"
       ]
     }
   ],

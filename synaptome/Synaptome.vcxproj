@@ -108,7 +108,9 @@
 
 		<CharacterSet>Unicode</CharacterSet>
 
-		<PlatformToolset>v143</PlatformToolset>
+		<PlatformToolset Condition="'$(PlatformToolset)'=='' and Exists('$(VCTargetsPath)\Platforms\$(Platform)\PlatformToolsets\v145\Toolset.props')">v145</PlatformToolset>
+
+		<PlatformToolset Condition="'$(PlatformToolset)'==''">v143</PlatformToolset>
 
 	</PropertyGroup>
 
@@ -120,7 +122,9 @@
 
 		<WholeProgramOptimization>true</WholeProgramOptimization>
 
-		<PlatformToolset>v143</PlatformToolset>
+		<PlatformToolset Condition="'$(PlatformToolset)'=='' and Exists('$(VCTargetsPath)\Platforms\$(Platform)\PlatformToolsets\v145\Toolset.props')">v145</PlatformToolset>
+
+		<PlatformToolset Condition="'$(PlatformToolset)'==''">v143</PlatformToolset>
 
 	</PropertyGroup>
 
@@ -496,6 +500,7 @@
 
 
 		<ClCompile Include="src\visuals\GridLayer.cpp" />
+		<ClCompile Include="src\visuals\AudioWaveformLayer.cpp" />
 		<ClCompile Include="src\visuals\OscilloscopeLayer.cpp" />
 
 		<ClCompile Include="src\visuals\GeodesicLayer.cpp" />
@@ -667,8 +672,10 @@
 
     <ClInclude Include="src\io\SerialSlipOsc.h" />
 
+		<ClInclude Include="src\io\AudioAnalysisBus.h" />
 		<ClInclude Include="src\ui\MenuController.h" />
 		<ClInclude Include="src\visuals\GridLayer.h" />
+		<ClInclude Include="src\visuals\AudioWaveformLayer.h" />
 		<ClInclude Include="src\visuals\OscilloscopeLayer.h" />
 		<ClInclude Include="src\visuals\GeodesicLayer.h" />
 		<ClInclude Include="src\visuals\LayerFactory.h" />

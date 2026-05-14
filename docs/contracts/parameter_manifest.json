@@ -13,9 +13,9 @@
     "synaptome/bin/data/layers/**/*.json"
   ],
   "counts": {
-    "parameters": 648,
-    "layerTemplates": 239,
-    "consoleTemplates": 167,
+    "parameters": 670,
+    "layerTemplates": 255,
+    "consoleTemplates": 174,
     "catalogAssetsWithoutLayerParameters": 12,
     "unresolvedAssets": 0
   },
@@ -28,7 +28,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1129
+        "line": 1157
       }
     },
     {
@@ -39,7 +39,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1160
+        "line": 1188
       }
     },
     {
@@ -50,7 +50,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1166
+        "line": 1194
       }
     },
     {
@@ -61,7 +61,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1172
+        "line": 1200
       }
     },
     {
@@ -72,7 +72,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1184
+        "line": 1212
       }
     },
     {
@@ -83,7 +83,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1196
+        "line": 1224
       }
     },
     {
@@ -94,7 +94,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1190
+        "line": 1218
       }
     },
     {
@@ -105,7 +105,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1178
+        "line": 1206
       }
     },
     {
@@ -776,7 +776,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1128
+        "line": 1156
       }
     },
     {
@@ -9275,7 +9275,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1127
+        "line": 1155
       }
     },
     {
@@ -9286,7 +9286,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1342
+        "line": 1405
       }
     },
     {
@@ -9297,7 +9297,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1344
+        "line": 1407
       }
     },
     {
@@ -9308,7 +9308,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1346
+        "line": 1409
       }
     },
     {
@@ -9319,7 +9319,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1345
+        "line": 1408
       }
     },
     {
@@ -9330,7 +9330,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1343
+        "line": 1406
       }
     },
     {
@@ -9530,6 +9530,28 @@
       }
     },
     {
+      "id": "overlay.text.bottomLeft",
+      "kind": "string",
+      "scope": "core",
+      "family": "overlay",
+      "units": "",
+      "source": {
+        "path": "synaptome/src/ofApp.cpp",
+        "line": 1252
+      }
+    },
+    {
+      "id": "overlay.text.bottomRight",
+      "kind": "string",
+      "scope": "core",
+      "family": "overlay",
+      "units": "",
+      "source": {
+        "path": "synaptome/src/ofApp.cpp",
+        "line": 1258
+      }
+    },
+    {
       "id": "overlay.text.color.b",
       "kind": "float",
       "scope": "core",
@@ -9537,7 +9559,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1251
+        "line": 1313
       }
     },
     {
@@ -9548,7 +9570,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1245
+        "line": 1307
       }
     },
     {
@@ -9559,7 +9581,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1239
+        "line": 1301
       }
     },
     {
@@ -9570,7 +9592,18 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1206
+        "line": 1234
+      }
+    },
+    {
+      "id": "overlay.text.corner.size",
+      "kind": "float",
+      "scope": "core",
+      "family": "overlay",
+      "units": "px",
+      "source": {
+        "path": "synaptome/src/ofApp.cpp",
+        "line": 1291
       }
     },
     {
@@ -9581,7 +9614,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1212
+        "line": 1264
       }
     },
     {
@@ -9592,7 +9625,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1219
+        "line": 1271
       }
     },
     {
@@ -9603,8 +9636,302 @@
       "units": "px",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1229
+        "line": 1281
       }
+    },
+    {
+      "id": "overlay.text.topLeft",
+      "kind": "string",
+      "scope": "core",
+      "family": "overlay",
+      "units": "",
+      "source": {
+        "path": "synaptome/src/ofApp.cpp",
+        "line": 1240
+      }
+    },
+    {
+      "id": "overlay.text.topRight",
+      "kind": "string",
+      "scope": "core",
+      "family": "overlay",
+      "units": "",
+      "source": {
+        "path": "synaptome/src/ofApp.cpp",
+        "line": 1246
+      }
+    },
+    {
+      "id": "sensors.audio.waveform.alpha",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "sensors",
+      "units": "normalized",
+      "assetId": "sensors.audio.waveform",
+      "layerType": "audioWaveform",
+      "template": "{registryPrefix}.alpha",
+      "source": {
+        "path": "synaptome/bin/data/layers/sensors/audio_waveform.json",
+        "line": 1
+      },
+      "default": 0.9,
+      "defaultKind": "float"
+    },
+    {
+      "id": "sensors.audio.waveform.bandAlpha",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "sensors",
+      "units": "normalized",
+      "assetId": "sensors.audio.waveform",
+      "layerType": "audioWaveform",
+      "template": "{registryPrefix}.bandAlpha",
+      "source": {
+        "path": "synaptome/bin/data/layers/sensors/audio_waveform.json",
+        "line": 1
+      },
+      "default": 0.75,
+      "defaultKind": "float"
+    },
+    {
+      "id": "sensors.audio.waveform.bandHeight",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "sensors",
+      "units": "",
+      "assetId": "sensors.audio.waveform",
+      "layerType": "audioWaveform",
+      "template": "{registryPrefix}.bandHeight",
+      "source": {
+        "path": "synaptome/bin/data/layers/sensors/audio_waveform.json",
+        "line": 1
+      },
+      "default": 0.16,
+      "defaultKind": "float"
+    },
+    {
+      "id": "sensors.audio.waveform.bgAlpha",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "sensors",
+      "units": "normalized",
+      "assetId": "sensors.audio.waveform",
+      "layerType": "audioWaveform",
+      "template": "{registryPrefix}.bgAlpha",
+      "source": {
+        "path": "synaptome/bin/data/layers/sensors/audio_waveform.json",
+        "line": 1
+      },
+      "default": 0.12,
+      "defaultKind": "float"
+    },
+    {
+      "id": "sensors.audio.waveform.bgColorB",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "sensors",
+      "units": "",
+      "assetId": "sensors.audio.waveform",
+      "layerType": "audioWaveform",
+      "template": "{registryPrefix}.bgColorB",
+      "source": {
+        "path": "synaptome/bin/data/layers/sensors/audio_waveform.json",
+        "line": 1
+      },
+      "default": 0.03,
+      "defaultKind": "float"
+    },
+    {
+      "id": "sensors.audio.waveform.bgColorG",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "sensors",
+      "units": "",
+      "assetId": "sensors.audio.waveform",
+      "layerType": "audioWaveform",
+      "template": "{registryPrefix}.bgColorG",
+      "source": {
+        "path": "synaptome/bin/data/layers/sensors/audio_waveform.json",
+        "line": 1
+      },
+      "default": 0.02,
+      "defaultKind": "float"
+    },
+    {
+      "id": "sensors.audio.waveform.bgColorR",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "sensors",
+      "units": "",
+      "assetId": "sensors.audio.waveform",
+      "layerType": "audioWaveform",
+      "template": "{registryPrefix}.bgColorR",
+      "source": {
+        "path": "synaptome/bin/data/layers/sensors/audio_waveform.json",
+        "line": 1
+      },
+      "default": 0.01,
+      "defaultKind": "float"
+    },
+    {
+      "id": "sensors.audio.waveform.colorB",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "sensors",
+      "units": "",
+      "assetId": "sensors.audio.waveform",
+      "layerType": "audioWaveform",
+      "template": "{registryPrefix}.colorB",
+      "source": {
+        "path": "synaptome/bin/data/layers/sensors/audio_waveform.json",
+        "line": 1
+      },
+      "default": 0.72,
+      "defaultKind": "float"
+    },
+    {
+      "id": "sensors.audio.waveform.colorG",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "sensors",
+      "units": "",
+      "assetId": "sensors.audio.waveform",
+      "layerType": "audioWaveform",
+      "template": "{registryPrefix}.colorG",
+      "source": {
+        "path": "synaptome/bin/data/layers/sensors/audio_waveform.json",
+        "line": 1
+      },
+      "default": 0.9,
+      "defaultKind": "float"
+    },
+    {
+      "id": "sensors.audio.waveform.colorR",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "sensors",
+      "units": "",
+      "assetId": "sensors.audio.waveform",
+      "layerType": "audioWaveform",
+      "template": "{registryPrefix}.colorR",
+      "source": {
+        "path": "synaptome/bin/data/layers/sensors/audio_waveform.json",
+        "line": 1
+      },
+      "default": 0.1,
+      "defaultKind": "float"
+    },
+    {
+      "id": "sensors.audio.waveform.gain",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "sensors",
+      "units": "normalized",
+      "assetId": "sensors.audio.waveform",
+      "layerType": "audioWaveform",
+      "template": "{registryPrefix}.gain",
+      "source": {
+        "path": "synaptome/bin/data/layers/sensors/audio_waveform.json",
+        "line": 1
+      },
+      "default": 3.0,
+      "defaultKind": "float"
+    },
+    {
+      "id": "sensors.audio.waveform.lineThickness",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "sensors",
+      "units": "",
+      "assetId": "sensors.audio.waveform",
+      "layerType": "audioWaveform",
+      "template": "{registryPrefix}.lineThickness",
+      "source": {
+        "path": "synaptome/bin/data/layers/sensors/audio_waveform.json",
+        "line": 1
+      },
+      "default": 3.0,
+      "defaultKind": "float"
+    },
+    {
+      "id": "sensors.audio.waveform.opacity",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "sensors",
+      "units": "normalized",
+      "assetId": "sensors.audio.waveform",
+      "layerType": "audioWaveform",
+      "template": "{registryPrefix}.opacity",
+      "default": 1.0,
+      "defaultKind": "float",
+      "source": {
+        "path": "synaptome/bin/data/layers/sensors/audio_waveform.json",
+        "line": 1
+      }
+    },
+    {
+      "id": "sensors.audio.waveform.showBands",
+      "kind": "bool",
+      "scope": "layer_asset",
+      "family": "sensors",
+      "units": "",
+      "assetId": "sensors.audio.waveform",
+      "layerType": "audioWaveform",
+      "template": "{registryPrefix}.showBands",
+      "source": {
+        "path": "synaptome/bin/data/layers/sensors/audio_waveform.json",
+        "line": 1
+      },
+      "default": true,
+      "defaultKind": "bool"
+    },
+    {
+      "id": "sensors.audio.waveform.smoothing",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "sensors",
+      "units": "",
+      "assetId": "sensors.audio.waveform",
+      "layerType": "audioWaveform",
+      "template": "{registryPrefix}.smoothing",
+      "source": {
+        "path": "synaptome/bin/data/layers/sensors/audio_waveform.json",
+        "line": 1
+      },
+      "default": 0.35,
+      "defaultKind": "float"
+    },
+    {
+      "id": "sensors.audio.waveform.verticalScale",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "sensors",
+      "units": "",
+      "assetId": "sensors.audio.waveform",
+      "layerType": "audioWaveform",
+      "template": "{registryPrefix}.verticalScale",
+      "source": {
+        "path": "synaptome/bin/data/layers/sensors/audio_waveform.json",
+        "line": 1
+      },
+      "default": 0.85,
+      "defaultKind": "float"
+    },
+    {
+      "id": "sensors.audio.waveform.visible",
+      "kind": "bool",
+      "scope": "layer_asset",
+      "family": "sensors",
+      "units": "",
+      "assetId": "sensors.audio.waveform",
+      "layerType": "audioWaveform",
+      "template": "{registryPrefix}.visible",
+      "source": {
+        "path": "synaptome/bin/data/layers/sensors/audio_waveform.json",
+        "line": 1
+      },
+      "default": true,
+      "defaultKind": "bool"
     },
     {
       "id": "sensors.bioamp.dom_hz",
@@ -9614,7 +9941,7 @@
       "units": "Hz",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1269
+        "line": 1331
       }
     },
     {
@@ -9625,7 +9952,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1267
+        "line": 1329
       }
     },
     {
@@ -9636,7 +9963,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1265
+        "line": 1327
       }
     },
     {
@@ -9647,7 +9974,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1268
+        "line": 1330
       }
     },
     {
@@ -9658,7 +9985,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1270
+        "line": 1332
       }
     },
     {
@@ -9669,7 +9996,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1266
+        "line": 1328
       }
     },
     {
@@ -9680,7 +10007,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1271
+        "line": 1333
       }
     },
     {
@@ -9691,7 +10018,7 @@
       "units": "bpm",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1126
+        "line": 1154
       }
     },
     {
@@ -9702,7 +10029,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1132
+        "line": 1160
       }
     },
     {
@@ -9713,7 +10040,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1138
+        "line": 1166
       }
     },
     {
@@ -9724,7 +10051,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1131
+        "line": 1159
       }
     },
     {
@@ -9735,7 +10062,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1144
+        "line": 1172
       }
     },
     {
@@ -9746,7 +10073,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1150
+        "line": 1178
       }
     }
   ],
@@ -10047,6 +10374,182 @@
         "line": 77
       },
       "sourceClass": "AgentFieldLayer"
+    },
+    {
+      "layerType": "audioWaveform",
+      "idPattern": "{registryPrefix}.alpha",
+      "kind": "float",
+      "suffix": "alpha",
+      "source": {
+        "path": "synaptome/src/visuals/AudioWaveformLayer.cpp",
+        "line": 84
+      },
+      "sourceClass": "AudioWaveformLayer"
+    },
+    {
+      "layerType": "audioWaveform",
+      "idPattern": "{registryPrefix}.bandAlpha",
+      "kind": "float",
+      "suffix": "bandAlpha",
+      "source": {
+        "path": "synaptome/src/visuals/AudioWaveformLayer.cpp",
+        "line": 87
+      },
+      "sourceClass": "AudioWaveformLayer"
+    },
+    {
+      "layerType": "audioWaveform",
+      "idPattern": "{registryPrefix}.bandHeight",
+      "kind": "float",
+      "suffix": "bandHeight",
+      "source": {
+        "path": "synaptome/src/visuals/AudioWaveformLayer.cpp",
+        "line": 86
+      },
+      "sourceClass": "AudioWaveformLayer"
+    },
+    {
+      "layerType": "audioWaveform",
+      "idPattern": "{registryPrefix}.bgAlpha",
+      "kind": "float",
+      "suffix": "bgAlpha",
+      "source": {
+        "path": "synaptome/src/visuals/AudioWaveformLayer.cpp",
+        "line": 88
+      },
+      "sourceClass": "AudioWaveformLayer"
+    },
+    {
+      "layerType": "audioWaveform",
+      "idPattern": "{registryPrefix}.bgColorB",
+      "kind": "float",
+      "suffix": "bgColorB",
+      "source": {
+        "path": "synaptome/src/visuals/AudioWaveformLayer.cpp",
+        "line": 94
+      },
+      "sourceClass": "AudioWaveformLayer"
+    },
+    {
+      "layerType": "audioWaveform",
+      "idPattern": "{registryPrefix}.bgColorG",
+      "kind": "float",
+      "suffix": "bgColorG",
+      "source": {
+        "path": "synaptome/src/visuals/AudioWaveformLayer.cpp",
+        "line": 93
+      },
+      "sourceClass": "AudioWaveformLayer"
+    },
+    {
+      "layerType": "audioWaveform",
+      "idPattern": "{registryPrefix}.bgColorR",
+      "kind": "float",
+      "suffix": "bgColorR",
+      "source": {
+        "path": "synaptome/src/visuals/AudioWaveformLayer.cpp",
+        "line": 92
+      },
+      "sourceClass": "AudioWaveformLayer"
+    },
+    {
+      "layerType": "audioWaveform",
+      "idPattern": "{registryPrefix}.colorB",
+      "kind": "float",
+      "suffix": "colorB",
+      "source": {
+        "path": "synaptome/src/visuals/AudioWaveformLayer.cpp",
+        "line": 91
+      },
+      "sourceClass": "AudioWaveformLayer"
+    },
+    {
+      "layerType": "audioWaveform",
+      "idPattern": "{registryPrefix}.colorG",
+      "kind": "float",
+      "suffix": "colorG",
+      "source": {
+        "path": "synaptome/src/visuals/AudioWaveformLayer.cpp",
+        "line": 90
+      },
+      "sourceClass": "AudioWaveformLayer"
+    },
+    {
+      "layerType": "audioWaveform",
+      "idPattern": "{registryPrefix}.colorR",
+      "kind": "float",
+      "suffix": "colorR",
+      "source": {
+        "path": "synaptome/src/visuals/AudioWaveformLayer.cpp",
+        "line": 89
+      },
+      "sourceClass": "AudioWaveformLayer"
+    },
+    {
+      "layerType": "audioWaveform",
+      "idPattern": "{registryPrefix}.gain",
+      "kind": "float",
+      "suffix": "gain",
+      "source": {
+        "path": "synaptome/src/visuals/AudioWaveformLayer.cpp",
+        "line": 81
+      },
+      "sourceClass": "AudioWaveformLayer"
+    },
+    {
+      "layerType": "audioWaveform",
+      "idPattern": "{registryPrefix}.lineThickness",
+      "kind": "float",
+      "suffix": "lineThickness",
+      "source": {
+        "path": "synaptome/src/visuals/AudioWaveformLayer.cpp",
+        "line": 83
+      },
+      "sourceClass": "AudioWaveformLayer"
+    },
+    {
+      "layerType": "audioWaveform",
+      "idPattern": "{registryPrefix}.showBands",
+      "kind": "bool",
+      "suffix": "showBands",
+      "source": {
+        "path": "synaptome/src/visuals/AudioWaveformLayer.cpp",
+        "line": 79
+      },
+      "sourceClass": "AudioWaveformLayer"
+    },
+    {
+      "layerType": "audioWaveform",
+      "idPattern": "{registryPrefix}.smoothing",
+      "kind": "float",
+      "suffix": "smoothing",
+      "source": {
+        "path": "synaptome/src/visuals/AudioWaveformLayer.cpp",
+        "line": 85
+      },
+      "sourceClass": "AudioWaveformLayer"
+    },
+    {
+      "layerType": "audioWaveform",
+      "idPattern": "{registryPrefix}.verticalScale",
+      "kind": "float",
+      "suffix": "verticalScale",
+      "source": {
+        "path": "synaptome/src/visuals/AudioWaveformLayer.cpp",
+        "line": 82
+      },
+      "sourceClass": "AudioWaveformLayer"
+    },
+    {
+      "layerType": "audioWaveform",
+      "idPattern": "{registryPrefix}.visible",
+      "kind": "bool",
+      "suffix": "visible",
+      "source": {
+        "path": "synaptome/src/visuals/AudioWaveformLayer.cpp",
+        "line": 76
+      },
+      "sourceClass": "AudioWaveformLayer"
     },
     {
       "layerType": "flocking",
@@ -12476,6 +12979,7 @@
       ],
       "sourceLayerTypes": [
         "agentField",
+        "audioWaveform",
         "flocking",
         "flowField",
         "gameOfLife",
@@ -12535,6 +13039,30 @@
         "agentField",
         "flocking",
         "flowField"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.bandAlpha",
+      "kind": "float",
+      "suffix": "bandAlpha",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "audioWaveform"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.bandHeight",
+      "kind": "float",
+      "suffix": "bandHeight",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "audioWaveform"
       ]
     },
     {
@@ -12611,6 +13139,18 @@
       ]
     },
     {
+      "idPattern": "console.layer{slot}.bgAlpha",
+      "kind": "float",
+      "suffix": "bgAlpha",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "audioWaveform"
+      ]
+    },
+    {
       "idPattern": "console.layer{slot}.bgB",
       "kind": "float",
       "suffix": "bgB",
@@ -12632,6 +13172,7 @@
         8
       ],
       "sourceLayerTypes": [
+        "audioWaveform",
         "oscilloscope"
       ]
     },
@@ -12644,6 +13185,7 @@
         8
       ],
       "sourceLayerTypes": [
+        "audioWaveform",
         "oscilloscope"
       ]
     },
@@ -12656,6 +13198,7 @@
         8
       ],
       "sourceLayerTypes": [
+        "audioWaveform",
         "oscilloscope"
       ]
     },
@@ -12880,6 +13423,7 @@
         8
       ],
       "sourceLayerTypes": [
+        "audioWaveform",
         "oscilloscope",
         "perlin",
         "stlModel"
@@ -12942,6 +13486,7 @@
         8
       ],
       "sourceLayerTypes": [
+        "audioWaveform",
         "oscilloscope",
         "perlin",
         "stlModel"
@@ -12956,6 +13501,7 @@
         8
       ],
       "sourceLayerTypes": [
+        "audioWaveform",
         "oscilloscope",
         "perlin",
         "stlModel"
@@ -13301,6 +13847,7 @@
         8
       ],
       "sourceLayerTypes": [
+        "audioWaveform",
         "media.clip",
         "media.webcam"
       ]
@@ -13437,6 +13984,18 @@
       "sourceLayerTypes": [
         "geodesic",
         "stlModel"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.lineThickness",
+      "kind": "float",
+      "suffix": "lineThickness",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "audioWaveform"
       ]
     },
     {
@@ -13958,6 +14517,18 @@
       ]
     },
     {
+      "idPattern": "console.layer{slot}.showBands",
+      "kind": "bool",
+      "suffix": "showBands",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "audioWaveform"
+      ]
+    },
+    {
       "idPattern": "console.layer{slot}.showCrosshair",
       "kind": "bool",
       "suffix": "showCrosshair",
@@ -13991,6 +14562,18 @@
       ],
       "sourceLayerTypes": [
         "oscilloscope"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.smoothing",
+      "kind": "float",
+      "suffix": "smoothing",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "audioWaveform"
       ]
     },
     {
@@ -14294,6 +14877,18 @@
       ]
     },
     {
+      "idPattern": "console.layer{slot}.verticalScale",
+      "kind": "float",
+      "suffix": "verticalScale",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "audioWaveform"
+      ]
+    },
+    {
       "idPattern": "console.layer{slot}.visible",
       "kind": "bool",
       "suffix": "visible",
@@ -14303,6 +14898,7 @@
       ],
       "sourceLayerTypes": [
         "agentField",
+        "audioWaveform",
         "flocking",
         "flowField",
         "gameOfLife",
@@ -14463,23 +15059,23 @@
   "commonSuffixes": [
     {
       "suffix": "visible",
-      "count": 31
+      "count": 32
     },
     {
       "suffix": "opacity",
-      "count": 28
+      "count": 29
     },
     {
       "suffix": "colorB",
-      "count": 17
+      "count": 18
     },
     {
       "suffix": "colorG",
-      "count": 17
+      "count": 18
     },
     {
       "suffix": "colorR",
-      "count": 17
+      "count": 18
     },
     {
       "suffix": "faceOpacity",
@@ -14526,12 +15122,12 @@
       "count": 16
     },
     {
-      "suffix": "speed",
+      "suffix": "alpha",
       "count": 10
     },
     {
-      "suffix": "alpha",
-      "count": 9
+      "suffix": "speed",
+      "count": 10
     },
     {
       "suffix": "bpmMultiplier",
@@ -14615,6 +15211,10 @@
     },
     {
       "suffix": "diffuse",
+      "count": 3
+    },
+    {
+      "suffix": "gain",
       "count": 3
     },
     {

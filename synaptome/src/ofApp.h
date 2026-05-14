@@ -22,6 +22,7 @@
 #include "visuals/GeodesicLayer.h"
 #include "visuals/LayerFactory.h"
 #include "visuals/LayerLibrary.h"
+#include "visuals/AudioWaveformLayer.h"
 #include "visuals/OscilloscopeLayer.h"
 #include "visuals/PerlinNoiseLayer.h"
 #include "visuals/StlModelLayer.h"
@@ -190,6 +191,9 @@ public:
         std::string addressPrefix = "/sensor/host/localmic";
         std::string levelAddress = "/sensor/host/localmic/mic-level";
         std::string peakAddress = "/sensor/host/localmic/mic-peak";
+        std::string bassAddress = "/sensor/host/localmic/mic-bass";
+        std::string midsAddress = "/sensor/host/localmic/mic-mids";
+        std::string highsAddress = "/sensor/host/localmic/mic-highs";
         int requestedDeviceIndex = -1;
         std::string deviceNameContains;
         int deviceIndex = -1;
@@ -205,6 +209,9 @@ public:
     uint64_t lastLocalMicIngestMs_ = 0;
     float lastLocalMicLevel_ = 0.0f;
     float lastLocalMicPeak_ = 0.0f;
+    float lastLocalMicBass_ = 0.0f;
+    float lastLocalMicMids_ = 0.0f;
+    float lastLocalMicHighs_ = 0.0f;
     // Diagnostic: last time we logged mic values (ms)
     uint64_t lastMicLogMs = 0;
     std::deque<std::pair<std::string, float>> oscHistory;

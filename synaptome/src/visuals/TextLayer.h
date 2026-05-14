@@ -15,12 +15,22 @@ public:
 
 private:
     bool ensureFontLoaded();
+    bool ensureCornerFontLoaded();
+    bool loadFontAtSize(ofTrueTypeFont& font,
+                        bool& fontLoaded,
+                        std::string& loadedFontName,
+                        int& loadedFontSize,
+                        int size);
 
     TextLayerState* state_ = nullptr;
     bool enabled_ = true;
     ofTrueTypeFont font_;
+    ofTrueTypeFont cornerFont_;
     bool fontLoaded_ = false;
+    bool cornerFontLoaded_ = false;
     std::string loadedFontName_;
+    std::string loadedCornerFontName_;
     int loadedFontSize_ = 0;
+    int loadedCornerFontSize_ = 0;
     ofColor textColor_ = ofColor::white;
 };

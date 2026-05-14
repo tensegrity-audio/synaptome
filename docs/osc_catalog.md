@@ -43,6 +43,18 @@ Typical app-facing families:
 The exact accepted routes are owned by `synaptome/src/io/OscParameterRouter.*` and the committed OSC map fixtures.
 Built-in route patterns use `OscParameterRouter` glob syntax. Use `*` for a wildcard path segment; regex-looking `.*` is treated as a literal dot plus wildcard and will not match normal mesh device IDs such as `0x0101`.
 
+Host audio publishes scalar metrics for modulation:
+
+```text
+/sensor/host/localmic/mic-level
+/sensor/host/localmic/mic-peak
+/sensor/host/localmic/mic-bass
+/sensor/host/localmic/mic-mids
+/sensor/host/localmic/mic-highs
+```
+
+The live waveform is not represented as a scalar OSC route. It is captured by the host audio bridge and rendered by the `Sensors > Audio Waveform` layer so OBS can capture the Synaptome output window directly.
+
 ## Public Boundary
 
 Included in first public Synaptome:

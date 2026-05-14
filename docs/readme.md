@@ -22,6 +22,7 @@ Synaptome is a public openFrameworks runtime for live visual performance. These 
 - [Contract index](contracts/README.md)
 - [Contract gaps](contracts/contract_gaps.md)
 - [Fixtures](contracts/fixtures.md)
+- [Signal Control integration](contracts/signal_control_integration.md)
 - [MIDI mapping](midi_mapping.md)
 - [OSC catalog](osc_catalog.md)
 - [Artist SDK example](examples/artist_sdk/README.md)

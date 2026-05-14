@@ -5,6 +5,7 @@
     <SynaptomeRepoRoot Condition="'$(SynaptomeRepoRoot)'=='' and '$(TensegrityRepoRoot)'!=''">$(TensegrityRepoRoot)</SynaptomeRepoRoot>
     <SynaptomeRepoRoot Condition="'$(SynaptomeRepoRoot)'=='' and '$(TENSEGRITY_REPO_ROOT)'!=''">$(TENSEGRITY_REPO_ROOT)</SynaptomeRepoRoot>
     <SynaptomeRepoRoot Condition="'$(SynaptomeRepoRoot)'=='' and Exists('$(MSBuildThisFileDirectory)..\tests\browser_flow_native_main.cpp')">$(MSBuildThisFileDirectory)..</SynaptomeRepoRoot>
+    <SynaptomeRepoRoot Condition="'$(SynaptomeRepoRoot)'=='' and Exists('$(USERPROFILE)\Documents\Tensegrity\synaptome\tests\browser_flow_native_main.cpp')">$(USERPROFILE)\Documents\Tensegrity\synaptome</SynaptomeRepoRoot>
     <SynaptomeRepoRoot Condition="'$(SynaptomeRepoRoot)'=='' and Exists('$(USERPROFILE)\Documents\Tensegrity\tensegrity\tests\browser_flow_native_main.cpp')">$(USERPROFILE)\Documents\Tensegrity\tensegrity</SynaptomeRepoRoot>
     <SynaptomeRepoRoot Condition="'$(SynaptomeRepoRoot)'==''">$(MSBuildThisFileDirectory)..</SynaptomeRepoRoot>
     <OF_ROOT Condition="'$(OF_ROOT)'=='' and '$(SynaptomeOpenFrameworksRoot)'!=''">$(SynaptomeOpenFrameworksRoot)</OF_ROOT>

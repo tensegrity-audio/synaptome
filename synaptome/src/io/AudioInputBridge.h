@@ -3,6 +3,7 @@
 #include "ofxOsc.h"
 #include "../core/ParameterRegistry.h"
 #include <atomic>
+#include <cstdint>
 #include <mutex>
 #include <vector>
 #include <string>
@@ -31,12 +32,23 @@ public:
 
     float lastRms() const { return lastRms_.load(); }
     float lastPeak() const { return lastPeak_.load(); }
+    float lastBass() const { return lastBass_.load(); }
+    float lastMids() const { return lastMids_.load(); }
+    float lastHighs() const { return lastHighs_.load(); }
 
 private:
     ofSoundStream soundStream_;
     std::atomic<float> lastRms_{0.0f};
     std::atomic<float> lastPeak_{0.0f};
+    std::atomic<float> lastBass_{0.0f};
+    std::atomic<float> lastMids_{0.0f};
+    std::atomic<float> lastHighs_{0.0f};
+    std::atomic<uint64_t> analysisFrame_{0};
     std::mutex deviceMutex_;
+    std::mutex analysisMutex_;
+    std::vector<float> analysisWindow_;
+    std::string deviceLabel_;
+    int sampleRate_ = 44100;
     int channels_ = 1;
 
     // Optional OSC sender

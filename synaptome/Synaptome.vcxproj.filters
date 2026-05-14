@@ -112,6 +112,9 @@
 		<ns0:ClCompile Include="src\visuals\OscilloscopeLayer.cpp">
 			<ns0:Filter>src</ns0:Filter>
 		</ns0:ClCompile>
+		<ns0:ClCompile Include="src\visuals\AudioWaveformLayer.cpp">
+			<ns0:Filter>src</ns0:Filter>
+		</ns0:ClCompile>
 
 
 
@@ -4548,6 +4551,9 @@
 
 
 		</ns0:ClInclude>
+		<ns0:ClInclude Include="src\io\AudioAnalysisBus.h">
+			<ns0:Filter>src</ns0:Filter>
+		</ns0:ClInclude>
 		<ns0:ClInclude Include="src\visuals\GridLayer.h">
 
 
@@ -4562,6 +4568,9 @@
 
 		</ns0:ClInclude>
 		<ns0:ClInclude Include="src\visuals\OscilloscopeLayer.h">
+			<ns0:Filter>src</ns0:Filter>
+		</ns0:ClInclude>
+		<ns0:ClInclude Include="src\visuals\AudioWaveformLayer.h">
 			<ns0:Filter>src</ns0:Filter>
 		</ns0:ClInclude>
 

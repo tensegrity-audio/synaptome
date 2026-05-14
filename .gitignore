@@ -24,6 +24,7 @@ Thumbs.db
 
 # Synaptome generated build output
 synaptome/bin/Synaptome.*
+synaptome/bin/Synaptome_*.*
 synaptome/bin/oF_v2.*
 synaptome/bin/data/log.txt
 synaptome/bin/data/logs/
@@ -31,6 +32,7 @@ synaptome/bin/data/config/control_hub_prefs.json
 synaptome/bin/data/config/console.json
 synaptome/bin/data/config/scene-last.json
 synaptome/obj/
+synaptome/x64/
 synaptome/src/thirdparty/*.exp
 synaptome/tests/**/Debug/
 synaptome/tests/**/Release/

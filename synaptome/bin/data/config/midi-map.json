@@ -3,23 +3,13 @@
     "osc": [
         {
             "bank": "home",
-            "pattern": "/sensor/deck/0x0201/heart-bpm",
-            "target": "console.layer1.speed"
+            "pattern": "/sensor/host/localmic/mic-level",
+            "target": "console.layer4.trailBoost"
         },
         {
             "bank": "home",
-            "pattern": "/sensor/deck/0x0201/imu-gyro-x",
-            "target": "console.layer2.rotateX"
-        },
-        {
-            "bank": "home",
-            "pattern": "/sensor/deck/0x0201/imu-gyro-y",
-            "target": "console.layer2.rotateY"
-        },
-        {
-            "bank": "home",
-            "pattern": "/sensor/deck/0x0201/imu-accel-z",
-            "target": "console.layer2.baseHeight"
+            "pattern": "/sensor/host/localmic/mic-level",
+            "target": "console.layer4.pointSize"
         }
     ],
     "oscSources": [
@@ -86,6 +76,19 @@
                 10.0
             ],
             "pattern": "/sensor/deck/0x0201/imu-accel-z",
+            "relative": true
+        },
+        {
+            "blend": "scale",
+            "in": [
+                0.0,
+                0.30000001192092896
+            ],
+            "out": [
+                0.0,
+                5.0
+            ],
+            "pattern": "/sensor/host/localmic/mic-level",
             "relative": true
         }
     ]

@@ -5,11 +5,16 @@
   "type": "text",
   "registryPrefix": "overlay.text",
   "opacity": 1.0,
-  "description": "Editable on-screen text that now lives inside console slots like any other layer.",
+  "description": "Editable center and corner text that lives inside console slots like any other layer.",
   "defaults": {
     "content": "Hello",
+    "topLeft": "",
+    "topRight": "",
+    "bottomLeft": "",
+    "bottomRight": "",
     "font": "VCR_OSD_MONO_1.001.ttf",
     "size": 48.0,
+    "cornerSize": 32.0,
     "color": [0.0, 255.0, 160.0]
   }
 }

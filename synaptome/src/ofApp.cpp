@@ -830,6 +830,12 @@ std::vector<std::string> ofApp::loadOscChannelHints() const {
         sample.append("/sensor/deck/0x0201/deck-scene\n");
         sample.append("/sensor/deck/0x0201/battery-soc\n");
         sample.append("/sensor/deck/0x0201/battery-volt\n");
+        sample.append("# Example entries for the host laptop mic\n");
+        sample.append("/sensor/host/localmic/mic-level\n");
+        sample.append("/sensor/host/localmic/mic-peak\n");
+        sample.append("/sensor/host/localmic/mic-bass\n");
+        sample.append("/sensor/host/localmic/mic-mids\n");
+        sample.append("/sensor/host/localmic/mic-highs\n");
         ofBufferToFile(cfgPath, sample);
         return hints;
     }
@@ -850,6 +856,17 @@ void ofApp::setupLocalMicBridge() {
     lastLocalMicIngestMs_ = 0;
     lastLocalMicLevel_ = 0.0f;
     lastLocalMicPeak_ = 0.0f;
+    lastLocalMicBass_ = 0.0f;
+    lastLocalMicMids_ = 0.0f;
+    lastLocalMicHighs_ = 0.0f;
+
+    auto assignLocalMicAddresses = [this]() {
+        localMicSettings_.levelAddress = localMicSettings_.addressPrefix + "/mic-level";
+        localMicSettings_.peakAddress = localMicSettings_.addressPrefix + "/mic-peak";
+        localMicSettings_.bassAddress = localMicSettings_.addressPrefix + "/mic-bass";
+        localMicSettings_.midsAddress = localMicSettings_.addressPrefix + "/mic-mids";
+        localMicSettings_.highsAddress = localMicSettings_.addressPrefix + "/mic-highs";
+    };
 
     std::string cfgPath = ofToDataPath("config/audio.json", true);
     ofJson audioCfg;
@@ -881,14 +898,12 @@ void ofApp::setupLocalMicBridge() {
         const ofJson& ingest = node["ingest"];
         localMicSettings_.ingestLocally = ingest.value("enabled", true);
         localMicSettings_.addressPrefix = normalizeOscPrefix(ingest.value("addressPrefix", localMicSettings_.addressPrefix));
-        localMicSettings_.levelAddress = localMicSettings_.addressPrefix + "/mic-level";
-        localMicSettings_.peakAddress = localMicSettings_.addressPrefix + "/mic-peak";
+        assignLocalMicAddresses();
         localMicSettings_.ingestRateLimitHz = ingest.value("rateLimitHz", localMicSettings_.ingestRateLimitHz);
         localMicSettings_.ingestDeadband = ingest.value("deadband", localMicSettings_.ingestDeadband);
     } else {
         localMicSettings_.addressPrefix = normalizeOscPrefix(localMicSettings_.addressPrefix);
-        localMicSettings_.levelAddress = localMicSettings_.addressPrefix + "/mic-level";
-        localMicSettings_.peakAddress = localMicSettings_.addressPrefix + "/mic-peak";
+        assignLocalMicAddresses();
     }
     if (localMicSettings_.ingestRateLimitHz > 0.0f) {
         localMicSettings_.ingestIntervalMs = static_cast<uint64_t>(std::max(1.0f, 1000.0f / localMicSettings_.ingestRateLimitHz));
@@ -993,8 +1008,12 @@ void ofApp::updateLocalMicBridge(uint64_t nowMs) {
     }
     float rms = audioBridge.lastRms();
     float peak = audioBridge.lastPeak();
+    float bass = audioBridge.lastBass();
+    float mids = audioBridge.lastMids();
+    float highs = audioBridge.lastHighs();
     if (!lastMicLogMs || nowMs - lastMicLogMs >= 1000) {
-        ofLogVerbose("AudioInputBridge") << "local mic rms=" << rms << " peak=" << peak;
+        ofLogVerbose("AudioInputBridge") << "local mic rms=" << rms << " peak=" << peak
+                                         << " bass=" << bass << " mids=" << mids << " highs=" << highs;
         lastMicLogMs = nowMs;
     }
     if (!localMicSettings_.ingestLocally) {
@@ -1008,15 +1027,24 @@ void ofApp::updateLocalMicBridge(uint64_t nowMs) {
                           (nowMs - lastLocalMicIngestMs_ >= localMicSettings_.ingestIntervalMs);
         bool levelDelta = std::fabs(rms - lastLocalMicLevel_) >= localMicSettings_.ingestDeadband;
         bool peakDelta = std::fabs(peak - lastLocalMicPeak_) >= localMicSettings_.ingestDeadband;
-        shouldEmit = intervalOk && (levelDelta || peakDelta);
+        bool bassDelta = std::fabs(bass - lastLocalMicBass_) >= localMicSettings_.ingestDeadband;
+        bool midsDelta = std::fabs(mids - lastLocalMicMids_) >= localMicSettings_.ingestDeadband;
+        bool highsDelta = std::fabs(highs - lastLocalMicHighs_) >= localMicSettings_.ingestDeadband;
+        shouldEmit = intervalOk && (levelDelta || peakDelta || bassDelta || midsDelta || highsDelta);
     }
     if (!shouldEmit) {
         return;
     }
     ingestOscMessage(localMicSettings_.levelAddress, rms);
     ingestOscMessage(localMicSettings_.peakAddress, peak);
+    ingestOscMessage(localMicSettings_.bassAddress, bass);
+    ingestOscMessage(localMicSettings_.midsAddress, mids);
+    ingestOscMessage(localMicSettings_.highsAddress, highs);
     lastLocalMicLevel_ = rms;
     lastLocalMicPeak_ = peak;
+    lastLocalMicBass_ = bass;
+    lastLocalMicMids_ = mids;
+    lastLocalMicHighs_ = highs;
     lastLocalMicIngestMs_ = nowMs;
     localMicIngestInitialized_ = true;
 }
@@ -1206,9 +1234,33 @@ void ofApp::setup() {
     addString("overlay.text.content",
               &textState.content,
               textState.content,
-              "Text Content",
+              "Center Text",
               overlayGroup,
-              "Text displayed by the HUD overlay");
+              "Text displayed in the center text slot");
+    addString("overlay.text.topLeft",
+              &textState.topLeft,
+              textState.topLeft,
+              "Top Left Text",
+              overlayGroup,
+              "Text displayed in the top-left text slot");
+    addString("overlay.text.topRight",
+              &textState.topRight,
+              textState.topRight,
+              "Top Right Text",
+              overlayGroup,
+              "Text displayed in the top-right text slot");
+    addString("overlay.text.bottomLeft",
+              &textState.bottomLeft,
+              textState.bottomLeft,
+              "Bottom Left Text",
+              overlayGroup,
+              "Text displayed in the bottom-left text slot");
+    addString("overlay.text.bottomRight",
+              &textState.bottomRight,
+              textState.bottomRight,
+              "Bottom Right Text",
+              overlayGroup,
+              "Text displayed in the bottom-right text slot");
     addString("overlay.text.font",
               &textState.font,
               textState.font,
@@ -1229,13 +1281,23 @@ void ofApp::setup() {
     addFloat("overlay.text.size",
              &textState.fontSize,
              textState.fontSize,
-             "Text Size",
+             "Center Text Size",
              overlayGroup,
              makeRange(12.0f, 256.0f, 1.0f),
              false,
              0,
              "px",
-             "Font size in pixels");
+             "Center text font size in pixels");
+    addFloat("overlay.text.corner.size",
+             &textState.cornerFontSize,
+             textState.cornerFontSize,
+             "Corner Text Size",
+             overlayGroup,
+             makeRange(8.0f, 256.0f, 1.0f),
+             false,
+             0,
+             "px",
+             "Corner text font size in pixels");
     addFloat("overlay.text.color.r",
              &textState.colorR,
              textState.colorR,
@@ -1279,6 +1341,7 @@ void ofApp::setup() {
     auto& factory = LayerFactory::instance();
     factory.registerType("grid", []() { return std::make_unique<GridLayer>(); });
     factory.registerType("geodesic", []() { return std::make_unique<GeodesicLayer>(); });
+    factory.registerType("audioWaveform", []() { return std::make_unique<AudioWaveformLayer>(); });
     factory.registerType("oscilloscope", []() { return std::make_unique<OscilloscopeLayer>(); });
     factory.registerType("perlin", []() { return std::make_unique<PerlinNoiseLayer>(); });
     factory.registerType("stlModel", []() { return std::make_unique<StlModelLayer>(); });
@@ -1798,7 +1861,12 @@ void ofApp::setup() {
             "/sensor/deck/0x0201/deck-intensity",
             "/sensor/deck/0x0201/deck-scene",
             "/sensor/deck/0x0201/battery-soc",
-            "/sensor/deck/0x0201/battery-volt"
+            "/sensor/deck/0x0201/battery-volt",
+            "/sensor/host/localmic/mic-level",
+            "/sensor/host/localmic/mic-peak",
+            "/sensor/host/localmic/mic-bass",
+            "/sensor/host/localmic/mic-mids",
+            "/sensor/host/localmic/mic-highs"
         };
     }
     midi.seedOscSources(oscHints);
@@ -4902,8 +4970,13 @@ ofJson ofApp::encodeSceneJson(const std::string& path) const {
           "fx.master",
           "camera.dist",
           "overlay.text.content",
+          "overlay.text.topLeft",
+          "overlay.text.topRight",
+          "overlay.text.bottomLeft",
+          "overlay.text.bottomRight",
           "overlay.text.font",
           "overlay.text.size",
+          "overlay.text.corner.size",
           "overlay.text.color.r",
           "overlay.text.color.g",
           "overlay.text.color.b"
