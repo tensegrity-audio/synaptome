@@ -3,6 +3,12 @@
     {
       "band": "hud",
       "collapsed": false,
+      "column": 1,
+      "id": "hud.audio.waveform"
+    },
+    {
+      "band": "hud",
+      "collapsed": false,
       "column": 0,
       "id": "hud.controls"
     },
@@ -41,6 +47,13 @@
   "hudStateMigrated": true,
   "hudVisible": true,
   "hudWidgets": [
+    {
+      "band": "hud",
+      "collapsed": false,
+      "column": 1,
+      "id": "hud.audio.waveform",
+      "visible": true
+    },
     {
       "band": "hud",
       "collapsed": false,

@@ -378,6 +378,50 @@ def validate_osc_map(data: object, path: Path) -> List[str]:
     return errors
 
 
+def validate_osc_input(data: object, path: Path) -> List[str]:
+    ctx = f"{path.name}"
+    if not isinstance(data, dict):
+        return [f"{ctx} must be a JSON object"]
+
+    errors: List[str] = []
+    version = data.get("version")
+    if version is not None and not isinstance(version, int):
+        errors.append("'version' must be an integer if present")
+
+    mode = data.get("mode")
+    if not isinstance(mode, str):
+        errors.append("'mode' must be a string")
+    elif mode not in {"directSerial", "routerUdp"}:
+        errors.append("'mode' must be one of ['directSerial', 'routerUdp']")
+
+    router_udp = data.get("routerUdp")
+    if not isinstance(router_udp, dict):
+        errors.append("'routerUdp' must be an object")
+    else:
+        host = router_udp.get("host")
+        if not isinstance(host, str) or not host:
+            errors.append("routerUdp.host must be a non-empty string")
+        port = router_udp.get("port")
+        if not isinstance(port, int) or isinstance(port, bool):
+            errors.append("routerUdp.port must be an integer")
+        elif not (1 <= port <= 65535):
+            errors.append("routerUdp.port must be between 1 and 65535")
+
+    serial = data.get("serial", {})
+    if serial is not None:
+        if not isinstance(serial, dict):
+            errors.append("'serial' must be an object if present")
+        else:
+            auto_port = serial.get("autoPort")
+            if auto_port is not None and not isinstance(auto_port, bool):
+                errors.append("serial.autoPort must be boolean if present")
+            port_name = serial.get("port")
+            if port_name is not None and not isinstance(port_name, str):
+                errors.append("serial.port must be a string if present")
+
+    return errors
+
+
 def validate_videos(data: object, path: Path) -> List[str]:
     ctx = f"{path.name}"
     if not isinstance(data, dict):
@@ -471,6 +515,7 @@ CONFIG_VALIDATORS: Dict[Path, ValidationFn] = {
     Path("synaptome/bin/data/config/hotkeys.json"): validate_hotkeys,
     Path("synaptome/bin/data/config/netmap.json"): validate_netmap,
     Path("synaptome/bin/data/config/osc-map.json"): validate_osc_map,
+    Path("synaptome/bin/data/config/osc-input.json"): validate_osc_input,
     Path("synaptome/bin/data/config/videos.json"): validate_videos,
     Path("synaptome/bin/data/config/profiles.json"): validate_profiles,
     Path("synaptome/bin/data/config/scene-last.json"): validate_scene,
@@ -480,6 +525,7 @@ CONFIG_VALIDATORS: Dict[Path, ValidationFn] = {
 BROWSER_CONFIG_TARGETS = [
     Path("synaptome/bin/data/config/midi-map.json"),
     Path("synaptome/bin/data/config/osc-map.json"),
+    Path("synaptome/bin/data/config/osc-input.json"),
     Path("synaptome/bin/data/config/hotkeys.json"),
 ]
 
@@ -487,6 +533,7 @@ BROWSER_EXAMPLE_SCHEMAS = {
     Path("docs/examples/parameter_example.json"): Path("docs/schemas/parameter.schema.json"),
     Path("docs/examples/midi_bank_example.json"): Path("docs/schemas/midi_bank.schema.json"),
     Path("docs/examples/osc_map_example.json"): Path("docs/schemas/osc_map.schema.json"),
+    Path("docs/examples/osc_input_example.json"): Path("docs/schemas/osc_input.schema.json"),
     Path("docs/examples/hotkeys_example.json"): Path("docs/schemas/hotkeys.schema.json"),
 }
 
@@ -519,6 +566,27 @@ CONTRACT_ENTRIES: tuple[ContractEntry, ...] = (
         fixtures=(Path("docs/examples/osc_map_example.json"),),
         notes="Includes a built-in route glob regression for mesh-style OSC inputs such as /sensor/matrix/0x0101/mic-level.",
         check_command=(sys.executable, "tools/validate_osc_route_patterns.py"),
+        public_app=True,
+    ),
+    ContractEntry(
+        name="Signal Control receive and OSC input selection",
+        status="validated",
+        sources=(
+            Path("synaptome/bin/data/config/osc-input.json"),
+            Path("docs/examples/osc_input_example.json"),
+            Path("docs/schemas/osc_input.schema.json"),
+            Path("docs/contracts/signal_control_integration.md"),
+            Path("tools/testdata/signal_control/expected_receive_contract.json"),
+            Path("tools/validate_signal_control_receive_contract.py"),
+        ),
+        validator_command="python tools\\validate_signal_control_receive_contract.py --check",
+        fixtures=(
+            Path("docs/examples/osc_input_example.json"),
+            Path("tools/testdata/runtime_state/config/osc-input.json"),
+            Path("tools/testdata/signal_control/expected_receive_contract.json"),
+        ),
+        notes="Locks the Router UDP input config shape plus the Signal Control scalar telemetry and waveform receive routes for /sensor/host/<source>/*.",
+        check_command=(sys.executable, "tools/validate_signal_control_receive_contract.py", "--check"),
         public_app=True,
     ),
     ContractEntry(

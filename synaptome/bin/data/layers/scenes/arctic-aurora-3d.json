@@ -1,0 +1,68 @@
+{
+  "globals": {
+    "transport.bpm": 120.0,
+    "globals.speed": 1.0,
+    "fx.master": 0.0,
+    "camera.dist": 1450.0,
+    "ui.hud": true
+  },
+  "effects": {
+    "dither": {
+      "route": 0
+    },
+    "ascii": {
+      "route": 0,
+      "block": 8.0,
+      "colorMode": 0.0,
+      "characterSet": 2.0,
+      "aspect": 0.0,
+      "padding": 0.0,
+      "gamma": 1.0,
+      "jitter": 0.0
+    },
+    "crt": {
+      "route": 0,
+      "scanline": 0.18,
+      "vignette": 0.28,
+      "bleed": 0.04
+    }
+  },
+  "console": {
+    "slots": [
+      {
+        "index": 1,
+        "assetId": "generative.arcticAuroraScene",
+        "active": true,
+        "opacity": 1.0,
+        "parameters": {
+          "console.layer1.alpha": 1.0,
+          "console.layer1.sceneScale": 1.0,
+          "console.layer1.sceneOffsetY": 0.0,
+          "console.layer1.sceneOffsetZ": 0.0,
+          "console.layer1.waterWidth": 4200.0,
+          "console.layer1.waterLevel": 0.0,
+          "console.layer1.waterWaveIdle": 3.2,
+          "console.layer1.waterHighlight": 1.15,
+          "console.layer1.waterReflection": 0.0,
+          "console.layer1.waterHorizonFog": 0.0,
+          "console.layer1.icebergCount": 6.0,
+          "console.layer1.icebergScale": 1.0,
+          "console.layer1.icebergSpread": 3400.0,
+          "console.layer1.icebergRimLight": 0.0,
+          "console.layer1.auroraWidth": 2600.0,
+          "console.layer1.auroraBaseY": 145.0,
+          "console.layer1.auroraHeight": 520.0,
+          "console.layer1.auroraDepthNear": -780.0,
+          "console.layer1.auroraDepthFar": -1260.0,
+          "console.layer1.auroraGlow": 2.2,
+          "console.layer1.auroraBloom": 2.6,
+          "console.layer1.auroraFoldStrength": 0.92,
+          "console.layer1.auroraRayDensity": 0.0,
+          "console.layer1.auroraCurtainCount": 4.0,
+          "console.layer1.audioAmount": 1.35,
+          "console.layer1.audioSmoothing": 0.32
+        }
+      }
+    ]
+  }
+}

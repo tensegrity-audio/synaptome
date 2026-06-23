@@ -207,6 +207,33 @@
 		<ns0:ClCompile Include="src\visuals\FlowFieldLayer.cpp">
 			<ns0:Filter>src</ns0:Filter>
 		</ns0:ClCompile>
+		<ns0:ClCompile Include="src\visuals\ConstellationStarfieldLayer.cpp">
+			<ns0:Filter>src</ns0:Filter>
+		</ns0:ClCompile>
+		<ns0:ClCompile Include="src\visuals\AuroraCurtainLayer.cpp">
+			<ns0:Filter>src</ns0:Filter>
+		</ns0:ClCompile>
+		<ns0:ClCompile Include="src\visuals\ArcticSeaIcebergLayer.cpp">
+			<ns0:Filter>src</ns0:Filter>
+		</ns0:ClCompile>
+		<ns0:ClCompile Include="src\visuals\ArcticAuroraSceneLayer.cpp">
+			<ns0:Filter>src</ns0:Filter>
+		</ns0:ClCompile>
+		<ns0:ClCompile Include="src\visuals\CosmicWebLayer.cpp">
+			<ns0:Filter>src</ns0:Filter>
+		</ns0:ClCompile>
+		<ns0:ClCompile Include="src\visuals\GalaxySpiralLayer.cpp">
+			<ns0:Filter>src</ns0:Filter>
+		</ns0:ClCompile>
+		<ns0:ClCompile Include="src\visuals\SolarSystemLayer.cpp">
+			<ns0:Filter>src</ns0:Filter>
+		</ns0:ClCompile>
+		<ns0:ClCompile Include="src\visuals\BigBangLayer.cpp">
+			<ns0:Filter>src</ns0:Filter>
+		</ns0:ClCompile>
+		<ns0:ClCompile Include="src\visuals\CosmosFormationLayer.cpp">
+			<ns0:Filter>src</ns0:Filter>
+		</ns0:ClCompile>
 
 
 
@@ -1377,6 +1404,9 @@
 			<ns0:Filter>src</ns0:Filter>
 		</ns0:ClCompile>
 		<ns0:ClCompile Include="src\ui\overlays\TelemetryWidget.cpp">
+			<ns0:Filter>src</ns0:Filter>
+		</ns0:ClCompile>
+		<ns0:ClCompile Include="src\ui\overlays\AudioMonitorWidget.cpp">
 			<ns0:Filter>src</ns0:Filter>
 		</ns0:ClCompile>
 		<ns0:ClCompile Include="src\ui\HudLayoutEditor.cpp">
@@ -4663,6 +4693,33 @@
 			<ns0:Filter>src</ns0:Filter>
 		</ns0:ClInclude>
 		<ns0:ClInclude Include="src\visuals\FlowFieldLayer.h">
+			<ns0:Filter>src</ns0:Filter>
+		</ns0:ClInclude>
+		<ns0:ClInclude Include="src\visuals\ConstellationStarfieldLayer.h">
+			<ns0:Filter>src</ns0:Filter>
+		</ns0:ClInclude>
+		<ns0:ClInclude Include="src\visuals\AuroraCurtainLayer.h">
+			<ns0:Filter>src</ns0:Filter>
+		</ns0:ClInclude>
+		<ns0:ClInclude Include="src\visuals\ArcticSeaIcebergLayer.h">
+			<ns0:Filter>src</ns0:Filter>
+		</ns0:ClInclude>
+		<ns0:ClInclude Include="src\visuals\ArcticAuroraSceneLayer.h">
+			<ns0:Filter>src</ns0:Filter>
+		</ns0:ClInclude>
+		<ns0:ClInclude Include="src\visuals\CosmicWebLayer.h">
+			<ns0:Filter>src</ns0:Filter>
+		</ns0:ClInclude>
+		<ns0:ClInclude Include="src\visuals\GalaxySpiralLayer.h">
+			<ns0:Filter>src</ns0:Filter>
+		</ns0:ClInclude>
+		<ns0:ClInclude Include="src\visuals\SolarSystemLayer.h">
+			<ns0:Filter>src</ns0:Filter>
+		</ns0:ClInclude>
+		<ns0:ClInclude Include="src\visuals\BigBangLayer.h">
+			<ns0:Filter>src</ns0:Filter>
+		</ns0:ClInclude>
+		<ns0:ClInclude Include="src\visuals\CosmosFormationLayer.h">
 			<ns0:Filter>src</ns0:Filter>
 		</ns0:ClInclude>
 
@@ -23052,6 +23109,9 @@
 			<ns0:Filter>src</ns0:Filter>
 		</ns0:ClInclude>
 		<ns0:ClInclude Include="src\ui\overlays\TelemetryWidget.h">
+			<ns0:Filter>src</ns0:Filter>
+		</ns0:ClInclude>
+		<ns0:ClInclude Include="src\ui\overlays\AudioMonitorWidget.h">
 			<ns0:Filter>src</ns0:Filter>
 		</ns0:ClInclude>
 		<ns0:ClInclude Include="src\visuals\VideoClipLayer.h">

@@ -58,10 +58,10 @@ void FlockingLayer::setup(ParameterRegistry& registry) {
 
     ParameterRegistry::Descriptor meta;
     meta.group = "Generative";
-    meta.label = "Flock Visible";
+    meta.label = "Action: Visible";
     registry.addBool(prefix + ".visible", &paramEnabled_, paramEnabled_, meta);
 
-    meta.label = "Flock Speed";
+    meta.label = "Time: Flock Speed";
     meta.range.min = 0.0f;
     meta.range.max = 40.0f;
     meta.range.step = 0.1f;
@@ -69,10 +69,10 @@ void FlockingLayer::setup(ParameterRegistry& registry) {
 
     meta = {};
     meta.group = "Generative";
-    meta.label = "Flock BPM Sync";
+    meta.label = "Action: BPM Sync";
     registry.addBool(prefix + ".bpmSync", &paramBpmSync_, paramBpmSync_, meta);
 
-    meta.label = "Flock BPM Mult";
+    meta.label = "Time: BPM Mult";
     meta.range.min = 0.25f;
     meta.range.max = 8.0f;
     meta.range.step = 0.25f;
@@ -80,7 +80,7 @@ void FlockingLayer::setup(ParameterRegistry& registry) {
 
     meta = {};
     meta.group = "Generative";
-    meta.label = "Flock Alpha";
+    meta.label = "Alpha: Flock";
     meta.range.min = 0.0f;
     meta.range.max = 1.0f;
     meta.range.step = 0.01f;
@@ -88,97 +88,97 @@ void FlockingLayer::setup(ParameterRegistry& registry) {
 
     meta = {};
     meta.group = "Generative";
-    meta.label = "Flock Reseed";
+    meta.label = "Action: Reseed";
     registry.addBool(prefix + ".reseed", &paramReseedRequested_, paramReseedRequested_, meta);
 
     meta = {};
     meta.group = "Generative";
-    meta.label = "Flock Mode";
+    meta.label = "Action: Mode";
     meta.range.min = 0.0f;
     meta.range.max = static_cast<float>(kModeCount - 1);
     meta.range.step = 1.0f;
     meta.description = modeDescriptions();
     registry.addFloat(prefix + ".mode", &paramMode_, paramMode_, meta);
 
-    meta.label = "Flock Boids";
+    meta.label = "Count: Boids";
     meta.range.min = 8.0f;
     meta.range.max = 160.0f;
     meta.range.step = 1.0f;
     registry.addFloat(prefix + ".boidCount", &paramBoidCount_, paramBoidCount_, meta);
 
-    meta.label = "Flock Predators";
+    meta.label = "Count: Predators";
     meta.range.min = 0.0f;
     meta.range.max = 24.0f;
     meta.range.step = 1.0f;
     registry.addFloat(prefix + ".predatorCount", &paramPredatorCount_, paramPredatorCount_, meta);
 
-    meta.label = "Flock Cohesion";
+    meta.label = "Force: Cohesion";
     meta.range.min = 0.0f;
     meta.range.max = 0.05f;
     meta.range.step = 0.001f;
     registry.addFloat(prefix + ".cohesion", &paramCohesion_, paramCohesion_, meta);
 
-    meta.label = "Flock Alignment";
+    meta.label = "Force: Alignment";
     meta.range.min = 0.0f;
     meta.range.max = 0.08f;
     meta.range.step = 0.001f;
     registry.addFloat(prefix + ".alignment", &paramAlignment_, paramAlignment_, meta);
 
-    meta.label = "Flock Separation";
+    meta.label = "Force: Separation";
     meta.range.min = 0.0f;
     meta.range.max = 0.02f;
     meta.range.step = 0.0005f;
     registry.addFloat(prefix + ".separation", &paramSeparation_, paramSeparation_, meta);
 
-    meta.label = "Flock Chase";
+    meta.label = "Force: Chase";
     meta.range.min = 0.0f;
     meta.range.max = 0.05f;
     meta.range.step = 0.001f;
     registry.addFloat(prefix + ".chase", &paramChase_, paramChase_, meta);
 
-    meta.label = "Flock Evade";
+    meta.label = "Force: Evade";
     meta.range.min = 0.0f;
     meta.range.max = 0.05f;
     meta.range.step = 0.001f;
     registry.addFloat(prefix + ".evade", &paramEvade_, paramEvade_, meta);
 
-    meta.label = "Flock Noise";
+    meta.label = "Motion: Noise";
     meta.range.min = 0.0f;
     meta.range.max = 0.03f;
     meta.range.step = 0.0005f;
     registry.addFloat(prefix + ".noise", &paramNoise_, paramNoise_, meta);
 
-    meta.label = "Flock Trail Fade";
+    meta.label = "Time: Trail Fade";
     meta.range.min = 0.0f;
     meta.range.max = 0.2f;
     meta.range.step = 0.001f;
     registry.addFloat(prefix + ".trailFade", &paramTrailFade_, paramTrailFade_, meta);
 
-    meta.label = "Flock Trail Deposit";
+    meta.label = "Glow: Trail Deposit";
     meta.range.min = 0.01f;
     meta.range.max = 1.0f;
     meta.range.step = 0.01f;
     registry.addFloat(prefix + ".trailDeposit", &paramTrailDeposit_, paramTrailDeposit_, meta);
 
-    meta.label = "Flock Point Size";
+    meta.label = "Scale: Point Size";
     meta.range.min = 1.0f;
     meta.range.max = 6.0f;
     meta.range.step = 0.25f;
     registry.addFloat(prefix + ".pointSize", &paramPointSize_, paramPointSize_, meta);
 
-    meta.label = "Flock Bg Alpha";
+    meta.label = "Alpha: Background";
     meta.range.min = 0.0f;
     meta.range.max = 1.0f;
     meta.range.step = 0.01f;
     registry.addFloat(prefix + ".backgroundAlpha", &paramBackgroundAlpha_, paramBackgroundAlpha_, meta);
 
-    meta.label = "Flock Trail Alpha";
+    meta.label = "Alpha: Trail";
     registry.addFloat(prefix + ".trailAlpha", &paramTrailAlpha_, paramTrailAlpha_, meta);
 
-    meta.label = "Flock Prey Alpha";
+    meta.label = "Alpha: Prey";
     registry.addFloat(prefix + ".preyAlpha", &paramPreyAlpha_, paramPreyAlpha_, meta);
 
-    meta.label = "Flock Pred Alpha";
+    meta.label = "Alpha: Predators";
     registry.addFloat(prefix + ".predAlpha", &paramPredAlpha_, paramPredAlpha_, meta);
 
     allocateTrail();

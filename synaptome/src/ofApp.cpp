@@ -1,4 +1,5 @@
 #include "ofApp.h"
+#include "io/AudioAnalysisBus.h"
 #include "io/ConsoleStore.h"
 #include "ui/overlays/ControlsHudWidget.h"
 #include "ui/overlays/StatusHudWidget.h"
@@ -7,6 +8,7 @@
 #include "ui/overlays/MenuMirrorHudWidget.h"
 #include "ui/overlays/TelemetryWidget.h"
 #include "ui/overlays/KeyListWidget.h"
+#include "ui/overlays/AudioMonitorWidget.h"
 #include "ui/ControlMappingHubState.h"
 #include "ui/MenuSkin.h"
 #include "ui/ControlHubEventBridge_clean.h"
@@ -48,6 +50,89 @@ namespace {
     bool endsWith(const std::string& text, const std::string& suffix) {
         return text.size() >= suffix.size()
             && text.compare(text.size() - suffix.size(), suffix.size(), suffix) == 0;
+    }
+
+    bool extractSingleNumericOscArg(const ofxOscMessage& msg, float& value) {
+        if (msg.getNumArgs() != 1) {
+            return false;
+        }
+        const ofxOscArgType type = msg.getArgType(0);
+        if (type == OFXOSC_TYPE_FLOAT) {
+            value = msg.getArgAsFloat(0);
+            return true;
+        }
+        if (type == OFXOSC_TYPE_DOUBLE) {
+            value = static_cast<float>(msg.getArgAsDouble(0));
+            return true;
+        }
+        if (type == OFXOSC_TYPE_INT32 || type == OFXOSC_TYPE_INT64) {
+            value = static_cast<float>(msg.getArgAsInt64(0));
+            return true;
+        }
+        return false;
+    }
+
+    bool extractNumericOscArgs(const ofxOscMessage& msg, std::vector<float>& values) {
+        values.clear();
+        values.reserve(msg.getNumArgs());
+        for (std::size_t i = 0; i < msg.getNumArgs(); ++i) {
+            const ofxOscArgType type = msg.getArgType(i);
+            float value = 0.0f;
+            if (type == OFXOSC_TYPE_FLOAT) {
+                value = msg.getArgAsFloat(i);
+            } else if (type == OFXOSC_TYPE_DOUBLE) {
+                value = static_cast<float>(msg.getArgAsDouble(i));
+            } else if (type == OFXOSC_TYPE_INT32 || type == OFXOSC_TYPE_INT64) {
+                value = static_cast<float>(msg.getArgAsInt64(i));
+            } else {
+                values.clear();
+                return false;
+            }
+            values.push_back(ofClamp(value, -1.0f, 1.0f));
+        }
+        return !values.empty();
+    }
+
+    std::string normalizeExternalAudioSourceId(const std::string& source) {
+        std::string trimmed = ofToLower(ofTrim(source));
+        std::string normalized;
+        normalized.reserve(trimmed.size());
+        for (unsigned char ch : trimmed) {
+            if (std::isalnum(ch) || ch == '_' || ch == '-') {
+                normalized.push_back(static_cast<char>(ch));
+            } else if (!normalized.empty() && normalized.back() != '-') {
+                normalized.push_back('-');
+            }
+        }
+        while (!normalized.empty() && normalized.back() == '-') {
+            normalized.pop_back();
+        }
+        return normalized.empty() ? std::string("unknown") : normalized;
+    }
+
+    bool parseHostAudioOscAddress(const std::string& address, std::string& sourceId, std::string& metric) {
+        auto tokens = ofSplitString(address, "/", true, true);
+        if (tokens.size() != 4) {
+            return false;
+        }
+        if (ofToLower(tokens[0]) != "sensor" || ofToLower(tokens[1]) != "host") {
+            return false;
+        }
+        sourceId = normalizeExternalAudioSourceId(tokens[2]);
+        metric = ofToLower(tokens[3]);
+        return !sourceId.empty() && !metric.empty();
+    }
+
+    bool isHostAudioTelemetryMetric(const std::string& metric) {
+        return metric == "mic-level"
+            || metric == "mic-peak"
+            || metric == "mic-bass"
+            || metric == "mic-mids"
+            || metric == "mic-highs";
+    }
+
+    std::string udpEndpointLabel(const std::string& host, int port) {
+        return "udp://" + (host.empty() ? std::string("127.0.0.1") : host) + ":" + ofToString(port);
     }
 
     void pruneArchivedRunLogs() {
@@ -537,6 +622,9 @@ namespace {
         if (lowered == "keylist" || lowered == "keys") {
             return std::make_unique<KeyListWidget>();
         }
+        if (lowered == "audiowaveform" || lowered == "audio" || lowered == "audiomonitor") {
+            return std::make_unique<AudioMonitorWidget>();
+        }
         return nullptr;
     }
 
@@ -847,6 +935,330 @@ std::vector<std::string> ofApp::loadOscChannelHints() const {
         hints.push_back(trimmed);
     }
     return hints;
+}
+
+void ofApp::loadOscInputSettings() {
+    oscInputSettings_ = OscInputSettings();
+    if (oscInputConfigPath.empty()) {
+        oscInputConfigPath = ofToDataPath("config/osc-input.json", true);
+    }
+
+    ofFile cfgFile(oscInputConfigPath);
+    if (!cfgFile.exists()) {
+        saveOscInputSettings();
+        ofLogNotice("OscInput") << "Wrote default OSC input config to " << oscInputConfigPath;
+        return;
+    }
+
+    try {
+        ofJson cfg = ofLoadJson(oscInputConfigPath);
+        std::string mode = cfg.value("mode", oscInputSettings_.mode);
+        std::string modeLower = ofToLower(mode);
+        if (modeLower == "routerudp" || modeLower == "router") {
+            oscInputSettings_.mode = "routerUdp";
+        } else {
+            oscInputSettings_.mode = "directSerial";
+        }
+        if (cfg.contains("routerUdp") && cfg["routerUdp"].is_object()) {
+            std::string host = cfg["routerUdp"].value("host", oscInputSettings_.routerUdpHost);
+            host = ofTrim(host);
+            oscInputSettings_.routerUdpHost = host.empty() ? std::string("127.0.0.1") : host;
+            int port = cfg["routerUdp"].value("port", oscInputSettings_.routerUdpPort);
+            oscInputSettings_.routerUdpPort = ofClamp(port, 1, 65535);
+        }
+    } catch (const std::exception& ex) {
+        ofLogWarning("OscInput") << "Failed to parse " << oscInputConfigPath << ": " << ex.what();
+        oscInputSettings_ = OscInputSettings();
+    }
+}
+
+void ofApp::saveOscInputSettings() const {
+    if (oscInputConfigPath.empty()) {
+        return;
+    }
+    ofJson cfg = ofJson::object();
+    cfg["version"] = 1;
+    cfg["mode"] = oscInputSettings_.mode;
+    cfg["serial"] = {
+        { "autoPort", true }
+    };
+    cfg["routerUdp"] = {
+        { "host", oscInputSettings_.routerUdpHost.empty() ? std::string("127.0.0.1") : oscInputSettings_.routerUdpHost },
+        { "port", oscInputSettings_.routerUdpPort }
+    };
+    if (!writeJsonSnapshotAtomically(oscInputConfigPath, cfg)) {
+        ofLogWarning("OscInput") << "Failed to save OSC input config to " << oscInputConfigPath;
+    }
+}
+
+void ofApp::applyOscInputMode(const std::string& mode) {
+    std::string modeLower = ofToLower(mode);
+    std::string normalized = (modeLower == "routerudp" || modeLower == "router")
+        ? std::string("routerUdp")
+        : std::string("directSerial");
+    if (oscInputSettings_.mode == normalized) {
+        updateControlHubOscInputStatus();
+        return;
+    }
+    oscInputSettings_.mode = normalized;
+    saveOscInputSettings();
+    if (oscInputSettings_.mode == "directSerial") {
+        stopRouterUdpReceiver();
+        collector.requestReconnect();
+        ofLogNotice("OscInput") << "OSC input switched to direct serial";
+    } else {
+        ensureRouterUdpReceiver(true);
+        ofLogNotice("OscInput") << "OSC input switched to router UDP on "
+                                << udpEndpointLabel(oscInputSettings_.routerUdpHost, oscInputSettings_.routerUdpPort);
+    }
+    updateControlHubOscInputStatus();
+}
+
+bool ofApp::ensureRouterUdpReceiver(bool forceRebind) {
+    const uint64_t nowMs = static_cast<uint64_t>(ofGetElapsedTimeMillis());
+    const std::string host = oscInputSettings_.routerUdpHost.empty()
+        ? std::string("127.0.0.1")
+        : oscInputSettings_.routerUdpHost;
+    const int port = ofClamp(oscInputSettings_.routerUdpPort, 1, 65535);
+    if (!forceRebind
+        && routerUdpListening_
+        && routerOscReceiver_.isListening()
+        && routerUdpBoundHost_ == host
+        && routerUdpBoundPort_ == port) {
+        return true;
+    }
+    if (!forceRebind && !routerUdpListening_ && lastRouterUdpBindAttemptMs_ != 0 && nowMs - lastRouterUdpBindAttemptMs_ < 1500) {
+        return false;
+    }
+
+    stopRouterUdpReceiver();
+    lastRouterUdpBindAttemptMs_ = nowMs;
+
+    try {
+        ofxOscReceiverSettings settings;
+        settings.host = host;
+        settings.port = port;
+        settings.reuse = false;
+        settings.start = true;
+        const bool started = routerOscReceiver_.setup(settings);
+        routerUdpListening_ = started && routerOscReceiver_.isListening();
+        if (routerUdpListening_) {
+            routerUdpBoundHost_ = host;
+            routerUdpBoundPort_ = port;
+            routerUdpStatusText_ = "Router UDP listening on " + udpEndpointLabel(host, port);
+            ofLogNotice("OscInput") << routerUdpStatusText_;
+            return true;
+        }
+        routerUdpStatusText_ = "Router UDP failed to bind " + udpEndpointLabel(host, port);
+        ofLogWarning("OscInput") << routerUdpStatusText_;
+    } catch (const std::exception& ex) {
+        routerUdpStatusText_ = "Router UDP bind failed on " + udpEndpointLabel(host, port) + ": " + ex.what();
+        ofLogWarning("OscInput") << routerUdpStatusText_;
+    } catch (...) {
+        routerUdpStatusText_ = "Router UDP bind failed on " + udpEndpointLabel(host, port);
+        ofLogWarning("OscInput") << routerUdpStatusText_;
+    }
+    routerUdpListening_ = false;
+    routerUdpBoundHost_.clear();
+    routerUdpBoundPort_ = 0;
+    return false;
+}
+
+void ofApp::stopRouterUdpReceiver() {
+    if (routerUdpListening_ || routerOscReceiver_.isListening()) {
+        routerOscReceiver_.stop();
+    }
+    routerUdpListening_ = false;
+    routerUdpBoundHost_.clear();
+    routerUdpBoundPort_ = 0;
+}
+
+void ofApp::updateRouterUdpReceiver(uint64_t nowMs) {
+    if (!ensureRouterUdpReceiver(false)) {
+        return;
+    }
+
+    static constexpr uint32_t kRouterUdpLogSample = 2000;
+    bool messageThisFrame = false;
+    ofxOscMessage msg;
+    while (routerOscReceiver_.hasWaitingMessages()) {
+        if (!routerOscReceiver_.getNextMessage(msg)) {
+            break;
+        }
+        if (handleExternalAudioWaveform(msg, nowMs)) {
+            messageThisFrame = true;
+            continue;
+        }
+
+        float value = 0.0f;
+        if (!extractSingleNumericOscArg(msg, value)) {
+            routerUdpDroppedMessages_++;
+            if (routerUdpDroppedMessages_ <= 5 || (routerUdpDroppedMessages_ % kRouterUdpLogSample) == 0) {
+                ofLogVerbose("OscInput") << "ignored router UDP message address=" << msg.getAddress()
+                                         << " args=" << msg.getNumArgs()
+                                         << " types=" << msg.getTypeString();
+            }
+            continue;
+        }
+
+        messageThisFrame = true;
+        routerUdpPacketsSeen_++;
+        lastRouterUdpPacketMs_ = nowMs;
+        if (routerUdpPacketsSeen_ <= 5 || (routerUdpPacketsSeen_ % kRouterUdpLogSample) == 0) {
+            ofLogVerbose("OscInput") << "routerUdp packet#" << routerUdpPacketsSeen_
+                                     << " t=" << nowMs
+                                     << " address=" << msg.getAddress()
+                                     << " value=" << value;
+        }
+        updateExternalAudioTelemetry(msg.getAddress(), value, nowMs);
+        ingestOscMessage(msg.getAddress(), value);
+    }
+
+    if (!messageThisFrame && routerUdpPacketsSeen_ == 0 && nowMs - lastRouterUdpWaitLogMs_ > 1000) {
+        ofLogNotice("OscInput") << "waiting for first router UDP packet on "
+                                << udpEndpointLabel(routerUdpBoundHost_, routerUdpBoundPort_);
+        lastRouterUdpWaitLogMs_ = nowMs;
+    }
+}
+
+bool ofApp::updateExternalAudioTelemetry(const std::string& address, float value, uint64_t nowMs) {
+    std::string sourceId;
+    std::string metric;
+    if (!parseHostAudioOscAddress(address, sourceId, metric) || !isHostAudioTelemetryMetric(metric)) {
+        return false;
+    }
+
+    auto& state = externalAudioSources_[sourceId];
+    state.sourceId = sourceId;
+    const float normalized = ofClamp(value, 0.0f, 1.0f);
+    if (metric == "mic-level") {
+        state.level = normalized;
+    } else if (metric == "mic-peak") {
+        state.peak = normalized;
+    } else if (metric == "mic-bass") {
+        state.bass = normalized;
+    } else if (metric == "mic-mids") {
+        state.mids = normalized;
+    } else if (metric == "mic-highs") {
+        state.highs = normalized;
+    }
+    state.telemetryMs = nowMs;
+    activeExternalAudioSourceId_ = sourceId;
+    return true;
+}
+
+bool ofApp::handleExternalAudioWaveform(const ofxOscMessage& msg, uint64_t nowMs) {
+    std::string sourceId;
+    std::string metric;
+    if (!parseHostAudioOscAddress(msg.getAddress(), sourceId, metric) || metric != "waveform") {
+        return false;
+    }
+
+    const std::size_t argCount = msg.getNumArgs();
+    if (argCount != 64 && argCount != 128 && argCount != 256) {
+        routerUdpDroppedMessages_++;
+        ofLogVerbose("OscInput") << "ignored waveform packet address=" << msg.getAddress()
+                                 << " unsupported sample count=" << argCount;
+        return true;
+    }
+
+    std::vector<float> samples;
+    if (!extractNumericOscArgs(msg, samples)) {
+        routerUdpDroppedMessages_++;
+        ofLogVerbose("OscInput") << "ignored waveform packet address=" << msg.getAddress()
+                                 << " nonnumeric args=" << msg.getTypeString();
+        return true;
+    }
+
+    auto& state = externalAudioSources_[sourceId];
+    state.sourceId = sourceId;
+    state.waveform = std::move(samples);
+    state.waveformMs = nowMs;
+    state.waveformPacketsSeen++;
+    activeExternalAudioSourceId_ = sourceId;
+    static constexpr uint32_t kRouterUdpLogSample = 2000;
+    routerUdpPacketsSeen_++;
+    lastRouterUdpPacketMs_ = nowMs;
+    if (routerUdpPacketsSeen_ <= 5 || (routerUdpPacketsSeen_ % kRouterUdpLogSample) == 0) {
+        ofLogVerbose("OscInput") << "routerUdp waveform packet#" << routerUdpPacketsSeen_
+                                 << " t=" << nowMs
+                                 << " address=" << msg.getAddress()
+                                 << " samples=" << state.waveform.size();
+    }
+    publishExternalAudioSnapshot(state);
+    return true;
+}
+
+void ofApp::publishExternalAudioSnapshot(const ExternalAudioSourceState& state) {
+    if (state.waveform.empty()) {
+        return;
+    }
+
+    AudioAnalysisBus::Snapshot snapshot;
+    snapshot.valid = true;
+    snapshot.frame = ++externalAudioFrameCounter_;
+    snapshot.sampleRate = 0;
+    snapshot.channels = 1;
+    snapshot.level = state.level;
+    snapshot.peak = state.peak;
+    snapshot.bass = state.bass;
+    snapshot.mids = state.mids;
+    snapshot.highs = state.highs;
+    snapshot.sourceLabel = state.sourceId.empty() ? std::string("external") : state.sourceId;
+    snapshot.waveform = state.waveform;
+    AudioAnalysisBus::instance().publish(snapshot);
+}
+
+void ofApp::refreshFreshExternalAudioSnapshot(uint64_t nowMs) {
+    if (ofToLower(oscInputSettings_.mode) != "routerudp" || activeExternalAudioSourceId_.empty()) {
+        return;
+    }
+    auto it = externalAudioSources_.find(activeExternalAudioSourceId_);
+    if (it == externalAudioSources_.end() || it->second.waveform.empty() || it->second.waveformMs == 0) {
+        return;
+    }
+    if (nowMs - it->second.waveformMs > 1000) {
+        return;
+    }
+    publishExternalAudioSnapshot(it->second);
+}
+
+void ofApp::updateControlHubOscInputStatus() {
+    if (!controlMappingHub) {
+        return;
+    }
+    ControlMappingHubState::OscInputStatus status;
+    status.mode = oscInputSettings_.mode;
+    status.routerUdpHost = oscInputSettings_.routerUdpHost;
+    status.routerUdpPort = oscInputSettings_.routerUdpPort;
+    status.serialConnected = collector.isConnected();
+    status.serialPort = collector.currentPort();
+    status.serialPacketsSeen = collectorPacketsSeen_;
+    status.routerListening = routerUdpListening_ && routerOscReceiver_.isListening();
+    status.hasLastMessage = lastOscMessageValid_;
+    status.lastAddress = lastOscAddress_;
+    status.lastValue = lastOscValue_;
+    status.lastMessageMs = lastOscMessageMs_;
+    if (!activeExternalAudioSourceId_.empty()) {
+        auto it = externalAudioSources_.find(activeExternalAudioSourceId_);
+        if (it != externalAudioSources_.end()) {
+            status.externalAudioSource = it->second.sourceId;
+            status.hasExternalTelemetry = it->second.telemetryMs != 0;
+            status.externalTelemetryMs = it->second.telemetryMs;
+            status.hasExternalWaveform = it->second.waveformMs != 0 && !it->second.waveform.empty();
+            status.externalWaveformMs = it->second.waveformMs;
+            status.externalWaveformSamples = it->second.waveform.size();
+            status.externalWaveformPacketsSeen = it->second.waveformPacketsSeen;
+        }
+    }
+    if (ofToLower(oscInputSettings_.mode) == "routerudp") {
+        status.statusText = routerUdpStatusText_.empty()
+            ? std::string("Router UDP selected; binding receiver")
+            : routerUdpStatusText_;
+    } else {
+        status.statusText = collector.isConnected() ? "Direct serial selected" : "Direct serial selected; searching";
+    }
+    controlMappingHub->setOscInputStatus(status);
 }
 
 void ofApp::setupLocalMicBridge() {
@@ -1349,6 +1761,15 @@ void ofApp::setup() {
     factory.registerType("agentField", []() { return std::make_unique<AgentFieldLayer>(); });
     factory.registerType("flocking", []() { return std::make_unique<FlockingLayer>(); });
     factory.registerType("flowField", []() { return std::make_unique<FlowFieldLayer>(); });
+    factory.registerType("constellationStarfield", []() { return std::make_unique<ConstellationStarfieldLayer>(); });
+    factory.registerType("auroraCurtain", []() { return std::make_unique<AuroraCurtainLayer>(); });
+    factory.registerType("arcticSeaIcebergs", []() { return std::make_unique<ArcticSeaIcebergLayer>(); });
+    factory.registerType("arcticAuroraScene", []() { return std::make_unique<ArcticAuroraSceneLayer>(); });
+    factory.registerType("cosmicWeb", []() { return std::make_unique<CosmicWebLayer>(); });
+    factory.registerType("galaxySpiral", []() { return std::make_unique<GalaxySpiralLayer>(); });
+    factory.registerType("solarSystem", []() { return std::make_unique<SolarSystemLayer>(); });
+    factory.registerType("bigBang", []() { return std::make_unique<BigBangLayer>(); });
+    factory.registerType("cosmosFormation", []() { return std::make_unique<CosmosFormationLayer>(); });
     factory.registerType("media.webcam", []() { return std::make_unique<VideoGrabberLayer>(); });
     factory.registerType("media.clip", []() { return std::make_unique<VideoClipLayer>(); });
     factory.registerType("text", []() { return std::make_unique<TextLayer>(); });
@@ -1364,6 +1785,8 @@ void ofApp::setup() {
     overlayLayoutPath = ofToDataPath("config/overlays.json", true);
     deviceMapsDir = ofToDataPath("device_maps", true);
     controlHubPrefsPath = ofToDataPath("config/control_hub_prefs.json", true);
+    oscInputConfigPath = ofToDataPath("config/osc-input.json", true);
+    loadOscInputSettings();
 
     overlayManager.setHudSkin(menuSkin.hud);
     overlayManager.setHost(this);
@@ -1407,6 +1830,7 @@ void ofApp::setup() {
     registerHudToggle("hud.layers", "Layers", "Show active layer summary", &hudShowLayers);
     registerHudToggle("hud.sensors", "Sensors", "Show recent sensor telemetry", &hudShowSensors);
     registerHudToggle("hud.menu", "Menu Mirror", "Show current menu breadcrumbs", &hudShowMenu);
+    registerHudToggle("hud.audio.waveform", "Audio Waveform", "Show current audio input waveform", &hudShowAudioWaveform);
     registerHudWidgetsFromCatalog();
 
     consoleSlots.resize(8);
@@ -1673,6 +2097,20 @@ void ofApp::setup() {
         controlMappingHub->setLayerLibrary(&layerLibrary);
         controlMappingHub->setDeviceMapsDirectory(deviceMapsDir);
         controlMappingHub->setSlotAssignmentsPath(slotAssignmentsPath);
+        controlMappingHub->setOscInputModeChangeCallback([this](const std::string& mode) {
+            applyOscInputMode(mode);
+        });
+        controlMappingHub->setOscInputReconnectCallback([this]() {
+            if (ofToLower(oscInputSettings_.mode) == "routerudp") {
+                ensureRouterUdpReceiver(true);
+                ofLogNotice("OscInput") << "Router UDP receiver rebind requested from Browser";
+            } else {
+                collector.requestReconnect();
+                ofLogNotice("OscInput") << "Serial OSC reconnect requested from Browser";
+            }
+            updateControlHubOscInputStatus();
+        });
+        updateControlHubOscInputStatus();
         controlMappingHub->setConsoleSlotLoadCallback([this](int layerIndex, const std::string& assetId) {
             return addAssetToConsoleLayer(layerIndex, assetId, true);
         });
@@ -2089,22 +2527,28 @@ void ofApp::update() {
     midi.update();
     bool collectorPacketThisFrame = false;
     static constexpr uint32_t kCollectorLogSample = 2000;
-    collector.update([&](const std::string& address, float value) {
-        uint64_t now = static_cast<uint64_t>(ofGetElapsedTimeMillis());
-        collectorPacketThisFrame = true;
-        collectorPacketsSeen_++;
-        lastCollectorPacketMs_ = now;
-        if (collectorPacketsSeen_ <= 5 || (collectorPacketsSeen_ % kCollectorLogSample) == 0) {
-            ofLogVerbose("CollectorSerial") << "packet#" << collectorPacketsSeen_
-                                            << " t=" << now
-                                            << " address=" << address
-                                            << " value=" << value;
-        }
-        ingestOscMessage(address, value);
-    });
+    const bool directSerialOscInput = ofToLower(oscInputSettings_.mode) != "routerudp";
     uint64_t nowMs = static_cast<uint64_t>(ofGetElapsedTimeMillis());
+    if (directSerialOscInput) {
+        collector.update([&](const std::string& address, float value) {
+            uint64_t now = static_cast<uint64_t>(ofGetElapsedTimeMillis());
+            collectorPacketThisFrame = true;
+            collectorPacketsSeen_++;
+            lastCollectorPacketMs_ = now;
+            if (collectorPacketsSeen_ <= 5 || (collectorPacketsSeen_ % kCollectorLogSample) == 0) {
+                ofLogVerbose("CollectorSerial") << "packet#" << collectorPacketsSeen_
+                                                << " t=" << now
+                                                << " address=" << address
+                                                << " value=" << value;
+            }
+            ingestOscMessage(address, value);
+        });
+    } else {
+        updateRouterUdpReceiver(nowMs);
+    }
     updateLocalMicBridge(nowMs);
-    if (collector.isConnected()) {
+    refreshFreshExternalAudioSnapshot(nowMs);
+    if (directSerialOscInput && collector.isConnected()) {
         bool shouldLogWait = false;
         if (collectorPacketsSeen_ == 0) {
             shouldLogWait = (nowMs - lastCollectorWaitLogMs_) > 1000;
@@ -2148,6 +2592,7 @@ void ofApp::update() {
     if (controlMappingHub && param_showHud != controlMappingHub->hudVisible()) {
         controlMappingHub->setHudVisible(param_showHud);
     }
+    updateControlHubOscInputStatus();
     bool consoleStateDirty = false;
     auto syncOverlayState = [&](bool& cached, bool desired, const std::string& feedId) {
         if (cached == desired) {
@@ -3120,7 +3565,7 @@ void ofApp::ensureSlotFbo(ofFbo& fbo, glm::ivec2 viewport) {
     ofFbo::Settings settings;
     settings.width = viewport.x;
     settings.height = viewport.y;
-    settings.useDepth = false;
+    settings.useDepth = true;
     settings.useStencil = false;
     settings.internalformat = GL_RGBA;
     settings.textureTarget = GL_TEXTURE_2D;
@@ -3131,6 +3576,7 @@ void ofApp::ensureSlotFbo(ofFbo& fbo, glm::ivec2 viewport) {
     fbo.allocate(settings);
     fbo.begin();
     ofClear(0, 0, 0, 0);
+    glClear(GL_DEPTH_BUFFER_BIT);
     fbo.end();
 }
 
@@ -3144,6 +3590,7 @@ void ofApp::drawConsole(glm::ivec2 viewport, float beatPhase) {
         if (!fbo.isAllocated()) return;
         fbo.begin();
         ofClear(0, 0, 0, 0);
+        glClear(GL_DEPTH_BUFFER_BIT);
         fbo.end();
     };
 
@@ -3496,6 +3943,7 @@ void ofApp::exit() {
     ofLogNotice("ofApp") << "scene saved";
     hotkeyManager.saveIfDirty();
     ofLogNotice("ofApp") << "hotkeys saved";
+    stopRouterUdpReceiver();
     midi.close();
     ofLogNotice("ofApp") << "exit done";
 }
@@ -3619,6 +4067,10 @@ void ofApp::setupOscRoutes() {
 void ofApp::ingestOscMessage(const std::string& address, float value) {
     static uint64_t oscLogCount = 0;
     ++oscLogCount;
+    lastOscMessageValid_ = true;
+    lastOscAddress_ = address;
+    lastOscValue_ = value;
+    lastOscMessageMs_ = static_cast<uint64_t>(ofGetElapsedTimeMillis());
     if (oscLogCount <= 5 || (oscLogCount % 2000) == 0) {
         ofLogVerbose("OscIn") << "address=" << address << " value=" << value;
     }

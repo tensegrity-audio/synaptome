@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "OSC input selection schema",
+  "type": "object",
+  "required": ["version", "mode", "routerUdp"],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["directSerial", "routerUdp"]
+    },
+    "routerUdp": {
+      "type": "object",
+      "required": ["host", "port"],
+      "additionalProperties": false,
+      "properties": {
+        "host": {
+          "type": "string",
+          "minLength": 1
+        },
+        "port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        }
+      }
+    },
+    "serial": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "autoPort": {
+          "type": "boolean"
+        },
+        "port": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

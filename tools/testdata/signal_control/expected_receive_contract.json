@@ -1,0 +1,69 @@
+{
+  "contract": "synaptome-signal-control-receive",
+  "version": 1,
+  "transport": {
+    "kind": "udp",
+    "defaultHost": "127.0.0.1",
+    "defaultPort": 9000
+  },
+  "inputModes": {
+    "default": "directSerial",
+    "supported": ["directSerial", "routerUdp"]
+  },
+  "sourceRules": {
+    "defaultSource": "zoom",
+    "pattern": "^[a-z0-9_-]+$"
+  },
+  "freshnessMs": {
+    "telemetryFreshMax": 2000,
+    "waveformFreshMax": 1000,
+    "staleAfter": 5000
+  },
+  "telemetry": [
+    {
+      "address": "/sensor/host/zoom/mic-level",
+      "metric": "mic-level",
+      "type": "float",
+      "range": [0.0, 1.0],
+      "usesScalarHistory": true
+    },
+    {
+      "address": "/sensor/host/zoom/mic-peak",
+      "metric": "mic-peak",
+      "type": "float",
+      "range": [0.0, 1.0],
+      "usesScalarHistory": true
+    },
+    {
+      "address": "/sensor/host/zoom/mic-bass",
+      "metric": "mic-bass",
+      "type": "float",
+      "range": [0.0, 1.0],
+      "usesScalarHistory": true
+    },
+    {
+      "address": "/sensor/host/zoom/mic-mids",
+      "metric": "mic-mids",
+      "type": "float",
+      "range": [0.0, 1.0],
+      "usesScalarHistory": true
+    },
+    {
+      "address": "/sensor/host/zoom/mic-highs",
+      "metric": "mic-highs",
+      "type": "float",
+      "range": [0.0, 1.0],
+      "usesScalarHistory": true
+    }
+  ],
+  "waveform": {
+    "address": "/sensor/host/zoom/waveform",
+    "type": "float-list",
+    "sampleRange": [-1.0, 1.0],
+    "allowedSampleCounts": [64, 128, 256],
+    "defaultSampleCount": 128,
+    "defaultRateHz": 30,
+    "usesScalarHistory": false,
+    "publishesAudioAnalysisBusSnapshot": true
+  }
+}

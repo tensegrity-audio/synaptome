@@ -48,6 +48,28 @@ public:
         bool active = false;
     };
 
+    struct OscInputStatus {
+        std::string mode = "directSerial";
+        std::string routerUdpHost = "127.0.0.1";
+        int routerUdpPort = 9000;
+        bool serialConnected = false;
+        std::string serialPort;
+        uint64_t serialPacketsSeen = 0;
+        bool routerListening = false;
+        bool hasLastMessage = false;
+        std::string lastAddress;
+        float lastValue = 0.0f;
+        uint64_t lastMessageMs = 0;
+        std::string externalAudioSource;
+        bool hasExternalTelemetry = false;
+        uint64_t externalTelemetryMs = 0;
+        bool hasExternalWaveform = false;
+        uint64_t externalWaveformMs = 0;
+        std::size_t externalWaveformSamples = 0;
+        uint64_t externalWaveformPacketsSeen = 0;
+        std::string statusText;
+    };
+
     ControlMappingHubState();
     ~ControlMappingHubState() override;
 
@@ -73,6 +95,9 @@ public:
     void setSlotAssignmentsPath(const std::string& path);
     void setMidiPaneStatus(const std::string& description, bool available);
     void setOscPaneStatus(const std::string& description, bool available);
+    void setOscInputStatus(const OscInputStatus& status);
+    void setOscInputModeChangeCallback(std::function<void(const std::string&)> cb);
+    void setOscInputReconnectCallback(std::function<void()> cb);
     void setMidiAction(std::function<void(MenuController&)> action);
     void setOscAction(std::function<void(MenuController&)> action);
     void setRoutingRollbackAction(std::function<void()> action);
@@ -209,8 +234,10 @@ private:
         bool isSavedSceneRow = false;
         bool isSavedSceneSaveRow = false;
         bool isSavedSceneOverwriteRow = false;
+        bool isOscInputRow = false;
         std::string savedSceneId;
         std::string savedScenePath;
+        std::string oscInputField;
     };
 
     struct CategorySection {
@@ -381,9 +408,12 @@ private:
     std::function<bool(const std::string&)> savedSceneOverwriteCallback_;
     std::function<void(MenuController&)> midiAction_;
     std::function<void(MenuController&)> oscAction_;
+    std::function<void(const std::string&)> oscInputModeChangeCallback_;
+    std::function<void()> oscInputReconnectCallback_;
 
     std::string midiStatus_ = "MIDI routing (planned)";
     std::string oscStatus_ = "OSC mapper (planned)";
+    OscInputStatus oscInputStatus_;
     bool midiAvailable_ = false;
     bool oscAvailable_ = false;
 
@@ -540,6 +570,8 @@ private:
     void markPreferencesDirty() const;
     void flushPreferences() const;
     std::string formatValue(const ParameterRow& row) const;
+    std::string formatOscInputValue(const ParameterRow& row) const;
+    std::string formatOscInputDetail(const ParameterRow& row) const;
     std::string hudPlacementSummary(const std::string& assetKey) const;
     std::string hudFeedSummary(const std::string& assetKey) const;
     std::string summarizeHudStatusFeed(const ofJson& payload) const;
@@ -557,6 +589,7 @@ private:
     bool rowSupportsValueEdit(const ParameterRow& row) const;
     bool isHudWidgetRow(const ParameterRow& row) const;
     bool oscSummaryActive() const;
+    bool activateOscInputRow(const ParameterRow& row) const;
     std::string ellipsize(const std::string& text, float maxWidth) const;
     std::vector<MidiRouter::OscSourceInfo> oscBrowserSources() const;
     std::string selectedOscSourceAddress(const std::vector<MidiRouter::OscSourceInfo>& sources) const;
@@ -632,6 +665,7 @@ private:
     void applyAssetMetadata(ParameterRow& row) const;
     bool applySyntheticAssetMetadata(ParameterRow& row) const;
     void appendSceneBrowserRows() const;
+    void appendOscInputRows() const;
     std::string sceneCurrentAssetLabel(const ConsoleLayerInfo& slot) const;
     bool isSavedSceneBrowserRow(const ParameterRow& row) const;
     bool handleSavedSceneRowActivation(const ParameterRow& row) const;
@@ -823,6 +857,18 @@ inline void ControlMappingHubState::setSlotAssignmentsPath(const std::string& pa
 inline void ControlMappingHubState::setOscPaneStatus(const std::string& description, bool available) {
     oscStatus_ = description;
     oscAvailable_ = available;
+}
+
+inline void ControlMappingHubState::setOscInputStatus(const OscInputStatus& status) {
+    oscInputStatus_ = status;
+}
+
+inline void ControlMappingHubState::setOscInputModeChangeCallback(std::function<void(const std::string&)> cb) {
+    oscInputModeChangeCallback_ = std::move(cb);
+}
+
+inline void ControlMappingHubState::setOscInputReconnectCallback(std::function<void()> cb) {
+    oscInputReconnectCallback_ = std::move(cb);
 }
 
 inline void ControlMappingHubState::setMidiAction(std::function<void(MenuController&)> action) {
@@ -2141,6 +2187,11 @@ inline bool ControlMappingHubState::handleInput(MenuController& controller, int 
             }
         }
         if (focusPane_ == FocusPane::kGrid && selectedRow) {
+            if (selectedRow->isOscInputRow) {
+                activateOscInputRow(*selectedRow);
+                controller.requestViewModelRefresh();
+                return true;
+            }
             if (selectedColumn_ == Column::kValue) {
                 if (isSavedSceneBrowserRow(*selectedRow)) {
                     handleSavedSceneRowActivation(*selectedRow);
@@ -2551,6 +2602,7 @@ inline void ControlMappingHubState::rebuildModel() const {
     }
 
     appendSceneBrowserRows();
+    appendOscInputRows();
     appendBioAmpRows();
     appendAssetPlaceholders(assetKeysPresent);
 
@@ -2608,6 +2660,12 @@ inline void ControlMappingHubState::rebuildModel() const {
         tableModel_.categories.push_back(std::move(category));
     }
 
+    std::stable_sort(tableModel_.categories.begin(), tableModel_.categories.end(), [](const CategorySection& a, const CategorySection& b) {
+        if (a.name == "OSC" && b.name != "OSC") return false;
+        if (b.name == "OSC" && a.name != "OSC") return true;
+        return a.name < b.name;
+    });
+
     std::unordered_set<std::string> categoryNames;
     categoryNames.reserve(tableModel_.categories.size() * 2);
     for (const auto& cat : tableModel_.categories) {
@@ -2627,6 +2685,7 @@ inline void ControlMappingHubState::rebuildModel() const {
     }
 
     tableModel_.tree.clear();
+    bool oscSummaryAdded = false;
     for (std::size_t i = 0; i < tableModel_.categories.size(); ++i) {
         const auto& category = tableModel_.categories[i];
         TreeNode catNode;
@@ -2642,6 +2701,9 @@ inline void ControlMappingHubState::rebuildModel() const {
         tableModel_.tree.push_back(catNode);
         int catNodeIndex = static_cast<int>(tableModel_.tree.size() - 1);
         if (!catNode.expandable || !catNode.expanded) {
+            if (category.name == "OSC") {
+                oscSummaryAdded = true;
+            }
             continue;
         }
         for (std::size_t j = 0; j < category.subcategories.size(); ++j) {
@@ -2684,16 +2746,31 @@ inline void ControlMappingHubState::rebuildModel() const {
                 tableModel_.tree.push_back(std::move(assetNode));
             }
         }
+        if (category.name == "OSC") {
+            TreeNode oscNode;
+            oscNode.label = "Channels";
+            oscNode.categoryName = category.name;
+            oscNode.categoryIndex = static_cast<int>(i);
+            oscNode.parentIndex = catNodeIndex;
+            oscNode.depth = 1;
+            oscNode.expandable = false;
+            oscNode.expanded = false;
+            oscNode.oscSummary = true;
+            tableModel_.tree.push_back(std::move(oscNode));
+            oscSummaryAdded = true;
+        }
     }
 
-    TreeNode oscNode;
-    oscNode.label = "OSC Channels";
-    oscNode.depth = 0;
-    oscNode.parentIndex = -1;
-    oscNode.expandable = false;
-    oscNode.expanded = false;
-    oscNode.oscSummary = true;
-    tableModel_.tree.push_back(std::move(oscNode));
+    if (!oscSummaryAdded) {
+        TreeNode oscNode;
+        oscNode.label = "OSC Channels";
+        oscNode.depth = 0;
+        oscNode.parentIndex = -1;
+        oscNode.expandable = false;
+        oscNode.expanded = false;
+        oscNode.oscSummary = true;
+        tableModel_.tree.push_back(std::move(oscNode));
+    }
 
     auto firstLeafIndex = [&]() -> int {
         int fallback = -1;
@@ -2705,7 +2782,7 @@ inline void ControlMappingHubState::rebuildModel() const {
                 if (fallback < 0) {
                     fallback = static_cast<int>(i);
                 }
-                if (node.categoryName != "Sensors") {
+                if (node.categoryName != "Sensors" && node.categoryName != "OSC") {
                     return static_cast<int>(i);
                 }
             }
@@ -2721,6 +2798,7 @@ inline void ControlMappingHubState::rebuildModel() const {
 
     if (treeSelectionPending_) {
         bool applied = false;
+        selectedRow_ = -1;
         if (pendingCategoryPref_.empty() && pendingSubcategoryPref_.empty() && pendingAssetPref_.empty()) {
             int leaf = firstLeafIndex();
             if (leaf >= 0) {
@@ -2875,6 +2953,9 @@ inline std::vector<std::string> ControlMappingHubState::columnHeaders() const {
 inline std::string ControlMappingHubState::formatValue(const ParameterRow& row) const {
     uint64_t nowMs = ofGetElapsedTimeMillis();
     std::string value;
+    if (row.isOscInputRow) {
+        return formatOscInputValue(row);
+    }
     if (row.isHudLayoutEntry) {
         return "Open layout editor";
     }
@@ -2957,6 +3038,142 @@ inline std::string ControlMappingHubState::formatValue(const ParameterRow& row) 
     }
     value += activityHint(row);
     return value;
+}
+
+inline std::string ControlMappingHubState::formatOscInputValue(const ParameterRow& row) const {
+    const std::string modeLower = ofToLower(oscInputStatus_.mode);
+    const bool routerMode = modeLower == "routerudp" || modeLower == "router";
+    if (row.oscInputField == "mode") {
+        return routerMode ? "Router UDP" : "Direct Serial";
+    }
+    if (row.oscInputField == "serial") {
+        if (routerMode) {
+            return "Paused while router is selected";
+        }
+        if (!oscInputStatus_.serialConnected) {
+            return "Searching";
+        }
+        return oscInputStatus_.serialPort.empty() ? std::string("Connected") : ("Connected: " + oscInputStatus_.serialPort);
+    }
+    if (row.oscInputField == "udpPort") {
+        const std::string host = oscInputStatus_.routerUdpHost.empty()
+            ? std::string("127.0.0.1")
+            : oscInputStatus_.routerUdpHost;
+        std::string value = "udp://" + host + ":" + ofToString(oscInputStatus_.routerUdpPort);
+        if (routerMode) {
+            value += oscInputStatus_.routerListening ? "  |  listening" : "  |  not listening";
+        }
+        return value;
+    }
+    if (row.oscInputField == "lastMessage") {
+        if (!oscInputStatus_.hasLastMessage || oscInputStatus_.lastAddress.empty()) {
+            return "No OSC yet";
+        }
+        return oscInputStatus_.lastAddress + " = " + ofToString(oscInputStatus_.lastValue, 3);
+    }
+    if (row.oscInputField == "externalSource") {
+        return oscInputStatus_.externalAudioSource.empty()
+            ? std::string("No external audio")
+            : oscInputStatus_.externalAudioSource;
+    }
+    if (row.oscInputField == "telemetryFreshness") {
+        if (!oscInputStatus_.hasExternalTelemetry || oscInputStatus_.externalTelemetryMs == 0) {
+            return "No telemetry";
+        }
+        uint64_t now = ofGetElapsedTimeMillis();
+        uint64_t ageMs = now > oscInputStatus_.externalTelemetryMs ? now - oscInputStatus_.externalTelemetryMs : 0;
+        if (ageMs <= 2000) {
+            return "Fresh";
+        }
+        if (ageMs <= 5000) {
+            return "Stale";
+        }
+        return "Expired";
+    }
+    if (row.oscInputField == "waveformFreshness") {
+        if (!oscInputStatus_.hasExternalWaveform || oscInputStatus_.externalWaveformMs == 0) {
+            return "No waveform";
+        }
+        uint64_t now = ofGetElapsedTimeMillis();
+        uint64_t ageMs = now > oscInputStatus_.externalWaveformMs ? now - oscInputStatus_.externalWaveformMs : 0;
+        if (ageMs <= 1000) {
+            return "Fresh";
+        }
+        if (ageMs <= 5000) {
+            return "Stale";
+        }
+        return "Expired";
+    }
+    if (row.oscInputField == "sampleCount") {
+        if (!oscInputStatus_.hasExternalWaveform) {
+            return "0 samples";
+        }
+        return ofToString(static_cast<unsigned long long>(oscInputStatus_.externalWaveformSamples)) + " samples";
+    }
+    if (row.oscInputField == "reconnect") {
+        return routerMode ? "Rebind Router UDP" : "Reconnect Serial";
+    }
+    return "-";
+}
+
+inline std::string ControlMappingHubState::formatOscInputDetail(const ParameterRow& row) const {
+    const std::string modeLower = ofToLower(oscInputStatus_.mode);
+    const bool routerMode = modeLower == "routerudp" || modeLower == "router";
+    if (row.oscInputField == "mode") {
+        return oscInputStatus_.statusText.empty() ? std::string("Enter toggles the OSC input source") : oscInputStatus_.statusText;
+    }
+    if (row.oscInputField == "serial") {
+        if (routerMode) {
+            return "Direct serial remains available as a fallback input";
+        }
+        return "Packets: " + ofToString(static_cast<unsigned long long>(oscInputStatus_.serialPacketsSeen));
+    }
+    if (row.oscInputField == "udpPort") {
+        return oscInputStatus_.statusText.empty()
+            ? std::string("Signal Control router target for Synaptome OSC")
+            : oscInputStatus_.statusText;
+    }
+    if (row.oscInputField == "lastMessage") {
+        if (!oscInputStatus_.hasLastMessage || oscInputStatus_.lastMessageMs == 0) {
+            return "-";
+        }
+        uint64_t now = ofGetElapsedTimeMillis();
+        uint64_t ageMs = now > oscInputStatus_.lastMessageMs ? now - oscInputStatus_.lastMessageMs : 0;
+        return ageMs < 1000 ? (ofToString(static_cast<int>(ageMs)) + " ms ago")
+                            : (ofToString(static_cast<float>(ageMs) / 1000.0f, 1) + " s ago");
+    }
+    if (row.oscInputField == "externalSource") {
+        return oscInputStatus_.externalAudioSource.empty()
+            ? std::string("Waiting for /sensor/host/<source>/mic-* or waveform packets")
+            : "Active external host source";
+    }
+    if (row.oscInputField == "telemetryFreshness") {
+        if (!oscInputStatus_.hasExternalTelemetry || oscInputStatus_.externalTelemetryMs == 0) {
+            return "No /sensor/host/<source>/mic-* telemetry received";
+        }
+        uint64_t now = ofGetElapsedTimeMillis();
+        uint64_t ageMs = now > oscInputStatus_.externalTelemetryMs ? now - oscInputStatus_.externalTelemetryMs : 0;
+        return ageMs < 1000 ? (ofToString(static_cast<int>(ageMs)) + " ms ago")
+                            : (ofToString(static_cast<float>(ageMs) / 1000.0f, 1) + " s ago");
+    }
+    if (row.oscInputField == "waveformFreshness") {
+        if (!oscInputStatus_.hasExternalWaveform || oscInputStatus_.externalWaveformMs == 0) {
+            return "No /sensor/host/<source>/waveform packets received";
+        }
+        uint64_t now = ofGetElapsedTimeMillis();
+        uint64_t ageMs = now > oscInputStatus_.externalWaveformMs ? now - oscInputStatus_.externalWaveformMs : 0;
+        return ageMs < 1000 ? (ofToString(static_cast<int>(ageMs)) + " ms ago")
+                            : (ofToString(static_cast<float>(ageMs) / 1000.0f, 1) + " s ago");
+    }
+    if (row.oscInputField == "sampleCount") {
+        return "Waveform packets: "
+             + ofToString(static_cast<unsigned long long>(oscInputStatus_.externalWaveformPacketsSeen));
+    }
+    if (row.oscInputField == "reconnect") {
+        return routerMode ? "Enter rebinds the UDP receiver"
+                          : "Enter requests a fresh serial connection";
+    }
+    return "-";
 }
 
 inline std::string ControlMappingHubState::hudPlacementSummary(const std::string& assetKey) const {
@@ -3206,6 +3423,9 @@ inline void ControlMappingHubState::emitHudMappingEvent(const std::string& reaso
 }
 
 inline bool ControlMappingHubState::rowHasLiveParameter(const ParameterRow& row) const {
+    if (row.isOscInputRow) {
+        return false;
+    }
     if (row.isHudLayoutEntry) {
         return false;
     }
@@ -3225,6 +3445,9 @@ inline bool ControlMappingHubState::rowHasLiveParameter(const ParameterRow& row)
 }
 
 inline bool ControlMappingHubState::rowSupportsValueEdit(const ParameterRow& row) const {
+    if (row.isOscInputRow) {
+        return true;
+    }
     if (row.isSavedSceneSaveRow) {
         return true;
     }
@@ -3255,6 +3478,53 @@ inline bool ControlMappingHubState::oscSummaryActive() const {
         return false;
     }
     return tableModel_.tree[selectedTreeNodeIndex_].oscSummary;
+}
+
+inline bool ControlMappingHubState::activateOscInputRow(const ParameterRow& row) const {
+    if (!row.isOscInputRow) {
+        return false;
+    }
+    const std::string modeLower = ofToLower(oscInputStatus_.mode);
+    const bool routerMode = modeLower == "routerudp" || modeLower == "router";
+    if (row.oscInputField == "mode") {
+        const std::string nextMode = routerMode ? "directSerial" : "routerUdp";
+        if (oscInputModeChangeCallback_) {
+            oscInputModeChangeCallback_(nextMode);
+        } else {
+            setBannerMessage("OSC input mode callback is not connected", 2200);
+        }
+        return true;
+    }
+    if (row.oscInputField == "reconnect") {
+        if (oscInputReconnectCallback_) {
+            oscInputReconnectCallback_();
+        } else {
+            setBannerMessage("OSC reconnect callback is not connected", 2200);
+        }
+        return true;
+    }
+    if (row.oscInputField == "udpPort") {
+        setBannerMessage("Router UDP port is configured in config/osc-input.json", 2600);
+        return true;
+    }
+    if (row.oscInputField == "serial") {
+        setBannerMessage(routerMode ? "Switch to Direct Serial before reconnecting serial"
+                                    : "Use Reconnect to rescan the serial device",
+                         2400);
+        return true;
+    }
+    if (row.oscInputField == "lastMessage") {
+        setBannerMessage(oscInputStatus_.hasLastMessage ? formatOscInputValue(row) : "No OSC packets received yet", 2400);
+        return true;
+    }
+    if (row.oscInputField == "externalSource"
+        || row.oscInputField == "telemetryFreshness"
+        || row.oscInputField == "waveformFreshness"
+        || row.oscInputField == "sampleCount") {
+        setBannerMessage(formatOscInputDetail(row), 2600);
+        return true;
+    }
+    return false;
 }
 
 inline std::vector<MidiRouter::OscSourceInfo> ControlMappingHubState::oscBrowserSources() const {
@@ -3290,6 +3560,9 @@ inline std::string ControlMappingHubState::selectedOscSourceAddress(const std::v
 }
 
 inline std::string ControlMappingHubState::formatMidiSummary(const ParameterRow& row) const {
+    if (row.isOscInputRow) {
+        return "-";
+    }
     if (row.isHudLayoutEntry) {
         return "-";
     }
@@ -3342,6 +3615,9 @@ inline std::string ControlMappingHubState::formatMidiSummary(const ParameterRow&
 }
 
 inline std::string ControlMappingHubState::formatMidiMin(const ParameterRow& row) const {
+    if (row.isOscInputRow) {
+        return "-";
+    }
     if (row.isHudLayoutEntry) {
         return "-";
     }
@@ -3352,6 +3628,9 @@ inline std::string ControlMappingHubState::formatMidiMin(const ParameterRow& row
 }
 
 inline std::string ControlMappingHubState::formatMidiMax(const ParameterRow& row) const {
+    if (row.isOscInputRow) {
+        return "-";
+    }
     if (row.isHudLayoutEntry) {
         return "-";
     }
@@ -3362,6 +3641,9 @@ inline std::string ControlMappingHubState::formatMidiMax(const ParameterRow& row
 }
 
 inline std::string ControlMappingHubState::formatOscSummary(const ParameterRow& row) const {
+    if (row.isOscInputRow) {
+        return formatOscInputDetail(row);
+    }
     if (row.isHudLayoutEntry) {
         return "-";
     }
@@ -3546,6 +3828,9 @@ inline void ControlMappingHubState::drawHudColumnPickerPanel(float panelX,
 }
 
 inline std::string ControlMappingHubState::formatSlotSummary(const ParameterRow& row) const {
+    if (row.isOscInputRow) {
+        return "-";
+    }
     if (row.isHudLayoutEntry) {
         return "-";
     }
@@ -4316,6 +4601,31 @@ inline bool ControlMappingHubState::applySyntheticAssetMetadata(ParameterRow& ro
         }
     }
     return false;
+}
+
+inline void ControlMappingHubState::appendOscInputRows() const {
+    auto appendRow = [&](const std::string& field, const std::string& label) {
+        ParameterRow row;
+        row.id = "osc.input." + field;
+        row.label = label;
+        row.category = "OSC";
+        row.subcategory = "Input";
+        row.familyLabel = "OSC";
+        row.assetLabel = "Input";
+        row.isOscInputRow = true;
+        row.oscInputField = field;
+        tableModel_.rows.push_back(std::move(row));
+    };
+
+    appendRow("mode", "Mode");
+    appendRow("serial", "Serial Port");
+    appendRow("udpPort", "Router UDP Port");
+    appendRow("lastMessage", "Last Message");
+    appendRow("externalSource", "External Source");
+    appendRow("telemetryFreshness", "Telemetry Freshness");
+    appendRow("waveformFreshness", "Waveform Freshness");
+    appendRow("sampleCount", "Waveform Samples");
+    appendRow("reconnect", "Reconnect");
 }
 
 inline std::string ControlMappingHubState::sceneCurrentAssetLabel(const ConsoleLayerInfo& slot) const {
@@ -6746,7 +7056,7 @@ inline void ControlMappingHubState::moveRow(int delta) const {
         slot = 0;
     }
     int count = static_cast<int>(rows.size());
-    slot = (slot + delta + count) % count;
+    slot = std::clamp(slot + delta, 0, count - 1);
     selectedRow_ = rows[slot];
     if (editingValueActive_) {
         const auto& row = tableModel_.rows[selectedRow_];

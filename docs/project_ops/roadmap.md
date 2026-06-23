@@ -25,6 +25,9 @@ Request Doc: docs/project_ops/completed/project_ops_compatibility.md
 
 ## Backlog
 
+- [3D Arctic Aurora Scene Roadmap](arctic_aurora_3d_scene_roadmap.md) tracks the integrated camera-space arctic scene layer, including the 3D sea plane, floating iceberg meshes, audio-scoped aurora volume, and today-scope milestones.
+- [Aurora Generative Layers Roadmap](aurora_generative_layers_roadmap.md) tracks waveform-first aurora layers, spectrum/FFT upgrade work, and audio-reactive curtain controls.
+- [Cosmic Generative Layers Roadmap](cosmic_generative_layers_roadmap.md) tracks show-oriented cosmic layer priorities, audio/sensor mappings, and external simulation-library candidates.
 - Use request artifacts from `docs/project_ops/in_progress/_REQUEST_TEMPLATE.md` when Project Ops-managed work begins.
 - Project Ops adapter and changed-request audits now run in Synaptome CI through the external `tensegrity-audio/project_ops` checkout pinned at `v0.1.2`.
 - Add release-note templates only if Synaptome starts publishing release notes beyond `docs/release_policy.md`.

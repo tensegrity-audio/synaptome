@@ -71,6 +71,14 @@
         {
           "band": "hud",
           "collapsed": false,
+          "column": 1,
+          "id": "hud.audio.waveform",
+          "target": "projector",
+          "visible": true
+        },
+        {
+          "band": "hud",
+          "collapsed": false,
           "column": 0,
           "id": "hud.controls",
           "target": "projector",
@@ -122,6 +130,14 @@
     "projector": {
       "capturedAtMs": 0,
       "widgets": [
+        {
+          "band": "hud",
+          "collapsed": false,
+          "column": 1,
+          "id": "hud.audio.waveform",
+          "target": "projector",
+          "visible": true
+        },
         {
           "band": "hud",
           "collapsed": false,

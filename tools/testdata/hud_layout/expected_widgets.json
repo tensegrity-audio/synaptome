@@ -26,14 +26,28 @@
   ],
   "hudColumnCount": 4,
   "counts": {
-    "hudWidgets": 6,
-    "feedIds": 13,
-    "controlPrefsWidgets": 6,
-    "controllerPrefsWidgets": 6,
+    "hudWidgets": 7,
+    "feedIds": 16,
+    "controlPrefsWidgets": 7,
+    "controllerPrefsWidgets": 7,
     "consoleLayoutTargets": 2,
-    "consoleLayoutWidgets": 12
+    "consoleLayoutWidgets": 14
   },
   "hudWidgets": [
+    {
+      "id": "hud.audio.waveform",
+      "label": "Audio Waveform",
+      "module": "audioWaveform",
+      "toggleId": "hud.audio.waveform",
+      "defaultBand": "hud",
+      "defaultColumn": 1,
+      "telemetryFeeds": [
+        "audio.waveform",
+        "audio.level",
+        "audio.peak"
+      ],
+      "path": "synaptome/bin/data/layers/hud/audio_waveform.json"
+    },
     {
       "id": "hud.controls",
       "label": "Control Hints",
@@ -116,6 +130,9 @@
     }
   ],
   "feedIds": [
+    "audio.level",
+    "audio.peak",
+    "audio.waveform",
     "breadcrumbs",
     "collector",
     "conflicts",
@@ -135,6 +152,13 @@
     "hudVisible": true,
     "hudStateMigrated": true,
     "hudWidgets": [
+      {
+        "id": "hud.audio.waveform",
+        "column": 1,
+        "band": "hud",
+        "collapsed": false,
+        "visible": true
+      },
       {
         "id": "hud.controls",
         "column": 0,
@@ -180,6 +204,12 @@
     ],
     "hudControllerWidgets": [
       {
+        "id": "hud.audio.waveform",
+        "column": 1,
+        "band": "hud",
+        "collapsed": false
+      },
+      {
         "id": "hud.controls",
         "column": 0,
         "band": "hud",
@@ -221,6 +251,14 @@
     "activeTarget": "controller",
     "targets": {
       "controller": [
+        {
+          "id": "hud.audio.waveform",
+          "column": 1,
+          "band": "hud",
+          "collapsed": false,
+          "visible": true,
+          "target": "projector"
+        },
         {
           "id": "hud.controls",
           "column": 0,
@@ -271,6 +309,14 @@
         }
       ],
       "projector": [
+        {
+          "id": "hud.audio.waveform",
+          "column": 1,
+          "band": "hud",
+          "collapsed": false,
+          "visible": true,
+          "target": "projector"
+        },
         {
           "id": "hud.controls",
           "column": 0,

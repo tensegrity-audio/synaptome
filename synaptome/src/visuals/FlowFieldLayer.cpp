@@ -120,88 +120,88 @@ void FlowFieldLayer::setup(ParameterRegistry& registry) {
 
     ParameterRegistry::Descriptor meta;
     meta.group = "Generative";
-    meta.label = "Flow Visible";
+    meta.label = "Action: Visible";
     registry.addBool(prefix + ".visible", &paramEnabled_, paramEnabled_, meta);
 
-    registerFloat(registry, prefix + ".speed", &paramSpeed_, paramSpeed_, "Flow Speed", 0.0f, 60.0f, 0.1f,
+    registerFloat(registry, prefix + ".speed", &paramSpeed_, paramSpeed_, "Time: Flow Speed", 0.0f, 60.0f, 0.1f,
                   "Free-running simulation steps per second.");
 
     meta = {};
     meta.group = "Generative";
-    meta.label = "Flow BPM Sync";
+    meta.label = "Action: BPM Sync";
     meta.description = "Use transport BPM instead of free-running speed.";
     registry.addBool(prefix + ".bpmSync", &paramBpmSync_, paramBpmSync_, meta);
 
-    registerFloat(registry, prefix + ".bpmMultiplier", &paramBpmMultiplier_, paramBpmMultiplier_, "Flow BPM Mult", 0.25f, 16.0f, 0.25f,
+    registerFloat(registry, prefix + ".bpmMultiplier", &paramBpmMultiplier_, paramBpmMultiplier_, "Time: BPM Mult", 0.25f, 16.0f, 0.25f,
                   "Simulation step multiplier when BPM sync is enabled.");
-    registerFloat(registry, prefix + ".alpha", &paramAlpha_, paramAlpha_, "Flow Alpha", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".alpha", &paramAlpha_, paramAlpha_, "Alpha: Flow", 0.0f, 1.0f, 0.01f);
 
     meta = {};
     meta.group = "Generative";
-    meta.label = "Flow Reseed";
+    meta.label = "Action: Reseed";
     meta.description = "Respawn every particle and clear trails.";
     registry.addBool(prefix + ".reseed", &paramReseedRequested_, paramReseedRequested_, meta);
 
-    meta.label = "Flow Auto Reseed";
+    meta.label = "Action: Auto Reseed";
     meta.description = "Respawn on a transport-quantized cadence.";
     registry.addBool(prefix + ".autoReseed", &paramAutoReseed_, paramAutoReseed_, meta);
 
-    registerFloat(registry, prefix + ".autoReseedEveryBeats", &paramAutoReseedEveryBeats_, paramAutoReseedEveryBeats_, "Flow Auto Reseed Beats", 1.0f, 128.0f, 1.0f);
-    registerFloat(registry, prefix + ".particleCount", &paramParticleCount_, paramParticleCount_, "Flow Particles", 16.0f, 4096.0f, 1.0f);
-    registerFloat(registry, prefix + ".particleLife", &paramParticleLife_, paramParticleLife_, "Flow Particle Life", 16.0f, 2048.0f, 1.0f);
-    registerFloat(registry, prefix + ".respawnRate", &paramRespawnRate_, paramRespawnRate_, "Flow Respawn Rate", 0.0f, 0.2f, 0.001f);
-    registerFloat(registry, prefix + ".spawnRadius", &paramSpawnRadius_, paramSpawnRadius_, "Flow Spawn Radius", 0.0f, 1.0f, 0.01f,
+    registerFloat(registry, prefix + ".autoReseedEveryBeats", &paramAutoReseedEveryBeats_, paramAutoReseedEveryBeats_, "Time: Auto Reseed Beats", 1.0f, 128.0f, 1.0f);
+    registerFloat(registry, prefix + ".particleCount", &paramParticleCount_, paramParticleCount_, "Count: Particles", 16.0f, 4096.0f, 1.0f);
+    registerFloat(registry, prefix + ".particleLife", &paramParticleLife_, paramParticleLife_, "Time: Particle Life", 16.0f, 2048.0f, 1.0f);
+    registerFloat(registry, prefix + ".respawnRate", &paramRespawnRate_, paramRespawnRate_, "Time: Respawn Rate", 0.0f, 0.2f, 0.001f);
+    registerFloat(registry, prefix + ".spawnRadius", &paramSpawnRadius_, paramSpawnRadius_, "Scale: Spawn Radius", 0.0f, 1.0f, 0.01f,
                   "0=center, 1=full field.");
 
     meta = {};
     meta.group = "Generative";
-    meta.label = "Flow Edge Wrap";
+    meta.label = "Action: Edge Wrap";
     registry.addBool(prefix + ".edgeWrap", &paramEdgeWrap_, paramEdgeWrap_, meta);
-    meta.label = "Flow Mirror X";
+    meta.label = "Action: Mirror X";
     registry.addBool(prefix + ".mirrorX", &paramMirrorX_, paramMirrorX_, meta);
-    meta.label = "Flow Mirror Y";
+    meta.label = "Action: Mirror Y";
     registry.addBool(prefix + ".mirrorY", &paramMirrorY_, paramMirrorY_, meta);
 
-    registerFloat(registry, prefix + ".fieldScale", &paramFieldScale_, paramFieldScale_, "Flow Field Scale", 0.2f, 16.0f, 0.01f);
-    registerFloat(registry, prefix + ".fieldStrength", &paramFieldStrength_, paramFieldStrength_, "Flow Field Strength", 0.0f, 4.0f, 0.01f);
-    registerFloat(registry, prefix + ".flowSpeed", &paramFlowSpeed_, paramFlowSpeed_, "Flow Field Speed", -2.0f, 2.0f, 0.01f);
-    registerFloat(registry, prefix + ".curlAmount", &paramCurlAmount_, paramCurlAmount_, "Flow Curl", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".turbulence", &paramTurbulence_, paramTurbulence_, "Flow Turbulence", 0.0f, 2.0f, 0.01f);
-    registerFloat(registry, prefix + ".stepSize", &paramStepSize_, paramStepSize_, "Flow Step Size", 0.1f, 6.0f, 0.01f);
-    registerFloat(registry, prefix + ".inertia", &paramInertia_, paramInertia_, "Flow Inertia", 0.0f, 0.98f, 0.01f);
-    registerFloat(registry, prefix + ".centerPull", &paramCenterPull_, paramCenterPull_, "Flow Center Pull", -1.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".driftX", &paramDriftX_, paramDriftX_, "Flow Drift X", -2.0f, 2.0f, 0.01f);
-    registerFloat(registry, prefix + ".driftY", &paramDriftY_, paramDriftY_, "Flow Drift Y", -2.0f, 2.0f, 0.01f);
+    registerFloat(registry, prefix + ".fieldScale", &paramFieldScale_, paramFieldScale_, "Scale: Field", 0.2f, 16.0f, 0.01f);
+    registerFloat(registry, prefix + ".fieldStrength", &paramFieldStrength_, paramFieldStrength_, "Force: Field Strength", 0.0f, 4.0f, 0.01f);
+    registerFloat(registry, prefix + ".flowSpeed", &paramFlowSpeed_, paramFlowSpeed_, "Time: Field Speed", -2.0f, 2.0f, 0.01f);
+    registerFloat(registry, prefix + ".curlAmount", &paramCurlAmount_, paramCurlAmount_, "Force: Curl", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".turbulence", &paramTurbulence_, paramTurbulence_, "Motion: Turbulence", 0.0f, 2.0f, 0.01f);
+    registerFloat(registry, prefix + ".stepSize", &paramStepSize_, paramStepSize_, "Scale: Step Size", 0.1f, 6.0f, 0.01f);
+    registerFloat(registry, prefix + ".inertia", &paramInertia_, paramInertia_, "Motion: Inertia", 0.0f, 0.98f, 0.01f);
+    registerFloat(registry, prefix + ".centerPull", &paramCenterPull_, paramCenterPull_, "Force: Center Pull", -1.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".driftX", &paramDriftX_, paramDriftX_, "Motion: Drift X", -2.0f, 2.0f, 0.01f);
+    registerFloat(registry, prefix + ".driftY", &paramDriftY_, paramDriftY_, "Motion: Drift Y", -2.0f, 2.0f, 0.01f);
 
-    registerFloat(registry, prefix + ".trailFade", &paramTrailFade_, paramTrailFade_, "Flow Trail Fade", 0.0f, 0.2f, 0.001f);
-    registerFloat(registry, prefix + ".trailDeposit", &paramTrailDeposit_, paramTrailDeposit_, "Flow Trail Deposit", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".trailBoost", &paramTrailBoost_, paramTrailBoost_, "Flow Trail Boost", 0.1f, 6.0f, 0.01f);
-    registerFloat(registry, prefix + ".backgroundAlpha", &paramBackgroundAlpha_, paramBackgroundAlpha_, "Flow Bg Alpha", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".trailAlpha", &paramTrailAlpha_, paramTrailAlpha_, "Flow Trail Alpha", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".pointSize", &paramPointSize_, paramPointSize_, "Flow Point Size", 0.0f, 4.0f, 0.25f);
+    registerFloat(registry, prefix + ".trailFade", &paramTrailFade_, paramTrailFade_, "Time: Trail Fade", 0.0f, 0.2f, 0.001f);
+    registerFloat(registry, prefix + ".trailDeposit", &paramTrailDeposit_, paramTrailDeposit_, "Glow: Trail Deposit", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".trailBoost", &paramTrailBoost_, paramTrailBoost_, "Glow: Trail Boost", 0.1f, 6.0f, 0.01f);
+    registerFloat(registry, prefix + ".backgroundAlpha", &paramBackgroundAlpha_, paramBackgroundAlpha_, "Alpha: Background", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".trailAlpha", &paramTrailAlpha_, paramTrailAlpha_, "Alpha: Trail", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".pointSize", &paramPointSize_, paramPointSize_, "Scale: Point Size", 0.0f, 4.0f, 0.25f);
 
     meta = {};
     meta.group = "Generative";
-    meta.label = "Flow Vectors";
+    meta.label = "Action: Vectors";
     meta.description = "Draw low-opacity vector arrows on top of the trail texture.";
     registry.addBool(prefix + ".vectorOverlay", &paramVectorOverlay_, paramVectorOverlay_, meta);
 
-    registerFloat(registry, prefix + ".vectorSpacing", &paramVectorSpacing_, paramVectorSpacing_, "Flow Vector Spacing", 8.0f, 64.0f, 1.0f);
-    registerFloat(registry, prefix + ".vectorScale", &paramVectorScale_, paramVectorScale_, "Flow Vector Scale", 0.05f, 1.5f, 0.01f);
-    registerFloat(registry, prefix + ".vectorAlpha", &paramVectorAlpha_, paramVectorAlpha_, "Flow Vector Alpha", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".colorBias", &paramColorBias_, paramColorBias_, "Flow Color Bias", 0.0f, 1.0f, 0.01f,
+    registerFloat(registry, prefix + ".vectorSpacing", &paramVectorSpacing_, paramVectorSpacing_, "Scale: Vector Spacing", 8.0f, 64.0f, 1.0f);
+    registerFloat(registry, prefix + ".vectorScale", &paramVectorScale_, paramVectorScale_, "Scale: Vector Length", 0.05f, 1.5f, 0.01f);
+    registerFloat(registry, prefix + ".vectorAlpha", &paramVectorAlpha_, paramVectorAlpha_, "Alpha: Vectors", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".colorBias", &paramColorBias_, paramColorBias_, "Color: Bias", 0.0f, 1.0f, 0.01f,
                   "Blend bias between color A and color B.");
-    registerFloat(registry, prefix + ".paletteRate", &paramPaletteRate_, paramPaletteRate_, "Flow Palette Rate", -2.0f, 2.0f, 0.01f);
+    registerFloat(registry, prefix + ".paletteRate", &paramPaletteRate_, paramPaletteRate_, "Time: Palette Rate", -2.0f, 2.0f, 0.01f);
 
-    registerFloat(registry, prefix + ".bgR", &paramBgR_, paramBgR_, "Flow Bg R", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".bgG", &paramBgG_, paramBgG_, "Flow Bg G", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".bgB", &paramBgB_, paramBgB_, "Flow Bg B", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".colorAR", &paramColorAR_, paramColorAR_, "Flow Color A R", 0.0f, 1.5f, 0.01f);
-    registerFloat(registry, prefix + ".colorAG", &paramColorAG_, paramColorAG_, "Flow Color A G", 0.0f, 1.5f, 0.01f);
-    registerFloat(registry, prefix + ".colorAB", &paramColorAB_, paramColorAB_, "Flow Color A B", 0.0f, 1.5f, 0.01f);
-    registerFloat(registry, prefix + ".colorBR", &paramColorBR_, paramColorBR_, "Flow Color B R", 0.0f, 1.5f, 0.01f);
-    registerFloat(registry, prefix + ".colorBG", &paramColorBG_, paramColorBG_, "Flow Color B G", 0.0f, 1.5f, 0.01f);
-    registerFloat(registry, prefix + ".colorBB", &paramColorBB_, paramColorBB_, "Flow Color B B", 0.0f, 1.5f, 0.01f);
+    registerFloat(registry, prefix + ".bgR", &paramBgR_, paramBgR_, "Color: Background R", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".bgG", &paramBgG_, paramBgG_, "Color: Background G", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".bgB", &paramBgB_, paramBgB_, "Color: Background B", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".colorAR", &paramColorAR_, paramColorAR_, "Color: A R", 0.0f, 1.5f, 0.01f);
+    registerFloat(registry, prefix + ".colorAG", &paramColorAG_, paramColorAG_, "Color: A G", 0.0f, 1.5f, 0.01f);
+    registerFloat(registry, prefix + ".colorAB", &paramColorAB_, paramColorAB_, "Color: A B", 0.0f, 1.5f, 0.01f);
+    registerFloat(registry, prefix + ".colorBR", &paramColorBR_, paramColorBR_, "Color: B R", 0.0f, 1.5f, 0.01f);
+    registerFloat(registry, prefix + ".colorBG", &paramColorBG_, paramColorBG_, "Color: B G", 0.0f, 1.5f, 0.01f);
+    registerFloat(registry, prefix + ".colorBB", &paramColorBB_, paramColorBB_, "Color: B B", 0.0f, 1.5f, 0.01f);
 
     allocateTrail();
     resetParticles();

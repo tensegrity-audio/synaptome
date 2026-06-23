@@ -40,8 +40,8 @@
     ]
   },
   "counts": {
-    "validLayerAssets": 41,
-    "hudWidgets": 6,
+    "validLayerAssets": 61,
+    "hudWidgets": 7,
     "consoleLayers": 8,
     "slotAssignments": 0
   },
@@ -138,6 +138,14 @@
       "targets": {
         "controller": [
           {
+            "id": "hud.audio.waveform",
+            "column": 1,
+            "visible": true,
+            "collapsed": false,
+            "band": "hud",
+            "target": "projector"
+          },
+          {
             "id": "hud.controls",
             "column": 0,
             "visible": true,
@@ -187,6 +195,14 @@
           }
         ],
         "projector": [
+          {
+            "id": "hud.audio.waveform",
+            "column": 1,
+            "visible": true,
+            "collapsed": false,
+            "band": "hud",
+            "target": "projector"
+          },
           {
             "id": "hud.controls",
             "column": 0,

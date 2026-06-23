@@ -196,7 +196,7 @@
 
 			<LanguageStandard>stdcpplatest</LanguageStandard>
 
-			<AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
+			<AdditionalOptions>/bigobj /Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
 
 		</ClCompile>
 
@@ -284,7 +284,7 @@
 
 			<LanguageStandard>stdcpplatest</LanguageStandard>
 
-			<AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
+			<AdditionalOptions>/bigobj /Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
 
 		</ClCompile>
 
@@ -512,6 +512,15 @@
 		<ClCompile Include="src\visuals\AgentFieldLayer.cpp" />
 		<ClCompile Include="src\visuals\FlockingLayer.cpp" />
 		<ClCompile Include="src\visuals\FlowFieldLayer.cpp" />
+		<ClCompile Include="src\visuals\ConstellationStarfieldLayer.cpp" />
+		<ClCompile Include="src\visuals\AuroraCurtainLayer.cpp" />
+		<ClCompile Include="src\visuals\ArcticSeaIcebergLayer.cpp" />
+		<ClCompile Include="src\visuals\ArcticAuroraSceneLayer.cpp" />
+		<ClCompile Include="src\visuals\CosmicWebLayer.cpp" />
+		<ClCompile Include="src\visuals\GalaxySpiralLayer.cpp" />
+		<ClCompile Include="src\visuals\SolarSystemLayer.cpp" />
+		<ClCompile Include="src\visuals\BigBangLayer.cpp" />
+		<ClCompile Include="src\visuals\CosmosFormationLayer.cpp" />
 		<ClCompile Include="src\visuals\VideoClipLayer.cpp" />
 		<ClCompile Include="src\visuals\VideoGrabberLayer.cpp" />
 		<ClCompile Include="src\visuals\TextLayer.cpp" />
@@ -535,6 +544,7 @@
 
 		<ClCompile Include="src\ui\overlays\KeyListWidget.cpp" />
 		<ClCompile Include="src\ui\overlays\TelemetryWidget.cpp" />
+		<ClCompile Include="src\ui\overlays\AudioMonitorWidget.cpp" />
         <ClCompile Include="src\\ui\\HudLayoutEditor.cpp" />
 	<ClCompile Include="src\\ui\\ControlHubEventBridge.cpp" />
 
@@ -686,6 +696,15 @@
 		<ClInclude Include="src\visuals\AgentFieldLayer.h" />
 		<ClInclude Include="src\visuals\FlockingLayer.h" />
 		<ClInclude Include="src\visuals\FlowFieldLayer.h" />
+		<ClInclude Include="src\visuals\ConstellationStarfieldLayer.h" />
+		<ClInclude Include="src\visuals\AuroraCurtainLayer.h" />
+		<ClInclude Include="src\visuals\ArcticSeaIcebergLayer.h" />
+		<ClInclude Include="src\visuals\ArcticAuroraSceneLayer.h" />
+		<ClInclude Include="src\visuals\CosmicWebLayer.h" />
+		<ClInclude Include="src\visuals\GalaxySpiralLayer.h" />
+		<ClInclude Include="src\visuals\SolarSystemLayer.h" />
+		<ClInclude Include="src\visuals\BigBangLayer.h" />
+		<ClInclude Include="src\visuals\CosmosFormationLayer.h" />
 		<ClInclude Include="src\visuals\VideoClipLayer.h" />
 		<ClInclude Include="src\visuals\VideoGrabberLayer.h" />
 		<ClInclude Include="src\visuals\TextLayer.h" />
@@ -709,6 +728,7 @@
 
 		<ClInclude Include="src\ui\overlays\KeyListWidget.h" />
 		<ClInclude Include="src\ui\overlays\TelemetryWidget.h" />
+		<ClInclude Include="src\ui\overlays\AudioMonitorWidget.h" />
         <ClInclude Include="src\\ui\\HudLayoutEditor.h" />
 
     <ClInclude Include="src\thirdparty\tinyosc.h" />

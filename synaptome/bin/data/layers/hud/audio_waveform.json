@@ -1,0 +1,15 @@
+{
+  "id": "hud.audio.waveform",
+  "label": "Audio Waveform",
+  "category": "HUD",
+  "type": "ui.hud.widget",
+  "registryPrefix": "hud.audio.waveform",
+  "description": "Current selected audio input waveform monitor.",
+  "hudWidget": {
+    "module": "audioWaveform",
+    "toggleId": "hud.audio.waveform",
+    "defaultBand": "hud",
+    "defaultColumn": 1,
+    "telemetry": ["audio.waveform", "audio.level", "audio.peak"]
+  }
+}

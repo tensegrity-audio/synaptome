@@ -119,105 +119,105 @@ void OscilloscopeLayer::setup(ParameterRegistry& registry) {
     ParameterRegistry::Descriptor meta;
     meta.group = "Oscilloscope";
 
-    meta.label = "Scope Visible";
+    meta.label = "Action: Visible";
     registry.addBool(prefix + ".visible", &paramEnabled_, paramEnabled_, meta);
 
-    meta.label = "Scope Show Grid";
+    meta.label = "Action: Show Grid";
     meta.description = "Toggle oscilloscope-style XY coordinate grid.";
     registry.addBool(prefix + ".showGrid", &paramShowGrid_, paramShowGrid_, meta);
 
-    meta.label = "Scope Show Crosshair";
+    meta.label = "Action: Show Crosshair";
     meta.description = "Toggle center horizontal/vertical axes.";
     registry.addBool(prefix + ".showCrosshair", &paramShowCrosshair_, paramShowCrosshair_, meta);
 
-    meta.label = "Scope Show Glow";
+    meta.label = "Action: Show Glow";
     meta.description = "Toggle CRT-like phosphor background glow.";
     registry.addBool(prefix + ".showGlow", &paramShowGlow_, paramShowGlow_, meta);
 
-    meta.label = "Scope Pattern";
+    meta.label = "Action: Pattern";
     meta.range.min = kPatternMin;
     meta.range.max = kPatternMax;
     meta.range.step = 1.0f;
     meta.description = "0=Audio XY 1=Circle 2=Lissajous 3=Rose";
     registry.addFloat(prefix + ".pattern", &paramPattern_, paramPattern_, meta);
 
-    meta.label = "Scope Mod Mode";
+    meta.label = "Action: Mod Mode";
     meta.range.min = kModModeMin;
     meta.range.max = kModModeMax;
     meta.range.step = 1.0f;
     meta.description = "0=Cartesian 1=Radial+Wiggle 2=Wiggle Only 3=Radial Only 4=Orbit 5=Spiral Twist 6=Mirror Warp";
     registry.addFloat(prefix + ".modMode", &paramModMode_, paramModMode_, meta);
 
-    meta.label = "Scope X Input";
+    meta.label = "Action: X Input";
     meta.range.min = kInputMin;
     meta.range.max = kInputMax;
     meta.range.step = 0.001f;
     meta.description = "Horizontal modulation input. Map mic or OSC here to bend the base pattern.";
     registry.addFloat(prefix + ".xInput", &paramXInput_, paramXInput_, meta);
 
-    meta.label = "Scope Y Input";
+    meta.label = "Action: Y Input";
     meta.description = "Vertical modulation input. Different X/Y sources create richer figures.";
     registry.addFloat(prefix + ".yInput", &paramYInput_, paramYInput_, meta);
 
-    meta.label = "Scope Speed Input";
+    meta.label = "Action: Speed Input";
     meta.description = "Modulation input for movement speed.";
     registry.addFloat(prefix + ".speedInput", &paramSpeedInput_, paramSpeedInput_, meta);
 
-    meta.label = "Scope Base Amount";
+    meta.label = "Scale: Base Amount";
     meta.range.min = kAmountMin;
     meta.range.max = kAmountMax;
     meta.range.step = 0.01f;
     meta.description = "Strength of the internally generated test pattern.";
     registry.addFloat(prefix + ".baseAmount", &paramBaseAmount_, paramBaseAmount_, meta);
 
-    meta.label = "Scope Mod Amount";
+    meta.label = "Motion: Mod Amount";
     meta.description = "How strongly xInput/yInput modulate the base pattern.";
     registry.addFloat(prefix + ".modAmount", &paramModAmount_, paramModAmount_, meta);
 
-    meta.label = "Scope Radial Amount";
+    meta.label = "Scale: Radial Amount";
     meta.range.min = kSignedAmountMin;
     meta.range.max = kSignedAmountMax;
     meta.range.step = 0.01f;
     meta.description = "How much modulation changes radial distance from center.";
     registry.addFloat(prefix + ".radialAmount", &paramRadialAmount_, paramRadialAmount_, meta);
 
-    meta.label = "Scope Wiggle Amount";
+    meta.label = "Motion: Wiggle Amount";
     meta.description = "How much modulation wiggles perpendicular to the current path.";
     registry.addFloat(prefix + ".wiggleAmount", &paramWiggleAmount_, paramWiggleAmount_, meta);
 
-    meta.label = "Scope Amplitude";
+    meta.label = "Scale: Amplitude";
     meta.range.min = kAmplitudeMin;
     meta.range.max = kAmplitudeMax;
     meta.range.step = 0.01f;
     meta.description = "Overall size of the generated pattern before scale/bias.";
     registry.addFloat(prefix + ".amplitude", &paramAmplitude_, paramAmplitude_, meta);
 
-    meta.label = "Scope Speed";
+    meta.label = "Time: Speed";
     meta.range.min = kSpeedMin;
     meta.range.max = kSpeedMax;
     meta.range.step = 0.01f;
     meta.description = "Base movement speed for the internal oscillator.";
     registry.addFloat(prefix + ".speed", &paramSpeed_, paramSpeed_, meta);
 
-    meta.label = "Scope Speed Mod Amount";
+    meta.label = "Time: Speed Mod Amount";
     meta.range.min = kSignedAmountMin;
     meta.range.max = kSignedAmountMax;
     meta.range.step = 0.01f;
     meta.description = "How much speedInput changes oscillator speed.";
     registry.addFloat(prefix + ".speedModAmount", &paramSpeedModAmount_, paramSpeedModAmount_, meta);
 
-    meta.label = "Scope Freq X";
+    meta.label = "Time: Freq X";
     meta.range.min = kFreqMin;
     meta.range.max = kFreqMax;
     meta.range.step = 0.01f;
     meta.description = "Horizontal oscillator rate.";
     registry.addFloat(prefix + ".freqX", &paramFreqX_, paramFreqX_, meta);
 
-    meta.label = "Scope Freq Y";
+    meta.label = "Time: Freq Y";
     meta.description = "Vertical oscillator rate.";
     registry.addFloat(prefix + ".freqY", &paramFreqY_, paramFreqY_, meta);
 
-    meta.label = "Scope Phase Offset";
+    meta.label = "Time: Phase Offset";
     meta.range.min = -180.0f;
     meta.range.max = 180.0f;
     meta.range.step = 0.1f;
@@ -225,7 +225,7 @@ void OscilloscopeLayer::setup(ParameterRegistry& registry) {
     meta.description = "Phase offset between X and Y oscillators.";
     registry.addFloat(prefix + ".phaseOffsetDeg", &paramPhaseOffsetDeg_, paramPhaseOffsetDeg_, meta);
 
-    meta.label = "Scope Morph";
+    meta.label = "Motion: Morph";
     meta.range.min = kMorphMin;
     meta.range.max = kMorphMax;
     meta.range.step = 0.01f;
@@ -233,64 +233,64 @@ void OscilloscopeLayer::setup(ParameterRegistry& registry) {
     meta.description = "Pattern-specific shape control.";
     registry.addFloat(prefix + ".morph", &paramMorph_, paramMorph_, meta);
 
-    meta.label = "Scope Grid Divisions";
+    meta.label = "Count: Grid Divisions";
     meta.range.min = kGridDivMin;
     meta.range.max = kGridDivMax;
     meta.range.step = 1.0f;
     meta.description = "Number of grid subdivisions per axis quadrant.";
     registry.addFloat(prefix + ".gridDivisions", &paramGridDivisions_, paramGridDivisions_, meta);
 
-    meta.label = "Scope Grid Alpha";
+    meta.label = "Alpha: Grid";
     meta.range.min = kGridAlphaMin;
     meta.range.max = kGridAlphaMax;
     meta.range.step = 0.01f;
     meta.description = "Opacity of the XY grid and crosshair overlay.";
     registry.addFloat(prefix + ".gridAlpha", &paramGridAlpha_, paramGridAlpha_, meta);
 
-    meta.label = "Scope Glow Alpha";
+    meta.label = "Glow: Alpha";
     meta.range.min = kGlowAlphaMin;
     meta.range.max = kGlowAlphaMax;
     meta.range.step = 0.01f;
     meta.description = "Opacity of the CRT-style background glow.";
     registry.addFloat(prefix + ".glowAlpha", &paramGlowAlpha_, paramGlowAlpha_, meta);
 
-    meta.label = "Scope Glow Radius";
+    meta.label = "Glow: Radius";
     meta.range.min = kGlowRadiusMin;
     meta.range.max = kGlowRadiusMax;
     meta.range.step = 0.01f;
     meta.description = "Scale of the glow relative to the trace radius.";
     registry.addFloat(prefix + ".glowRadius", &paramGlowRadius_, paramGlowRadius_, meta);
 
-    meta.label = "Scope Glow Falloff";
+    meta.label = "Glow: Falloff";
     meta.range.min = kGlowFalloffMin;
     meta.range.max = kGlowFalloffMax;
     meta.range.step = 0.01f;
     meta.description = "Controls how quickly the glow fades toward the center.";
     registry.addFloat(prefix + ".glowFalloff", &paramGlowFalloff_, paramGlowFalloff_, meta);
 
-    meta.label = "Scope X Scale";
+    meta.label = "Scale: X";
     meta.range.min = kScaleMin;
     meta.range.max = kScaleMax;
     meta.range.step = 0.01f;
     meta.description = "Horizontal gain applied after xInput.";
     registry.addFloat(prefix + ".xScale", &paramXScale_, paramXScale_, meta);
 
-    meta.label = "Scope Y Scale";
+    meta.label = "Scale: Y";
     meta.description = "Vertical gain applied after yInput.";
     registry.addFloat(prefix + ".yScale", &paramYScale_, paramYScale_, meta);
 
-    meta.label = "Scope X Bias";
+    meta.label = "Motion: X Bias";
     meta.range.min = kBiasMin;
     meta.range.max = kBiasMax;
     meta.range.step = 0.001f;
     meta.description = "Horizontal offset after gain.";
     registry.addFloat(prefix + ".xBias", &paramXBias_, paramXBias_, meta);
 
-    meta.label = "Scope Y Bias";
+    meta.label = "Motion: Y Bias";
     meta.description = "Vertical offset after gain.";
     registry.addFloat(prefix + ".yBias", &paramYBias_, paramYBias_, meta);
 
-    meta.label = "Scope Rotation";
+    meta.label = "Motion: Rotation";
     meta.range.min = -180.0f;
     meta.range.max = 180.0f;
     meta.range.step = 0.1f;
@@ -298,7 +298,7 @@ void OscilloscopeLayer::setup(ParameterRegistry& registry) {
     meta.description = "Rotates the trace around screen center.";
     registry.addFloat(prefix + ".rotationDeg", &paramRotationDeg_, paramRotationDeg_, meta);
 
-    meta.label = "Scope History";
+    meta.label = "Time: History";
     meta.range.min = kHistoryMin;
     meta.range.max = kHistoryMax;
     meta.range.step = 1.0f;
@@ -306,42 +306,42 @@ void OscilloscopeLayer::setup(ParameterRegistry& registry) {
     meta.description = "Max retained points in the trail buffer.";
     registry.addFloat(prefix + ".historySize", &paramHistorySize_, paramHistorySize_, meta);
 
-    meta.label = "Scope Sample Density";
+    meta.label = "Count: Sample Density";
     meta.range.min = kDensityMin;
     meta.range.max = kDensityMax;
     meta.range.step = 1.0f;
     meta.description = "Interpolated points generated each frame between samples.";
     registry.addFloat(prefix + ".sampleDensity", &paramSampleDensity_, paramSampleDensity_, meta);
 
-    meta.label = "Scope Thickness";
+    meta.label = "Scale: Thickness";
     meta.range.min = kThicknessMin;
     meta.range.max = kThicknessMax;
     meta.range.step = 0.1f;
     meta.description = "OpenGL line width for the trace.";
     registry.addFloat(prefix + ".thickness", &paramThickness_, paramThickness_, meta);
 
-    meta.label = "Scope Alpha";
+    meta.label = "Alpha: Scope";
     meta.range.min = kAlphaMin;
     meta.range.max = kAlphaMax;
     meta.range.step = 0.01f;
     meta.description = "Master alpha for the trace.";
     registry.addFloat(prefix + ".alpha", &paramAlpha_, paramAlpha_, meta);
 
-    meta.label = "Scope Decay";
+    meta.label = "Time: Decay";
     meta.range.min = kDecayMin;
     meta.range.max = kDecayMax;
     meta.range.step = 0.01f;
     meta.description = "Higher values preserve more of the trail.";
     registry.addFloat(prefix + ".decay", &paramDecay_, paramDecay_, meta);
 
-    meta.label = "Scope Intensity";
+    meta.label = "Glow: Intensity";
     meta.range.min = kIntensityMin;
     meta.range.max = kIntensityMax;
     meta.range.step = 0.01f;
     meta.description = "Brightness multiplier for the trace colors.";
     registry.addFloat(prefix + ".intensity", &paramIntensity_, paramIntensity_, meta);
 
-    meta.label = "Scope Point Size";
+    meta.label = "Scale: Point Size";
     meta.range.min = kPointSizeMin;
     meta.range.max = kPointSizeMax;
     meta.range.step = 0.1f;
@@ -352,19 +352,19 @@ void OscilloscopeLayer::setup(ParameterRegistry& registry) {
     meta.range.max = kColorMax;
     meta.range.step = 0.01f;
     meta.description = "RGB color channels for the trace.";
-    meta.label = "Scope Red";
+    meta.label = "Color: Scope R";
     registry.addFloat(prefix + ".colorR", &paramColorR_, paramColorR_, meta);
-    meta.label = "Scope Green";
+    meta.label = "Color: Scope G";
     registry.addFloat(prefix + ".colorG", &paramColorG_, paramColorG_, meta);
-    meta.label = "Scope Blue";
+    meta.label = "Color: Scope B";
     registry.addFloat(prefix + ".colorB", &paramColorB_, paramColorB_, meta);
 
-    meta.label = "Scope BG Red";
+    meta.label = "Color: Background R";
     meta.description = "Background glow color red channel.";
     registry.addFloat(prefix + ".bgColorR", &paramBgColorR_, paramBgColorR_, meta);
-    meta.label = "Scope BG Green";
+    meta.label = "Color: Background G";
     registry.addFloat(prefix + ".bgColorG", &paramBgColorG_, paramBgColorG_, meta);
-    meta.label = "Scope BG Blue";
+    meta.label = "Color: Background B";
     registry.addFloat(prefix + ".bgColorB", &paramBgColorB_, paramBgColorB_, meta);
 
     history_.clear();

@@ -1,0 +1,98 @@
+{
+  "id": "generative.arcticAuroraScene",
+  "label": "3D Arctic Aurora Scene",
+  "category": "Generative",
+  "type": "arcticAuroraScene",
+  "registryPrefix": "generative.arcticAuroraScene",
+  "description": "Integrated orbitable 3D arctic aurora scene using the shared Synaptome camera: a centered circular sea disk, floating iceberg meshes, stars, and a cylindrical emissive aurora volume driven only by aurora audio energy.",
+  "opacity": 1.0,
+  "defaults": {
+    "visible": true,
+    "alpha": 1.0,
+    "sceneScale": 1.0,
+    "sceneOffsetY": 0.0,
+    "sceneOffsetZ": 0.0,
+    "waterWidth": 4200.0,
+    "waterNearZ": 260.0,
+    "waterFarZ": -1450.0,
+    "waterLevel": 0.0,
+    "waterWaveIdle": 3.2,
+    "waterHighlight": 1.15,
+    "waterReflection": 0.0,
+    "waterHorizonFog": 0.0,
+    "icebergCount": 6,
+    "icebergScale": 1.0,
+    "icebergSpread": 3400.0,
+    "icebergRimLight": 0.0,
+    "auroraWidth": 2600.0,
+    "auroraBaseY": 145.0,
+    "auroraHeight": 520.0,
+    "auroraDepthNear": -780.0,
+    "auroraDepthFar": -1260.0,
+    "auroraGlow": 2.2,
+    "auroraBloom": 2.6,
+    "auroraFoldStrength": 0.92,
+    "auroraRayDensity": 0.0,
+    "auroraCurtainCount": 4,
+    "audioAmount": 1.35,
+    "audioSmoothing": 0.32,
+    "reseed": false,
+    "seed": 20260621,
+    "skyTopR": 0.0,
+    "skyTopG": 0.004,
+    "skyTopB": 0.015,
+    "skyTopColor": [
+      0.0,
+      0.004,
+      0.015
+    ],
+    "skyHorizonR": 0.010,
+    "skyHorizonG": 0.028,
+    "skyHorizonB": 0.055,
+    "skyHorizonColor": [
+      0.010,
+      0.028,
+      0.055
+    ],
+    "waterR": 0.055,
+    "waterG": 0.155,
+    "waterB": 0.265,
+    "waterColor": [
+      0.055,
+      0.155,
+      0.265
+    ],
+    "auroraR": 0.08,
+    "auroraG": 1.0,
+    "auroraB": 0.52,
+    "auroraColor": [
+      0.08,
+      1.0,
+      0.52
+    ],
+    "aurora2R": 0.48,
+    "aurora2G": 0.18,
+    "aurora2B": 0.92,
+    "aurora2Color": [
+      0.48,
+      0.18,
+      0.92
+    ],
+    "iceRimR": 0.12,
+    "iceRimG": 0.88,
+    "iceRimB": 1.0,
+    "iceRimColor": [
+      0.12,
+      0.88,
+      1.0
+    ],
+    "iceAccentR": 0.20,
+    "iceAccentG": 0.42,
+    "iceAccentB": 0.62,
+    "iceAccentColor": [
+      0.20,
+      0.42,
+      0.62
+    ]
+  }
+}

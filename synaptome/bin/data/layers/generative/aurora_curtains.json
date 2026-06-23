@@ -1,0 +1,58 @@
+{
+  "id": "generative.auroraCurtains",
+  "label": "Aurora Curtains",
+  "category": "Generative",
+  "type": "auroraCurtain",
+  "registryPrefix": "generative.auroraCurtains",
+  "description": "Atmospheric aurora curtains driven by a smoothed audio energy field, with translucent depth veils, vertical rays, horizon glow, and soft peak bloom.",
+  "opacity": 1.0,
+  "defaults": {
+    "visible": true,
+    "mirror": false,
+    "alpha": 1.0,
+    "curtainCount": 3,
+    "sampleDensity": 220,
+    "waveformGain": 0.38,
+    "verticalScale": 0.34,
+    "curtainHeight": 0.48,
+    "foldStrength": 1.15,
+    "flowSpeed": 0.12,
+    "noiseScale": 2.8,
+    "trailDecay": 0.20,
+    "lineThickness": 2.0,
+    "glowAmount": 1.35,
+    "shimmerAmount": 0.65,
+    "magneticTilt": -0.12,
+    "bassLift": 0.56,
+    "midsFold": 1.05,
+    "highsSparkle": 1.10,
+    "peakFlash": 0.38,
+    "audioAmount": 0.82,
+    "audioSmoothing": 0.56,
+    "bgAlpha": 0.18,
+    "bgR": 0.003,
+    "bgG": 0.007,
+    "bgB": 0.018,
+    "backgroundColor": [
+      0.003,
+      0.007,
+      0.018
+    ],
+    "colorR": 0.06,
+    "colorG": 0.95,
+    "colorB": 0.42,
+    "color": [
+      0.06,
+      0.95,
+      0.42
+    ],
+    "color2R": 0.42,
+    "color2G": 0.22,
+    "color2B": 0.85,
+    "color2": [
+      0.42,
+      0.22,
+      0.85
+    ]
+  }
+}

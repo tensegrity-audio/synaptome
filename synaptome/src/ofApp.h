@@ -1,5 +1,6 @@
 #pragma once
 #include "ofMain.h"
+#include "ofxOsc.h"
 #include "io/MidiRouter.h"
 #include "io/SerialSlipOsc.h"
 #include "io/AudioInputBridge.h"
@@ -30,6 +31,15 @@
 #include "visuals/AgentFieldLayer.h"
 #include "visuals/FlockingLayer.h"
 #include "visuals/FlowFieldLayer.h"
+#include "visuals/ConstellationStarfieldLayer.h"
+#include "visuals/AuroraCurtainLayer.h"
+#include "visuals/ArcticSeaIcebergLayer.h"
+#include "visuals/ArcticAuroraSceneLayer.h"
+#include "visuals/CosmicWebLayer.h"
+#include "visuals/GalaxySpiralLayer.h"
+#include "visuals/SolarSystemLayer.h"
+#include "visuals/BigBangLayer.h"
+#include "visuals/CosmosFormationLayer.h"
 #include "visuals/VideoGrabberLayer.h"
 #include "visuals/VideoClipLayer.h"
 #include "visuals/TextLayer.h"
@@ -88,6 +98,7 @@ public:
     bool hudShowSensors = true;
     bool hudShowMenu = true;
     bool hudShowTelemetry = true;
+    bool hudShowAudioWaveform = true;
     bool paused = false;
     float speed = 1.0f;
     float t = 0.0f;
@@ -128,6 +139,7 @@ public:
     std::string hudConfigPath;
     std::string overlayLayoutPath;
     std::string controlHubPrefsPath;
+    std::string oscInputConfigPath;
     std::string activeMidiBank = "home";
 
     // Event bridge (connects control hub events -> HUD)
@@ -177,6 +189,40 @@ public:
     OscParameterRouter oscRouter;
     mutable std::unordered_map<std::string, uint64_t> oscRouteMuteUntilMs_;
     mutable std::unordered_map<std::string, uint64_t> oscModifierTelemetryMs_;
+    struct OscInputSettings {
+        std::string mode = "directSerial";
+        std::string routerUdpHost = "127.0.0.1";
+        int routerUdpPort = 9000;
+    } oscInputSettings_;
+    ofxOscReceiver routerOscReceiver_;
+    bool routerUdpListening_ = false;
+    std::string routerUdpBoundHost_;
+    int routerUdpBoundPort_ = 0;
+    std::string routerUdpStatusText_;
+    uint64_t routerUdpPacketsSeen_ = 0;
+    uint64_t routerUdpDroppedMessages_ = 0;
+    uint64_t lastRouterUdpPacketMs_ = 0;
+    uint64_t lastRouterUdpWaitLogMs_ = 0;
+    uint64_t lastRouterUdpBindAttemptMs_ = 0;
+    bool lastOscMessageValid_ = false;
+    std::string lastOscAddress_;
+    float lastOscValue_ = 0.0f;
+    uint64_t lastOscMessageMs_ = 0;
+    struct ExternalAudioSourceState {
+        std::string sourceId;
+        float level = 0.0f;
+        float peak = 0.0f;
+        float bass = 0.0f;
+        float mids = 0.0f;
+        float highs = 0.0f;
+        std::vector<float> waveform;
+        uint64_t telemetryMs = 0;
+        uint64_t waveformMs = 0;
+        uint64_t waveformPacketsSeen = 0;
+    };
+    std::unordered_map<std::string, ExternalAudioSourceState> externalAudioSources_;
+    std::string activeExternalAudioSourceId_;
+    uint64_t externalAudioFrameCounter_ = 0;
     // Local host audio capture bridge (selectable device)
     AudioInputBridge audioBridge;
     std::size_t localMicModifierIndex = static_cast<std::size_t>(-1);
@@ -419,6 +465,17 @@ public:
     int compositeHeight = 0;
 
     void setupOscRoutes();
+    void loadOscInputSettings();
+    void saveOscInputSettings() const;
+    void applyOscInputMode(const std::string& mode);
+    bool ensureRouterUdpReceiver(bool forceRebind = false);
+    void stopRouterUdpReceiver();
+    void updateRouterUdpReceiver(uint64_t nowMs);
+    void updateControlHubOscInputStatus();
+    bool updateExternalAudioTelemetry(const std::string& address, float value, uint64_t nowMs);
+    bool handleExternalAudioWaveform(const ofxOscMessage& msg, uint64_t nowMs);
+    void publishExternalAudioSnapshot(const ExternalAudioSourceState& state);
+    void refreshFreshExternalAudioSnapshot(uint64_t nowMs);
     void setupLocalMicBridge();
     void ingestOscMessage(const std::string& address, float value);
     void noteSensorActivity(const std::string& address, float value);

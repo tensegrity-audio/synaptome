@@ -73,10 +73,10 @@ void AgentFieldLayer::setup(ParameterRegistry& registry) {
 
     ParameterRegistry::Descriptor meta;
     meta.group = "Generative";
-    meta.label = "Field Visible";
+    meta.label = "Action: Visible";
     registry.addBool(prefix + ".visible", &paramEnabled_, paramEnabled_, meta);
 
-    meta.label = "Field Speed";
+    meta.label = "Time: Field Speed";
     meta.range.min = 0.0f;
     meta.range.max = 40.0f;
     meta.range.step = 0.1f;
@@ -84,10 +84,10 @@ void AgentFieldLayer::setup(ParameterRegistry& registry) {
 
     meta = {};
     meta.group = "Generative";
-    meta.label = "Field BPM Sync";
+    meta.label = "Action: BPM Sync";
     registry.addBool(prefix + ".bpmSync", &paramBpmSync_, paramBpmSync_, meta);
 
-    meta.label = "Field BPM Mult";
+    meta.label = "Time: BPM Mult";
     meta.range.min = 0.25f;
     meta.range.max = 8.0f;
     meta.range.step = 0.25f;
@@ -95,7 +95,7 @@ void AgentFieldLayer::setup(ParameterRegistry& registry) {
 
     meta = {};
     meta.group = "Generative";
-    meta.label = "Field Alpha";
+    meta.label = "Alpha: Field";
     meta.range.min = 0.0f;
     meta.range.max = 1.0f;
     meta.range.step = 0.01f;
@@ -103,10 +103,10 @@ void AgentFieldLayer::setup(ParameterRegistry& registry) {
 
     meta = {};
     meta.group = "Generative";
-    meta.label = "Field Auto Reseed";
+    meta.label = "Action: Auto Reseed";
     registry.addBool(prefix + ".autoReseed", &paramAutoReseed_, paramAutoReseed_, meta);
 
-    meta.label = "Field Auto Reseed Beats";
+    meta.label = "Time: Auto Reseed Beats";
     meta.range.min = 1.0f;
     meta.range.max = 64.0f;
     meta.range.step = 1.0f;
@@ -114,86 +114,86 @@ void AgentFieldLayer::setup(ParameterRegistry& registry) {
 
     meta = {};
     meta.group = "Generative";
-    meta.label = "Field Reseed";
+    meta.label = "Action: Reseed";
     registry.addBool(prefix + ".reseed", &paramReseedRequested_, paramReseedRequested_, meta);
 
     meta = {};
     meta.group = "Generative";
-    meta.label = "Field Mode";
+    meta.label = "Action: Mode";
     meta.range.min = 0.0f;
     meta.range.max = static_cast<float>(kModeCount - 1);
     meta.range.step = 1.0f;
     meta.description = modeDescriptions();
     registry.addFloat(prefix + ".mode", &paramMode_, paramMode_, meta);
 
-    meta.label = "Field Agents";
+    meta.label = "Count: Agents";
     meta.range.min = 4.0f;
     meta.range.max = 256.0f;
     meta.range.step = 1.0f;
     registry.addFloat(prefix + ".agentCount", &paramAgentCount_, paramAgentCount_, meta);
 
-    meta.label = "Field Step Size";
+    meta.label = "Scale: Step Size";
     meta.range.min = 0.1f;
     meta.range.max = 4.0f;
     meta.range.step = 0.05f;
     registry.addFloat(prefix + ".stepSize", &paramStepSize_, paramStepSize_, meta);
 
-    meta.label = "Field Turn Rate";
+    meta.label = "Motion: Turn Rate";
     meta.range.min = 0.01f;
     meta.range.max = 2.0f;
     meta.range.step = 0.01f;
     registry.addFloat(prefix + ".turnRate", &paramTurnRate_, paramTurnRate_, meta);
 
-    meta.label = "Field Sensor Angle";
+    meta.label = "Scale: Sensor Angle";
     meta.range.min = 0.05f;
     meta.range.max = 1.5f;
     meta.range.step = 0.01f;
     registry.addFloat(prefix + ".sensorAngle", &paramSensorAngle_, paramSensorAngle_, meta);
 
-    meta.label = "Field Sensor Dist";
+    meta.label = "Scale: Sensor Distance";
     meta.range.min = 0.5f;
     meta.range.max = 8.0f;
     meta.range.step = 0.1f;
     registry.addFloat(prefix + ".sensorDistance", &paramSensorDistance_, paramSensorDistance_, meta);
 
-    meta.label = "Field Deposit";
+    meta.label = "Glow: Deposit";
     meta.range.min = 0.01f;
     meta.range.max = 1.0f;
     meta.range.step = 0.01f;
     registry.addFloat(prefix + ".deposit", &paramDeposit_, paramDeposit_, meta);
 
-    meta.label = "Field Decay";
+    meta.label = "Time: Decay";
     meta.range.min = 0.0f;
     meta.range.max = 0.2f;
     meta.range.step = 0.001f;
     registry.addFloat(prefix + ".decay", &paramDecay_, paramDecay_, meta);
 
-    meta.label = "Field Diffuse";
+    meta.label = "Motion: Diffuse";
     meta.range.min = 0.0f;
     meta.range.max = 1.0f;
     meta.range.step = 0.01f;
     registry.addFloat(prefix + ".diffuse", &paramDiffuse_, paramDiffuse_, meta);
 
-    meta.label = "Field Trail Boost";
+    meta.label = "Glow: Trail Boost";
     meta.range.min = 0.1f;
     meta.range.max = 4.0f;
     meta.range.step = 0.05f;
     registry.addFloat(prefix + ".trailBoost", &paramTrailBoost_, paramTrailBoost_, meta);
 
-    meta.label = "Field Reset Coverage";
+    meta.label = "Scale: Reset Coverage";
     meta.range.min = 0.05f;
     meta.range.max = 0.98f;
     meta.range.step = 0.01f;
     meta.description = "Reset once this fraction of the field has grown in";
     registry.addFloat(prefix + ".resetCoverage", &paramResetCoverage_, paramResetCoverage_, meta);
 
-    meta.label = "Field Bg Alpha";
+    meta.label = "Alpha: Background";
     meta.range.min = 0.0f;
     meta.range.max = 1.0f;
     meta.range.step = 0.01f;
     registry.addFloat(prefix + ".backgroundAlpha", &paramBackgroundAlpha_, paramBackgroundAlpha_, meta);
 
-    meta.label = "Field Trail Alpha";
+    meta.label = "Alpha: Trail";
     meta.range.min = 0.0f;
     meta.range.max = 1.0f;
     meta.range.step = 0.01f;
@@ -204,17 +204,17 @@ void AgentFieldLayer::setup(ParameterRegistry& registry) {
     meta.range.min = 0.0f;
     meta.range.max = 1.0f;
     meta.range.step = 0.01f;
-    meta.label = "Field Bg R";
+    meta.label = "Color: Background R";
     registry.addFloat(prefix + ".bgR", &paramBgR_, paramBgR_, meta);
-    meta.label = "Field Bg G";
+    meta.label = "Color: Background G";
     registry.addFloat(prefix + ".bgG", &paramBgG_, paramBgG_, meta);
-    meta.label = "Field Bg B";
+    meta.label = "Color: Background B";
     registry.addFloat(prefix + ".bgB", &paramBgB_, paramBgB_, meta);
-    meta.label = "Field Trail R";
+    meta.label = "Color: Trail R";
     registry.addFloat(prefix + ".trailR", &paramTrailR_, paramTrailR_, meta);
-    meta.label = "Field Trail G";
+    meta.label = "Color: Trail G";
     registry.addFloat(prefix + ".trailG", &paramTrailG_, paramTrailG_, meta);
-    meta.label = "Field Trail B";
+    meta.label = "Color: Trail B";
     registry.addFloat(prefix + ".trailB", &paramTrailB_, paramTrailB_, meta);
 
     allocateField();

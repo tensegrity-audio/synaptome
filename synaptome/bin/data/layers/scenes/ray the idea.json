@@ -1,0 +1,287 @@
+{
+  "banks": {
+    "global": [
+      {
+        "controls": [
+          {
+            "description": "Master post-processing amount",
+            "id": "masterFx",
+            "label": "Master FX",
+            "target": "fx.master"
+          },
+          {
+            "description": "Global animation speed",
+            "id": "speed",
+            "label": "Speed",
+            "target": "globals.speed"
+          },
+          {
+            "description": "Session tempo",
+            "id": "bpm",
+            "label": "Tempo",
+            "target": "transport.bpm"
+          },
+          {
+            "description": "Toggle HUD visibility",
+            "id": "hud",
+            "label": "HUD Visible",
+            "target": "ui.hud"
+          },
+          {
+            "description": "Camera distance",
+            "id": "camDist",
+            "label": "Camera Distance",
+            "target": "camera.dist"
+          }
+        ],
+        "id": "home",
+        "label": "Home"
+      }
+    ]
+  },
+  "console": {
+    "slots": [
+      {
+        "active": true,
+        "assetId": "generative.gameOfLife",
+        "index": 1,
+        "label": "Game of Life",
+        "opacity": 1.0,
+        "parameters": {
+          "console.layer1.aliveAlpha": 1.0,
+          "console.layer1.aliveB": 0.800000011920929,
+          "console.layer1.aliveG": 0.10000000149011612,
+          "console.layer1.aliveR": 0.8999999761581421,
+          "console.layer1.alpha": 1.0,
+          "console.layer1.autoReseed": true,
+          "console.layer1.autoReseedEveryBeats": 128.0,
+          "console.layer1.bpmMultiplier": 4.0,
+          "console.layer1.bpmSync": true,
+          "console.layer1.deadAlpha": 0.8999999761581421,
+          "console.layer1.deadB": 0.5,
+          "console.layer1.deadG": 0.5,
+          "console.layer1.deadR": 1.0,
+          "console.layer1.density": 0.4000000059604645,
+          "console.layer1.fadeFrames": 64.0,
+          "console.layer1.paused": false,
+          "console.layer1.preset": 1.0,
+          "console.layer1.reseed": false,
+          "console.layer1.reseedQuantizeBeats": 4.0,
+          "console.layer1.speed": 2.0,
+          "console.layer1.wrap": true
+        }
+      },
+      {
+        "active": true,
+        "assetId": "text.layer",
+        "index": 2,
+        "label": "Text Layer",
+        "opacity": 1.0
+      }
+    ]
+  },
+  "effects": {
+    "ascii": {
+      "aspectMode": 1.0,
+      "block": 9.0,
+      "characterSet": 2.0,
+      "colorMode": 2.0,
+      "gamma": 1.0,
+      "jitter": 1.0,
+      "padding": 1.0,
+      "route": 0.0
+    },
+    "asciiSupersample": {
+      "block": 18.0,
+      "characterSet": 0.0,
+      "colorMode": 2.0,
+      "gamma": 0.0,
+      "jitter": 1.0,
+      "route": 0.0
+    },
+    "crt": {
+      "bleed": 0.15000000596046448,
+      "glow": 0.0,
+      "headSwitch": 0.0,
+      "lumaNoise": 0.0,
+      "perChannelOffset": 0.0,
+      "rgbMisalignment": 0.0,
+      "route": 0.0,
+      "scanline": 0.4000000059604645,
+      "scanlineJitter": 0.0,
+      "softness": 0.0,
+      "subpixelAspect": 2.0,
+      "subpixelDensity": 0.0,
+      "subpixelPadding": 0.0,
+      "syncTear": 0.0,
+      "trackingWobble": 0.0,
+      "vignette": 0.25
+    },
+    "dither": {
+      "cellSize": 16.0,
+      "route": 0.0
+    },
+    "motion": {
+      "alphaMix": 0.0,
+      "blur": 1.0,
+      "boost": 8.0,
+      "fadeBeats": {
+        "base": 2.0,
+        "modifiers": []
+      },
+      "headColorB": 255.0,
+      "headColorG": 0.0,
+      "headColorR": 0.0,
+      "mix": 0.5,
+      "route": 0.0,
+      "softness": 16.0,
+      "tailColorB": 0.0,
+      "tailColorG": 255.0,
+      "tailColorR": 0.0,
+      "tailOpacity": 100.0,
+      "threshold": 0.4000000059604645
+    }
+  },
+  "globals": {
+    "camera.dist": 700.0,
+    "fx.master": {
+      "base": 0.0,
+      "modifiers": []
+    },
+    "globals.speed": 1.0,
+    "overlay.text.bottomLeft": "",
+    "overlay.text.bottomRight": "",
+    "overlay.text.color.b": 100.0,
+    "overlay.text.color.g": 200.0,
+    "overlay.text.color.r": 0.0,
+    "overlay.text.content": "ray the idea",
+    "overlay.text.corner.size": 32.0,
+    "overlay.text.font": "VCR_OSD_MONO_1.001.ttf",
+    "overlay.text.size": 72.0,
+    "overlay.text.topLeft": "",
+    "overlay.text.topRight": "",
+    "transport.bpm": 120.0
+  },
+  "mappings": {
+    "router": {
+      "cc": [],
+      "osc": [
+        {
+          "bank": "home",
+          "pattern": "/sensor/host/localmic/mic-bass",
+          "target": "effects.motion.fadeBeats"
+        }
+      ],
+      "oscSources": [
+        {
+          "blend": "scale",
+          "in": [
+            0.0,
+            1.0
+          ],
+          "out": [
+            0.0,
+            1.0
+          ],
+          "pattern": "/sensor/matrix/0x0101/mic-level",
+          "relative": true
+        },
+        {
+          "blend": "scale",
+          "in": [
+            89.0,
+            130.0
+          ],
+          "out": [
+            0.0,
+            4.0
+          ],
+          "pattern": "/sensor/deck/0x0201/heart-bpm",
+          "relative": true
+        },
+        {
+          "blend": "scale",
+          "in": [
+            0.0,
+            1.0
+          ],
+          "out": [
+            0.0,
+            1.0
+          ],
+          "pattern": "/sensor/deck/0x0201/imu-gyro-x",
+          "relative": true
+        },
+        {
+          "blend": "scale",
+          "in": [
+            0.0,
+            1.0
+          ],
+          "out": [
+            0.0,
+            1.0
+          ],
+          "pattern": "/sensor/deck/0x0201/imu-gyro-y",
+          "relative": true
+        },
+        {
+          "blend": "scale",
+          "in": [
+            -10.0,
+            0.0
+          ],
+          "out": [
+            0.0,
+            10.0
+          ],
+          "pattern": "/sensor/deck/0x0201/imu-accel-z",
+          "relative": true
+        },
+        {
+          "blend": "scale",
+          "in": [
+            0.0,
+            0.30000001192092896
+          ],
+          "out": [
+            0.0,
+            5.0
+          ],
+          "pattern": "/sensor/host/localmic/mic-level",
+          "relative": true,
+          "smooth": 1.0
+        },
+        {
+          "blend": "scale",
+          "in": [
+            0.0,
+            0.5
+          ],
+          "out": [
+            0.0,
+            2.0
+          ],
+          "pattern": "/sensor/host/localmic/mic-bass",
+          "relative": true
+        }
+      ]
+    },
+    "slotAssignments": {
+      "assignments": []
+    }
+  },
+  "scene": {
+    "savedAt": "2026-06-21T19:21:20-0400",
+    "schemaVersion": 2,
+    "source": {
+      "name": "ray the idea",
+      "path": "layers/scenes/ray the idea.json"
+    },
+    "storage": {
+      "kind": "named",
+      "name": "ray the idea",
+      "path": "layers/scenes/ray the idea.json"
+    }
+  }
+}

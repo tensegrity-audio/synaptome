@@ -72,26 +72,26 @@ void AudioWaveformLayer::setup(ParameterRegistry& registry) {
     ParameterRegistry::Descriptor meta;
     meta.group = "Audio Waveform";
 
-    meta.label = "Waveform Visible";
+    meta.label = "Action: Visible";
     registry.addBool(prefix + ".visible", &paramEnabled_, paramEnabled_, meta);
 
-    meta.label = "Waveform Show Bands";
+    meta.label = "Action: Show Bands";
     registry.addBool(prefix + ".showBands", &paramShowBands_, paramShowBands_, meta);
 
-    registerFloat(registry, prefix + ".gain", &paramGain_, paramGain_, "Waveform Gain", kGainMin, kGainMax, 0.01f);
-    registerFloat(registry, prefix + ".verticalScale", &paramVerticalScale_, paramVerticalScale_, "Waveform Scale", kVerticalScaleMin, kVerticalScaleMax, 0.01f);
-    registerFloat(registry, prefix + ".lineThickness", &paramLineThickness_, paramLineThickness_, "Waveform Thickness", kThicknessMin, kThicknessMax, 0.1f, "px");
-    registerFloat(registry, prefix + ".alpha", &paramAlpha_, paramAlpha_, "Waveform Alpha", kAlphaMin, kAlphaMax, 0.01f, "normalized");
-    registerFloat(registry, prefix + ".smoothing", &paramSmoothing_, paramSmoothing_, "Waveform Smoothing", kSmoothingMin, kSmoothingMax, 0.01f, "normalized");
-    registerFloat(registry, prefix + ".bandHeight", &paramBandHeight_, paramBandHeight_, "Waveform Band Height", kBandHeightMin, kBandHeightMax, 0.01f, "normalized");
-    registerFloat(registry, prefix + ".bandAlpha", &paramBandAlpha_, paramBandAlpha_, "Waveform Band Alpha", kAlphaMin, kAlphaMax, 0.01f, "normalized");
-    registerFloat(registry, prefix + ".bgAlpha", &paramBgAlpha_, paramBgAlpha_, "Waveform BG Alpha", kAlphaMin, kAlphaMax, 0.01f, "normalized");
-    registerFloat(registry, prefix + ".colorR", &paramColorR_, paramColorR_, "Waveform Red", kColorMin, kColorMax, 0.01f);
-    registerFloat(registry, prefix + ".colorG", &paramColorG_, paramColorG_, "Waveform Green", kColorMin, kColorMax, 0.01f);
-    registerFloat(registry, prefix + ".colorB", &paramColorB_, paramColorB_, "Waveform Blue", kColorMin, kColorMax, 0.01f);
-    registerFloat(registry, prefix + ".bgColorR", &paramBgColorR_, paramBgColorR_, "Waveform BG Red", kColorMin, kColorMax, 0.01f);
-    registerFloat(registry, prefix + ".bgColorG", &paramBgColorG_, paramBgColorG_, "Waveform BG Green", kColorMin, kColorMax, 0.01f);
-    registerFloat(registry, prefix + ".bgColorB", &paramBgColorB_, paramBgColorB_, "Waveform BG Blue", kColorMin, kColorMax, 0.01f);
+    registerFloat(registry, prefix + ".gain", &paramGain_, paramGain_, "Audio: Waveform Gain", kGainMin, kGainMax, 0.01f);
+    registerFloat(registry, prefix + ".verticalScale", &paramVerticalScale_, paramVerticalScale_, "Scale: Waveform", kVerticalScaleMin, kVerticalScaleMax, 0.01f);
+    registerFloat(registry, prefix + ".lineThickness", &paramLineThickness_, paramLineThickness_, "Scale: Waveform Thickness", kThicknessMin, kThicknessMax, 0.1f, "px");
+    registerFloat(registry, prefix + ".alpha", &paramAlpha_, paramAlpha_, "Alpha: Waveform", kAlphaMin, kAlphaMax, 0.01f, "normalized");
+    registerFloat(registry, prefix + ".smoothing", &paramSmoothing_, paramSmoothing_, "Audio: Waveform Smoothing", kSmoothingMin, kSmoothingMax, 0.01f, "normalized");
+    registerFloat(registry, prefix + ".bandHeight", &paramBandHeight_, paramBandHeight_, "Scale: Band Height", kBandHeightMin, kBandHeightMax, 0.01f, "normalized");
+    registerFloat(registry, prefix + ".bandAlpha", &paramBandAlpha_, paramBandAlpha_, "Alpha: Bands", kAlphaMin, kAlphaMax, 0.01f, "normalized");
+    registerFloat(registry, prefix + ".bgAlpha", &paramBgAlpha_, paramBgAlpha_, "Alpha: Background", kAlphaMin, kAlphaMax, 0.01f, "normalized");
+    registerFloat(registry, prefix + ".colorR", &paramColorR_, paramColorR_, "Color: Waveform R", kColorMin, kColorMax, 0.01f);
+    registerFloat(registry, prefix + ".colorG", &paramColorG_, paramColorG_, "Color: Waveform G", kColorMin, kColorMax, 0.01f);
+    registerFloat(registry, prefix + ".colorB", &paramColorB_, paramColorB_, "Color: Waveform B", kColorMin, kColorMax, 0.01f);
+    registerFloat(registry, prefix + ".bgColorR", &paramBgColorR_, paramBgColorR_, "Color: Background R", kColorMin, kColorMax, 0.01f);
+    registerFloat(registry, prefix + ".bgColorG", &paramBgColorG_, paramBgColorG_, "Color: Background G", kColorMin, kColorMax, 0.01f);
+    registerFloat(registry, prefix + ".bgColorB", &paramBgColorB_, paramBgColorB_, "Color: Background B", kColorMin, kColorMax, 0.01f);
 }
 
 void AudioWaveformLayer::update(const LayerUpdateParams& params) {

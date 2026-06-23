@@ -1,9 +1,11 @@
 #pragma once
 
 #include <algorithm>
+#include <cctype>
 #include <cstddef>
 #include <cmath>
 #include <functional>
+#include <initializer_list>
 #include <limits>
 #include <stdexcept>
 #include <string>
@@ -163,11 +165,114 @@ private:
     std::vector<StringParam> strings_;
 };
 
+namespace parameter_label_detail {
+    inline std::string toLowerAscii(std::string value) {
+        std::transform(value.begin(), value.end(), value.begin(), [](unsigned char c) {
+            return static_cast<char>(std::tolower(c));
+        });
+        return value;
+    }
+
+    inline bool startsWithCategoryPrefix(const std::string& label) {
+        static const char* prefixes[] = {
+            "Action: ",
+            "Alpha: ",
+            "Audio: ",
+            "Color: ",
+            "Count: ",
+            "Force: ",
+            "Glow: ",
+            "Motion: ",
+            "Scale: ",
+            "Seed: ",
+            "Time: ",
+        };
+        for (const char* prefix : prefixes) {
+            if (label.rfind(prefix, 0) == 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    inline bool containsAny(const std::string& haystack, std::initializer_list<const char*> needles) {
+        for (const char* needle : needles) {
+            if (haystack.find(needle) != std::string::npos) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    inline std::string categoryPrefixFor(const std::string& id, const std::string& label) {
+        const std::string text = toLowerAscii(id + " " + label);
+
+        if (containsAny(text, { "seed", "random" })) {
+            return "Seed";
+        }
+        if (containsAny(text, { "color", "palette", " red", " green", " blue", ".r", ".g", ".b",
+                                "colorr", "colorg", "colorb", " b", " g", " r", "sky", "water",
+                                "ice", "star", "orbitr", "orbitg", "orbitb", "trailr", "trailg",
+                                "trailb", "bgcolor", "background color" })) {
+            return "Color";
+        }
+        if (containsAny(text, { "alpha", "opacity", "transparent", "coverage", "mask", "fade",
+                                "vignette", "mix" })) {
+            return "Alpha";
+        }
+        if (containsAny(text, { "audio", "bass", "mid", "high", "peak", "waveform", "mic-",
+                                "sensor", "input", "gain" })) {
+            return "Audio";
+        }
+        if (containsAny(text, { "bpm", "beat", "time", "evolution", "smoothing", "decay",
+                                "duration", "persistence", "memory", "rate", "frequency",
+                                "lacunarity", "sync", "every" })) {
+            return "Time";
+        }
+        if (containsAny(text, { "count", "density", "steps", "samples", "segments", "octaves",
+                                "character set", "set", "agents", "particles", "curtain count" })) {
+            return "Count";
+        }
+        if (containsAny(text, { "glow", "bloom", "brightness", "contrast", "intensity",
+                                "emission", "radiance", "highlight", "reflection", "rim",
+                                "flash", "sparkle", "shimmer", "luminosity", "luminance",
+                                "boost" })) {
+            return "Glow";
+        }
+        if (containsAny(text, { "gravity", "pressure", "force", "swirl", "curl", "turbulence",
+                                "noise", "deform", "twist", "bend", "bulge", "fold", "wave",
+                                "lift", "drift", "diffuse", "deposit", "turn", "storm",
+                                "wind", "ripple" })) {
+            return "Force";
+        }
+        if (containsAny(text, { "scale", "size", "width", "height", "depth", "radius",
+                                "distance", "spread", "zoom", "thickness", "aspect", "padding",
+                                "resolution", "level", "amount", "cell", "texel", "softness",
+                                "density" })) {
+            return "Scale";
+        }
+        if (containsAny(text, { "speed", "motion", "rotate", "rotation", "orbit", "tilt",
+                                "offset", "position", "x", "y", "z", "hover", "tracking",
+                                "jitter", "wobble", "mirror" })) {
+            return "Motion";
+        }
+        return "Action";
+    }
+
+    inline std::string categorizedLabel(const std::string& id, const std::string& label) {
+        if (label.empty() || startsWithCategoryPrefix(label)) {
+            return label;
+        }
+        return categoryPrefixFor(id, label) + ": " + label;
+    }
+}
+
 inline ParameterRegistry::Descriptor mergeDescriptor(const std::string& id,
                                                      const ParameterRegistry::Descriptor& metaTemplate) {
     ParameterRegistry::Descriptor desc = metaTemplate;
     if (desc.id.empty()) desc.id = id;
     if (desc.label.empty()) desc.label = id;
+    desc.label = parameter_label_detail::categorizedLabel(desc.id, desc.label);
     return desc;
 }
 

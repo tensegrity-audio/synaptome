@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "mode": "directSerial",
+  "routerUdp": {
+    "host": "127.0.0.1",
+    "port": 9000
+  },
+  "serial": {
+    "autoPort": true
+  }
+}
