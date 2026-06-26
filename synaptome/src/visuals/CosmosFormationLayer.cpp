@@ -12,8 +12,8 @@
 namespace {
     constexpr float kMinDt = 0.0f;
     constexpr float kMaxDt = 1.0f / 20.0f;
-    constexpr int kGrowthCols = 96;
-    constexpr int kGrowthRows = 54;
+    constexpr int kGrowthCols = 72;
+    constexpr int kGrowthRows = 40;
     constexpr float kGrowthExtent = 1.24f;
 
     float wrap01(float value) {
@@ -135,6 +135,9 @@ void CosmosFormationLayer::configure(const ofJson& config) {
     paramClusterSpread_ = def.value("clusterSpread", paramClusterSpread_);
     paramClusterDrift_ = def.value("clusterDrift", paramClusterDrift_);
     paramClusterSoftness_ = def.value("clusterSoftness", paramClusterSoftness_);
+    paramSubstructureAmount_ = def.value("substructureAmount", paramSubstructureAmount_);
+    paramSubstructureScale_ = def.value("substructureScale", paramSubstructureScale_);
+    paramSubstructureGlow_ = def.value("substructureGlow", paramSubstructureGlow_);
     paramShear_ = def.value("shear", paramShear_);
     paramVoidPressure_ = def.value("voidPressure", paramVoidPressure_);
     paramTurbulence_ = def.value("turbulence", paramTurbulence_);
@@ -205,13 +208,13 @@ void CosmosFormationLayer::setup(ParameterRegistry& registry) {
     meta.label = "Layer: Visible";
     registry.addBool(prefix + ".visible", &paramEnabled_, paramEnabled_, meta);
 
-    registerFloat(registry, prefix + ".alpha", &paramAlpha_, paramAlpha_, "Alpha: Cosmos", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".particleCount", &paramParticleCount_, paramParticleCount_, "Count: Matter Points", 96.0f, 3200.0f, 1.0f);
-    registerFloat(registry, prefix + ".clusterCount", &paramClusterCount_, paramClusterCount_, "Count: Web Seeds", 4.0f, 128.0f, 1.0f);
-    registerFloat(registry, prefix + ".radius", &paramRadius_, paramRadius_, "Scale: Cosmos", 0.25f, 2.4f, 0.01f);
-    registerFloat(registry, prefix + ".originRadius", &paramOriginRadius_, paramOriginRadius_, "Scale: Singularity", 0.0f, 0.12f, 0.001f);
-    registerFloat(registry, prefix + ".expansionRate", &paramExpansionRate_, paramExpansionRate_, "Time: Cosmic Rate", 0.05f, 3.0f, 0.01f);
-    registerFloat(registry, prefix + ".expansionForce", &paramExpansionForce_, paramExpansionForce_, "Force: Expansion", 0.0f, 2.0f, 0.01f);
+    registerFloat(registry, prefix + ".alpha", &paramAlpha_, paramAlpha_, "Layer: Opacity", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".particleCount", &paramParticleCount_, paramParticleCount_, "Stars: Count", 96.0f, 3200.0f, 1.0f);
+    registerFloat(registry, prefix + ".clusterCount", &paramClusterCount_, paramClusterCount_, "Web: Seed Count", 4.0f, 128.0f, 1.0f);
+    registerFloat(registry, prefix + ".radius", &paramRadius_, paramRadius_, "Cosmos: Radius", 0.25f, 2.4f, 0.01f);
+    registerFloat(registry, prefix + ".originRadius", &paramOriginRadius_, paramOriginRadius_, "Formation: Singularity Radius", 0.0f, 0.12f, 0.001f);
+    registerFloat(registry, prefix + ".expansionRate", &paramExpansionRate_, paramExpansionRate_, "Formation: Expansion Rate", 0.05f, 3.0f, 0.01f);
+    registerFloat(registry, prefix + ".expansionForce", &paramExpansionForce_, paramExpansionForce_, "Expansion: Force", 0.0f, 2.0f, 0.01f);
 
     meta = {};
     meta.group = "Cosmos Formation";
@@ -219,58 +222,64 @@ void CosmosFormationLayer::setup(ParameterRegistry& registry) {
     meta.description = "Advance the formation lifecycle automatically after each bang.";
     registry.addBool(prefix + ".autoAdvance", &paramAutoAdvance_, paramAutoAdvance_, meta);
 
-    registerFloat(registry, prefix + ".formationAge", &paramFormationAge_, paramFormationAge_, "Time: Formation Age", 0.0f, 1.0f, 0.001f,
+    registerFloat(registry, prefix + ".formationAge", &paramFormationAge_, paramFormationAge_, "Formation: Age", 0.0f, 1.0f, 0.001f,
                   "Normalized lifecycle: 0 is singular burst, 1 is mature cosmic web.");
-    registerFloat(registry, prefix + ".formationTime", &paramFormationTime_, paramFormationTime_, "Time: Formation Duration", 1.0f, 300.0f, 0.1f);
-    registerFloat(registry, prefix + ".evolutionSpeed", &paramEvolutionSpeed_, paramEvolutionSpeed_, "Time: Evolution Speed", 0.0f, 1.5f, 0.001f,
+    registerFloat(registry, prefix + ".formationTime", &paramFormationTime_, paramFormationTime_, "Formation: Duration", 1.0f, 300.0f, 0.1f);
+    registerFloat(registry, prefix + ".evolutionSpeed", &paramEvolutionSpeed_, paramEvolutionSpeed_, "Formation: Evolution Speed", 0.0f, 1.5f, 0.001f,
                   "Master time scale for web drift, field evolution, and matter transport.");
-    registerFloat(registry, prefix + ".gravity", &paramGravity_, paramGravity_, "Force: Gravity", 0.0f, 2.5f, 0.01f);
-    registerFloat(registry, prefix + ".gravityDelay", &paramGravityDelay_, paramGravityDelay_, "Time: Gravity Delay", 0.0f, 0.95f, 0.01f,
+    registerFloat(registry, prefix + ".gravity", &paramGravity_, paramGravity_, "Nodes: Gravity", 0.0f, 2.5f, 0.01f);
+    registerFloat(registry, prefix + ".gravityDelay", &paramGravityDelay_, paramGravityDelay_, "Formation: Gravity Delay", 0.0f, 0.95f, 0.01f,
                   "Lifecycle position before web-node attraction becomes strong.");
-    registerFloat(registry, prefix + ".gravityEmergence", &paramGravityEmergence_, paramGravityEmergence_, "Time: Gravity Emergence", 0.0f, 1.5f, 0.01f,
+    registerFloat(registry, prefix + ".gravityEmergence", &paramGravityEmergence_, paramGravityEmergence_, "Formation: Gravity Emergence", 0.0f, 1.5f, 0.01f,
                   "How quickly latent web nodes become real gravitational wells.");
-    registerFloat(registry, prefix + ".clusterSwirl", &paramClusterSwirl_, paramClusterSwirl_, "Motion: Node Swirl", -4.0f, 4.0f, 0.01f);
-    registerFloat(registry, prefix + ".clusterSpread", &paramClusterSpread_, paramClusterSpread_, "Scale: Web Spread", 0.1f, 1.2f, 0.01f);
-    registerFloat(registry, prefix + ".clusterDrift", &paramClusterDrift_, paramClusterDrift_, "Motion: Web Drift", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".clusterSoftness", &paramClusterSoftness_, paramClusterSoftness_, "Scale: Node Softness", 0.15f, 2.0f, 0.01f,
+    registerFloat(registry, prefix + ".clusterSwirl", &paramClusterSwirl_, paramClusterSwirl_, "Nodes: Swirl", -4.0f, 4.0f, 0.01f);
+    registerFloat(registry, prefix + ".clusterSpread", &paramClusterSpread_, paramClusterSpread_, "Web: Spread", 0.1f, 1.2f, 0.01f);
+    registerFloat(registry, prefix + ".clusterDrift", &paramClusterDrift_, paramClusterDrift_, "Web: Drift", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".clusterSoftness", &paramClusterSoftness_, paramClusterSoftness_, "Nodes: Softness", 0.15f, 2.0f, 0.01f,
                   "Higher values make web nodes broader and less point-like.");
-    registerFloat(registry, prefix + ".shear", &paramShear_, paramShear_, "Force: Shear", -2.0f, 2.0f, 0.01f);
-    registerFloat(registry, prefix + ".voidPressure", &paramVoidPressure_, paramVoidPressure_, "Force: Void Pressure", 0.0f, 1.0f, 0.01f,
+    registerFloat(registry, prefix + ".substructureAmount", &paramSubstructureAmount_, paramSubstructureAmount_, "Clusters: Detail Amount", 0.0f, 1.5f, 0.01f,
+                  "How much deterministic child structure each large web node contributes.");
+    registerFloat(registry, prefix + ".substructureScale", &paramSubstructureScale_, paramSubstructureScale_, "Clusters: Detail Scale", 0.05f, 1.0f, 0.01f,
+                  "How far child nuclei and axons spread around each parent node.");
+    registerFloat(registry, prefix + ".substructureGlow", &paramSubstructureGlow_, paramSubstructureGlow_, "Clusters: Detail Glow", 0.0f, 2.5f, 0.01f,
+                  "How strongly child cluster detail contributes to field glow.");
+    registerFloat(registry, prefix + ".shear", &paramShear_, paramShear_, "Web: Shear", -2.0f, 2.0f, 0.01f);
+    registerFloat(registry, prefix + ".voidPressure", &paramVoidPressure_, paramVoidPressure_, "Void: Pressure", 0.0f, 1.0f, 0.01f,
                   "Residual expansion that keeps matter from collapsing into fixed points.");
-    registerFloat(registry, prefix + ".turbulence", &paramTurbulence_, paramTurbulence_, "Motion: Matter Turbulence", 0.0f, 2.0f, 0.01f);
-    registerFloat(registry, prefix + ".coolingRate", &paramCoolingRate_, paramCoolingRate_, "Time: Cooling Rate", 0.0f, 2.0f, 0.01f);
-    registerFloat(registry, prefix + ".fieldLuminosity", &paramFieldLuminosity_, paramFieldLuminosity_, "Glow: Field Luminosity", 0.0f, 4.0f, 0.01f,
+    registerFloat(registry, prefix + ".turbulence", &paramTurbulence_, paramTurbulence_, "Stars: Turbulence", 0.0f, 2.0f, 0.01f);
+    registerFloat(registry, prefix + ".coolingRate", &paramCoolingRate_, paramCoolingRate_, "Formation: Cooling Rate", 0.0f, 2.0f, 0.01f);
+    registerFloat(registry, prefix + ".fieldLuminosity", &paramFieldLuminosity_, paramFieldLuminosity_, "Field: Luminosity", 0.0f, 4.0f, 0.01f,
                   "How strongly dense compressed field regions emit visible glow.");
-    registerFloat(registry, prefix + ".glowPersistence", &paramGlowPersistence_, paramGlowPersistence_, "Glow: Persistence", 0.0f, 0.98f, 0.01f,
-                  "How long dense field glow and audio excitation linger.");
-    registerFloat(registry, prefix + ".filamentMemory", &paramFilamentMemory_, paramFilamentMemory_, "Time: Filament Memory", 0.0f, 0.995f, 0.001f,
-                  "How long activated filaments remain stable after matter and audio move through them.");
-    registerFloat(registry, prefix + ".matterSize", &paramMatterSize_, paramMatterSize_, "Scale: Matter Size", 0.25f, 8.0f, 0.05f);
-    registerFloat(registry, prefix + ".matterGlow", &paramMatterGlow_, paramMatterGlow_, "Glow: Matter", 0.0f, 8.0f, 0.1f);
-    registerFloat(registry, prefix + ".trailAlpha", &paramTrailAlpha_, paramTrailAlpha_, "Alpha: Motion Trail", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".trailThickness", &paramTrailThickness_, paramTrailThickness_, "Scale: Motion Trail", 0.25f, 8.0f, 0.05f);
-    registerFloat(registry, prefix + ".haloAlpha", &paramHaloAlpha_, paramHaloAlpha_, "Alpha: Web Field", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".haloRadius", &paramHaloRadius_, paramHaloRadius_, "Scale: Node Atmosphere", 0.02f, 0.45f, 0.001f);
-    registerFloat(registry, prefix + ".shockwaveCount", &paramShockwaveCount_, paramShockwaveCount_, "Count: Pressure Waves", 0.0f, 12.0f, 1.0f);
-    registerFloat(registry, prefix + ".shockwaveAlpha", &paramShockwaveAlpha_, paramShockwaveAlpha_, "Alpha: Pressure Wave", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".shockwaveWidth", &paramShockwaveWidth_, paramShockwaveWidth_, "Scale: Pressure Wave Width", 0.005f, 0.16f, 0.001f);
-    registerFloat(registry, prefix + ".shockwaveSpeed", &paramShockwaveSpeed_, paramShockwaveSpeed_, "Time: Pressure Wave Speed", 0.05f, 3.0f, 0.01f);
-    registerFloat(registry, prefix + ".pressureAmount", &paramPressureAmount_, paramPressureAmount_, "Force: Pressure Wave", 0.0f, 1.5f, 0.01f);
-    registerFloat(registry, prefix + ".audioAmount", &paramAudioAmount_, paramAudioAmount_, "Audio: Amount", 0.0f, 2.0f, 0.01f);
-    registerFloat(registry, prefix + ".audioAccretion", &paramAudioAccretion_, paramAudioAccretion_, "Audio: Accretion", 0.0f, 2.0f, 0.01f,
-                  "How much audio contributes to long-term web-node and filament formation.");
-    registerFloat(registry, prefix + ".audioGlow", &paramAudioGlow_, paramAudioGlow_, "Audio: Glow", 0.0f, 3.0f, 0.01f,
-                  "How much audio boosts field, node, and matter glow.");
-    registerFloat(registry, prefix + ".audioTwinkle", &paramAudioTwinkle_, paramAudioTwinkle_, "Audio: Twinkle", 0.0f, 3.0f, 0.01f,
-                  "How much highs, peaks, and beats modulate star twinkle.");
-    registerFloat(registry, prefix + ".bassExpansion", &paramBassExpansion_, paramBassExpansion_, "Audio: Bass Expansion", -1.0f, 1.5f, 0.01f);
-    registerFloat(registry, prefix + ".midsTurbulence", &paramMidsTurbulence_, paramMidsTurbulence_, "Audio: Mids Turbulence", 0.0f, 2.0f, 0.01f);
-    registerFloat(registry, prefix + ".highsSparkle", &paramHighsSparkle_, paramHighsSparkle_, "Audio: Highs Sparkle", 0.0f, 4.0f, 0.01f);
-    registerFloat(registry, prefix + ".waveformWarp", &paramWaveformWarp_, paramWaveformWarp_, "Audio: Waveform Warp", 0.0f, 0.3f, 0.001f);
-    registerFloat(registry, prefix + ".peakBangThreshold", &paramPeakBangThreshold_, paramPeakBangThreshold_, "Audio: Peak Bang Threshold", 0.01f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".peakImpulse", &paramPeakImpulse_, paramPeakImpulse_, "Audio: Peak Impulse", 0.0f, 2.0f, 0.01f);
-    registerFloat(registry, prefix + ".beatImpulse", &paramBeatImpulse_, paramBeatImpulse_, "Audio: Beat Impulse", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".audioSmoothing", &paramAudioSmoothing_, paramAudioSmoothing_, "Audio: Smoothing", 0.0f, 0.98f, 0.01f);
+    registerFloat(registry, prefix + ".glowPersistence", &paramGlowPersistence_, paramGlowPersistence_, "Field: Glow Persistence", 0.0f, 0.98f, 0.01f,
+                  "How long dense field glow and signal excitation linger.");
+    registerFloat(registry, prefix + ".filamentMemory", &paramFilamentMemory_, paramFilamentMemory_, "Axons: Memory", 0.0f, 0.995f, 0.001f,
+                  "How long activated filaments remain stable after matter and signal move through them.");
+    registerFloat(registry, prefix + ".matterSize", &paramMatterSize_, paramMatterSize_, "Stars: Size", 0.25f, 8.0f, 0.05f);
+    registerFloat(registry, prefix + ".matterGlow", &paramMatterGlow_, paramMatterGlow_, "Stars: Glow", 0.0f, 8.0f, 0.1f);
+    registerFloat(registry, prefix + ".trailAlpha", &paramTrailAlpha_, paramTrailAlpha_, "Trails: Alpha", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".trailThickness", &paramTrailThickness_, paramTrailThickness_, "Trails: Thickness", 0.25f, 8.0f, 0.05f);
+    registerFloat(registry, prefix + ".haloAlpha", &paramHaloAlpha_, paramHaloAlpha_, "Field: Alpha", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".haloRadius", &paramHaloRadius_, paramHaloRadius_, "Nodes: Atmosphere Radius", 0.02f, 0.45f, 0.001f);
+    registerFloat(registry, prefix + ".shockwaveCount", &paramShockwaveCount_, paramShockwaveCount_, "Shockwave: Count", 0.0f, 12.0f, 1.0f);
+    registerFloat(registry, prefix + ".shockwaveAlpha", &paramShockwaveAlpha_, paramShockwaveAlpha_, "Shockwave: Alpha", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".shockwaveWidth", &paramShockwaveWidth_, paramShockwaveWidth_, "Shockwave: Width", 0.005f, 0.16f, 0.001f);
+    registerFloat(registry, prefix + ".shockwaveSpeed", &paramShockwaveSpeed_, paramShockwaveSpeed_, "Shockwave: Speed", 0.05f, 3.0f, 0.01f);
+    registerFloat(registry, prefix + ".pressureAmount", &paramPressureAmount_, paramPressureAmount_, "Shockwave: Force", 0.0f, 1.5f, 0.01f);
+    registerFloat(registry, prefix + ".audioAmount", &paramAudioAmount_, paramAudioAmount_, "Signal: Amount", 0.0f, 2.0f, 0.01f);
+    registerFloat(registry, prefix + ".audioAccretion", &paramAudioAccretion_, paramAudioAccretion_, "Formation: Accretion", 0.0f, 2.0f, 0.01f,
+                  "How much signal modulation contributes to long-term web-node and filament formation.");
+    registerFloat(registry, prefix + ".audioGlow", &paramAudioGlow_, paramAudioGlow_, "Field: Glow Lift", 0.0f, 3.0f, 0.01f,
+                  "How much signal modulation boosts field, node, and matter glow.");
+    registerFloat(registry, prefix + ".audioTwinkle", &paramAudioTwinkle_, paramAudioTwinkle_, "Stars: Twinkle", 0.0f, 3.0f, 0.01f,
+                  "How much signal modulation affects star twinkle.");
+    registerFloat(registry, prefix + ".bassExpansion", &paramBassExpansion_, paramBassExpansion_, "Expansion: Signal Amount", -1.0f, 1.5f, 0.01f);
+    registerFloat(registry, prefix + ".midsTurbulence", &paramMidsTurbulence_, paramMidsTurbulence_, "Stars: Turbulence Lift", 0.0f, 2.0f, 0.01f);
+    registerFloat(registry, prefix + ".highsSparkle", &paramHighsSparkle_, paramHighsSparkle_, "Stars: Sparkle", 0.0f, 4.0f, 0.01f);
+    registerFloat(registry, prefix + ".waveformWarp", &paramWaveformWarp_, paramWaveformWarp_, "Field: Warp", 0.0f, 0.3f, 0.001f);
+    registerFloat(registry, prefix + ".peakBangThreshold", &paramPeakBangThreshold_, paramPeakBangThreshold_, "Shockwave: Peak Threshold", 0.01f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".peakImpulse", &paramPeakImpulse_, paramPeakImpulse_, "Shockwave: Peak Impulse", 0.0f, 2.0f, 0.01f);
+    registerFloat(registry, prefix + ".beatImpulse", &paramBeatImpulse_, paramBeatImpulse_, "Shockwave: Beat Impulse", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".audioSmoothing", &paramAudioSmoothing_, paramAudioSmoothing_, "Signal: Smoothing", 0.0f, 0.98f, 0.01f);
 
     meta = {};
     meta.group = "Cosmos Formation";
@@ -284,26 +293,26 @@ void CosmosFormationLayer::setup(ParameterRegistry& registry) {
     meta.description = "Respawn matter and clusters using the current seed.";
     registry.addBool(prefix + ".reseed", &paramReseedRequested_, paramReseedRequested_, meta);
 
-    registerFloat(registry, prefix + ".seed", &paramSeed_, paramSeed_, "Seed: Cosmos", 0.0f, 99999.0f, 1.0f);
-    registerFloat(registry, prefix + ".bgAlpha", &paramBgAlpha_, paramBgAlpha_, "Alpha: Background", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".bgR", &paramBgR_, paramBgR_, "Color: Background R", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".bgG", &paramBgG_, paramBgG_, "Color: Background G", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".bgB", &paramBgB_, paramBgB_, "Color: Background B", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".hotR", &paramHotR_, paramHotR_, "Color: Hot Matter R", 0.0f, 1.5f, 0.01f);
-    registerFloat(registry, prefix + ".hotG", &paramHotG_, paramHotG_, "Color: Hot Matter G", 0.0f, 1.5f, 0.01f);
-    registerFloat(registry, prefix + ".hotB", &paramHotB_, paramHotB_, "Color: Hot Matter B", 0.0f, 1.5f, 0.01f);
-    registerFloat(registry, prefix + ".matterR", &paramMatterR_, paramMatterR_, "Color: Matter R", 0.0f, 1.5f, 0.01f);
-    registerFloat(registry, prefix + ".matterG", &paramMatterG_, paramMatterG_, "Color: Matter G", 0.0f, 1.5f, 0.01f);
-    registerFloat(registry, prefix + ".matterB", &paramMatterB_, paramMatterB_, "Color: Matter B", 0.0f, 1.5f, 0.01f);
-    registerFloat(registry, prefix + ".coolR", &paramCoolR_, paramCoolR_, "Color: Cool Matter R", 0.0f, 1.5f, 0.01f);
-    registerFloat(registry, prefix + ".coolG", &paramCoolG_, paramCoolG_, "Color: Cool Matter G", 0.0f, 1.5f, 0.01f);
-    registerFloat(registry, prefix + ".coolB", &paramCoolB_, paramCoolB_, "Color: Cool Matter B", 0.0f, 1.5f, 0.01f);
-    registerFloat(registry, prefix + ".clusterR", &paramClusterR_, paramClusterR_, "Color: Cluster R", 0.0f, 1.5f, 0.01f);
-    registerFloat(registry, prefix + ".clusterG", &paramClusterG_, paramClusterG_, "Color: Cluster G", 0.0f, 1.5f, 0.01f);
-    registerFloat(registry, prefix + ".clusterB", &paramClusterB_, paramClusterB_, "Color: Cluster B", 0.0f, 1.5f, 0.01f);
-    registerFloat(registry, prefix + ".waveR", &paramWaveR_, paramWaveR_, "Color: Wave R", 0.0f, 1.5f, 0.01f);
-    registerFloat(registry, prefix + ".waveG", &paramWaveG_, paramWaveG_, "Color: Wave G", 0.0f, 1.5f, 0.01f);
-    registerFloat(registry, prefix + ".waveB", &paramWaveB_, paramWaveB_, "Color: Wave B", 0.0f, 1.5f, 0.01f);
+    registerFloat(registry, prefix + ".seed", &paramSeed_, paramSeed_, "Cosmos: Seed", 0.0f, 99999.0f, 1.0f);
+    registerFloat(registry, prefix + ".bgAlpha", &paramBgAlpha_, paramBgAlpha_, "Background: Alpha", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".bgR", &paramBgR_, paramBgR_, "Background: Color R", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".bgG", &paramBgG_, paramBgG_, "Background: Color G", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".bgB", &paramBgB_, paramBgB_, "Background: Color B", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".hotR", &paramHotR_, paramHotR_, "Stars: Hot Color R", 0.0f, 1.5f, 0.01f);
+    registerFloat(registry, prefix + ".hotG", &paramHotG_, paramHotG_, "Stars: Hot Color G", 0.0f, 1.5f, 0.01f);
+    registerFloat(registry, prefix + ".hotB", &paramHotB_, paramHotB_, "Stars: Hot Color B", 0.0f, 1.5f, 0.01f);
+    registerFloat(registry, prefix + ".matterR", &paramMatterR_, paramMatterR_, "Stars: Color R", 0.0f, 1.5f, 0.01f);
+    registerFloat(registry, prefix + ".matterG", &paramMatterG_, paramMatterG_, "Stars: Color G", 0.0f, 1.5f, 0.01f);
+    registerFloat(registry, prefix + ".matterB", &paramMatterB_, paramMatterB_, "Stars: Color B", 0.0f, 1.5f, 0.01f);
+    registerFloat(registry, prefix + ".coolR", &paramCoolR_, paramCoolR_, "Stars: Cool Color R", 0.0f, 1.5f, 0.01f);
+    registerFloat(registry, prefix + ".coolG", &paramCoolG_, paramCoolG_, "Stars: Cool Color G", 0.0f, 1.5f, 0.01f);
+    registerFloat(registry, prefix + ".coolB", &paramCoolB_, paramCoolB_, "Stars: Cool Color B", 0.0f, 1.5f, 0.01f);
+    registerFloat(registry, prefix + ".clusterR", &paramClusterR_, paramClusterR_, "Nodes: Color R", 0.0f, 1.5f, 0.01f);
+    registerFloat(registry, prefix + ".clusterG", &paramClusterG_, paramClusterG_, "Nodes: Color G", 0.0f, 1.5f, 0.01f);
+    registerFloat(registry, prefix + ".clusterB", &paramClusterB_, paramClusterB_, "Nodes: Color B", 0.0f, 1.5f, 0.01f);
+    registerFloat(registry, prefix + ".waveR", &paramWaveR_, paramWaveR_, "Shockwave: Color R", 0.0f, 1.5f, 0.01f);
+    registerFloat(registry, prefix + ".waveG", &paramWaveG_, paramWaveG_, "Shockwave: Color G", 0.0f, 1.5f, 0.01f);
+    registerFloat(registry, prefix + ".waveB", &paramWaveB_, paramWaveB_, "Shockwave: Color B", 0.0f, 1.5f, 0.01f);
 
     resetMatter();
 }
@@ -448,6 +457,9 @@ void CosmosFormationLayer::clampParams() {
     paramClusterSpread_ = ofClamp(paramClusterSpread_, 0.1f, 1.2f);
     paramClusterDrift_ = ofClamp(paramClusterDrift_, 0.0f, 1.0f);
     paramClusterSoftness_ = ofClamp(paramClusterSoftness_, 0.15f, 2.0f);
+    paramSubstructureAmount_ = ofClamp(paramSubstructureAmount_, 0.0f, 1.5f);
+    paramSubstructureScale_ = ofClamp(paramSubstructureScale_, 0.05f, 1.0f);
+    paramSubstructureGlow_ = ofClamp(paramSubstructureGlow_, 0.0f, 2.5f);
     paramShear_ = ofClamp(paramShear_, -2.0f, 2.0f);
     paramVoidPressure_ = ofClamp(paramVoidPressure_, 0.0f, 1.0f);
     paramTurbulence_ = ofClamp(paramTurbulence_, 0.0f, 2.0f);
@@ -849,7 +861,7 @@ void CosmosFormationLayer::seedWebNodesFromClusters() {
     std::uniform_real_distribution<float> unit(0.0f, 1.0f);
     std::uniform_real_distribution<float> centered(-1.0f, 1.0f);
 
-    const std::size_t satelliteCount = std::max<std::size_t>(16, clusters_.size() * 5 / 4);
+    const std::size_t satelliteCount = std::max<std::size_t>(12, clusters_.size() / 2);
     webNodes_.reserve(clusters_.size() + satelliteCount);
     const float initialActivation = ofClamp(0.055f + smoothStep(0.0f, 1.0f, paramFormationAge_) * 0.18f, 0.0f, 0.32f);
     for (const auto& cluster : clusters_) {
@@ -901,6 +913,8 @@ void CosmosFormationLayer::buildFilamentEdges() {
     const std::vector<FilamentEdge> previousEdges = filamentEdges_;
     filamentEdges_.clear();
     if (webNodes_.size() < 2) {
+        detailNodes_.clear();
+        detailEdges_.clear();
         return;
     }
 
@@ -937,7 +951,8 @@ void CosmosFormationLayer::buildFilamentEdges() {
             return lhs.first < rhs.first;
         });
 
-        const int connectCount = std::min(3, static_cast<int>(nearest.size()));
+        const int targetConnections = webNodes_.size() > 112 ? 2 : 3;
+        const int connectCount = std::min(targetConnections, static_cast<int>(nearest.size()));
         for (int n = 0; n < connectCount; ++n) {
             const int a = static_cast<int>(i);
             const int b = nearest[static_cast<std::size_t>(n)].second;
@@ -971,6 +986,179 @@ void CosmosFormationLayer::buildFilamentEdges() {
                 edge.conductivity = edge.activation;
             }
             filamentEdges_.push_back(edge);
+        }
+    }
+
+    for (auto& edge : filamentEdges_) {
+        updateFilamentGeometry(edge);
+    }
+    buildClusterSubstructure();
+}
+
+void CosmosFormationLayer::updateFilamentGeometry(FilamentEdge& edge) const {
+    edge.geometryReady = false;
+    if (edge.a < 0 || edge.b < 0 ||
+        edge.a >= static_cast<int>(webNodes_.size()) ||
+        edge.b >= static_cast<int>(webNodes_.size())) {
+        return;
+    }
+
+    const glm::vec2 a = webNodes_[static_cast<std::size_t>(edge.a)].pos;
+    const glm::vec2 b = webNodes_[static_cast<std::size_t>(edge.b)].pos;
+    for (std::size_t i = 0; i < edge.curvePoints.size(); ++i) {
+        const float t = static_cast<float>(i) / static_cast<float>(edge.curvePoints.size() - 1);
+        const glm::vec2 point = organicFilamentPoint(a, b, edge.bend, t, edge.a, edge.b, seedState_);
+        edge.curvePoints[i] = point;
+        if (i == 0) {
+            edge.boundsMin = point;
+            edge.boundsMax = point;
+        } else {
+            edge.boundsMin.x = std::min(edge.boundsMin.x, point.x);
+            edge.boundsMin.y = std::min(edge.boundsMin.y, point.y);
+            edge.boundsMax.x = std::max(edge.boundsMax.x, point.x);
+            edge.boundsMax.y = std::max(edge.boundsMax.y, point.y);
+        }
+    }
+    edge.geometryReady = true;
+}
+
+void CosmosFormationLayer::buildClusterSubstructure() {
+    detailNodes_.clear();
+    detailEdges_.clear();
+    if (webNodes_.empty()) {
+        return;
+    }
+
+    std::mt19937 rng(seedState_ ^ 0x6d2b79f5u);
+    std::uniform_real_distribution<float> unit(0.0f, 1.0f);
+    std::uniform_real_distribution<float> centered(-1.0f, 1.0f);
+
+    detailNodes_.reserve(webNodes_.size() * 6);
+    for (std::size_t parentIndex = 0; parentIndex < webNodes_.size(); ++parentIndex) {
+        const WebNode& parent = webNodes_[parentIndex];
+        const float parentSeed = static_cast<float>(parent.id) * 131.17f + static_cast<float>(seedState_) * 0.013f;
+        const int childCount = 3 + static_cast<int>(std::round(ofClamp(parent.mass, 0.0f, 1.2f) * 1.6f + unit(rng) * 1.2f));
+        const std::size_t groupStart = detailNodes_.size();
+
+        DetailNode core;
+        core.parent = static_cast<int>(parentIndex);
+        core.offset = glm::vec2(0.0f, 0.0f);
+        core.mass = ofLerp(0.34f, 0.70f, unit(rng));
+        core.radius = parent.radius * ofLerp(0.16f, 0.28f, unit(rng));
+        core.heat = parent.heat;
+        core.seed = parentSeed + unit(rng) * 1000.0f;
+        core.activationBias = ofLerp(0.20f, 0.46f, unit(rng));
+        detailNodes_.push_back(core);
+
+        for (int child = 1; child < childCount; ++child) {
+            const float t = (static_cast<float>(child) + unit(rng) * 0.35f) / static_cast<float>(childCount);
+            const float angle = t * TWO_PI * 2.3999632f + parentSeed * 0.0017f + centered(rng) * 0.28f;
+            const float radius = parent.radius * ofLerp(0.34f, 1.45f, std::pow(unit(rng), 0.72f));
+            glm::vec2 offset(std::cos(angle) * radius, std::sin(angle) * radius * ofLerp(0.55f, 0.92f, unit(rng)));
+            offset = rotateVec(offset, centered(rng) * 0.55f + parentSeed * 0.0003f);
+            offset = domainWarp(offset, seedState_ + static_cast<std::uint32_t>(parent.id * 97 + child * 17), radius * 0.18f);
+
+            DetailNode node;
+            node.parent = static_cast<int>(parentIndex);
+            node.offset = offset;
+            node.mass = ofLerp(0.16f, 0.52f, std::pow(unit(rng), 0.55f));
+            node.radius = parent.radius * ofLerp(0.10f, 0.24f, unit(rng));
+            node.heat = ofClamp(parent.heat + centered(rng) * 0.12f, 0.04f, 0.80f);
+            node.seed = parentSeed + static_cast<float>(child) * 73.0f + unit(rng) * 1000.0f;
+            node.activationBias = ofLerp(0.08f, 0.36f, unit(rng));
+            detailNodes_.push_back(node);
+        }
+
+        const std::size_t groupEnd = detailNodes_.size();
+        auto detailEdgeExists = [&](int a, int b) {
+            const int lo = std::min(a, b);
+            const int hi = std::max(a, b);
+            return std::any_of(detailEdges_.begin(), detailEdges_.end(), [&](const DetailEdge& edge) {
+                return edge.a == lo && edge.b == hi;
+            });
+        };
+
+        for (std::size_t i = groupStart + 1; i < groupEnd; ++i) {
+            std::vector<std::pair<float, int>> nearest;
+            nearest.reserve(groupEnd - groupStart - 1);
+            const glm::vec2 pi = detailNodes_[i].offset;
+            for (std::size_t j = groupStart; j < groupEnd; ++j) {
+                if (i == j) {
+                    continue;
+                }
+                const glm::vec2 delta = pi - detailNodes_[j].offset;
+                nearest.push_back({ glm::dot(delta, delta), static_cast<int>(j) });
+            }
+            std::sort(nearest.begin(), nearest.end(), [](const auto& lhs, const auto& rhs) {
+                return lhs.first < rhs.first;
+            });
+
+            const int connectCount = std::min(1 + (detailNodes_[i].mass > 0.34f ? 1 : 0), static_cast<int>(nearest.size()));
+            for (int n = 0; n < connectCount; ++n) {
+                const int a = static_cast<int>(i);
+                const int b = nearest[static_cast<std::size_t>(n)].second;
+                const int lo = std::min(a, b);
+                const int hi = std::max(a, b);
+                if (detailEdgeExists(lo, hi)) {
+                    continue;
+                }
+                const float dist = std::sqrt(std::max(0.0001f, nearest[static_cast<std::size_t>(n)].first));
+                DetailEdge edge;
+                edge.a = lo;
+                edge.b = hi;
+                edge.strength = ofClamp(0.075f / dist, 0.18f, 1.0f);
+                edge.seed = parentSeed + static_cast<float>(lo * 31 + hi * 53);
+                const glm::vec2 delta = detailNodes_[static_cast<std::size_t>(hi)].offset - detailNodes_[static_cast<std::size_t>(lo)].offset;
+                const glm::vec2 normal = safeNormalize(glm::vec2(-delta.y, delta.x), glm::vec2(0.0f, 1.0f));
+                edge.bend = normal * dist * ofLerp(-0.30f, 0.30f, unit(rng));
+                detailEdges_.push_back(edge);
+            }
+        }
+    }
+
+    for (auto& edge : detailEdges_) {
+        updateDetailGeometry(edge);
+    }
+}
+
+glm::vec2 CosmosFormationLayer::detailNodePosition(const DetailNode& node) const {
+    if (node.parent < 0 || node.parent >= static_cast<int>(webNodes_.size())) {
+        return node.offset * paramSubstructureScale_;
+    }
+    const WebNode& parent = webNodes_[static_cast<std::size_t>(node.parent)];
+    const float parentSeed = static_cast<float>(parent.id) * 131.17f + static_cast<float>(seedState_) * 0.013f;
+    const float slowTurn = parentSeed * 0.0009f + parent.age * 0.006f * parent.heat;
+    return parent.pos + rotateVec(node.offset * paramSubstructureScale_, slowTurn);
+}
+
+void CosmosFormationLayer::updateDetailGeometry(DetailEdge& edge) const {
+    if (edge.a < 0 || edge.b < 0 ||
+        edge.a >= static_cast<int>(detailNodes_.size()) ||
+        edge.b >= static_cast<int>(detailNodes_.size())) {
+        return;
+    }
+
+    const glm::vec2 a = detailNodePosition(detailNodes_[static_cast<std::size_t>(edge.a)]);
+    const glm::vec2 b = detailNodePosition(detailNodes_[static_cast<std::size_t>(edge.b)]);
+    const glm::vec2 scaledBend = edge.bend * paramSubstructureScale_;
+    for (std::size_t i = 0; i < edge.curvePoints.size(); ++i) {
+        const float t = static_cast<float>(i) / static_cast<float>(edge.curvePoints.size() - 1);
+        const glm::vec2 point = organicFilamentPoint(a,
+                                                     b,
+                                                     scaledBend,
+                                                     t,
+                                                     edge.a,
+                                                     edge.b,
+                                                     seedState_ + static_cast<std::uint32_t>(edge.seed));
+        edge.curvePoints[i] = point;
+        if (i == 0) {
+            edge.boundsMin = point;
+            edge.boundsMax = point;
+        } else {
+            edge.boundsMin.x = std::min(edge.boundsMin.x, point.x);
+            edge.boundsMin.y = std::min(edge.boundsMin.y, point.y);
+            edge.boundsMax.x = std::max(edge.boundsMax.x, point.x);
+            edge.boundsMax.y = std::max(edge.boundsMax.y, point.y);
         }
     }
 }
@@ -1053,6 +1241,14 @@ void CosmosFormationLayer::updateCosmicWeb(float dt, float timeSeconds) {
         edge.conductivity = ofClamp(edge.strength * (0.20f + edge.activation * 0.72f + edge.audioCharge * 0.22f),
                                     0.0f, 1.25f);
     }
+
+    for (auto& edge : filamentEdges_) {
+        updateFilamentGeometry(edge);
+    }
+    for (auto& edge : detailEdges_) {
+        updateDetailGeometry(edge);
+    }
+
     webRebuildAccumulator_ += dt;
     if (webRebuildAccumulator_ > 4.0f || filamentEdges_.empty()) {
         buildFilamentEdges();
@@ -1087,6 +1283,9 @@ void CosmosFormationLayer::paintCosmicWebIntoField(float dt, float timeSeconds) 
             edge.b >= static_cast<int>(webNodes_.size())) {
             continue;
         }
+        if (!edge.geometryReady) {
+            continue;
+        }
 
         const glm::vec2 a = webNodes_[static_cast<std::size_t>(edge.a)].pos;
         const glm::vec2 b = webNodes_[static_cast<std::size_t>(edge.b)].pos;
@@ -1096,12 +1295,11 @@ void CosmosFormationLayer::paintCosmicWebIntoField(float dt, float timeSeconds) 
                             (1.0f + beatPulse_ * 0.10f + mids_ * audioDrive * 0.08f +
                              edge.audioCharge * 0.16f + level_ * audioDrive * paramAudioGlow_ * 0.08f);
         const float influenceMargin = 0.24f;
-        const glm::vec2 roughControl = (a + b) * 0.5f + edge.bend;
-        const auto [minX, maxX] = gridBounds(std::min(std::min(a.x, b.x), roughControl.x) - influenceMargin,
-                                             std::max(std::max(a.x, b.x), roughControl.x) + influenceMargin,
+        const auto [minX, maxX] = gridBounds(edge.boundsMin.x - influenceMargin,
+                                             edge.boundsMax.x + influenceMargin,
                                              kGrowthCols);
-        const auto [minY, maxY] = gridBounds(std::min(std::min(a.y, b.y), roughControl.y) - influenceMargin,
-                                             std::max(std::max(a.y, b.y), roughControl.y) + influenceMargin,
+        const auto [minY, maxY] = gridBounds(edge.boundsMin.y - influenceMargin,
+                                             edge.boundsMax.y + influenceMargin,
                                              kGrowthRows);
 
         for (int y = minY; y <= maxY; ++y) {
@@ -1111,19 +1309,16 @@ void CosmosFormationLayer::paintCosmicWebIntoField(float dt, float timeSeconds) 
                 float bestD = 100.0f;
                 float bestT = 0.0f;
                 glm::vec2 bestDir = safeNormalize(b - a);
-                glm::vec2 previous = organicFilamentPoint(a, b, edge.bend, 0.0f, edge.a, edge.b, seedState_);
-                constexpr int kCurveSegments = 8;
-                for (int segment = 1; segment <= kCurveSegments; ++segment) {
-                    const float segmentT = static_cast<float>(segment) / static_cast<float>(kCurveSegments);
-                    const glm::vec2 current = organicFilamentPoint(a, b, edge.bend, segmentT, edge.a, edge.b, seedState_);
+                for (std::size_t segment = 1; segment < edge.curvePoints.size(); ++segment) {
+                    const glm::vec2& previous = edge.curvePoints[segment - 1];
+                    const glm::vec2& current = edge.curvePoints[segment];
                     float localT = 0.0f;
                     const float d = distanceToSegment(p, previous, current, localT);
                     if (d < bestD) {
                         bestD = d;
-                        bestT = (static_cast<float>(segment - 1) + localT) / static_cast<float>(kCurveSegments);
+                        bestT = (static_cast<float>(segment - 1) + localT) / static_cast<float>(edge.curvePoints.size() - 1);
                         bestDir = safeNormalize(current - previous, bestDir);
                     }
-                    previous = current;
                 }
 
                 const float d = bestD;
@@ -1153,6 +1348,14 @@ void CosmosFormationLayer::paintCosmicWebIntoField(float dt, float timeSeconds) 
     }
 
     if (webNodes_.size() >= 2) {
+        std::vector<glm::vec2> warpedSites;
+        warpedSites.reserve(webNodes_.size());
+        for (const auto& node : webNodes_) {
+            warpedSites.push_back(domainWarp(node.pos,
+                                             seedState_ + static_cast<std::uint32_t>(node.id * 11),
+                                             0.028f));
+        }
+
         for (int y = 0; y < kGrowthRows; ++y) {
             for (int x = 0; x < kGrowthCols; ++x) {
                 GrowthCell& cell = growthField_[static_cast<std::size_t>(y * kGrowthCols + x)];
@@ -1163,10 +1366,7 @@ void CosmosFormationLayer::paintCosmicWebIntoField(float dt, float timeSeconds) 
                 int nearestIndex = -1;
                 int secondIndex = -1;
                 for (std::size_t i = 0; i < webNodes_.size(); ++i) {
-                    const glm::vec2 site = domainWarp(webNodes_[i].pos,
-                                                      seedState_ + static_cast<std::uint32_t>(webNodes_[i].id * 11),
-                                                      0.028f);
-                    const glm::vec2 delta = warped - site;
+                    const glm::vec2 delta = warped - warpedSites[i];
                     const float d2 = glm::dot(delta, delta);
                     if (d2 < nearestD2) {
                         secondD2 = nearestD2;
@@ -1249,6 +1449,122 @@ void CosmosFormationLayer::paintCosmicWebIntoField(float dt, float timeSeconds) 
                                                                     node.audioCharge * 0.18f +
                                                                     level_ * audioDrive * paramAudioGlow_ * 0.060f),
                                                    0.0f, 1.0f));
+            }
+        }
+    }
+
+    if (paramSubstructureAmount_ > 0.001f && !detailNodes_.empty()) {
+        auto parentActivationFor = [&](const DetailNode& node) {
+            if (node.parent < 0 || node.parent >= static_cast<int>(webNodes_.size())) {
+                return 0.0f;
+            }
+            const WebNode& parent = webNodes_[static_cast<std::size_t>(node.parent)];
+            return ofClamp(parent.activation + parent.audioCharge * 0.24f + node.activationBias, 0.0f, 1.0f);
+        };
+
+        for (const auto& edge : detailEdges_) {
+            if (edge.a < 0 || edge.b < 0 ||
+                edge.a >= static_cast<int>(detailNodes_.size()) ||
+                edge.b >= static_cast<int>(detailNodes_.size())) {
+                continue;
+            }
+
+            const DetailNode& detailA = detailNodes_[static_cast<std::size_t>(edge.a)];
+            const DetailNode& detailB = detailNodes_[static_cast<std::size_t>(edge.b)];
+            const float active = smoothStep(0.08f, 0.88f, (parentActivationFor(detailA) + parentActivationFor(detailB)) * 0.5f);
+            if (active <= 0.010f) {
+                continue;
+            }
+
+            const float influenceMargin = 0.070f * paramSubstructureScale_;
+            const auto [minX, maxX] = gridBounds(edge.boundsMin.x - influenceMargin,
+                                                 edge.boundsMax.x + influenceMargin,
+                                                 kGrowthCols);
+            const auto [minY, maxY] = gridBounds(edge.boundsMin.y - influenceMargin,
+                                                 edge.boundsMax.y + influenceMargin,
+                                                 kGrowthRows);
+
+            for (int y = minY; y <= maxY; ++y) {
+                for (int x = minX; x <= maxX; ++x) {
+                    GrowthCell& cell = growthField_[static_cast<std::size_t>(y * kGrowthCols + x)];
+                    const glm::vec2 p = growthFieldPoint(x, y);
+                    float bestD = 100.0f;
+                    float bestT = 0.0f;
+                    glm::vec2 bestDir = safeNormalize(edge.curvePoints.back() - edge.curvePoints.front());
+                    for (std::size_t segment = 1; segment < edge.curvePoints.size(); ++segment) {
+                        const glm::vec2& previous = edge.curvePoints[segment - 1];
+                        const glm::vec2& current = edge.curvePoints[segment];
+                        float localT = 0.0f;
+                        const float d = distanceToSegment(p, previous, current, localT);
+                        if (d < bestD) {
+                            bestD = d;
+                            bestT = (static_cast<float>(segment - 1) + localT) / static_cast<float>(edge.curvePoints.size() - 1);
+                            bestDir = safeNormalize(current - previous, bestDir);
+                        }
+                    }
+
+                    const float alongFade = smoothStep(0.0f, 0.10f, bestT) * (1.0f - smoothStep(0.90f, 1.0f, bestT));
+                    const float core = std::exp(-(bestD * bestD) / 0.00055f);
+                    const float skirt = std::exp(-(bestD * bestD) / 0.0065f) * 0.26f;
+                    const float flicker = 0.76f + ofNoise(p.x * 19.0f + edge.seed * 0.01f,
+                                                          p.y * 19.0f - seedState_ * 0.003f,
+                                                          timeSeconds * 0.040f) * 0.34f;
+                    const float filament = ofClamp((core + skirt) * alongFade * edge.strength *
+                                                   active * paramSubstructureAmount_ * flicker,
+                                                   0.0f,
+                                                   1.0f);
+                    if (filament <= 0.0004f) {
+                        continue;
+                    }
+
+                    cell.ridge = std::max(cell.ridge, filament * 0.72f);
+                    cell.darkDensity = ofClamp(cell.darkDensity + filament * 0.024f, 0.0f, 1.5f);
+                    cell.gasDensity = ofClamp(cell.gasDensity + filament * 0.016f, 0.0f, 1.5f);
+                    cell.stellarDensity = ofClamp(cell.stellarDensity + filament * 0.006f * active, 0.0f, 1.0f);
+                    cell.audioEnergy = std::max(cell.audioEnergy, filament * active * level_ * audioDrive * 0.040f);
+                    cell.luminosity = std::max(cell.luminosity,
+                                               ofClamp(filament * paramSubstructureGlow_ *
+                                                       (0.050f + active * 0.10f + cell.audioEnergy * 0.12f),
+                                                       0.0f,
+                                                       1.0f));
+                    cell.filamentDir = safeNormalize(cell.filamentDir + bestDir * filament, bestDir);
+                }
+            }
+        }
+
+        for (const auto& detail : detailNodes_) {
+            const float active = smoothStep(0.08f, 0.92f, parentActivationFor(detail));
+            if (active <= 0.010f) {
+                continue;
+            }
+
+            const glm::vec2 pos = detailNodePosition(detail);
+            const float radius = std::max(0.010f, detail.radius * paramSubstructureScale_);
+            const float influenceMargin = std::max(0.035f, radius * 3.6f);
+            const auto [minX, maxX] = gridBounds(pos.x - influenceMargin, pos.x + influenceMargin, kGrowthCols);
+            const auto [minY, maxY] = gridBounds(pos.y - influenceMargin, pos.y + influenceMargin, kGrowthRows);
+
+            for (int y = minY; y <= maxY; ++y) {
+                for (int x = minX; x <= maxX; ++x) {
+                    GrowthCell& cell = growthField_[static_cast<std::size_t>(y * kGrowthCols + x)];
+                    const glm::vec2 p = growthFieldPoint(x, y);
+                    const float distance = glm::length(p - pos);
+                    const float influence = std::exp(-(distance * distance) / std::max(0.00025f, radius * radius * 1.8f)) *
+                                            detail.mass * active * paramSubstructureAmount_;
+                    if (influence <= 0.0005f) {
+                        continue;
+                    }
+
+                    cell.node = std::max(cell.node, influence * 0.62f);
+                    cell.stellarDensity = ofClamp(cell.stellarDensity + influence * 0.020f, 0.0f, 1.0f);
+                    cell.compression = std::max(cell.compression, influence * 0.30f);
+                    cell.temperature = std::max(cell.temperature, ofClamp(detail.heat * influence, 0.0f, 1.0f));
+                    cell.luminosity = std::max(cell.luminosity,
+                                               ofClamp(influence * paramSubstructureGlow_ *
+                                                       (0.12f + active * 0.18f + level_ * audioDrive * 0.055f),
+                                                       0.0f,
+                                                       1.0f));
+                }
             }
         }
     }
@@ -1537,11 +1853,10 @@ void CosmosFormationLayer::drawGrowthField(float width, float height, float minD
     for (const auto& edge : filamentEdges_) {
         if (edge.a < 0 || edge.b < 0 ||
             edge.a >= static_cast<int>(webNodes_.size()) ||
-            edge.b >= static_cast<int>(webNodes_.size())) {
+            edge.b >= static_cast<int>(webNodes_.size()) ||
+            !edge.geometryReady) {
             continue;
         }
-        const glm::vec2 aField = webNodes_[static_cast<std::size_t>(edge.a)].pos;
-        const glm::vec2 bField = webNodes_[static_cast<std::size_t>(edge.b)].pos;
         const float edgeActive = smoothStep(0.015f, 0.86f, edge.activation);
         const float edgeVisible = ofClamp(edge.conductivity * 0.72f + edge.massFlow * 0.22f + edge.audioCharge * 0.18f, 0.0f, 1.0f);
         if (edgeVisible <= 0.010f) {
@@ -1551,11 +1866,9 @@ void CosmosFormationLayer::drawGrowthField(float width, float height, float minD
         glow.a = ofClamp(alpha * paramHaloAlpha_ * edgeVisible * (0.020f + edgeActive * 0.040f + level_ * audioDrive * 0.018f), 0.0f, 0.22f);
         setColor(glow);
         ofSetLineWidth(std::max(0.55f, minDim * (0.0008f + edgeVisible * 0.0024f)));
-        glm::vec2 previous = screenPoint(organicFilamentPoint(aField, bField, edge.bend, 0.0f, edge.a, edge.b, seedState_), width, height);
-        constexpr int kDrawSegments = 12;
-        for (int segment = 1; segment <= kDrawSegments; ++segment) {
-            const float t = static_cast<float>(segment) / static_cast<float>(kDrawSegments);
-            const glm::vec2 current = screenPoint(organicFilamentPoint(aField, bField, edge.bend, t, edge.a, edge.b, seedState_), width, height);
+        glm::vec2 previous = screenPoint(edge.curvePoints.front(), width, height);
+        for (std::size_t segment = 1; segment < edge.curvePoints.size(); ++segment) {
+            const glm::vec2 current = screenPoint(edge.curvePoints[segment], width, height);
             ofDrawLine(previous.x, previous.y, current.x, current.y);
             previous = current;
         }
@@ -1564,12 +1877,97 @@ void CosmosFormationLayer::drawGrowthField(float width, float height, float minD
         glow.a = ofClamp(alpha * paramHaloAlpha_ * edgeVisible * 0.026f, 0.0f, 0.13f);
         setColor(glow);
         ofSetLineWidth(std::max(0.45f, minDim * 0.0009f));
-        previous = screenPoint(organicFilamentPoint(aField, bField, edge.bend, 0.0f, edge.a, edge.b, seedState_), width, height);
-        for (int segment = 1; segment <= kDrawSegments; ++segment) {
-            const float t = static_cast<float>(segment) / static_cast<float>(kDrawSegments);
-            const glm::vec2 current = screenPoint(organicFilamentPoint(aField, bField, edge.bend, t, edge.a, edge.b, seedState_), width, height);
+        previous = screenPoint(edge.curvePoints.front(), width, height);
+        for (std::size_t segment = 1; segment < edge.curvePoints.size(); ++segment) {
+            const glm::vec2 current = screenPoint(edge.curvePoints[segment], width, height);
             ofDrawLine(previous.x, previous.y, current.x, current.y);
             previous = current;
+        }
+    }
+
+    if (paramSubstructureAmount_ > 0.001f && paramSubstructureGlow_ > 0.001f && !detailNodes_.empty()) {
+        auto detailActivation = [&](const DetailNode& node) {
+            if (node.parent < 0 || node.parent >= static_cast<int>(webNodes_.size())) {
+                return 0.0f;
+            }
+            const WebNode& parent = webNodes_[static_cast<std::size_t>(node.parent)];
+            return smoothStep(0.05f, 0.92f, ofClamp(parent.activation + parent.audioCharge * 0.26f + node.activationBias, 0.0f, 1.0f));
+        };
+
+        for (const auto& edge : detailEdges_) {
+            if (edge.a < 0 || edge.b < 0 ||
+                edge.a >= static_cast<int>(detailNodes_.size()) ||
+                edge.b >= static_cast<int>(detailNodes_.size())) {
+                continue;
+            }
+
+            const DetailNode& a = detailNodes_[static_cast<std::size_t>(edge.a)];
+            const DetailNode& b = detailNodes_[static_cast<std::size_t>(edge.b)];
+            const float active = (detailActivation(a) + detailActivation(b)) * 0.5f;
+            const float visible = ofClamp(active * edge.strength * paramSubstructureAmount_ *
+                                          (0.70f + paramSubstructureGlow_ * 0.45f + audioGlow * 0.16f + audioTwinkle * 0.06f),
+                                          0.0f,
+                                          1.0f);
+            if (visible <= 0.012f) {
+                continue;
+            }
+
+            ofFloatColor edgeColor = coolColor.getLerped(matterColor, ofClamp(visible * 0.44f, 0.0f, 1.0f));
+            edgeColor = edgeColor.getLerped(waveColor, ofClamp(audioTwinkle * 0.08f + active * 0.10f, 0.0f, 1.0f));
+            edgeColor.a = ofClamp(fieldAlpha * paramHaloAlpha_ * visible * 0.072f, 0.0f, 0.24f);
+            setColor(edgeColor);
+            ofSetLineWidth(std::max(0.45f, minDim * (0.00045f + visible * 0.00135f)));
+            glm::vec2 previous = screenPoint(edge.curvePoints.front(), width, height);
+            for (std::size_t segment = 1; segment < edge.curvePoints.size(); ++segment) {
+                const glm::vec2 current = screenPoint(edge.curvePoints[segment], width, height);
+                ofDrawLine(previous.x, previous.y, current.x, current.y);
+                previous = current;
+            }
+
+            edgeColor = matterColor.getLerped(clusterColor, 0.38f);
+            edgeColor.a = ofClamp(fieldAlpha * paramHaloAlpha_ * visible * 0.036f, 0.0f, 0.16f);
+            setColor(edgeColor);
+            ofSetLineWidth(std::max(0.35f, minDim * 0.00055f));
+            previous = screenPoint(edge.curvePoints.front(), width, height);
+            for (std::size_t segment = 1; segment < edge.curvePoints.size(); ++segment) {
+                const glm::vec2 current = screenPoint(edge.curvePoints[segment], width, height);
+                ofDrawLine(previous.x, previous.y, current.x, current.y);
+                previous = current;
+            }
+        }
+
+        for (const auto& detail : detailNodes_) {
+            const float active = detailActivation(detail);
+            const float visible = ofClamp(active * detail.mass * paramSubstructureAmount_ *
+                                          (0.80f + paramSubstructureGlow_ * 0.42f + audioGlow * 0.18f),
+                                          0.0f,
+                                          1.0f);
+            if (visible <= 0.014f) {
+                continue;
+            }
+
+            const glm::vec2 fieldPos = detailNodePosition(detail);
+            const glm::vec2 pos = screenPoint(fieldPos, width, height);
+            if (pos.x < -80.0f || pos.x > width + 80.0f || pos.y < -80.0f || pos.y > height + 80.0f) {
+                continue;
+            }
+
+            const float twinkle = 0.76f + ofNoise(fieldPos.x * 27.0f + detail.seed * 0.007f,
+                                                  fieldPos.y * 27.0f - seedState_ * 0.002f,
+                                                  timeSeconds * 0.10f) * 0.34f +
+                                  audioTwinkle * 0.08f;
+            const float glowRadius = minDim * detail.radius * paramSubstructureScale_ *
+                                     (0.72f + visible * 1.85f + audioGlow * 0.20f);
+            const float coreRadius = std::max(0.95f, minDim * (0.0008f + detail.mass * 0.0015f + audioTwinkle * 0.00022f));
+            ofFloatColor glow = clusterColor.getLerped(hotColor, ofClamp(detail.heat * 0.45f + visible * 0.18f, 0.0f, 1.0f));
+            glow = glow.getLerped(waveColor, ofClamp(audioTwinkle * 0.10f + active * 0.05f, 0.0f, 1.0f));
+            glow.a = ofClamp(fieldAlpha * paramHaloAlpha_ * visible * twinkle * 0.12f, 0.0f, 0.34f);
+            setColor(glow);
+            ofDrawCircle(pos.x, pos.y, glowRadius);
+
+            glow.a = ofClamp(fieldAlpha * paramHaloAlpha_ * visible * twinkle * 0.34f, 0.0f, 0.72f);
+            setColor(glow);
+            ofDrawCircle(pos.x, pos.y, coreRadius);
         }
     }
 

@@ -317,6 +317,16 @@ void ArcticAuroraSceneLayer::configure(const ofJson& config) {
     paramWaterHighlight_ = def.value("waterHighlight", paramWaterHighlight_);
     paramWaterReflection_ = def.value("waterReflection", paramWaterReflection_);
     paramWaterHorizonFog_ = def.value("waterHorizonFog", paramWaterHorizonFog_);
+    paramWaterAlpha_ = def.value("waterAlpha", paramWaterAlpha_);
+    paramWaterBrightness_ = def.value("waterBrightness", paramWaterBrightness_);
+    paramWaterTranslucency_ = def.value("waterTranslucency", paramWaterTranslucency_);
+    paramWaterCurvature_ = def.value("waterCurvature", paramWaterCurvature_);
+    paramWaterHemisphereDepth_ = def.value("waterHemisphereDepth", paramWaterHemisphereDepth_);
+    paramWaterNoiseAmount_ = def.value("waterNoiseAmount", paramWaterNoiseAmount_);
+    paramWaterNoiseScale_ = def.value("waterNoiseScale", paramWaterNoiseScale_);
+    paramWaterRippleAmount_ = def.value("waterRippleAmount", paramWaterRippleAmount_);
+    paramWaterRippleRadius_ = def.value("waterRippleRadius", paramWaterRippleRadius_);
+    paramWaterAuroraLight_ = def.value("waterAuroraLight", paramWaterAuroraLight_);
     paramIcebergCount_ = def.value("icebergCount", paramIcebergCount_);
     paramIcebergScale_ = def.value("icebergScale", paramIcebergScale_);
     paramIcebergSpread_ = def.value("icebergSpread", paramIcebergSpread_);
@@ -373,68 +383,78 @@ void ArcticAuroraSceneLayer::setup(ParameterRegistry& registry) {
 
     ParameterRegistry::Descriptor meta;
     meta.group = "3D Arctic Aurora";
-    meta.label = "Action: Visible";
+    meta.label = "Layer: Visible";
     registry.addBool(prefix + ".visible", &paramEnabled_, paramEnabled_, meta);
 
-    registerFloat(registry, prefix + ".alpha", &paramAlpha_, paramAlpha_, "Alpha: Scene", 0.0f, 1.0f, 0.01f, "normalized");
-    registerFloat(registry, prefix + ".sceneScale", &paramSceneScale_, paramSceneScale_, "Scale: Scene", 0.25f, 2.0f, 0.01f);
-    registerFloat(registry, prefix + ".sceneOffsetY", &paramSceneOffsetY_, paramSceneOffsetY_, "Scale: Scene Offset Y", -500.0f, 500.0f, 1.0f);
-    registerFloat(registry, prefix + ".sceneOffsetZ", &paramSceneOffsetZ_, paramSceneOffsetZ_, "Scale: Scene Offset Z", -1000.0f, 1000.0f, 1.0f);
+    registerFloat(registry, prefix + ".alpha", &paramAlpha_, paramAlpha_, "Layer: Opacity", 0.0f, 1.0f, 0.01f, "normalized");
+    registerFloat(registry, prefix + ".sceneScale", &paramSceneScale_, paramSceneScale_, "Scene: Scale", 0.25f, 2.0f, 0.01f);
+    registerFloat(registry, prefix + ".sceneOffsetY", &paramSceneOffsetY_, paramSceneOffsetY_, "Scene: Offset Y", -500.0f, 500.0f, 1.0f);
+    registerFloat(registry, prefix + ".sceneOffsetZ", &paramSceneOffsetZ_, paramSceneOffsetZ_, "Scene: Offset Z", -1000.0f, 1000.0f, 1.0f);
 
-    registerFloat(registry, prefix + ".waterWidth", &paramWaterWidth_, paramWaterWidth_, "Scale: Water Disk Diameter", 300.0f, 6000.0f, 10.0f);
-    registerFloat(registry, prefix + ".waterNearZ", &paramWaterNearZ_, paramWaterNearZ_, "Scale: Water Near Z", -300.0f, 700.0f, 10.0f);
-    registerFloat(registry, prefix + ".waterFarZ", &paramWaterFarZ_, paramWaterFarZ_, "Scale: Water Far Z", -2600.0f, -300.0f, 10.0f);
-    registerFloat(registry, prefix + ".waterLevel", &paramWaterLevel_, paramWaterLevel_, "Scale: Water Level", -400.0f, 100.0f, 1.0f);
-    registerFloat(registry, prefix + ".waterWaveIdle", &paramWaterWaveIdle_, paramWaterWaveIdle_, "Motion: Idle Water Wave", 0.0f, 28.0f, 0.5f);
-    registerFloat(registry, prefix + ".waterHighlight", &paramWaterHighlight_, paramWaterHighlight_, "Glow: Water Highlight", 0.0f, 1.5f, 0.01f);
-    registerFloat(registry, prefix + ".waterReflection", &paramWaterReflection_, paramWaterReflection_, "Glow: Water Reflection", 0.0f, 1.8f, 0.01f);
-    registerFloat(registry, prefix + ".waterHorizonFog", &paramWaterHorizonFog_, paramWaterHorizonFog_, "Alpha: Water Horizon Fog", 0.0f, 1.5f, 0.01f);
+    registerFloat(registry, prefix + ".waterWidth", &paramWaterWidth_, paramWaterWidth_, "Water: Diameter", 300.0f, 6000.0f, 10.0f);
+    registerFloat(registry, prefix + ".waterNearZ", &paramWaterNearZ_, paramWaterNearZ_, "Water: Near Z", -300.0f, 700.0f, 10.0f);
+    registerFloat(registry, prefix + ".waterFarZ", &paramWaterFarZ_, paramWaterFarZ_, "Water: Far Z", -2600.0f, -300.0f, 10.0f);
+    registerFloat(registry, prefix + ".waterLevel", &paramWaterLevel_, paramWaterLevel_, "Water: Level", -400.0f, 100.0f, 1.0f);
+    registerFloat(registry, prefix + ".waterWaveIdle", &paramWaterWaveIdle_, paramWaterWaveIdle_, "Water: Idle Wave", 0.0f, 28.0f, 0.5f);
+    registerFloat(registry, prefix + ".waterHighlight", &paramWaterHighlight_, paramWaterHighlight_, "Water: Highlight", 0.0f, 1.5f, 0.01f);
+    registerFloat(registry, prefix + ".waterReflection", &paramWaterReflection_, paramWaterReflection_, "Water: Reflection", 0.0f, 1.8f, 0.01f);
+    registerFloat(registry, prefix + ".waterHorizonFog", &paramWaterHorizonFog_, paramWaterHorizonFog_, "Water: Horizon Fog", 0.0f, 1.5f, 0.01f);
+    registerFloat(registry, prefix + ".waterAlpha", &paramWaterAlpha_, paramWaterAlpha_, "Water: Alpha", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".waterBrightness", &paramWaterBrightness_, paramWaterBrightness_, "Water: Brightness", 0.2f, 2.5f, 0.01f);
+    registerFloat(registry, prefix + ".waterTranslucency", &paramWaterTranslucency_, paramWaterTranslucency_, "Water: Translucency", 0.0f, 1.5f, 0.01f);
+    registerFloat(registry, prefix + ".waterCurvature", &paramWaterCurvature_, paramWaterCurvature_, "Water: Curvature", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".waterHemisphereDepth", &paramWaterHemisphereDepth_, paramWaterHemisphereDepth_, "Water: Hemisphere Depth", 0.0f, 6000.0f, 10.0f);
+    registerFloat(registry, prefix + ".waterNoiseAmount", &paramWaterNoiseAmount_, paramWaterNoiseAmount_, "Water: Noise Amount", 0.0f, 18.0f, 0.1f);
+    registerFloat(registry, prefix + ".waterNoiseScale", &paramWaterNoiseScale_, paramWaterNoiseScale_, "Water: Noise Scale", 0.0005f, 0.012f, 0.0001f);
+    registerFloat(registry, prefix + ".waterRippleAmount", &paramWaterRippleAmount_, paramWaterRippleAmount_, "Water: Ripple Amount", 0.0f, 18.0f, 0.1f);
+    registerFloat(registry, prefix + ".waterRippleRadius", &paramWaterRippleRadius_, paramWaterRippleRadius_, "Water: Ripple Radius", 80.0f, 1000.0f, 5.0f);
+    registerFloat(registry, prefix + ".waterAuroraLight", &paramWaterAuroraLight_, paramWaterAuroraLight_, "Water: Aurora Light", 0.0f, 2.5f, 0.01f);
 
-    registerFloat(registry, prefix + ".icebergCount", &paramIcebergCount_, paramIcebergCount_, "Count: Icebergs", 0.0f, 14.0f, 1.0f);
-    registerFloat(registry, prefix + ".icebergScale", &paramIcebergScale_, paramIcebergScale_, "Scale: Icebergs", 0.2f, 2.0f, 0.01f);
-    registerFloat(registry, prefix + ".icebergSpread", &paramIcebergSpread_, paramIcebergSpread_, "Scale: Iceberg Spread", 100.0f, 5000.0f, 10.0f);
-    registerFloat(registry, prefix + ".icebergRimLight", &paramIcebergRimLight_, paramIcebergRimLight_, "Glow: Iceberg Edge Lines", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".icebergCount", &paramIcebergCount_, paramIcebergCount_, "Icebergs: Count", 0.0f, 14.0f, 1.0f);
+    registerFloat(registry, prefix + ".icebergScale", &paramIcebergScale_, paramIcebergScale_, "Icebergs: Scale", 0.2f, 2.0f, 0.01f);
+    registerFloat(registry, prefix + ".icebergSpread", &paramIcebergSpread_, paramIcebergSpread_, "Icebergs: Spread", 100.0f, 5000.0f, 10.0f);
+    registerFloat(registry, prefix + ".icebergRimLight", &paramIcebergRimLight_, paramIcebergRimLight_, "Icebergs: Edge Lines", 0.0f, 1.0f, 0.01f);
 
-    registerFloat(registry, prefix + ".auroraWidth", &paramAuroraWidth_, paramAuroraWidth_, "Scale: Aurora Arc Length", 300.0f, 8000.0f, 10.0f);
-    registerFloat(registry, prefix + ".auroraBaseY", &paramAuroraBaseY_, paramAuroraBaseY_, "Scale: Aurora Base Y", -100.0f, 400.0f, 1.0f);
-    registerFloat(registry, prefix + ".auroraHeight", &paramAuroraHeight_, paramAuroraHeight_, "Scale: Aurora Height", 100.0f, 900.0f, 5.0f);
-    registerFloat(registry, prefix + ".auroraDepthNear", &paramAuroraDepthNear_, paramAuroraDepthNear_, "Scale: Aurora Inner Radius", -1800.0f, 100.0f, 10.0f);
-    registerFloat(registry, prefix + ".auroraDepthFar", &paramAuroraDepthFar_, paramAuroraDepthFar_, "Scale: Aurora Outer Radius", -2600.0f, -300.0f, 10.0f);
-    registerFloat(registry, prefix + ".auroraGlow", &paramAuroraGlow_, paramAuroraGlow_, "Glow: Aurora Glow", 0.0f, 3.5f, 0.01f);
-    registerFloat(registry, prefix + ".auroraBloom", &paramAuroraBloom_, paramAuroraBloom_, "Glow: Aurora Bloom", 0.0f, 4.0f, 0.01f);
-    registerFloat(registry, prefix + ".auroraFoldStrength", &paramAuroraFoldStrength_, paramAuroraFoldStrength_, "Force: Aurora Fold Strength", 0.0f, 2.5f, 0.01f);
-    registerFloat(registry, prefix + ".auroraRayDensity", &paramAuroraRayDensity_, paramAuroraRayDensity_, "Count: Aurora Ray Density", 0.0f, 1.8f, 0.01f);
-    registerFloat(registry, prefix + ".auroraCurtainCount", &paramAuroraCurtainCount_, paramAuroraCurtainCount_, "Count: Aurora Curtains", 1.0f, 6.0f, 1.0f);
-    registerFloat(registry, prefix + ".audioAmount", &paramAudioAmount_, paramAudioAmount_, "Audio: Aurora Amount", 0.0f, 3.0f, 0.01f);
-    registerFloat(registry, prefix + ".audioSmoothing", &paramAudioSmoothing_, paramAudioSmoothing_, "Audio: Aurora Smoothing", 0.0f, 0.98f, 0.01f);
+    registerFloat(registry, prefix + ".auroraWidth", &paramAuroraWidth_, paramAuroraWidth_, "Aurora: Arc Length", 300.0f, 8000.0f, 10.0f);
+    registerFloat(registry, prefix + ".auroraBaseY", &paramAuroraBaseY_, paramAuroraBaseY_, "Aurora: Base Y", -100.0f, 700.0f, 1.0f);
+    registerFloat(registry, prefix + ".auroraHeight", &paramAuroraHeight_, paramAuroraHeight_, "Aurora: Height", 100.0f, 900.0f, 5.0f);
+    registerFloat(registry, prefix + ".auroraDepthNear", &paramAuroraDepthNear_, paramAuroraDepthNear_, "Aurora: Inner Radius", -1800.0f, 100.0f, 10.0f);
+    registerFloat(registry, prefix + ".auroraDepthFar", &paramAuroraDepthFar_, paramAuroraDepthFar_, "Aurora: Outer Radius", -2600.0f, -300.0f, 10.0f);
+    registerFloat(registry, prefix + ".auroraGlow", &paramAuroraGlow_, paramAuroraGlow_, "Aurora: Glow", 0.0f, 3.5f, 0.01f);
+    registerFloat(registry, prefix + ".auroraBloom", &paramAuroraBloom_, paramAuroraBloom_, "Aurora: Bloom", 0.0f, 4.0f, 0.01f);
+    registerFloat(registry, prefix + ".auroraFoldStrength", &paramAuroraFoldStrength_, paramAuroraFoldStrength_, "Aurora: Fold Strength", 0.0f, 2.5f, 0.01f);
+    registerFloat(registry, prefix + ".auroraRayDensity", &paramAuroraRayDensity_, paramAuroraRayDensity_, "Aurora: Ray Density", 0.0f, 1.8f, 0.01f);
+    registerFloat(registry, prefix + ".auroraCurtainCount", &paramAuroraCurtainCount_, paramAuroraCurtainCount_, "Aurora: Curtain Count", 1.0f, 6.0f, 1.0f);
+    registerFloat(registry, prefix + ".audioAmount", &paramAudioAmount_, paramAudioAmount_, "Signal: Amount", 0.0f, 3.0f, 0.01f);
+    registerFloat(registry, prefix + ".audioSmoothing", &paramAudioSmoothing_, paramAudioSmoothing_, "Signal: Smoothing", 0.0f, 0.98f, 0.01f);
 
     meta = {};
     meta.group = "3D Arctic Aurora";
     meta.label = "Action: Reseed";
     registry.addBool(prefix + ".reseed", &paramReseedRequested_, paramReseedRequested_, meta);
-    registerFloat(registry, prefix + ".seed", &paramSeed_, paramSeed_, "Seed: Scene", 0.0f, 99999999.0f, 1.0f);
+    registerFloat(registry, prefix + ".seed", &paramSeed_, paramSeed_, "Scene: Seed", 0.0f, 99999999.0f, 1.0f);
 
-    registerFloat(registry, prefix + ".skyTopR", &paramSkyTopR_, paramSkyTopR_, "Color: Sky Top R", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".skyTopG", &paramSkyTopG_, paramSkyTopG_, "Color: Sky Top G", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".skyTopB", &paramSkyTopB_, paramSkyTopB_, "Color: Sky Top B", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".skyHorizonR", &paramSkyHorizonR_, paramSkyHorizonR_, "Color: Sky Horizon R", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".skyHorizonG", &paramSkyHorizonG_, paramSkyHorizonG_, "Color: Sky Horizon G", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".skyHorizonB", &paramSkyHorizonB_, paramSkyHorizonB_, "Color: Sky Horizon B", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".waterR", &paramWaterR_, paramWaterR_, "Color: Water R", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".waterG", &paramWaterG_, paramWaterG_, "Color: Water G", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".waterB", &paramWaterB_, paramWaterB_, "Color: Water B", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".auroraR", &paramAuroraR_, paramAuroraR_, "Color: Aurora R", 0.0f, 1.5f, 0.01f);
-    registerFloat(registry, prefix + ".auroraG", &paramAuroraG_, paramAuroraG_, "Color: Aurora G", 0.0f, 1.5f, 0.01f);
-    registerFloat(registry, prefix + ".auroraB", &paramAuroraB_, paramAuroraB_, "Color: Aurora B", 0.0f, 1.5f, 0.01f);
-    registerFloat(registry, prefix + ".aurora2R", &paramAurora2R_, paramAurora2R_, "Color: Aurora 2 R", 0.0f, 1.5f, 0.01f);
-    registerFloat(registry, prefix + ".aurora2G", &paramAurora2G_, paramAurora2G_, "Color: Aurora 2 G", 0.0f, 1.5f, 0.01f);
-    registerFloat(registry, prefix + ".aurora2B", &paramAurora2B_, paramAurora2B_, "Color: Aurora 2 B", 0.0f, 1.5f, 0.01f);
-    registerFloat(registry, prefix + ".iceRimR", &paramIceRimR_, paramIceRimR_, "Color: Ice Rim R", 0.0f, 1.5f, 0.01f);
-    registerFloat(registry, prefix + ".iceRimG", &paramIceRimG_, paramIceRimG_, "Color: Ice Rim G", 0.0f, 1.5f, 0.01f);
-    registerFloat(registry, prefix + ".iceRimB", &paramIceRimB_, paramIceRimB_, "Color: Ice Rim B", 0.0f, 1.5f, 0.01f);
-    registerFloat(registry, prefix + ".iceAccentR", &paramIceAccentR_, paramIceAccentR_, "Color: Ice Accent R", 0.0f, 1.5f, 0.01f);
-    registerFloat(registry, prefix + ".iceAccentG", &paramIceAccentG_, paramIceAccentG_, "Color: Ice Accent G", 0.0f, 1.5f, 0.01f);
-    registerFloat(registry, prefix + ".iceAccentB", &paramIceAccentB_, paramIceAccentB_, "Color: Ice Accent B", 0.0f, 1.5f, 0.01f);
+    registerFloat(registry, prefix + ".skyTopR", &paramSkyTopR_, paramSkyTopR_, "Sky: Top Color R", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".skyTopG", &paramSkyTopG_, paramSkyTopG_, "Sky: Top Color G", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".skyTopB", &paramSkyTopB_, paramSkyTopB_, "Sky: Top Color B", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".skyHorizonR", &paramSkyHorizonR_, paramSkyHorizonR_, "Sky: Horizon Color R", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".skyHorizonG", &paramSkyHorizonG_, paramSkyHorizonG_, "Sky: Horizon Color G", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".skyHorizonB", &paramSkyHorizonB_, paramSkyHorizonB_, "Sky: Horizon Color B", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".waterR", &paramWaterR_, paramWaterR_, "Water: Color R", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".waterG", &paramWaterG_, paramWaterG_, "Water: Color G", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".waterB", &paramWaterB_, paramWaterB_, "Water: Color B", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".auroraR", &paramAuroraR_, paramAuroraR_, "Aurora: Color R", 0.0f, 1.5f, 0.01f);
+    registerFloat(registry, prefix + ".auroraG", &paramAuroraG_, paramAuroraG_, "Aurora: Color G", 0.0f, 1.5f, 0.01f);
+    registerFloat(registry, prefix + ".auroraB", &paramAuroraB_, paramAuroraB_, "Aurora: Color B", 0.0f, 1.5f, 0.01f);
+    registerFloat(registry, prefix + ".aurora2R", &paramAurora2R_, paramAurora2R_, "Aurora: Secondary Color R", 0.0f, 1.5f, 0.01f);
+    registerFloat(registry, prefix + ".aurora2G", &paramAurora2G_, paramAurora2G_, "Aurora: Secondary Color G", 0.0f, 1.5f, 0.01f);
+    registerFloat(registry, prefix + ".aurora2B", &paramAurora2B_, paramAurora2B_, "Aurora: Secondary Color B", 0.0f, 1.5f, 0.01f);
+    registerFloat(registry, prefix + ".iceRimR", &paramIceRimR_, paramIceRimR_, "Ice: Rim Color R", 0.0f, 1.5f, 0.01f);
+    registerFloat(registry, prefix + ".iceRimG", &paramIceRimG_, paramIceRimG_, "Ice: Rim Color G", 0.0f, 1.5f, 0.01f);
+    registerFloat(registry, prefix + ".iceRimB", &paramIceRimB_, paramIceRimB_, "Ice: Rim Color B", 0.0f, 1.5f, 0.01f);
+    registerFloat(registry, prefix + ".iceAccentR", &paramIceAccentR_, paramIceAccentR_, "Ice: Accent Color R", 0.0f, 1.5f, 0.01f);
+    registerFloat(registry, prefix + ".iceAccentG", &paramIceAccentG_, paramIceAccentG_, "Ice: Accent Color G", 0.0f, 1.5f, 0.01f);
+    registerFloat(registry, prefix + ".iceAccentB", &paramIceAccentB_, paramIceAccentB_, "Ice: Accent Color B", 0.0f, 1.5f, 0.01f);
 
     resetLayout();
 }
@@ -557,12 +577,22 @@ void ArcticAuroraSceneLayer::clampParams() {
     paramWaterHighlight_ = ofClamp(paramWaterHighlight_, 0.0f, 1.5f);
     paramWaterReflection_ = ofClamp(paramWaterReflection_, 0.0f, 1.8f);
     paramWaterHorizonFog_ = ofClamp(paramWaterHorizonFog_, 0.0f, 1.5f);
+    paramWaterAlpha_ = ofClamp(paramWaterAlpha_, 0.0f, 1.0f);
+    paramWaterBrightness_ = ofClamp(paramWaterBrightness_, 0.2f, 2.5f);
+    paramWaterTranslucency_ = ofClamp(paramWaterTranslucency_, 0.0f, 1.5f);
+    paramWaterCurvature_ = ofClamp(paramWaterCurvature_, 0.0f, 1.0f);
+    paramWaterHemisphereDepth_ = ofClamp(paramWaterHemisphereDepth_, 0.0f, 6000.0f);
+    paramWaterNoiseAmount_ = ofClamp(paramWaterNoiseAmount_, 0.0f, 18.0f);
+    paramWaterNoiseScale_ = ofClamp(paramWaterNoiseScale_, 0.0005f, 0.012f);
+    paramWaterRippleAmount_ = ofClamp(paramWaterRippleAmount_, 0.0f, 18.0f);
+    paramWaterRippleRadius_ = ofClamp(paramWaterRippleRadius_, 80.0f, 1000.0f);
+    paramWaterAuroraLight_ = ofClamp(paramWaterAuroraLight_, 0.0f, 2.5f);
     paramIcebergCount_ = std::round(ofClamp(paramIcebergCount_, 0.0f, 14.0f));
     paramIcebergScale_ = ofClamp(paramIcebergScale_, 0.2f, 2.0f);
     paramIcebergSpread_ = ofClamp(paramIcebergSpread_, 100.0f, 5000.0f);
     paramIcebergRimLight_ = ofClamp(paramIcebergRimLight_, 0.0f, 1.0f);
     paramAuroraWidth_ = ofClamp(paramAuroraWidth_, 300.0f, 8000.0f);
-    paramAuroraBaseY_ = ofClamp(paramAuroraBaseY_, -100.0f, 400.0f);
+    paramAuroraBaseY_ = ofClamp(paramAuroraBaseY_, -100.0f, 700.0f);
     paramAuroraHeight_ = ofClamp(paramAuroraHeight_, 100.0f, 900.0f);
     paramAuroraDepthNear_ = ofClamp(paramAuroraDepthNear_, -1800.0f, 100.0f);
     paramAuroraDepthFar_ = ofClamp(paramAuroraDepthFar_, -2600.0f, -300.0f);
@@ -757,11 +787,11 @@ void ArcticAuroraSceneLayer::drawAuroraVolume(const LayerDrawParams& params, flo
     const float spinDrive = hasAudio_
         ? ofClamp(paramAudioAmount_ * (level_ * 0.030f + mids_ * 0.020f + highs_ * 0.018f + peak_ * 0.034f),
                   0.0f,
-                  0.22f)
+                  0.075f)
         : 0.0f;
     const float baseArc = ofClamp(requestedArc * (1.0f + widthDrive * 0.34f + pulseDrive * 0.08f),
-                                  PI * 0.32f,
-                                  TWO_PI * 0.43f);
+                                  PI * 0.38f,
+                                  TWO_PI * 0.36f);
 
     const ofFloatColor primary = colorFrom(paramAuroraR_, paramAuroraG_, paramAuroraB_, 1.0f);
     const ofFloatColor secondary = colorFrom(paramAurora2R_, paramAurora2G_, paramAurora2B_, 1.0f);
@@ -795,32 +825,36 @@ void ArcticAuroraSceneLayer::drawAuroraVolume(const LayerDrawParams& params, flo
     };
 
     auto sharedPolarFlowAt = [&](float theta, float radiusT, float verticalT) {
-        const float c = std::cos(theta);
-        const float s = std::sin(theta);
-        const float flowTime = time * (0.16f + audioDrive * 0.018f) + pulseDrive * 0.040f;
+        const float flowTime = time * (0.13f + audioDrive * 0.010f) + pulseDrive * 0.018f;
         const float polarEnergy = polarEnergyAt(theta);
-        const float lobe2 = std::sin(theta * 2.0f + flowTime * 1.45f);
-        const float lobe3 = std::sin(theta * 3.0f - flowTime * 1.06f + 1.15f);
-        const float lobe5 = std::cos(theta * 5.0f + flowTime * 0.72f - 0.60f);
-        const float broadNoise = signedNoise(c * 1.25f + 0.35f, s * 1.25f - 0.55f, flowTime * 0.85f);
-        const float crossNoise = signedNoise(c * 2.10f - 1.10f, s * 2.10f + 0.80f, flowTime * 0.56f + 17.0f);
-        const float sharedField = lobe2 * 0.46f + lobe3 * 0.30f + broadNoise * 0.18f + lobe5 * 0.06f;
-        const float shearField = lobe3 * 0.45f - lobe2 * 0.24f + crossNoise * 0.31f;
-        const float radiusWeight = ofLerp(0.88f, 1.12f, smootherStep(radiusT));
-        const float verticalWeight = ofLerp(0.58f, 1.10f, smootherStep(verticalT));
+        const float path = theta * 0.46f + radiusT * 1.35f;
+        const float vertical = ofClamp(verticalT, 0.0f, 1.0f);
+        const float streamA = signedNoise(path * 0.78f + flowTime * 0.30f,
+                                          radiusT * 1.8f + vertical * 0.46f,
+                                          flowTime * 0.86f);
+        const float streamB = signedNoise(path * 1.64f - flowTime * 0.18f,
+                                          vertical * 1.55f + radiusT * 0.72f,
+                                          flowTime * 0.62f + 17.0f);
+        const float streamC = std::sin(path * 3.4f + vertical * 2.1f + flowTime * 1.18f);
+        const float sharedField = streamA * 0.52f + streamB * 0.22f + streamC * 0.26f;
+        const float shearField = streamB * 0.56f - streamA * 0.24f +
+            std::sin((path + vertical * 0.80f) * 4.6f - flowTime * 0.90f) * 0.20f;
+        const float radiusWeight = ofLerp(0.82f, 1.14f, smootherStep(radiusT));
+        const float verticalWeight = ofLerp(0.48f, 1.12f, smootherStep(vertical));
+        const float edgeWeight = std::pow(std::abs(vertical * 2.0f - 1.0f), 1.18f);
         const float flowGain = (1.0f + foldStrength * 0.36f) *
-            (1.0f + audioDrive * 0.15f + pulseDrive * 0.08f) *
+            (1.0f + audioDrive * 0.09f + pulseDrive * 0.06f) *
             (0.90f + polarEnergy * 0.18f);
 
         AuroraFlow flow;
-        flow.angularOffset = (sharedField * 0.030f + shearField * 0.014f) *
-            flowGain * radiusWeight * ofLerp(0.62f, 1.0f, verticalT);
-        flow.radialOffset = (sharedField * 54.0f + shearField * 22.0f) *
+        flow.angularOffset = (sharedField * 0.018f + shearField * 0.012f) *
+            flowGain * radiusWeight * ofLerp(0.58f, 1.0f, vertical);
+        flow.radialOffset = (sharedField * 70.0f + shearField * 28.0f) *
             flowGain * radiusWeight * verticalWeight;
-        flow.verticalOffset = (shearField * 38.0f + sharedField * 18.0f) *
-            flowGain * ofLerp(0.42f, 1.0f, verticalT);
+        flow.verticalOffset = (shearField * 30.0f + sharedField * 16.0f) *
+            flowGain * ofLerp(0.18f, 1.0f, edgeWeight);
         flow.energy = ofClamp(0.88f + std::abs(sharedField) * 0.24f + std::abs(shearField) * 0.11f +
-                                  polarEnergy * 0.10f + audioDrive * 0.055f + pulseDrive * 0.075f,
+                                  polarEnergy * 0.10f + audioDrive * 0.040f + pulseDrive * 0.060f,
                               0.72f,
                               1.55f);
         return flow;
@@ -840,7 +874,11 @@ void ArcticAuroraSceneLayer::drawAuroraVolume(const LayerDrawParams& params, flo
 
     for (int c = 0; c < curtains; ++c) {
         const float layerT = curtains > 1 ? static_cast<float>(c) / static_cast<float>(curtains - 1) : 0.0f;
-        const float baseRadius = ofLerp(innerRadius, outerRadius, layerT);
+        const float stackT = layerT - 0.5f;
+        const float depthSpan = std::max(80.0f, outerRadius - innerRadius);
+        const float baseRadius = ofClamp(midRadius + stackT * depthSpan * 0.62f,
+                                         innerRadius,
+                                         outerRadius);
         const float height = paramAuroraHeight_ * ofLerp(1.08f, 0.86f, layerT);
         const float phase = time * (0.18f + layerT * 0.055f) + layerT * 9.2f;
         const float layerStrength = ofLerp(1.18f, 0.72f, layerT);
@@ -850,10 +888,11 @@ void ArcticAuroraSceneLayer::drawAuroraVolume(const LayerDrawParams& params, flo
         const float arcBreath = 0.84f + 0.24f * ofNoise(layerT * 5.0f + 2.0f, time * 0.08f);
         const float layerArc = ofClamp(baseArc * arcBreath * (1.0f + widthDrive * 0.18f),
                                        PI * 0.28f,
-                                       TWO_PI * 0.46f);
-        const float layerCenter = -HALF_PI + layerT * TWO_PI +
-            sceneTime_ * (layerRate + direction * spinDrive) +
-            std::sin(time * (0.045f + layerT * 0.015f) + layerT * 6.0f) * 0.18f;
+                                       TWO_PI * 0.38f);
+        const float layerCenter = -HALF_PI +
+            stackT * baseArc * 0.34f +
+            sceneTime_ * (layerRate * 0.16f + direction * spinDrive * 0.35f) +
+            std::sin(time * (0.045f + layerT * 0.015f) + layerT * 6.0f) * 0.085f;
 
         auto subBandCenterAt = [&](float subBandT) {
             const float bandIndex = std::round(subBandT * 5.0f);
@@ -864,8 +903,11 @@ void ArcticAuroraSceneLayer::drawAuroraVolume(const LayerDrawParams& params, flo
             const float slowOrbit = std::sin(time * (0.055f + subBandT * 0.032f) +
                                              layerT * 5.3f +
                                              subBandT * 8.7f) *
-                (0.045f + subBandT * 0.095f);
-            return layerCenter + sceneTime_ * (subRate + audioSpin) + slowOrbit;
+                (0.035f + subBandT * 0.050f);
+            return layerCenter +
+                (subBandT - 0.50f) * 0.070f +
+                sceneTime_ * (subRate * 0.28f + audioSpin * 0.22f) +
+                slowOrbit;
         };
 
         auto subBandArcAt = [&](float subBandT) {
@@ -874,7 +916,7 @@ void ArcticAuroraSceneLayer::drawAuroraVolume(const LayerDrawParams& params, flo
                                                  23.0f);
             return ofClamp(layerArc * (1.0f + widthNoise * 0.075f + widthDrive * subBandT * 0.035f),
                            PI * 0.24f,
-                           TWO_PI * 0.48f);
+                           TWO_PI * 0.39f);
         };
 
         auto verticalShapeAt = [&](float theta, float subBandT, float v) {
@@ -883,6 +925,8 @@ void ArcticAuroraSceneLayer::drawAuroraVolume(const LayerDrawParams& params, flo
             const float topWeight = std::pow(ofClamp(v, 0.0f, 1.0f), 1.45f);
             const float midWeight = std::pow(std::max(0.0f, std::sin(v * PI)), 0.70f);
             const float lowerWeight = std::pow(ofClamp(1.0f - v, 0.0f, 1.0f), 1.55f);
+            const float tipWeight = std::pow(ofClamp(v, 0.0f, 1.0f), 2.35f);
+            const float polarEnergy = polarEnergyAt(theta);
             const float broad = signedNoise(cTheta * 1.15f + subBandT * 2.4f,
                                             sTheta * 1.15f - layerT * 1.7f,
                                             time * 0.18f + subBandT * 0.65f);
@@ -890,15 +934,25 @@ void ArcticAuroraSceneLayer::drawAuroraVolume(const LayerDrawParams& params, flo
             const float fineLift = signedNoise(cTheta * 2.2f - subBandT * 1.6f,
                                                sTheta * 2.2f + layerT * 2.1f,
                                                time * 0.32f + 31.0f);
+            const float audioColumn = hasAudio_
+                ? ofClamp(audioDrive * 0.36f + pulseDrive * 0.22f + polarEnergy * 0.30f, 0.0f, 1.55f)
+                : 0.54f;
+            const float audioNorm = smootherStep(ofClamp(audioColumn, 0.0f, 1.0f));
+            const float quietTipTaper = (audioNorm - 0.55f) * (0.16f + tipWeight * 0.72f);
+            const float columnLift = ofClamp(audioColumn - 0.45f, -0.45f, 0.92f) *
+                (midWeight * 0.10f + tipWeight * 0.30f);
             const float heightScale = ofClamp(1.0f +
                                                   (broad * 0.24f + crest * 0.13f) *
                                                       (0.72f + foldStrength * 0.26f) *
                                                       (0.72f + topWeight * 0.52f) +
-                                                  audioDrive * 0.025f * polarEnergyAt(theta),
-                                              0.62f,
-                                              1.48f);
+                                                  quietTipTaper +
+                                                  columnLift,
+                                              0.48f,
+                                              1.72f);
             const float yOffset = (broad * 86.0f + crest * 42.0f) * topWeight +
-                fineLift * 34.0f * midWeight -
+                fineLift * (34.0f + audioColumn * 24.0f) * midWeight +
+                fineLift * 42.0f * tipWeight -
+                (1.0f - audioNorm) * 68.0f * tipWeight -
                 std::abs(fineLift) * 24.0f * lowerWeight;
             return glm::vec2(heightScale, yOffset);
         };
@@ -987,11 +1041,26 @@ void ArcticAuroraSceneLayer::drawAuroraVolume(const LayerDrawParams& params, flo
                 fold * ofLerp(0.54f, 1.02f, layerT) +
                 std::sin((sampleU * 2.15f + layerT) * TWO_PI + phase) * (18.0f + expandRadius * 0.10f) +
                 signedNoise(sampleU * 1.8f, v * 2.6f + 11.0f, phase * 0.8f) * expandRadius * 0.12f * looseness;
-            const float y = paramAuroraBaseY_ - expandY * 0.22f +
-                bass_ * audio * 42.0f + pulseDrive * 30.0f +
-                flow.verticalOffset * ofLerp(0.48f, 0.86f, v) +
-                yShape.y * (0.56f + looseness * 0.18f) +
-                v * (height * yShape.x + expandY * 1.15f) + verticalDrift;
+            const float edgeWeight = std::pow(std::abs(v * 2.0f - 1.0f), 1.20f);
+            const float centeredV = v - 0.5f;
+            const float baseHeight = height * yShape.x + expandY * 1.15f;
+            const float edgeExpansion = (audioDrive * 54.0f + pulseDrive * 46.0f + localEnergy * 18.0f) *
+                edgeWeight *
+                (0.72f + foldStrength * 0.18f + looseness * 0.10f);
+            const float edgeFlutter = (slow * 24.0f + fine * 14.0f + hangingWave * 18.0f) *
+                edgeWeight *
+                (0.62f + foldStrength * 0.34f) *
+                (1.0f + audioDrive * 0.10f);
+            const float lowerFray = (slow * 28.0f + fine * 15.0f) *
+                std::pow(1.0f - v, 2.15f) *
+                (0.48f + looseness * 0.16f);
+            const float y = paramAuroraBaseY_ + baseHeight * 0.5f +
+                centeredV * (baseHeight + edgeExpansion) +
+                flow.verticalOffset * ofLerp(0.16f, 0.88f, edgeWeight) +
+                yShape.y * (0.28f + edgeWeight * (0.46f + looseness * 0.10f)) +
+                verticalDrift * (0.42f + edgeWeight * 0.36f) +
+                edgeFlutter +
+                lowerFray;
             return polarPoint(theta, std::max(10.0f, radius), y);
         };
 
@@ -1088,7 +1157,7 @@ void ArcticAuroraSceneLayer::drawAuroraVolume(const LayerDrawParams& params, flo
 
         ofMesh edgeGlow;
         edgeGlow.setMode(OF_PRIMITIVE_LINES);
-        const float edgeRows[] = { 0.06f, 0.24f, 0.46f, 0.68f };
+        const float edgeRows[] = { 0.06f, 0.24f, 0.46f, 0.68f, 0.90f };
         for (float v : edgeRows) {
             for (int x = 0; x < cols; ++x) {
                 const float u0 = static_cast<float>(x) / static_cast<float>(cols);
@@ -1164,26 +1233,76 @@ void ArcticAuroraSceneLayer::drawAuroraVolume(const LayerDrawParams& params, flo
     glDepthMask(GL_TRUE);
 }
 
+float ArcticAuroraSceneLayer::waterSurfaceYAt(float x, float z, float time, float waveScale) const {
+    const float diskRadius = std::max(180.0f, paramWaterWidth_ * 0.5f);
+    const float radius = glm::length(glm::vec2(x, z));
+    const float radial = ofClamp(radius / diskRadius, 0.0f, 1.0f);
+    const float radialCalm = ofLerp(0.38f, 1.0f, smootherStep(radial * radial));
+    const float wave = waterWaveAt(x, z, time, paramWaterWaveIdle_ * waveScale) * radialCalm;
+    const float noise = signedNoise(x * paramWaterNoiseScale_ + 21.0f,
+                                    z * paramWaterNoiseScale_ - 13.0f,
+                                    time * 0.090f) *
+        paramWaterNoiseAmount_ * waveScale * radialCalm;
+
+    float ripple = 0.0f;
+    if (paramWaterRippleAmount_ > 0.001f && !icebergs_.empty()) {
+        const float rippleRadius = std::max(1.0f, paramWaterRippleRadius_);
+        const glm::vec2 sample(x, z);
+        for (const auto& iceberg : icebergs_) {
+            glm::vec2 source(iceberg.position.x, iceberg.position.z);
+            if (iceberg.orbitRadius > 0.0f) {
+                const float angle = iceberg.orbitAngle + time * iceberg.driftSpeed;
+                const float radialDrift = std::sin(time * 0.085f + iceberg.seed * 2.1f) * 18.0f +
+                    signedNoise(iceberg.seed * 0.37f, time * 0.035f, 12.0f) * 9.0f;
+                const float sourceRadius = std::max(20.0f, iceberg.orbitRadius + radialDrift);
+                source = glm::vec2(std::cos(angle) * sourceRadius, std::sin(angle) * sourceRadius);
+            }
+
+            const float distance = glm::length(sample - source);
+            const float falloff = std::exp(-(distance * distance) / (2.0f * rippleRadius * rippleRadius));
+            const float phase = distance * 0.060f - time * (1.02f + iceberg.scale * 0.18f) + iceberg.seed * 0.73f;
+            const float wake = std::sin(phase) + std::sin(phase * 0.58f + 1.7f) * 0.28f;
+            ripple += wake * falloff * (0.55f + iceberg.scale * 0.45f);
+        }
+    }
+
+    return paramWaterLevel_ + wave + noise + ripple * paramWaterRippleAmount_ * waveScale * radialCalm;
+}
+
 void ArcticAuroraSceneLayer::drawWaterPlane(const LayerDrawParams& params, float alpha) const {
+    static_cast<void>(params);
     ofMesh surface;
     surface.setMode(OF_PRIMITIVE_TRIANGLES);
-    const float time = sceneTime_ + params.time * 0.035f;
-    const int radialSegments = 38;
+    const float time = sceneTime_;
+    const int radialSegments = 44;
     const int angularSegments = 112;
     const float diskRadius = std::max(180.0f, paramWaterWidth_ * 0.5f);
+    const float waterAlpha = alpha * paramWaterAlpha_;
+    const float translucencyFade = ofClamp(1.12f - paramWaterTranslucency_ * 0.46f, 0.26f, 1.16f);
+    const float colorGain = paramWaterBrightness_;
+    const float auroraInnerRadius = radiusFromDepthParam(paramAuroraDepthNear_);
+    const float auroraOuterRadius = std::max(auroraInnerRadius + 80.0f, radiusFromDepthParam(paramAuroraDepthFar_));
+    const float auroraMidRadius = (auroraInnerRadius + auroraOuterRadius) * 0.5f;
+    const float auroraLightSpan = std::max(180.0f, std::abs(auroraOuterRadius - auroraInnerRadius) * 0.70f + diskRadius * 0.08f);
+    const float auroraLightEnergy = ofClamp(auroraEnergy_, 0.0f, 2.4f);
+    const float auroraLightPulse = ofClamp(auroraPulse_, 0.0f, 2.6f);
 
     for (int row = 0; row <= radialSegments; ++row) {
         const float v = static_cast<float>(row) / static_cast<float>(radialSegments);
         const float radius = diskRadius * std::sqrt(v);
         const float edgeT = smootherStep(ofMap(v, 0.72f, 1.0f, 0.0f, 1.0f, true));
-        const float radialCalm = ofLerp(0.38f, 1.0f, smootherStep(v));
         for (int col = 0; col <= angularSegments; ++col) {
             const float u = static_cast<float>(col) / static_cast<float>(angularSegments);
             const float theta = u * TWO_PI;
             const float x = std::cos(theta) * radius;
             const float z = std::sin(theta) * radius;
-            const float wave = waterWaveAt(x, z, time, paramWaterWaveIdle_) * radialCalm;
-            const float y = paramWaterLevel_ + wave;
+            const float y = waterSurfaceYAt(x, z, time);
+            const float zDepthT = smootherStep(ofMap(z,
+                                                     paramWaterNearZ_,
+                                                     paramWaterFarZ_,
+                                                     0.0f,
+                                                     1.0f,
+                                                     true));
             const float edgeFade = 1.0f - edgeT * 0.78f;
             const float radialT = smootherStep(v);
             const float moonColumn = std::pow(ofClamp(1.0f - std::abs(std::sin(theta + 0.25f)) * 0.72f, 0.0f, 1.0f), 2.4f);
@@ -1195,13 +1314,19 @@ void ArcticAuroraSceneLayer::drawWaterPlane(const LayerDrawParams& params, float
                                             (0.55f + v * 0.45f),
                                         0.0f,
                                         0.14f);
-            const ofFloatColor nearColor = colorFrom(paramWaterR_ * (1.36f + glint),
-                                                     paramWaterG_ * (1.44f + glint * 1.5f),
-                                                     paramWaterB_ * (1.62f + glint * 1.8f),
-                                                     alpha * ofLerp(0.52f, 0.38f, v) * edgeFade);
-            const ofFloatColor moonColor = colorFrom(0.48f + moonlight * 0.24f,
-                                                     0.72f + moonlight * 0.20f,
-                                                     1.00f + moonlight * 0.18f,
+            const float depthShade = ofLerp(1.10f, 0.72f, zDepthT);
+            const float surfaceOpacity = ofLerp(0.62f, 0.34f, v) *
+                ofLerp(1.06f, 0.74f, zDepthT) *
+                translucencyFade;
+            const ofFloatColor nearColor = colorFrom(paramWaterR_ * colorGain * (1.36f + glint) * depthShade,
+                                                     paramWaterG_ * colorGain * (1.44f + glint * 1.5f) * depthShade,
+                                                     paramWaterB_ * colorGain * (1.62f + glint * 1.8f) * depthShade,
+                                                     waterAlpha * surfaceOpacity * edgeFade);
+            const float brightnessT = ofMap(colorGain, 0.2f, 2.5f, 0.0f, 1.0f, true);
+            const float moonGain = ofLerp(0.82f, 1.18f, brightnessT);
+            const ofFloatColor moonColor = colorFrom((0.48f + moonlight * 0.24f) * moonGain,
+                                                     (0.72f + moonlight * 0.20f) * ofLerp(0.82f, 1.14f, brightnessT),
+                                                     (1.00f + moonlight * 0.18f) * ofLerp(0.82f, 1.10f, brightnessT),
                                                      nearColor.a);
             const ofFloatColor edgeColor = colorFrom(paramSkyHorizonR_ * 1.05f,
                                                      paramSkyHorizonG_ * 1.05f,
@@ -1209,9 +1334,26 @@ void ArcticAuroraSceneLayer::drawWaterPlane(const LayerDrawParams& params, float
                                                      nearColor.a * 0.58f);
             const ofFloatColor color = nearColor
                 .getLerped(moonColor, ofClamp(moonlight, 0.0f, 0.68f))
-                .getLerped(edgeColor, edgeT * 0.34f);
+                .getLerped(edgeColor, ofClamp(edgeT * 0.26f + zDepthT * 0.20f, 0.0f, 0.48f));
+            const float auroraRing = std::pow(ofClamp(1.0f - std::abs(radius - auroraMidRadius) / auroraLightSpan,
+                                                      0.0f,
+                                                      1.0f),
+                                              1.45f);
+            const float auroraColumn = 0.55f + 0.45f * ofNoise(std::cos(theta) * 1.35f + 9.0f,
+                                                               std::sin(theta) * 1.35f - 3.0f,
+                                                               time * 0.12f);
+            const float auroraLight = ofClamp(paramWaterAuroraLight_ *
+                                                  auroraRing *
+                                                  auroraColumn *
+                                                  (0.10f + auroraLightEnergy * 0.24f + auroraLightPulse * 0.22f),
+                                              0.0f,
+                                              0.62f);
+            const ofFloatColor auroraTint = colorFrom(paramAuroraR_ * 0.58f + paramAurora2R_ * 0.18f,
+                                                      paramAuroraG_ * 0.58f + paramAurora2G_ * 0.18f,
+                                                      paramAuroraB_ * 0.58f + paramAurora2B_ * 0.18f,
+                                                      color.a);
             surface.addVertex(glm::vec3(x, y, z));
-            surface.addColor(color);
+            surface.addColor(color.getLerped(auroraTint, auroraLight));
         }
     }
 
@@ -1232,15 +1374,77 @@ void ArcticAuroraSceneLayer::drawWaterPlane(const LayerDrawParams& params, float
 
     ofEnableBlendMode(OF_BLENDMODE_ALPHA);
     glDepthMask(GL_FALSE);
+    if (paramWaterCurvature_ > 0.01f && paramWaterHemisphereDepth_ > 1.0f) {
+        ofMesh lowerHemisphere;
+        lowerHemisphere.setMode(OF_PRIMITIVE_TRIANGLES);
+        const int hemiRows = 36;
+        const float curvature = smootherStep(paramWaterCurvature_);
+        const float hemiDepth = paramWaterHemisphereDepth_ * curvature;
+        const float volumeAlpha = waterAlpha *
+            curvature *
+            ofClamp(0.46f + paramWaterTranslucency_ * 0.34f, 0.24f, 1.0f);
+        const ofFloatColor bottomColor = colorFrom(paramWaterR_ * colorGain * 0.52f,
+                                                   paramWaterG_ * colorGain * 0.68f,
+                                                   paramWaterB_ * colorGain * 0.90f,
+                                                   volumeAlpha * 0.16f);
+        const ofFloatColor equatorColor = colorFrom(paramWaterR_ * colorGain * 0.92f,
+                                                    paramWaterG_ * colorGain * 1.08f,
+                                                    paramWaterB_ * colorGain * 1.30f,
+                                                    volumeAlpha * 0.34f);
+        const ofFloatColor farShade = colorFrom(paramSkyHorizonR_ * 0.58f,
+                                                paramSkyHorizonG_ * 0.70f,
+                                                paramSkyHorizonB_ * 0.95f,
+                                                volumeAlpha * 0.18f);
+        for (int row = 0; row <= hemiRows; ++row) {
+            const float v = static_cast<float>(row) / static_cast<float>(hemiRows);
+            const float phi = v * HALF_PI;
+            const float radius = diskRadius * std::sin(phi);
+            const float y = paramWaterLevel_ - hemiDepth * std::cos(phi);
+            for (int col = 0; col <= angularSegments; ++col) {
+                const float u = static_cast<float>(col) / static_cast<float>(angularSegments);
+                const float theta = u * TWO_PI;
+                const glm::vec3 point = polarPoint(theta, radius, y);
+                const float zDepthT = smootherStep(ofMap(point.z,
+                                                         paramWaterNearZ_,
+                                                         paramWaterFarZ_,
+                                                         0.0f,
+                                                         1.0f,
+                                                         true));
+                const ofFloatColor color = bottomColor
+                    .getLerped(equatorColor, smootherStep(v))
+                    .getLerped(farShade, zDepthT * 0.22f);
+                lowerHemisphere.addVertex(point);
+                lowerHemisphere.addColor(color);
+            }
+        }
+        for (int row = 0; row < hemiRows; ++row) {
+            for (int col = 0; col < angularSegments; ++col) {
+                const int i00 = row * (angularSegments + 1) + col;
+                const int i10 = i00 + 1;
+                const int i01 = (row + 1) * (angularSegments + 1) + col;
+                const int i11 = i01 + 1;
+                lowerHemisphere.addIndex(i00);
+                lowerHemisphere.addIndex(i11);
+                lowerHemisphere.addIndex(i10);
+                lowerHemisphere.addIndex(i00);
+                lowerHemisphere.addIndex(i01);
+                lowerHemisphere.addIndex(i11);
+            }
+        }
+        lowerHemisphere.draw();
+    }
     surface.draw();
 
     ofMesh highlights;
     highlights.setMode(OF_PRIMITIVE_LINES);
-    const ofFloatColor faintCyan = colorFrom(0.28f, 0.88f, 1.0f, alpha * paramWaterHighlight_ * 0.22f);
+    const ofFloatColor faintCyan = colorFrom(0.28f * colorGain,
+                                             0.88f * colorGain,
+                                             1.0f * colorGain,
+                                             waterAlpha * paramWaterHighlight_ * 0.22f);
     const ofFloatColor edgeLine = colorFrom(0.46f,
                                             0.66f,
                                             0.90f,
-                                            alpha * paramWaterHighlight_ * 0.18f);
+                                            waterAlpha * paramWaterHighlight_ * 0.18f);
     for (int row = 5; row <= radialSegments; row += 4) {
         const float v = static_cast<float>(row) / static_cast<float>(radialSegments);
         const float radius = diskRadius * std::sqrt(v);
@@ -1253,18 +1457,12 @@ void ArcticAuroraSceneLayer::drawWaterPlane(const LayerDrawParams& params, float
             if (skip > 0.40f) {
                 const float theta0 = theta - arcHalf;
                 const float theta1 = theta + arcHalf;
-                const glm::vec3 a = polarPoint(theta0,
-                                               radius,
-                                               paramWaterLevel_ + 2.0f + waterWaveAt(std::cos(theta0) * radius,
-                                                                                    std::sin(theta0) * radius,
-                                                                                    time,
-                                                                                    paramWaterWaveIdle_) * 0.20f);
-                const glm::vec3 b = polarPoint(theta1,
-                                               radius,
-                                               paramWaterLevel_ + 2.0f + waterWaveAt(std::cos(theta1) * radius,
-                                                                                    std::sin(theta1) * radius,
-                                                                                    time,
-                                                                                    paramWaterWaveIdle_) * 0.20f);
+                const float ax = std::cos(theta0) * radius;
+                const float az = std::sin(theta0) * radius;
+                const float bx = std::cos(theta1) * radius;
+                const float bz = std::sin(theta1) * radius;
+                const glm::vec3 a(ax, waterSurfaceYAt(ax, az, time, 0.20f) + 2.0f, az);
+                const glm::vec3 b(bx, waterSurfaceYAt(bx, bz, time, 0.20f) + 2.0f, bz);
                 addLine(highlights,
                         a,
                         b,
@@ -1282,6 +1480,7 @@ void ArcticAuroraSceneLayer::drawWaterPlane(const LayerDrawParams& params, float
 }
 
 void ArcticAuroraSceneLayer::drawWaterReflection(const LayerDrawParams& params, float alpha) const {
+    static_cast<void>(params);
     if (paramWaterReflection_ <= 0.0f) {
         return;
     }
@@ -1290,7 +1489,7 @@ void ArcticAuroraSceneLayer::drawWaterReflection(const LayerDrawParams& params, 
     reflection.setMode(OF_PRIMITIVE_TRIANGLES);
 
     const int bands = 18;
-    const float time = sceneTime_ + params.time * 0.04f;
+    const float time = sceneTime_;
     const float audioLift = hasAudio_ ? ofClamp(auroraEnergy_, 0.16f, 1.35f) : 0.36f;
     const float baseAlpha = alpha * paramWaterReflection_ * (0.025f + audioLift * 0.060f);
     const float diskRadius = std::max(180.0f, paramWaterWidth_ * 0.5f);
@@ -1316,20 +1515,22 @@ void ArcticAuroraSceneLayer::drawWaterReflection(const LayerDrawParams& params, 
             const float halfTheta = ofLerp(0.045f, 0.13f, 1.0f - t) *
                 (0.72f + ofNoise(t * 9.0f + layerT, time * 0.09f) * 0.44f);
             const float halfRadius = ofLerp(8.0f, 24.0f, 1.0f - t);
-            const float y = paramWaterLevel_ + 4.0f + waterWaveAt(std::cos(theta) * radius,
-                                                                  std::sin(theta) * radius,
-                                                                  time,
-                                                                  paramWaterWaveIdle_) * 0.12f;
             const float fade = std::sin(t * PI) * ofLerp(1.0f, 0.62f, layerT);
             const ofFloatColor green = colorFrom(paramAuroraR_, paramAuroraG_, paramAuroraB_, baseAlpha * fade);
             const ofFloatColor violet = colorFrom(paramAurora2R_, paramAurora2G_, paramAurora2B_, baseAlpha * fade * 0.50f);
             const ofFloatColor color = green.getLerped(violet, ofNoise(t * 3.5f, 16.0f + layerT, time * 0.10f));
 
+            auto reflectionPoint = [&](float sampleTheta, float sampleRadius) {
+                const float px = std::cos(sampleTheta) * sampleRadius;
+                const float pz = std::sin(sampleTheta) * sampleRadius;
+                return glm::vec3(px, waterSurfaceYAt(px, pz, time, 0.12f) + 4.0f, pz);
+            };
+
             addQuad(reflection,
-                    polarPoint(theta - halfTheta, radius - halfRadius, y),
-                    polarPoint(theta + halfTheta, radius - halfRadius, y),
-                    polarPoint(theta + halfTheta * 0.82f, radius + halfRadius, y),
-                    polarPoint(theta - halfTheta * 0.82f, radius + halfRadius, y),
+                    reflectionPoint(theta - halfTheta, radius - halfRadius),
+                    reflectionPoint(theta + halfTheta, radius - halfRadius),
+                    reflectionPoint(theta + halfTheta * 0.82f, radius + halfRadius),
+                    reflectionPoint(theta - halfTheta * 0.82f, radius + halfRadius),
                     color);
         }
     }
@@ -1352,11 +1553,11 @@ void ArcticAuroraSceneLayer::drawWaterHorizonMist(float alpha) const {
     const float diskRadius = std::max(180.0f, paramWaterWidth_ * 0.5f);
     const float innerRadius = diskRadius * 0.78f;
     const float outerRadius = diskRadius * 1.06f;
-    const float y = paramWaterLevel_ + 7.0f;
+    const float time = sceneTime_;
     const ofFloatColor inner = colorFrom(paramSkyHorizonR_ * 1.6f,
                                          paramSkyHorizonG_ * 1.8f,
                                          paramSkyHorizonB_ * 2.1f,
-                                         alpha * paramWaterHorizonFog_ * 0.14f);
+                                         alpha * paramWaterAlpha_ * paramWaterHorizonFog_ * 0.14f);
     const ofFloatColor outer = colorFrom(paramAuroraR_ * 0.28f,
                                          paramAuroraG_ * 0.26f,
                                          paramAuroraB_ * 0.25f,
@@ -1365,9 +1566,13 @@ void ArcticAuroraSceneLayer::drawWaterHorizonMist(float alpha) const {
     for (int i = 0; i <= segments; ++i) {
         const float u = static_cast<float>(i) / static_cast<float>(segments);
         const float theta = u * TWO_PI;
-        mist.addVertex(polarPoint(theta, innerRadius, y));
+        const float innerX = std::cos(theta) * innerRadius;
+        const float innerZ = std::sin(theta) * innerRadius;
+        const float outerX = std::cos(theta) * outerRadius;
+        const float outerZ = std::sin(theta) * outerRadius;
+        mist.addVertex(glm::vec3(innerX, waterSurfaceYAt(innerX, innerZ, time, 0.0f) + 7.0f, innerZ));
         mist.addColor(inner);
-        mist.addVertex(polarPoint(theta, outerRadius, y + 16.0f));
+        mist.addVertex(glm::vec3(outerX, waterSurfaceYAt(outerX, outerZ, time, 0.0f) + 22.0f, outerZ));
         mist.addColor(outer);
     }
     for (int i = 0; i < segments; ++i) {
@@ -1393,8 +1598,8 @@ void ArcticAuroraSceneLayer::buildIcebergMeshes(Iceberg& iceberg, const glm::vec
     const int sides = randomInt(rng, 9, 13);
     const float halfWidth = dimensions.x * 0.5f;
     const float halfDepth = dimensions.z * 0.5f;
-    const float visibleHeight = dimensions.y * randomRange(rng, 0.20f, 0.34f);
-    const float underwaterDepth = dimensions.y * randomRange(rng, 0.78f, 1.24f);
+    const float visibleHeight = dimensions.y * randomRange(rng, 0.26f, 0.42f);
+    const float underwaterDepth = dimensions.y * randomRange(rng, 0.68f, 1.02f);
 
     std::vector<glm::vec2> silhouette;
     std::vector<glm::vec2> facetPoints2d;
@@ -1416,7 +1621,7 @@ void ArcticAuroraSceneLayer::buildIcebergMeshes(Iceberg& iceberg, const glm::vec
         const float waterX = c * halfWidth * radial * randomRange(rng, 0.88f, 1.13f);
         const float waterZ = s * halfDepth * radial * randomRange(rng, 0.82f, 1.18f);
         const float waterY = randomRange(rng, -2.0f, 3.0f);
-        const float underScale = randomRange(rng, 0.38f, 0.66f);
+        const float underScale = randomRange(rng, 0.54f, 0.78f);
         const glm::vec2 boundaryPoint(waterX, waterZ);
         const glm::vec3 waterPoint(waterX, waterY, waterZ);
 
@@ -1424,12 +1629,12 @@ void ArcticAuroraSceneLayer::buildIcebergMeshes(Iceberg& iceberg, const glm::vec
         facetPoints2d.push_back(boundaryPoint);
         facetPoints3d.push_back(waterPoint);
         waterRing.push_back(waterPoint);
-        underRing.push_back(glm::vec3(waterX * underScale + randomRange(rng, -10.0f, 10.0f),
-                                      -underwaterDepth * randomRange(rng, 0.28f, 0.58f),
-                                      waterZ * underScale + randomRange(rng, -10.0f, 10.0f)));
+        underRing.push_back(glm::vec3(waterX * underScale + randomRange(rng, -7.0f, 7.0f),
+                                      -underwaterDepth * randomRange(rng, 0.34f, 0.60f),
+                                      waterZ * underScale + randomRange(rng, -7.0f, 7.0f)));
     }
 
-    const int interiorCount = randomInt(rng, 12, 20);
+    const int interiorCount = randomInt(rng, 16, 25);
     int attempts = 0;
     while (static_cast<int>(facetPoints2d.size()) < sides + interiorCount && attempts < interiorCount * 12) {
         ++attempts;
@@ -1445,14 +1650,21 @@ void ArcticAuroraSceneLayer::buildIcebergMeshes(Iceberg& iceberg, const glm::vec
         const float ridge = std::max(0.0f, signedNoise(p.x * 0.010f + iceberg.seed,
                                                        p.y * 0.012f - iceberg.seed,
                                                        0.0f));
-        const float y = visibleHeight * (0.12f + broadPlateau * 0.40f + ridge * 0.11f)
-            + randomRange(rng, -3.0f, 5.0f);
+        const float peak = std::pow(std::max(0.0f, signedNoise(p.x * 0.027f - iceberg.seed * 0.7f,
+                                                               p.y * 0.024f + iceberg.seed * 0.5f,
+                                                               4.0f)),
+                                    2.15f);
+        const float shoulder = std::max(0.0f, std::sin((angle + iceberg.seed) * 3.0f)) *
+            std::pow(centerFalloff, 0.85f);
+        const float y = visibleHeight *
+                (0.10f + broadPlateau * 0.34f + ridge * 0.16f + peak * 0.28f + shoulder * 0.10f)
+            + randomRange(rng, -2.0f, 7.0f);
         facetPoints2d.push_back(p);
         facetPoints3d.push_back(glm::vec3(p.x, y, p.y));
     }
 
     const glm::vec3 keelTip(randomRange(rng, -halfWidth * 0.08f, halfWidth * 0.08f),
-                            -underwaterDepth * randomRange(rng, 0.95f, 1.28f),
+                            -underwaterDepth * randomRange(rng, 0.78f, 1.02f),
                             randomRange(rng, -halfDepth * 0.08f, halfDepth * 0.08f));
 
     iceberg.aboveWater.clear();
@@ -1469,11 +1681,11 @@ void ArcticAuroraSceneLayer::buildIcebergMeshes(Iceberg& iceberg, const glm::vec
                                                paramIceAccentG_ * 0.24f,
                                                paramIceAccentB_ * 0.28f,
                                                0.68f);
-    const ofFloatColor underColor = colorFrom(0.010f, 0.075f, 0.115f, 0.38f);
-    const ofFloatColor underEdgeColor = colorFrom(paramAuroraR_ * 0.30f + 0.025f,
-                                                  paramAuroraG_ * 0.28f + 0.045f,
-                                                  paramAuroraB_ * 0.32f + 0.070f,
-                                                  0.34f);
+    const ofFloatColor underColor = colorFrom(0.030f, 0.145f, 0.210f, 0.52f);
+    const ofFloatColor underEdgeColor = colorFrom(paramAuroraR_ * 0.36f + 0.055f,
+                                                  paramAuroraG_ * 0.34f + 0.085f,
+                                                  paramAuroraB_ * 0.40f + 0.120f,
+                                                  0.46f);
     const ofFloatColor rimColor = colorFrom(0.62f, 0.88f, 1.0f, 0.20f);
 
     const auto triangles = delaunayTriangulate(facetPoints2d);
@@ -1510,20 +1722,22 @@ void ArcticAuroraSceneLayer::buildIcebergMeshes(Iceberg& iceberg, const glm::vec
     for (int i = 0; i < sides; ++i) {
         const int next = (i + 1) % sides;
         const float sideFront = (waterRing[i].z + waterRing[next].z) * 0.5f / std::max(1.0f, halfDepth);
-        const float spikeDrop = underwaterDepth * randomRange(rng, 0.62f, 1.16f);
-        const glm::vec3 localSpike((underRing[i].x + underRing[next].x) * 0.5f + randomRange(rng, -halfWidth * 0.10f, halfWidth * 0.10f),
-                                   -spikeDrop,
-                                   (underRing[i].z + underRing[next].z) * 0.5f + randomRange(rng, -halfDepth * 0.10f, halfDepth * 0.10f));
+        const float softKeelDrop = underwaterDepth * randomRange(rng, 0.48f, 0.76f);
+        const glm::vec3 localKeel((underRing[i].x + underRing[next].x) * 0.5f + randomRange(rng, -halfWidth * 0.045f, halfWidth * 0.045f),
+                                  -softKeelDrop,
+                                  (underRing[i].z + underRing[next].z) * 0.5f + randomRange(rng, -halfDepth * 0.045f, halfDepth * 0.045f));
         addQuad(iceberg.belowWater, underRing[i], underRing[next], waterRing[next], waterRing[i],
                 underColor.getLerped(underEdgeColor, ofClamp(sideFront * 0.22f + 0.12f, 0.0f, 0.28f)));
-        addTriangle(iceberg.belowWater, underRing[i], underRing[next], localSpike, withAlphaScale(underColor, 0.92f));
-        addTriangle(iceberg.belowWater, keelTip, underRing[next], underRing[i], withAlphaScale(underColor, 0.58f));
+        addTriangle(iceberg.belowWater, underRing[i], underRing[next], localKeel, withAlphaScale(underColor, 0.76f));
+        addTriangle(iceberg.belowWater, keelTip, underRing[next], underRing[i], withAlphaScale(underColor, 0.46f));
     }
 }
 
 glm::vec3 ArcticAuroraSceneLayer::icebergWorldPosition(const Iceberg& iceberg) const {
     if (iceberg.orbitRadius <= 0.0f) {
-        return iceberg.position;
+        glm::vec3 position = iceberg.position;
+        position.y = waterSurfaceYAt(position.x, position.z, sceneTime_) + iceberg.position.y;
+        return position;
     }
 
     const float angle = iceberg.orbitAngle + sceneTime_ * iceberg.driftSpeed;
@@ -1531,8 +1745,8 @@ glm::vec3 ArcticAuroraSceneLayer::icebergWorldPosition(const Iceberg& iceberg) c
         signedNoise(iceberg.seed * 0.37f, sceneTime_ * 0.035f, 12.0f) * 9.0f;
     const float bob = std::sin(sceneTime_ * 0.42f + iceberg.bobPhase) * iceberg.bobAmount +
         std::sin(sceneTime_ * 0.19f + iceberg.seed) * iceberg.bobAmount * 0.35f;
-    glm::vec3 position = polarPoint(angle, std::max(20.0f, iceberg.orbitRadius + radialDrift), iceberg.position.y + bob);
-    position.y += waterWaveAt(position.x, position.z, sceneTime_ * 0.35f, paramWaterWaveIdle_) * 0.16f;
+    glm::vec3 position = polarPoint(angle, std::max(20.0f, iceberg.orbitRadius + radialDrift), 0.0f);
+    position.y = waterSurfaceYAt(position.x, position.z, sceneTime_) + iceberg.position.y + bob;
     return position;
 }
 
@@ -1550,7 +1764,7 @@ void ArcticAuroraSceneLayer::drawIceberg(const Iceberg& iceberg, float alpha) co
     const float yaw = icebergWorldYaw(iceberg);
 
     ofPushMatrix();
-    ofTranslate(position.x, paramWaterLevel_ + position.y, position.z);
+    ofTranslate(position.x, position.y, position.z);
     ofRotateYDeg(yaw);
     ofScale(scale, scale, scale);
 

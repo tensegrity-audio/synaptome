@@ -22,10 +22,16 @@ private:
         float energy = 0.0f;
     };
 
-    enum Mode {
+    enum TrailModel {
         AntTunnels = 0,
         SlimeMold = 1,
         Physarum = 2
+    };
+
+    enum BehaviorMode {
+        Balanced = 0,
+        Explore = 1,
+        Exploit = 2
     };
 
     void allocateField();
@@ -42,8 +48,10 @@ private:
     int indexFor(int x, int y) const;
     float currentBeatPosition(float timeSeconds, float bpm) const;
     float fieldCoverage(float threshold) const;
+    int behaviorMode() const;
     void triggerReset();
 
+    TrailModel model_ = Physarum;
     bool paramEnabled_ = true;
     float paramSpeed_ = 10.0f;
     bool paramBpmSync_ = false;

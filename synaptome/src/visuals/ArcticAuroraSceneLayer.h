@@ -59,6 +59,7 @@ private:
     void drawWaterPlane(const LayerDrawParams& params, float alpha) const;
     void drawWaterReflection(const LayerDrawParams& params, float alpha) const;
     void drawWaterHorizonMist(float alpha) const;
+    float waterSurfaceYAt(float x, float z, float time, float waveScale = 1.0f) const;
     void buildIcebergMeshes(Iceberg& iceberg, const glm::vec3& dimensions, std::mt19937& rng);
     glm::vec3 icebergWorldPosition(const Iceberg& iceberg) const;
     float icebergWorldYaw(const Iceberg& iceberg) const;
@@ -78,6 +79,16 @@ private:
     float paramWaterHighlight_ = 1.15f;
     float paramWaterReflection_ = 0.0f;
     float paramWaterHorizonFog_ = 0.0f;
+    float paramWaterAlpha_ = 0.94f;
+    float paramWaterBrightness_ = 1.18f;
+    float paramWaterTranslucency_ = 0.72f;
+    float paramWaterCurvature_ = 1.0f;
+    float paramWaterHemisphereDepth_ = 2100.0f;
+    float paramWaterNoiseAmount_ = 2.8f;
+    float paramWaterNoiseScale_ = 0.0038f;
+    float paramWaterRippleAmount_ = 4.0f;
+    float paramWaterRippleRadius_ = 420.0f;
+    float paramWaterAuroraLight_ = 0.55f;
 
     float paramIcebergCount_ = 6.0f;
     float paramIcebergScale_ = 1.0f;
@@ -85,8 +96,8 @@ private:
     float paramIcebergRimLight_ = 0.0f;
 
     float paramAuroraWidth_ = 2600.0f;
-    float paramAuroraBaseY_ = 145.0f;
-    float paramAuroraHeight_ = 520.0f;
+    float paramAuroraBaseY_ = 220.0f;
+    float paramAuroraHeight_ = 560.0f;
     float paramAuroraDepthNear_ = -780.0f;
     float paramAuroraDepthFar_ = -1260.0f;
     float paramAuroraGlow_ = 2.2f;

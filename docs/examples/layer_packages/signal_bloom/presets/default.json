@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "packageId": "examples.signal_bloom",
+  "assetId": "examples.signal_bloom",
+  "presetId": "default",
+  "label": "Default",
+  "description": "Baseline Signal Bloom settings.",
+  "parameters": {
+    "visible": true,
+    "speed": 0.65,
+    "bpmSync": true,
+    "bpmMultiplier": 1.0,
+    "scale": 0.82,
+    "rotationDeg": 0.0,
+    "alpha": 0.86,
+    "gain": 0.62,
+    "lineOpacity": 0.72,
+    "colorR": 0.12,
+    "colorG": 0.78,
+    "colorB": 1.0,
+    "bgColorR": 0.02,
+    "bgColorG": 0.04,
+    "bgColorB": 0.08,
+    "xInput": 0.5,
+    "yInput": 0.5,
+    "speedInput": 0.0
+  }
+}

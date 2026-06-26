@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "packageId": "examples.signal_bloom",
+  "assetId": "examples.signal_bloom",
+  "presetId": "bright",
+  "label": "Bright",
+  "description": "Brighter high-energy color and line settings.",
+  "parameters": {
+    "speed": 1.15,
+    "scale": 0.92,
+    "alpha": 0.95,
+    "gain": 1.05,
+    "lineOpacity": 0.9,
+    "colorR": 0.2,
+    "colorG": 0.95,
+    "colorB": 1.0,
+    "bgColorR": 0.02,
+    "bgColorG": 0.03,
+    "bgColorB": 0.1,
+    "speedInput": 0.25
+  }
+}

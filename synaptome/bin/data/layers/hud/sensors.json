@@ -1,15 +1,15 @@
 {
   "id": "hud.sensors",
-  "label": "Sensor Telemetry",
+  "label": "Connected Devices",
   "category": "HUD",
   "type": "ui.hud.widget",
   "registryPrefix": "hud.sensors",
-  "description": "Matrix and deck sensor heartbeat + OSC feed monitor.",
+  "description": "Runtime device connection summary for cameras, MIDI, audio, OSC, and sensor buses.",
   "hudWidget": {
-    "module": "sensors",
+    "module": "connectedDevices",
     "toggleId": "hud.sensors",
     "defaultBand": "hud",
     "defaultColumn": 1,
-    "telemetry": ["imu", "mic", "osc"]
+    "telemetry": ["devices", "midi", "audio", "osc"]
   }
 }

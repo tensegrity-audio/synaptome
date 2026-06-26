@@ -4,7 +4,18 @@ This roadmap is the Project Ops request index for Synaptome. It is not the publi
 
 ## In Progress
 
-No active Project Ops requests are open.
+- **Layer Package And Compatibility Bench Scaffolding** ([Request Doc](in_progress/layer_package_compatibility_bench_scaffolding.md))
+State Summary
+- Phase: INTAKE
+- Status: Draft
+- Steps Complete: 2 / 10
+- Progress: Draft package/preset schemas, shared package discovery roots, a Signal Bloom package fixture, static validation, package-derived snapshots, and opt-in combined catalog/manifest checks now exist without changing runtime loading behavior.
+- Last Step Outcome: 2026-06-26 - Added `tools/layer_package_discovery.py`, `--include-packages` paths for catalog/parameter manifest generators, and combined golden snapshots for package/runtime compatibility checks.
+- Next Step: Define the file-backed generated-layer template shape first, then add one docs/example STL/model fixture and generated snapshot without changing Browser/runtime loading.
+- Dependencies / Overlap: `docs/project_ops/synaptome_layer_design_standards.md`, `docs/architecture/synaptome_layer_system_roadmap.md`, `docs/architecture/synaptome_artist_sdk.md`, `docs/contracts/contract_gaps.md`, `docs/contracts/parameter_manifest.json`, `docs/schemas/layer_asset.schema.json`, `tools/layer_catalog_regression.py`, `tools/gen_parameter_manifest.py`.
+- Blocking Issues / Unknowns: Runtime bench shape depends on an app-native or offscreen layer test seam; generated registration/module loading remains a later architecture decision; beat-reactive mapping presets depend on the separate transport/reactivity contract.
+- Impact / Priority Notes: Promotes package-driven layer authoring, folder/file discovery, visible mapping defaults, preset banks, and validation/bench work into trackable layer-system scaffolding without claiming hot-loaded plugins.
+- Resume From: Intake; start the file-backed generated-layer template fixture while keeping package/runtime combined checks draft-only.
 
 ## Completed
 
@@ -28,6 +39,8 @@ Request Doc: docs/project_ops/completed/project_ops_compatibility.md
 - [3D Arctic Aurora Scene Roadmap](arctic_aurora_3d_scene_roadmap.md) tracks the integrated camera-space arctic scene layer, including the 3D sea plane, floating iceberg meshes, audio-scoped aurora volume, and today-scope milestones.
 - [Aurora Generative Layers Roadmap](aurora_generative_layers_roadmap.md) tracks waveform-first aurora layers, spectrum/FFT upgrade work, and audio-reactive curtain controls.
 - [Cosmic Generative Layers Roadmap](cosmic_generative_layers_roadmap.md) tracks show-oriented cosmic layer priorities, audio/sensor mappings, and external simulation-library candidates.
+- [Transport And Reactivity Contract](../architecture/synaptome_transport_reactivity.md) tracks non-layer BPM, beat detection, clock source, confidence, onset/downbeat, and mapping-visible timing source work.
+- [Public Runtime Contract Roadmap](../architecture/synaptome_public_runtime_contract_roadmap.md) tracks non-layer scene, HUD, console/display, media, device, external boundary, and host audio contract follow-up.
 - Use request artifacts from `docs/project_ops/in_progress/_REQUEST_TEMPLATE.md` when Project Ops-managed work begins.
 - Project Ops adapter and changed-request audits now run in Synaptome CI through the external `tensegrity-audio/project_ops` checkout pinned at `v0.1.2`.
 - Add release-note templates only if Synaptome starts publishing release notes beyond `docs/release_policy.md`.

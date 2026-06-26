@@ -1,4 +1,3 @@
 ofxGui
-ofxOpenCv
 ofxOsc
 ofxVectorGraphics

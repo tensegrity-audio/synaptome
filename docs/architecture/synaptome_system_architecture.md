@@ -543,7 +543,7 @@ Current status: strong. Scene load now has staged scene/display transaction hand
 
 ## Next Architecture Work
 
-Implementation sequencing should follow the public gap register in [`docs/contracts/contract_gaps.md`](../contracts/contract_gaps.md).
+Implementation sequencing should follow the owning public roadmaps indexed from [`docs/contracts/contract_gaps.md`](../contracts/contract_gaps.md), especially the layer-system, transport/reactivity, and public runtime contract roadmaps.
 
 Near-term architecture-to-implementation children:
 

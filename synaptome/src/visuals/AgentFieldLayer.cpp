@@ -7,9 +7,9 @@
 namespace {
     constexpr int kModeCount = 3;
     const char* kModeLabels[kModeCount] = {
-        "Ant Tunnels",
-        "Slime Mold",
-        "Physarum"
+        "Balanced",
+        "Explore",
+        "Exploit"
     };
 
     std::string modeDescriptions() {
@@ -29,8 +29,28 @@ namespace {
 }
 
 void AgentFieldLayer::configure(const ofJson& config) {
+    const std::string model = config.value("model", std::string());
+    if (model == "antTunnels") {
+        model_ = AntTunnels;
+    } else if (model == "slimeMold") {
+        model_ = SlimeMold;
+    } else if (model == "physarum" || model == "physarumParticles") {
+        model_ = Physarum;
+    }
+
     if (config.contains("defaults")) {
         const auto& def = config["defaults"];
+        const bool legacyAlgorithmMode = model.empty() && def.contains("mode");
+        if (model.empty()) {
+            const int legacyMode = static_cast<int>(std::round(def.value("mode", paramMode_)));
+            if (legacyMode == 0) {
+                model_ = AntTunnels;
+            } else if (legacyMode == 1) {
+                model_ = SlimeMold;
+            } else {
+                model_ = Physarum;
+            }
+        }
         paramSpeed_ = def.value("speed", paramSpeed_);
         paramBpmSync_ = def.value("bpmSync", paramBpmSync_);
         paramBpmMultiplier_ = def.value("bpmMultiplier", paramBpmMultiplier_);
@@ -38,6 +58,9 @@ void AgentFieldLayer::configure(const ofJson& config) {
         paramAutoReseed_ = def.value("autoReseed", paramAutoReseed_);
         paramAutoReseedEveryBeats_ = def.value("autoReseedEveryBeats", paramAutoReseedEveryBeats_);
         paramMode_ = def.value("mode", paramMode_);
+        if (legacyAlgorithmMode) {
+            paramMode_ = 0.0f;
+        }
         paramAgentCount_ = def.value("agentCount", paramAgentCount_);
         paramStepSize_ = def.value("stepSize", paramStepSize_);
         paramTurnRate_ = def.value("turnRate", paramTurnRate_);
@@ -95,7 +118,7 @@ void AgentFieldLayer::setup(ParameterRegistry& registry) {
 
     meta = {};
     meta.group = "Generative";
-    meta.label = "Alpha: Field";
+    meta.label = "Visibility: Field Opacity";
     meta.range.min = 0.0f;
     meta.range.max = 1.0f;
     meta.range.step = 0.01f;
@@ -119,7 +142,7 @@ void AgentFieldLayer::setup(ParameterRegistry& registry) {
 
     meta = {};
     meta.group = "Generative";
-    meta.label = "Action: Mode";
+    meta.label = "Action: Behavior Mode";
     meta.range.min = 0.0f;
     meta.range.max = static_cast<float>(kModeCount - 1);
     meta.range.step = 1.0f;
@@ -156,19 +179,19 @@ void AgentFieldLayer::setup(ParameterRegistry& registry) {
     meta.range.step = 0.1f;
     registry.addFloat(prefix + ".sensorDistance", &paramSensorDistance_, paramSensorDistance_, meta);
 
-    meta.label = "Glow: Deposit";
+    meta.label = "Force: Trail Deposit";
     meta.range.min = 0.01f;
     meta.range.max = 1.0f;
     meta.range.step = 0.01f;
     registry.addFloat(prefix + ".deposit", &paramDeposit_, paramDeposit_, meta);
 
-    meta.label = "Time: Decay";
+    meta.label = "Time: Trail Decay";
     meta.range.min = 0.0f;
     meta.range.max = 0.2f;
     meta.range.step = 0.001f;
     registry.addFloat(prefix + ".decay", &paramDecay_, paramDecay_, meta);
 
-    meta.label = "Motion: Diffuse";
+    meta.label = "Motion: Trail Diffusion";
     meta.range.min = 0.0f;
     meta.range.max = 1.0f;
     meta.range.step = 0.01f;
@@ -187,13 +210,13 @@ void AgentFieldLayer::setup(ParameterRegistry& registry) {
     meta.description = "Reset once this fraction of the field has grown in";
     registry.addFloat(prefix + ".resetCoverage", &paramResetCoverage_, paramResetCoverage_, meta);
 
-    meta.label = "Alpha: Background";
+    meta.label = "Visibility: Background Opacity";
     meta.range.min = 0.0f;
     meta.range.max = 1.0f;
     meta.range.step = 0.01f;
     registry.addFloat(prefix + ".backgroundAlpha", &paramBackgroundAlpha_, paramBackgroundAlpha_, meta);
 
-    meta.label = "Alpha: Trail";
+    meta.label = "Visibility: Trail Opacity";
     meta.range.min = 0.0f;
     meta.range.max = 1.0f;
     meta.range.step = 0.01f;
@@ -338,9 +361,8 @@ void AgentFieldLayer::resetAgents() {
     std::fill(scratch_.begin(), scratch_.end(), 0.0f);
     agents_.assign(static_cast<std::size_t>(std::round(paramAgentCount_)), {});
 
-    const Mode mode = static_cast<Mode>(static_cast<int>(paramMode_));
     for (auto& agent : agents_) {
-        if (mode == Physarum) {
+        if (model_ == Physarum) {
             agent.x = ofRandom(textureSize_.x * 0.25f, textureSize_.x * 0.75f);
             agent.y = ofRandom(textureSize_.y * 0.25f, textureSize_.y * 0.75f);
         } else {
@@ -376,9 +398,8 @@ void AgentFieldLayer::diffuseAndDecay() {
 
 void AgentFieldLayer::stepAgents(float amount) {
     const float jitterScale = 0.7f + amount * 0.3f;
-    const Mode mode = static_cast<Mode>(static_cast<int>(paramMode_));
     for (auto& agent : agents_) {
-        switch (mode) {
+        switch (model_) {
         case AntTunnels:
             stepAnt(agent, jitterScale);
             break;
@@ -394,7 +415,25 @@ void AgentFieldLayer::stepAgents(float amount) {
 }
 
 void AgentFieldLayer::stepAnt(Agent& agent, float jitterScale) {
-    agent.angle += ofRandom(-1.0f, 1.0f) * paramTurnRate_ * (0.5f + jitterScale);
+    const int mode = behaviorMode();
+    const float explore = mode == Explore ? 1.0f : (mode == Exploit ? 0.15f : 0.45f);
+    const float exploit = mode == Exploit ? 1.0f : (mode == Explore ? 0.15f : 0.55f);
+    const float sensorDist = std::max(1.0f, paramSensorDistance_);
+    const float forward = sample(agent.x + std::cos(agent.angle) * sensorDist,
+                                 agent.y + std::sin(agent.angle) * sensorDist);
+    const float left = sample(agent.x + std::cos(agent.angle - paramSensorAngle_) * sensorDist,
+                              agent.y + std::sin(agent.angle - paramSensorAngle_) * sensorDist);
+    const float right = sample(agent.x + std::cos(agent.angle + paramSensorAngle_) * sensorDist,
+                               agent.y + std::sin(agent.angle + paramSensorAngle_) * sensorDist);
+
+    if (exploit > 0.1f) {
+        if (left > forward && left > right) {
+            agent.angle -= paramTurnRate_ * exploit;
+        } else if (right > forward && right > left) {
+            agent.angle += paramTurnRate_ * exploit;
+        }
+    }
+    agent.angle += ofRandom(-1.0f, 1.0f) * paramTurnRate_ * (0.35f + jitterScale * explore);
     agent.x += std::cos(agent.angle) * paramStepSize_;
     agent.y += std::sin(agent.angle) * paramStepSize_;
 
@@ -404,8 +443,8 @@ void AgentFieldLayer::stepAnt(Agent& agent, float jitterScale) {
         agent.y = ofClamp(agent.y, 1.0f, static_cast<float>(textureSize_.y - 2));
     }
 
-    deposit(static_cast<int>(agent.x), static_cast<int>(agent.y), paramDeposit_ * 1.8f);
-    if (ofRandomuf() < 0.25f) {
+    deposit(static_cast<int>(agent.x), static_cast<int>(agent.y), paramDeposit_ * (1.2f + exploit));
+    if (ofRandomuf() < 0.18f + explore * 0.18f) {
         const float side = agent.angle + (ofRandomuf() < 0.5f ? HALF_PI : -HALF_PI);
         deposit(static_cast<int>(agent.x + std::cos(side)),
                 static_cast<int>(agent.y + std::sin(side)),
@@ -414,7 +453,18 @@ void AgentFieldLayer::stepAnt(Agent& agent, float jitterScale) {
 }
 
 void AgentFieldLayer::stepSlime(Agent& agent, float jitterScale) {
-    if (ofRandomuf() < 0.25f + jitterScale * 0.1f) {
+    const int mode = behaviorMode();
+    const float explore = mode == Explore ? 1.0f : (mode == Exploit ? 0.2f : 0.55f);
+    const float exploit = mode == Exploit ? 1.0f : (mode == Explore ? 0.15f : 0.45f);
+    const float sensorDist = std::max(1.0f, paramSensorDistance_);
+    const float left = sample(agent.x + std::cos(agent.angle - paramSensorAngle_) * sensorDist,
+                              agent.y + std::sin(agent.angle - paramSensorAngle_) * sensorDist);
+    const float right = sample(agent.x + std::cos(agent.angle + paramSensorAngle_) * sensorDist,
+                               agent.y + std::sin(agent.angle + paramSensorAngle_) * sensorDist);
+    if (exploit > 0.1f && std::abs(left - right) > 0.001f) {
+        agent.angle += (right > left ? 1.0f : -1.0f) * paramTurnRate_ * exploit;
+    }
+    if (ofRandomuf() < 0.18f + explore * 0.2f + jitterScale * 0.08f) {
         agent.angle += ofRandom(-1.0f, 1.0f) * paramTurnRate_;
     }
     agent.x = wrapCoord(agent.x + std::cos(agent.angle) * paramStepSize_, static_cast<float>(textureSize_.x));
@@ -426,8 +476,8 @@ void AgentFieldLayer::stepSlime(Agent& agent, float jitterScale) {
         agent.angle += ofRandom(-PI, PI);
     }
 
-    deposit(static_cast<int>(agent.x), static_cast<int>(agent.y), paramDeposit_ * (1.0f + agent.energy));
-    if (ofRandomuf() < 0.35f) {
+    deposit(static_cast<int>(agent.x), static_cast<int>(agent.y), paramDeposit_ * (1.0f + agent.energy + exploit * 0.35f));
+    if (ofRandomuf() < 0.22f + explore * 0.25f) {
         const float branch = agent.angle + (ofRandomuf() < 0.5f ? paramSensorAngle_ : -paramSensorAngle_);
         deposit(static_cast<int>(agent.x + std::cos(branch)),
                 static_cast<int>(agent.y + std::sin(branch)),
@@ -436,6 +486,9 @@ void AgentFieldLayer::stepSlime(Agent& agent, float jitterScale) {
 }
 
 void AgentFieldLayer::stepPhysarum(Agent& agent, float jitterScale) {
+    const int mode = behaviorMode();
+    const float explore = mode == Explore ? 1.0f : (mode == Exploit ? 0.1f : 0.35f);
+    const float exploit = mode == Exploit ? 1.0f : (mode == Explore ? 0.35f : 0.7f);
     const float sensorDist = paramSensorDistance_;
     const float sensorAngle = paramSensorAngle_;
     const float forward = sample(agent.x + std::cos(agent.angle) * sensorDist,
@@ -446,16 +499,16 @@ void AgentFieldLayer::stepPhysarum(Agent& agent, float jitterScale) {
                                agent.y + std::sin(agent.angle + sensorAngle) * sensorDist);
 
     if (left > forward && left > right) {
-        agent.angle -= paramTurnRate_;
+        agent.angle -= paramTurnRate_ * exploit;
     } else if (right > forward && right > left) {
-        agent.angle += paramTurnRate_;
+        agent.angle += paramTurnRate_ * exploit;
     } else {
-        agent.angle += ofRandom(-1.0f, 1.0f) * paramTurnRate_ * 0.4f * jitterScale;
+        agent.angle += ofRandom(-1.0f, 1.0f) * paramTurnRate_ * (0.25f + explore * 0.35f) * jitterScale;
     }
 
     agent.x = wrapCoord(agent.x + std::cos(agent.angle) * paramStepSize_, static_cast<float>(textureSize_.x));
     agent.y = wrapCoord(agent.y + std::sin(agent.angle) * paramStepSize_, static_cast<float>(textureSize_.y));
-    deposit(static_cast<int>(agent.x), static_cast<int>(agent.y), paramDeposit_ * 1.4f);
+    deposit(static_cast<int>(agent.x), static_cast<int>(agent.y), paramDeposit_ * (1.1f + exploit * 0.45f));
 }
 
 void AgentFieldLayer::deposit(int x, int y, float amount) {
@@ -519,6 +572,10 @@ float AgentFieldLayer::fieldCoverage(float threshold) const {
         }
     }
     return static_cast<float>(filled) / static_cast<float>(field_.size());
+}
+
+int AgentFieldLayer::behaviorMode() const {
+    return static_cast<int>(std::round(ofClamp(paramMode_, 0.0f, static_cast<float>(kModeCount - 1))));
 }
 
 void AgentFieldLayer::triggerReset() {

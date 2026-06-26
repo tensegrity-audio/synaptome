@@ -1,0 +1,15 @@
+{
+  "id": "hud.debug.terminal",
+  "label": "Debug Terminal",
+  "category": "HUD",
+  "type": "ui.hud.widget",
+  "registryPrefix": "hud.debug.terminal",
+  "description": "Compact runtime log and diagnostics context.",
+  "hudWidget": {
+    "module": "debugTerminal",
+    "toggleId": "hud.debug.terminal",
+    "defaultBand": "hud",
+    "defaultColumn": 0,
+    "telemetry": ["runtime", "feeds", "events"]
+  }
+}

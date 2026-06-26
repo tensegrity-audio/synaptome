@@ -9,6 +9,9 @@
     "id": { "type": "string", "minLength": 1 },
     "label": { "type": "string", "minLength": 1 },
     "category": { "type": "string", "minLength": 1 },
+    "layerGroup": { "type": "string" },
+    "model": { "type": "string" },
+    "stateModel": { "type": "string" },
     "type": { "type": "string", "minLength": 1 },
     "registryPrefix": { "type": "string" },
     "description": { "type": "string" },
@@ -20,6 +23,10 @@
       "type": "object",
       "additionalProperties": true
     },
+    "modes": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/mode" }
+    },
     "coverage": { "$ref": "#/definitions/coverage" },
     "hudWidget": {
       "type": "object",
@@ -27,6 +34,18 @@
     }
   },
   "definitions": {
+    "mode": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "label"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 },
+        "kind": { "type": "string" },
+        "live": { "type": "boolean" },
+        "description": { "type": "string" }
+      }
+    },
     "coverage": {
       "type": "object",
       "additionalProperties": true,

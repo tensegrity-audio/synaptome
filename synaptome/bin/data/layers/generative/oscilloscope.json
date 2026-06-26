@@ -6,6 +6,13 @@
   "registryPrefix": "generative.oscilloscope",
   "opacity": 1.0,
   "defaults": {
+    "signalMode": 0,
+    "triggerSync": true,
+    "waveformGain": 1.6,
+    "waveformMix": 0.75,
+    "waveformDelay": 12,
+    "waveformSmoothing": 0.3,
+    "waveformPersistence": 0.65,
     "pattern": 1,
     "modMode": 1,
     "xInput": 0.0,

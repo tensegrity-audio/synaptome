@@ -981,6 +981,16 @@ def _contract_schema_for_resolved_path(resolved: Path):
     except ValueError:
         return None
 
+    if resolved.name == "layer.package.json":
+        return BasePath / "docs" / "schemas" / "layer_package.schema.json"
+
+    if (
+        "layer_packages" in rel_path.parts
+        and resolved.parent.name == "presets"
+        and resolved.suffix == ".json"
+    ):
+        return BasePath / "docs" / "schemas" / "layer_preset.schema.json"
+
     if rel_path.match("synaptome/bin/data/device_maps/*.json"):
         return BasePath / "docs" / "schemas" / "device_map.schema.json"
 

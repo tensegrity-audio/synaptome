@@ -11,11 +11,22 @@ public:
         std::string id;
         std::string label;
         std::string category;
+        std::string layerGroup;
+        std::string model;
+        std::string stateModel;
         std::string type;
         std::string configPath;
         std::string registryPrefix;
         float opacity = 1.0f;
         ofJson config;
+        struct ModeInfo {
+            std::string id;
+            std::string label;
+            std::string kind;
+            std::string description;
+            bool live = false;
+        };
+        std::vector<ModeInfo> modes;
         struct Coverage {
             bool defined = false;
             std::string mode = "upstream";

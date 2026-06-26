@@ -1,0 +1,264 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Synaptome Layer Package",
+  "description": "Draft schema for package-declared Synaptome layer extensions.",
+  "type": "object",
+  "required": ["schemaVersion", "packageId", "asset", "parameters"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1 },
+    "packageId": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-z][A-Za-z0-9_.-]*$"
+    },
+    "packageVersion": { "type": "string" },
+    "description": { "type": "string" },
+    "asset": { "$ref": "#/definitions/asset" },
+    "source": { "$ref": "#/definitions/source" },
+    "parameters": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/parameter" }
+    },
+    "modes": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/mode" }
+    },
+    "presets": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/presetRef" }
+    },
+    "presetBanks": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/presetBank" }
+    },
+    "mappingPresets": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/mappingPreset" }
+    },
+    "media": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/mediaRef" }
+    },
+    "tests": { "$ref": "#/definitions/tests" },
+    "compatibility": { "$ref": "#/definitions/compatibility" }
+  },
+  "definitions": {
+    "asset": {
+      "type": "object",
+      "required": ["id", "label", "category", "type", "registryPrefix"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 },
+        "category": { "type": "string", "minLength": 1 },
+        "layerGroup": { "type": "string" },
+        "model": { "type": "string" },
+        "stateModel": { "type": "string" },
+        "type": { "type": "string", "minLength": 1 },
+        "registryPrefix": { "type": "string", "minLength": 1 },
+        "description": { "type": "string" },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "strategy": {
+          "type": "string",
+          "enum": ["source-registration", "generated-registration", "module-loader", "template-generated"]
+        },
+        "registration": { "type": "string" },
+        "files": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "range": {
+      "type": "object",
+      "required": ["min", "max"],
+      "additionalProperties": false,
+      "properties": {
+        "min": { "type": "number" },
+        "max": { "type": "number" },
+        "step": { "type": "number" }
+      }
+    },
+    "option": {
+      "type": "object",
+      "required": ["value", "label"],
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "oneOf": [
+            { "type": "number" },
+            { "type": "string" },
+            { "type": "boolean" }
+          ]
+        },
+        "label": { "type": "string", "minLength": 1 },
+        "description": { "type": "string" }
+      }
+    },
+    "optionsSource": {
+      "type": "object",
+      "required": ["id", "value", "label"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "value": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 }
+      }
+    },
+    "parameter": {
+      "type": "object",
+      "required": ["id", "kind", "label", "default"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-z][A-Za-z0-9]*$"
+        },
+        "kind": { "type": "string", "enum": ["float", "bool", "string"] },
+        "label": { "type": "string", "minLength": 1 },
+        "default": {},
+        "range": { "$ref": "#/definitions/range" },
+        "units": { "type": "string" },
+        "description": { "type": "string" },
+        "options": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/option" }
+        },
+        "optionsSource": { "$ref": "#/definitions/optionsSource" },
+        "deprecated": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "replacement": { "type": "string" },
+            "reason": { "type": "string" }
+          }
+        }
+      }
+    },
+    "mode": {
+      "type": "object",
+      "required": ["id", "label"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 },
+        "kind": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "presetRef": {
+      "type": "object",
+      "required": ["presetId", "label", "path"],
+      "additionalProperties": false,
+      "properties": {
+        "presetId": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 },
+        "description": { "type": "string" }
+      }
+    },
+    "presetBank": {
+      "type": "object",
+      "required": ["id", "label", "presets"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 },
+        "presets": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "mappingSource": {
+      "type": "object",
+      "required": ["kind", "pattern"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "type": "string", "enum": ["osc"] },
+        "pattern": { "type": "string", "minLength": 1 },
+        "in": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "type": "number" }
+        },
+        "out": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "type": "number" }
+        },
+        "smooth": { "type": "number", "minimum": 0 },
+        "deadband": { "type": "number", "minimum": 0 },
+        "blend": { "type": "string", "enum": ["set", "scale", "add"] },
+        "relative": { "type": "boolean" }
+      }
+    },
+    "mapping": {
+      "type": "object",
+      "required": ["target", "source"],
+      "additionalProperties": false,
+      "properties": {
+        "target": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-z][A-Za-z0-9]*$"
+        },
+        "source": { "$ref": "#/definitions/mappingSource" },
+        "description": { "type": "string" }
+      }
+    },
+    "mappingPreset": {
+      "type": "object",
+      "required": ["id", "label", "mappings"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 },
+        "description": { "type": "string" },
+        "mappings": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/mapping" }
+        }
+      }
+    },
+    "mediaRef": {
+      "type": "object",
+      "required": ["id", "path"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 },
+        "kind": { "type": "string" }
+      }
+    },
+    "tests": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "bench": { "type": "string" }
+      }
+    },
+    "compatibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "noHeavySetupSideEffects": { "type": "boolean" },
+        "sourceRegistrationRequired": { "type": "boolean" },
+        "manifestInspectionOnly": { "type": "boolean" }
+      }
+    }
+  }
+}

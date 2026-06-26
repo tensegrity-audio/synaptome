@@ -2,7 +2,12 @@
 
 Status: Architecture draft with validated public SDK example fixture and first public registration decision. This document describes what Synaptome can provide to openFrameworks artists as a reusable library/runtime, and what gaps remain between the current app and that public SDK.
 
-Read with: [`synaptome_system_architecture.md`](synaptome_system_architecture.md), [`synaptome_subsystem_anatomy.md`](synaptome_subsystem_anatomy.md), [`synaptome_external_contracts.md`](synaptome_external_contracts.md), and [`docs/contracts/contract_gaps.md`](../contracts/contract_gaps.md).
+Read with: [`synaptome_system_architecture.md`](synaptome_system_architecture.md),
+[`synaptome_subsystem_anatomy.md`](synaptome_subsystem_anatomy.md),
+[`synaptome_external_contracts.md`](synaptome_external_contracts.md),
+[`synaptome_layer_system_roadmap.md`](synaptome_layer_system_roadmap.md),
+[`synaptome_transport_reactivity.md`](synaptome_transport_reactivity.md), and
+[`docs/contracts/contract_gaps.md`](../contracts/contract_gaps.md).
 
 ## Purpose
 
@@ -141,11 +146,12 @@ Current gap:
 
 The artist ships:
 - source layer class,
-- factory registration,
-- asset JSON,
+- package manifest with asset metadata, parameters, modes, options, presets,
+  media, tests, and compatibility expectations,
+- source registration file,
 - optional presets/scenes,
 - optional media files,
-- parameter documentation,
+- parameter documentation generated from package declarations,
 - validation fixture.
 
 Target:
@@ -155,13 +161,50 @@ Current gap:
 - No plugin/package layout exists yet.
 - Factory registration still requires source-level integration.
 - Public dependency boundaries are not split from the current monolithic app.
-- Extension install should eventually avoid editing `ofApp.cpp`.
+- Extension install and validation should eventually avoid editing `ofApp.cpp`.
 
 First public decision:
 - The first public Synaptome repo may ship with an honest source-registration SDK path.
 - Artist examples should use a dedicated registration file/snippet, catalog JSON, scene fixture, and validator instead of implying hot-loaded plugins already exist.
 - Synaptome must not claim no-source-edit installation until a generated registration, module manifest, or plugin/package loader is implemented and validated.
 - `LayerFactory::registerType()` must fail loudly for empty or duplicate type IDs so package collisions cannot silently replace layer implementations.
+
+## Layer System Roadmap
+
+The detailed roadmap for layer quality of life now lives in
+[`synaptome_layer_system_roadmap.md`](synaptome_layer_system_roadmap.md).
+
+The author-facing direction for individual layers lives in
+[`synaptome_layer_design_standards.md`](../project_ops/synaptome_layer_design_standards.md).
+In short, layers should evolve from C++-defined islands toward
+self-describing modules with stable public parameters, visible mappings,
+package metadata, presets, validation fixtures, and eventually single-layer
+bench coverage.
+
+That roadmap owns:
+
+- layer package layout,
+- folder-driven layer discovery,
+- file-backed generated layers such as dropped STL models,
+- package-declared parameters and manifest generation,
+- static and dynamic option metadata,
+- layer presets and preset banks,
+- package OSC mapping presets that appear in the Browser mapping surface,
+- single-layer validation and runtime bench work,
+- source registration now and generated/module loading later.
+
+The Artist SDK depends on that roadmap, but does not own all of its internal
+implementation details.
+
+## Runtime Systems Outside The Layer Roadmap
+
+Some artist-facing capabilities feed layers but are not layer-system work.
+BPM, beat detection, source confidence, onset/downbeat events, and transport
+fallback policy live in
+[`synaptome_transport_reactivity.md`](synaptome_transport_reactivity.md).
+
+Layer packages may reference transport or beat sources in mapping presets, but
+the runtime owns how those sources are produced.
 
 ## The Core Artist Library
 
@@ -306,14 +349,15 @@ For a normal openFrameworks sketch:
 | ESP32 firmware | No | Helper repo |
 | Show-specific presets | No | Example pack |
 
-## Current Gaps To Close
+## Current SDK Gaps To Close
 
 | Gap | Current State | Target |
 | --- | --- | --- |
 | Public layer authoring guide | Architecture docs plus validated `docs/examples/artist_sdk/**` fixture. | Step-by-step guide expanded from the fixture. |
 | Parameter vocabulary | Implicit in code and examples. | Versioned reference plus generated manifest. |
-| Layer package layout | No public extension folder structure. | Installable extension convention. |
+| Layer system roadmap | Layer package, folder discovery, file-backed generated layers, package params, options, presets, mapping presets, and bench work are larger than the SDK overview. | Use `synaptome_layer_system_roadmap.md` as the primary roadmap for improving the layer system. |
 | Factory registration | Source-level registration is the first public path; duplicate/empty type IDs now fail loudly. | Generated registration, plugin manifest, or module loader for no-source-edit installs. |
+| Transport/reactivity contract | BPM and beat context exist, but clock source, confidence, onset/downbeat, and fallback policy are runtime concerns outside the layer roadmap. | Use `synaptome_transport_reactivity.md` for BPM, beat detection, and timing-source work. |
 | Catalog fixture | Golden static `LayerLibrary` ingestion snapshot plus validated artist-authored source/catalog/scene fixture. | Use both fixtures to tighten the public authoring guide and future package seam. |
 | Mapping lifecycle | Real Browser/MIDI/OSC flows. | Public docs for global/scene/local mapping ownership. |
 | Media onboarding | `videos.json` manifest. | Decided manifest/folder-scan workflow. |

@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "packageId": "examples.signal_bloom",
+  "presetId": "default",
+  "frames": 120,
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "transport": {
+    "bpm": 120.0,
+    "speed": 1.0
+  },
+  "seed": 1001
+}

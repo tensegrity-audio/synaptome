@@ -16,10 +16,14 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import layer_package_catalog_regression
+import layer_package_discovery
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 APP_ROOT = REPO_ROOT / "synaptome"
 DEFAULT_ROOT = APP_ROOT / "bin" / "data" / "layers"
 DEFAULT_EXPECTED = REPO_ROOT / "tools" / "testdata" / "layer_catalog" / "expected_catalog.json"
+DEFAULT_COMBINED_EXPECTED = REPO_ROOT / "tools" / "testdata" / "layer_packages" / "expected_combined_layer_catalog.json"
 
 
 def rel(path: Path) -> str:
@@ -50,6 +54,9 @@ def normalize_entry(path: Path, config: dict[str, Any], factory_types: dict[str,
     entry_id = config.get("id") or path.stem
     label = config.get("label") or entry_id
     category = config.get("category") or "Unsorted"
+    layer_group = config.get("layerGroup") or ""
+    model = config.get("model") or ""
+    state_model = config.get("stateModel") or ""
     layer_type = config.get("type") or ""
     registry_prefix = config.get("registryPrefix") or entry_id
 
@@ -67,6 +74,9 @@ def normalize_entry(path: Path, config: dict[str, Any], factory_types: dict[str,
         "id": str(entry_id),
         "label": str(label),
         "category": str(category),
+        "layerGroup": str(layer_group),
+        "model": str(model),
+        "stateModel": str(state_model),
         "type": str(layer_type),
         "kind": kind,
         "registryPrefix": str(registry_prefix),
@@ -75,6 +85,26 @@ def normalize_entry(path: Path, config: dict[str, Any], factory_types: dict[str,
         "factoryClass": factory_types.get(str(layer_type), ""),
         "defaultKeys": sorted(config.get("defaults", {}).keys()) if isinstance(config.get("defaults"), dict) else [],
     }
+
+    modes = config.get("modes")
+    if isinstance(modes, list):
+        normalized_modes = []
+        for mode in modes:
+            if not isinstance(mode, dict):
+                continue
+            mode_id = mode.get("id")
+            if not isinstance(mode_id, str) or not mode_id:
+                continue
+            normalized_modes.append(
+                {
+                    "id": mode_id,
+                    "label": str(mode.get("label", mode_id)),
+                    "kind": str(mode.get("kind", "")),
+                    "live": bool(mode.get("live", mode.get("kind") == "live")),
+                }
+            )
+        if normalized_modes:
+            normalized["modes"] = normalized_modes
 
     if coverage:
         normalized["coverage"] = {
@@ -103,10 +133,16 @@ def iter_layer_files(root: Path) -> list[Path]:
     ]
 
 
-def build_catalog(root: Path = DEFAULT_ROOT) -> dict[str, Any]:
+def build_catalog(
+    root: Path = DEFAULT_ROOT,
+    include_packages: bool = False,
+    package_roots: list[Path] | tuple[Path, ...] | None = None,
+) -> dict[str, Any]:
     factory_types = parse_factory_types()
     entries: list[dict[str, Any]] = []
     skipped: list[dict[str, str]] = []
+    package_catalog: dict[str, Any] | None = None
+    package_errors: list[str] = []
 
     for path in iter_layer_files(root):
         config = load_json(path)
@@ -118,9 +154,18 @@ def build_catalog(root: Path = DEFAULT_ROOT) -> dict[str, Any]:
             continue
         entries.append(normalize_entry(path, config, factory_types))
 
-    entries.sort(key=lambda item: (item["category"], item["label"]))
+    selected_package_roots = tuple(package_roots or layer_package_discovery.fixture_roots())
+    if include_packages:
+        package_catalog, package_errors = layer_package_catalog_regression.build_catalog(selected_package_roots)
+        if not package_errors:
+            for package_entry in package_catalog.get("entries", []):
+                if isinstance(package_entry, dict):
+                    entries.append(package_entry)
+
+    entries.sort(key=lambda item: (item["category"], item["layerGroup"], item["label"]))
 
     categories: dict[str, int] = {}
+    layer_groups: dict[str, int] = {}
     types: dict[str, int] = {}
     kinds: dict[str, int] = {}
     duplicates: list[str] = []
@@ -129,6 +174,8 @@ def build_catalog(root: Path = DEFAULT_ROOT) -> dict[str, Any]:
 
     for entry in entries:
         categories[entry["category"]] = categories.get(entry["category"], 0) + 1
+        if entry["layerGroup"]:
+            layer_groups[entry["layerGroup"]] = layer_groups.get(entry["layerGroup"], 0) + 1
         types[entry["type"]] = types.get(entry["type"], 0) + 1
         kinds[entry["kind"]] = kinds.get(entry["kind"], 0) + 1
         if entry["id"] in seen_ids:
@@ -137,7 +184,7 @@ def build_catalog(root: Path = DEFAULT_ROOT) -> dict[str, Any]:
         if entry["kind"] == "runtime-layer" and not entry["factoryClass"]:
             unresolved_runtime_types.append(entry["type"])
 
-    return {
+    catalog: dict[str, Any] = {
         "schemaVersion": 1,
         "sourceStrategy": "Static mirror of LayerLibrary JSON ingestion and LayerFactory registration checks.",
         "sources": [
@@ -149,12 +196,14 @@ def build_catalog(root: Path = DEFAULT_ROOT) -> dict[str, Any]:
             "entries": len(entries),
             "skipped": len(skipped),
             "categories": len(categories),
+            "layerGroups": len(layer_groups),
             "types": len(types),
             "factoryTypes": len(factory_types),
             "duplicateIds": len(set(duplicates)),
             "unresolvedRuntimeTypes": len(set(unresolved_runtime_types)),
         },
         "categories": dict(sorted(categories.items())),
+        "layerGroups": dict(sorted(layer_groups.items())),
         "kinds": dict(sorted(kinds.items())),
         "types": dict(sorted(types.items())),
         "factoryTypes": dict(sorted(factory_types.items())),
@@ -163,14 +212,30 @@ def build_catalog(root: Path = DEFAULT_ROOT) -> dict[str, Any]:
         "duplicateIds": sorted(set(duplicates)),
         "unresolvedRuntimeTypes": sorted(set(unresolved_runtime_types)),
     }
+    if include_packages:
+        catalog["sourceStrategy"] = [
+            "Static mirror of LayerLibrary JSON ingestion and LayerFactory registration checks.",
+            "Package entries are appended from draft layer.package.json discovery output.",
+            "This combined view is a compatibility check only; runtime loading still uses legacy layer JSON unless changed in app code.",
+        ]
+        catalog["packageDiscovery"] = layer_package_discovery.root_report(selected_package_roots)
+        catalog["packageErrors"] = package_errors
+        catalog["counts"]["packageEntries"] = int((package_catalog or {}).get("counts", {}).get("packages", 0))
+        catalog["sources"].extend([rel(root) for root in selected_package_roots])
+    return catalog
 
 
 def dumps(data: dict[str, Any]) -> str:
     return json.dumps(data, indent=2, sort_keys=False) + "\n"
 
 
-def check_catalog(expected_path: Path) -> int:
-    actual = build_catalog()
+def check_catalog(expected_path: Path, include_packages: bool, package_roots: tuple[Path, ...]) -> int:
+    actual = build_catalog(include_packages=include_packages, package_roots=package_roots)
+    package_errors = actual.get("packageErrors", [])
+    if isinstance(package_errors, list) and package_errors:
+        for error in package_errors:
+            print(f"Layer package catalog error: {error}", file=sys.stderr)
+        return 1
     actual_text = dumps(actual)
     expected_text = expected_path.read_text(encoding="utf-8") if expected_path.exists() else ""
     if actual_text != expected_text:
@@ -206,19 +271,30 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--write", action="store_true", help="Rewrite the expected catalog snapshot")
     parser.add_argument("--check", action="store_true", help="Check the expected snapshot (default)")
-    parser.add_argument("--expected", type=Path, default=DEFAULT_EXPECTED, help="Expected snapshot path")
+    parser.add_argument("--include-packages", action="store_true", help="Append draft layer package catalog entries")
+    parser.add_argument("--package-root", type=Path, action="append", help="Package discovery root for --include-packages")
+    parser.add_argument("--expected", type=Path, default=None, help="Expected snapshot path")
     return parser.parse_args(argv)
 
 
 def main(argv: list[str]) -> int:
     args = parse_args(argv)
-    expected_path = args.expected if args.expected.is_absolute() else REPO_ROOT / args.expected
+    expected_default = DEFAULT_COMBINED_EXPECTED if args.include_packages else DEFAULT_EXPECTED
+    raw_expected = args.expected or expected_default
+    expected_path = raw_expected if raw_expected.is_absolute() else REPO_ROOT / raw_expected
+    package_roots = layer_package_discovery.roots_from_args(args.package_root, layer_package_discovery.fixture_roots())
     if args.write:
+        actual = build_catalog(include_packages=args.include_packages, package_roots=package_roots)
+        package_errors = actual.get("packageErrors", [])
+        if isinstance(package_errors, list) and package_errors:
+            for error in package_errors:
+                print(f"Layer package catalog error: {error}", file=sys.stderr)
+            return 1
         expected_path.parent.mkdir(parents=True, exist_ok=True)
-        expected_path.write_text(dumps(build_catalog()), encoding="utf-8")
+        expected_path.write_text(dumps(actual), encoding="utf-8")
         print(f"Wrote layer catalog snapshot: {rel(expected_path)}")
         return 0
-    return check_catalog(expected_path)
+    return check_catalog(expected_path, args.include_packages, package_roots)
 
 
 if __name__ == "__main__":

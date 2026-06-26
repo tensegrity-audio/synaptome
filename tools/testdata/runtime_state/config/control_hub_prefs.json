@@ -9,20 +9,14 @@
     {
       "band": "hud",
       "collapsed": false,
+      "column": 2,
+      "id": "hud.scene.preview"
+    },
+    {
+      "band": "hud",
+      "collapsed": false,
       "column": 0,
       "id": "hud.controls"
-    },
-    {
-      "band": "hud",
-      "collapsed": false,
-      "column": 1,
-      "id": "hud.layers"
-    },
-    {
-      "band": "hud",
-      "collapsed": false,
-      "column": 1,
-      "id": "hud.menu"
     },
     {
       "band": "hud",
@@ -34,13 +28,7 @@
       "band": "hud",
       "collapsed": false,
       "column": 0,
-      "id": "hud.status"
-    },
-    {
-      "band": "hud",
-      "collapsed": false,
-      "column": 0,
-      "id": "hud.telemetry"
+      "id": "hud.debug.terminal"
     }
   ],
   "hudLayoutTarget": "controller",
@@ -57,22 +45,15 @@
     {
       "band": "hud",
       "collapsed": false,
+      "column": 2,
+      "id": "hud.scene.preview",
+      "visible": true
+    },
+    {
+      "band": "hud",
+      "collapsed": false,
       "column": 0,
       "id": "hud.controls",
-      "visible": true
-    },
-    {
-      "band": "hud",
-      "collapsed": false,
-      "column": 1,
-      "id": "hud.layers",
-      "visible": true
-    },
-    {
-      "band": "hud",
-      "collapsed": false,
-      "column": 1,
-      "id": "hud.menu",
       "visible": true
     },
     {
@@ -86,14 +67,7 @@
       "band": "hud",
       "collapsed": false,
       "column": 0,
-      "id": "hud.status",
-      "visible": true
-    },
-    {
-      "band": "hud",
-      "collapsed": false,
-      "column": 0,
-      "id": "hud.telemetry",
+      "id": "hud.debug.terminal",
       "visible": true
     }
   ]

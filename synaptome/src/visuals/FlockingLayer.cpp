@@ -4,37 +4,67 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <utility>
 
 namespace {
-    constexpr int kModeCount = 2;
-    const char* kModeLabels[kModeCount] = {
-        "Murmuration",
-        "Predator / Prey"
+    constexpr int kModeCount = 3;
+    const char* kSchoolingModeLabels[kModeCount] = {
+        "Gather",
+        "Scatter",
+        "Panic"
+    };
+    const char* kMurmurationModeLabels[kModeCount] = {
+        "Fold",
+        "Bloom",
+        "Ripple"
     };
 
-    std::string modeDescriptions() {
+    std::string modeDescriptions(bool schoolingModel) {
+        const char* const* labels = schoolingModel ? kSchoolingModeLabels : kMurmurationModeLabels;
         std::string desc;
         for (int i = 0; i < kModeCount; ++i) {
             if (!desc.empty()) desc += "  ";
-            desc += ofToString(i) + "=" + kModeLabels[i];
+            desc += ofToString(i) + "=" + labels[i];
         }
         return desc;
     }
 }
 
 void FlockingLayer::configure(const ofJson& config) {
+    const std::string model = config.value("model", std::string());
+    if (model == "schooling") {
+        model_ = Schooling;
+    } else if (model == "murmuration") {
+        model_ = Murmuration;
+    }
+
     if (config.contains("defaults")) {
         const auto& def = config["defaults"];
+        const bool legacyAlgorithmMode = model.empty() && def.contains("mode");
+        if (model.empty()) {
+            const int legacyMode = static_cast<int>(std::round(def.value("mode", paramMode_)));
+            model_ = legacyMode == 1 ? Schooling : Murmuration;
+            if (legacyMode == 1 && !def.contains("predatorEnabled")) {
+                paramPredatorEnabled_ = true;
+            }
+        }
         paramSpeed_ = def.value("speed", paramSpeed_);
         paramBpmSync_ = def.value("bpmSync", paramBpmSync_);
         paramBpmMultiplier_ = def.value("bpmMultiplier", paramBpmMultiplier_);
         paramAlpha_ = def.value("alpha", paramAlpha_);
         paramMode_ = def.value("mode", paramMode_);
+        if (legacyAlgorithmMode) {
+            paramMode_ = 0.0f;
+        }
         paramBoidCount_ = def.value("boidCount", paramBoidCount_);
+        paramPredatorEnabled_ = def.value("predatorEnabled", paramPredatorEnabled_);
         paramPredatorCount_ = def.value("predatorCount", paramPredatorCount_);
+        paramPredatorPressure_ = def.value("predatorPressure", paramPredatorPressure_);
+        paramNeighborCount_ = def.value("neighborCount", paramNeighborCount_);
         paramCohesion_ = def.value("cohesion", paramCohesion_);
         paramAlignment_ = def.value("alignment", paramAlignment_);
         paramSeparation_ = def.value("separation", paramSeparation_);
+        paramPredatorSeparation_ = def.value("predatorSeparation", paramPredatorSeparation_);
         paramChase_ = def.value("chase", paramChase_);
         paramEvade_ = def.value("evade", paramEvade_);
         paramNoise_ = def.value("noise", paramNoise_);
@@ -45,6 +75,18 @@ void FlockingLayer::configure(const ofJson& config) {
         paramTrailAlpha_ = def.value("trailAlpha", paramTrailAlpha_);
         paramPreyAlpha_ = def.value("preyAlpha", paramPreyAlpha_);
         paramPredAlpha_ = def.value("predAlpha", paramPredAlpha_);
+        paramBgR_ = def.value("bgR", paramBgR_);
+        paramBgG_ = def.value("bgG", paramBgG_);
+        paramBgB_ = def.value("bgB", paramBgB_);
+        paramTrailR_ = def.value("trailR", paramTrailR_);
+        paramTrailG_ = def.value("trailG", paramTrailG_);
+        paramTrailB_ = def.value("trailB", paramTrailB_);
+        paramPreyR_ = def.value("preyR", paramPreyR_);
+        paramPreyG_ = def.value("preyG", paramPreyG_);
+        paramPreyB_ = def.value("preyB", paramPreyB_);
+        paramPredR_ = def.value("predatorR", paramPredR_);
+        paramPredG_ = def.value("predatorG", paramPredG_);
+        paramPredB_ = def.value("predatorB", paramPredB_);
     }
 
     if (config.contains("textureSize") && config["textureSize"].is_array() && config["textureSize"].size() >= 2) {
@@ -80,7 +122,7 @@ void FlockingLayer::setup(ParameterRegistry& registry) {
 
     meta = {};
     meta.group = "Generative";
-    meta.label = "Alpha: Flock";
+    meta.label = "Visibility: Flock Opacity";
     meta.range.min = 0.0f;
     meta.range.max = 1.0f;
     meta.range.step = 0.01f;
@@ -93,24 +135,44 @@ void FlockingLayer::setup(ParameterRegistry& registry) {
 
     meta = {};
     meta.group = "Generative";
-    meta.label = "Action: Mode";
+    meta.label = model_ == Schooling ? "Action: School Mode" : "Action: Murmuration Mode";
     meta.range.min = 0.0f;
     meta.range.max = static_cast<float>(kModeCount - 1);
     meta.range.step = 1.0f;
-    meta.description = modeDescriptions();
+    meta.description = modeDescriptions(model_ == Schooling);
     registry.addFloat(prefix + ".mode", &paramMode_, paramMode_, meta);
 
-    meta.label = "Count: Boids";
+    meta.label = "Count: Prey";
     meta.range.min = 8.0f;
-    meta.range.max = 160.0f;
+    meta.range.max = 512.0f;
     meta.range.step = 1.0f;
     registry.addFloat(prefix + ".boidCount", &paramBoidCount_, paramBoidCount_, meta);
+
+    meta = {};
+    meta.group = "Generative";
+    meta.label = "Action: Predator Enabled";
+    registry.addBool(prefix + ".predatorEnabled", &paramPredatorEnabled_, paramPredatorEnabled_, meta);
 
     meta.label = "Count: Predators";
     meta.range.min = 0.0f;
     meta.range.max = 24.0f;
     meta.range.step = 1.0f;
     registry.addFloat(prefix + ".predatorCount", &paramPredatorCount_, paramPredatorCount_, meta);
+
+    meta.label = "Force: Predator Pressure";
+    meta.range.min = 0.0f;
+    meta.range.max = 2.0f;
+    meta.range.step = 0.01f;
+    registry.addFloat(prefix + ".predatorPressure", &paramPredatorPressure_, paramPredatorPressure_, meta);
+
+    meta.label = model_ == Schooling ? "Scale: School Radius" : "Count: Topological Neighbors";
+    meta.range.min = 1.0f;
+    meta.range.max = 12.0f;
+    meta.range.step = 1.0f;
+    meta.description = model_ == Schooling
+        ? "Metric neighborhood radius: higher values make the school clump and lane over a larger local zone."
+        : "Topological neighborhood count: each bird follows this many nearest birds, independent of metric distance.";
+    registry.addFloat(prefix + ".neighborCount", &paramNeighborCount_, paramNeighborCount_, meta);
 
     meta.label = "Force: Cohesion";
     meta.range.min = 0.0f;
@@ -124,11 +186,17 @@ void FlockingLayer::setup(ParameterRegistry& registry) {
     meta.range.step = 0.001f;
     registry.addFloat(prefix + ".alignment", &paramAlignment_, paramAlignment_, meta);
 
-    meta.label = "Force: Separation";
+    meta.label = "Force: Prey Separation";
     meta.range.min = 0.0f;
     meta.range.max = 0.02f;
     meta.range.step = 0.0005f;
     registry.addFloat(prefix + ".separation", &paramSeparation_, paramSeparation_, meta);
+
+    meta.label = "Force: Predator Separation";
+    meta.range.min = 0.0f;
+    meta.range.max = 0.12f;
+    meta.range.step = 0.001f;
+    registry.addFloat(prefix + ".predatorSeparation", &paramPredatorSeparation_, paramPredatorSeparation_, meta);
 
     meta.label = "Force: Chase";
     meta.range.min = 0.0f;
@@ -166,20 +234,50 @@ void FlockingLayer::setup(ParameterRegistry& registry) {
     meta.range.step = 0.25f;
     registry.addFloat(prefix + ".pointSize", &paramPointSize_, paramPointSize_, meta);
 
-    meta.label = "Alpha: Background";
+    meta.label = "Visibility: Background Opacity";
     meta.range.min = 0.0f;
     meta.range.max = 1.0f;
     meta.range.step = 0.01f;
     registry.addFloat(prefix + ".backgroundAlpha", &paramBackgroundAlpha_, paramBackgroundAlpha_, meta);
 
-    meta.label = "Alpha: Trail";
+    meta.label = "Visibility: Trail Opacity";
     registry.addFloat(prefix + ".trailAlpha", &paramTrailAlpha_, paramTrailAlpha_, meta);
 
-    meta.label = "Alpha: Prey";
+    meta.label = "Visibility: Prey Opacity";
     registry.addFloat(prefix + ".preyAlpha", &paramPreyAlpha_, paramPreyAlpha_, meta);
 
-    meta.label = "Alpha: Predators";
+    meta.label = "Visibility: Predator Opacity";
     registry.addFloat(prefix + ".predAlpha", &paramPredAlpha_, paramPredAlpha_, meta);
+
+    meta = {};
+    meta.group = "Generative";
+    meta.range.min = 0.0f;
+    meta.range.max = 1.0f;
+    meta.range.step = 0.01f;
+    meta.label = "Color: Background R";
+    registry.addFloat(prefix + ".bgR", &paramBgR_, paramBgR_, meta);
+    meta.label = "Color: Background G";
+    registry.addFloat(prefix + ".bgG", &paramBgG_, paramBgG_, meta);
+    meta.label = "Color: Background B";
+    registry.addFloat(prefix + ".bgB", &paramBgB_, paramBgB_, meta);
+    meta.label = "Color: Trail R";
+    registry.addFloat(prefix + ".trailR", &paramTrailR_, paramTrailR_, meta);
+    meta.label = "Color: Trail G";
+    registry.addFloat(prefix + ".trailG", &paramTrailG_, paramTrailG_, meta);
+    meta.label = "Color: Trail B";
+    registry.addFloat(prefix + ".trailB", &paramTrailB_, paramTrailB_, meta);
+    meta.label = "Color: Prey R";
+    registry.addFloat(prefix + ".preyR", &paramPreyR_, paramPreyR_, meta);
+    meta.label = "Color: Prey G";
+    registry.addFloat(prefix + ".preyG", &paramPreyG_, paramPreyG_, meta);
+    meta.label = "Color: Prey B";
+    registry.addFloat(prefix + ".preyB", &paramPreyB_, paramPreyB_, meta);
+    meta.label = "Color: Predator R";
+    registry.addFloat(prefix + ".predatorR", &paramPredR_, paramPredR_, meta);
+    meta.label = "Color: Predator G";
+    registry.addFloat(prefix + ".predatorG", &paramPredG_, paramPredG_, meta);
+    meta.label = "Color: Predator B";
+    registry.addFloat(prefix + ".predatorB", &paramPredB_, paramPredB_, meta);
 
     allocateTrail();
     resetSimulation();
@@ -191,8 +289,10 @@ void FlockingLayer::update(const LayerUpdateParams& params) {
     if (!enabled_) return;
 
     paramMode_ = std::round(ofClamp(paramMode_, 0.0f, static_cast<float>(kModeCount - 1)));
-    paramBoidCount_ = std::round(ofClamp(paramBoidCount_, 8.0f, 160.0f));
+    paramBoidCount_ = std::round(ofClamp(paramBoidCount_, 8.0f, 512.0f));
     paramPredatorCount_ = std::round(ofClamp(paramPredatorCount_, 0.0f, 24.0f));
+    paramPredatorPressure_ = ofClamp(paramPredatorPressure_, 0.0f, 2.0f);
+    paramNeighborCount_ = std::round(ofClamp(paramNeighborCount_, 1.0f, 12.0f));
     paramBpmMultiplier_ = ofClamp(paramBpmMultiplier_, 0.25f, 8.0f);
     paramAlpha_ = ofClamp(paramAlpha_, 0.0f, 1.0f);
     paramPointSize_ = ofClamp(paramPointSize_, 1.0f, 6.0f);
@@ -200,6 +300,19 @@ void FlockingLayer::update(const LayerUpdateParams& params) {
     paramTrailAlpha_ = ofClamp(paramTrailAlpha_, 0.0f, 1.0f);
     paramPreyAlpha_ = ofClamp(paramPreyAlpha_, 0.0f, 1.0f);
     paramPredAlpha_ = ofClamp(paramPredAlpha_, 0.0f, 1.0f);
+    paramPredatorSeparation_ = ofClamp(paramPredatorSeparation_, 0.0f, 0.12f);
+    paramBgR_ = ofClamp(paramBgR_, 0.0f, 1.0f);
+    paramBgG_ = ofClamp(paramBgG_, 0.0f, 1.0f);
+    paramBgB_ = ofClamp(paramBgB_, 0.0f, 1.0f);
+    paramTrailR_ = ofClamp(paramTrailR_, 0.0f, 1.0f);
+    paramTrailG_ = ofClamp(paramTrailG_, 0.0f, 1.0f);
+    paramTrailB_ = ofClamp(paramTrailB_, 0.0f, 1.0f);
+    paramPreyR_ = ofClamp(paramPreyR_, 0.0f, 1.0f);
+    paramPreyG_ = ofClamp(paramPreyG_, 0.0f, 1.0f);
+    paramPreyB_ = ofClamp(paramPreyB_, 0.0f, 1.0f);
+    paramPredR_ = ofClamp(paramPredR_, 0.0f, 1.0f);
+    paramPredG_ = ofClamp(paramPredG_, 0.0f, 1.0f);
+    paramPredB_ = ofClamp(paramPredB_, 0.0f, 1.0f);
 
     if (paramReseedRequested_ ||
         static_cast<int>(boids_.size()) != static_cast<int>(paramBoidCount_) ||
@@ -210,28 +323,24 @@ void FlockingLayer::update(const LayerUpdateParams& params) {
 
     const float stepRate = stepRateFor(params);
     if (stepRate <= 0.0f) {
-        if (dirty_) {
-            syncTexture();
-            dirty_ = false;
-        }
+        syncTexture();
+        dirty_ = false;
         return;
     }
 
     stepAccumulator_ += params.dt * stepRate;
     int iterations = std::min(24, static_cast<int>(std::floor(stepAccumulator_)));
     if (iterations <= 0) {
-        if (dirty_) {
-            syncTexture();
-            dirty_ = false;
-        }
+        syncTexture();
+        dirty_ = false;
         return;
     }
 
     stepAccumulator_ -= static_cast<float>(iterations);
     for (int i = 0; i < iterations; ++i) {
         fadeTrail();
-        if (static_cast<int>(paramMode_) == PredatorPrey) {
-            stepPredatorPrey(1.0f / static_cast<float>(iterations));
+        if (model_ == Schooling) {
+            stepSchooling(1.0f / static_cast<float>(iterations));
         } else {
             stepMurmuration(1.0f / static_cast<float>(iterations), params.time);
         }
@@ -301,74 +410,164 @@ void FlockingLayer::fadeTrail() {
     }
 }
 
-void FlockingLayer::stepMurmuration(float dtScale, float time) {
+void FlockingLayer::stepSchooling(float dtScale) {
+    const float radiusControl = ofClamp(paramNeighborCount_, 1.0f, 12.0f);
+    const float separationRadius = 2.5f + radiusControl * 0.55f;
+    const float alignmentRadius = separationRadius + 4.0f + radiusControl * 0.85f;
+    const float cohesionRadius = alignmentRadius + 3.0f + radiusControl * 0.9f;
+    const float separationRadius2 = separationRadius * separationRadius;
+    const float alignmentRadius2 = alignmentRadius * alignmentRadius;
+    const float cohesionRadius2 = cohesionRadius * cohesionRadius;
+    const float predatorThreatRadius = 15.0f + radiusControl * 1.5f;
+    const float predatorThreatRadius2 = predatorThreatRadius * predatorThreatRadius;
+
     for (auto& boid : boids_) {
         glm::vec2 cohesion(0.0f);
         glm::vec2 alignment(0.0f);
         glm::vec2 separation(0.0f);
-        int neighbors = 0;
+        int cohesionNeighbors = 0;
+        int alignmentNeighbors = 0;
 
         for (const auto& other : boids_) {
             if (&boid == &other) continue;
             glm::vec2 delta = other.pos - boid.pos;
             float d2 = glm::dot(delta, delta);
-            if (d2 < 70.0f) {
+            if (d2 < cohesionRadius2) {
                 cohesion += other.pos;
-                alignment += other.vel;
-                ++neighbors;
+                ++cohesionNeighbors;
             }
-            if (d2 > 0.001f && d2 < 9.0f) {
+            if (d2 < alignmentRadius2) {
+                alignment += other.vel;
+                ++alignmentNeighbors;
+            }
+            if (d2 > 0.001f && d2 < separationRadius2) {
+                const float distance = std::sqrt(d2);
+                separation -= (delta / distance) * ((separationRadius - distance) / separationRadius);
+            }
+        }
+
+        const int mode = behaviorMode();
+        const float cohesionSign = mode == Diverge ? -0.65f : 1.0f;
+        const float separationScale = mode == Diverge ? 2.2f : 1.0f;
+        const float stressScale = mode == Stressed ? 1.6f : 1.0f;
+        if (cohesionNeighbors > 0) {
+            boid.vel += ((cohesion / static_cast<float>(cohesionNeighbors)) - boid.pos) * paramCohesion_ * cohesionSign;
+        }
+        if (alignmentNeighbors > 0) {
+            boid.vel += ((alignment / static_cast<float>(alignmentNeighbors)) - boid.vel) * paramAlignment_;
+        }
+        boid.vel += separation * paramSeparation_ * separationScale;
+
+        if (predatorsActive()) {
+            for (const auto& predator : predators_) {
+                glm::vec2 delta = predator.pos - boid.pos;
+                float d2 = glm::dot(delta, delta);
+                if (d2 > 0.001f && d2 < predatorThreatRadius2) {
+                    const float distance = std::sqrt(d2);
+                    const float falloff = (predatorThreatRadius - distance) / predatorThreatRadius;
+                    boid.vel -= delta * paramEvade_ * paramPredatorPressure_ * (0.55f + falloff * 1.8f);
+                }
+            }
+        }
+
+        boid.vel.x += ofRandom(-1.0f, 1.0f) * paramNoise_ * stressScale;
+        boid.vel.y += ofRandom(-1.0f, 1.0f) * paramNoise_ * stressScale;
+        clampSpeed(boid.vel, 0.42f, 0.8f, 1.25f + (stressScale - 1.0f) * 0.2f);
+        boid.pos = wrapPosition(boid.pos + boid.vel * (1.0f + dtScale));
+        depositTrail(boid.pos, paramTrailDeposit_);
+    }
+
+    if (predatorsActive()) {
+        stepPredators(dtScale);
+    }
+}
+
+void FlockingLayer::stepMurmuration(float dtScale, float time) {
+    const int maxNeighbors = std::max(1, static_cast<int>(paramNeighborCount_));
+    const float predatorThreatRadius = 18.0f + ofClamp(paramNeighborCount_, 1.0f, 12.0f) * 1.7f;
+    const float predatorThreatRadius2 = predatorThreatRadius * predatorThreatRadius;
+    for (auto& boid : boids_) {
+        std::vector<std::pair<float, const Boid*>> nearest;
+        nearest.reserve(boids_.size());
+        for (const auto& other : boids_) {
+            if (&boid == &other) continue;
+            glm::vec2 delta = other.pos - boid.pos;
+            nearest.push_back({ glm::dot(delta, delta), &other });
+        }
+        std::sort(nearest.begin(), nearest.end(), [](const auto& a, const auto& b) {
+            return a.first < b.first;
+        });
+
+        glm::vec2 cohesion(0.0f);
+        glm::vec2 alignment(0.0f);
+        glm::vec2 separation(0.0f);
+        const int neighbors = std::min(maxNeighbors, static_cast<int>(nearest.size()));
+        for (int i = 0; i < neighbors; ++i) {
+            const auto& neighbor = nearest[static_cast<std::size_t>(i)];
+            const Boid& other = *neighbor.second;
+            glm::vec2 delta = other.pos - boid.pos;
+            cohesion += other.pos;
+            alignment += other.vel;
+            if (neighbor.first > 0.001f && neighbor.first < 16.0f) {
                 separation -= delta;
             }
         }
 
         if (neighbors > 0) {
-            boid.vel += ((cohesion / static_cast<float>(neighbors)) - boid.pos) * paramCohesion_;
+            const int mode = behaviorMode();
+            const float cohesionSign = mode == Diverge ? -0.45f : 1.0f;
+            const float separationScale = mode == Diverge ? 2.0f : 1.0f;
+            const float stressScale = mode == Stressed ? 1.9f : 1.0f;
+            const float wave = std::sin((boid.pos.x + boid.pos.y) * 0.055f + time * 1.7f);
+            glm::vec2 tangent(-boid.vel.y, boid.vel.x);
+            if (glm::dot(tangent, tangent) > 0.0001f) {
+                tangent = glm::normalize(tangent);
+            }
+            boid.vel += ((cohesion / static_cast<float>(neighbors)) - boid.pos) * paramCohesion_ * cohesionSign;
             boid.vel += ((alignment / static_cast<float>(neighbors)) - boid.vel) * paramAlignment_;
-            boid.vel += separation * paramSeparation_;
+            boid.vel += separation * paramSeparation_ * separationScale;
+            boid.vel += tangent * wave * paramNoise_ * stressScale * 1.8f;
+            boid.vel.x += std::sin(boid.pos.y * 0.2f + time * 0.8f) * paramNoise_ * stressScale;
+            boid.vel.y += std::cos(boid.pos.x * 0.16f + time * 1.0f) * paramNoise_ * stressScale;
         }
 
-        boid.vel.x += std::sin(boid.pos.y * 0.2f + time * 0.8f) * paramNoise_;
-        boid.vel.y += std::cos(boid.pos.x * 0.16f + time * 1.0f) * paramNoise_;
+        if (predatorsActive()) {
+            for (const auto& predator : predators_) {
+                glm::vec2 delta = predator.pos - boid.pos;
+                float d2 = glm::dot(delta, delta);
+                if (d2 > 0.001f && d2 < predatorThreatRadius2) {
+                    const float distance = std::sqrt(d2);
+                    const float falloff = (predatorThreatRadius - distance) / predatorThreatRadius;
+                    glm::vec2 away = -delta / distance;
+                    glm::vec2 tangent(-away.y, away.x);
+                    const float waveSign = std::sin(time * 1.3f + boid.pos.x * 0.11f + boid.pos.y * 0.07f) >= 0.0f ? 1.0f : -1.0f;
+                    boid.vel += away * paramEvade_ * paramPredatorPressure_ * (0.55f + falloff * 1.4f);
+                    boid.vel += tangent * waveSign * paramEvade_ * paramPredatorPressure_ * (0.35f + falloff * 0.9f);
+                }
+            }
+        }
         clampSpeed(boid.vel, 0.38f, 0.8f, 1.2f);
         boid.pos = wrapPosition(boid.pos + boid.vel * (1.0f + dtScale));
         depositTrail(boid.pos, paramTrailDeposit_);
     }
+
+    if (predatorsActive()) {
+        stepPredators(dtScale);
+    }
 }
 
-void FlockingLayer::stepPredatorPrey(float dtScale) {
-    for (auto& prey : boids_) {
-        glm::vec2 cohesion(0.0f);
-        glm::vec2 alignment(0.0f);
-        int neighbors = 0;
-        for (const auto& other : boids_) {
-            if (&prey == &other) continue;
-            glm::vec2 delta = other.pos - prey.pos;
-            float d2 = glm::dot(delta, delta);
-            if (d2 < 64.0f) {
-                cohesion += other.pos;
-                alignment += other.vel;
-                ++neighbors;
-            }
-        }
-        if (neighbors > 0) {
-            prey.vel += ((cohesion / static_cast<float>(neighbors)) - prey.pos) * paramCohesion_;
-            prey.vel += ((alignment / static_cast<float>(neighbors)) - prey.vel) * paramAlignment_;
-        }
-        for (const auto& predator : predators_) {
-            glm::vec2 delta = predator.pos - prey.pos;
-            float d2 = glm::dot(delta, delta);
-            if (d2 < 90.0f) {
-                prey.vel -= delta * paramEvade_;
-            }
-        }
-        clampSpeed(prey.vel, 0.42f, 0.8f, 1.25f);
-        prey.pos = wrapPosition(prey.pos + prey.vel * (1.0f + dtScale));
-        depositTrail(prey.pos, paramTrailDeposit_);
-    }
-
+void FlockingLayer::stepPredators(float dtScale) {
     for (auto& predator : predators_) {
         if (boids_.empty()) break;
+        glm::vec2 separation(0.0f);
+        for (const auto& other : predators_) {
+            if (&predator == &other) continue;
+            glm::vec2 delta = other.pos - predator.pos;
+            const float d2 = glm::dot(delta, delta);
+            if (d2 > 0.001f && d2 < 100.0f) {
+                separation -= delta * ((100.0f - d2) / 100.0f);
+            }
+        }
         std::size_t best = 0;
         float bestDist = std::numeric_limits<float>::max();
         for (std::size_t i = 0; i < boids_.size(); ++i) {
@@ -379,8 +578,28 @@ void FlockingLayer::stepPredatorPrey(float dtScale) {
                 best = i;
             }
         }
-        predator.vel += (boids_[best].pos - predator.pos) * paramChase_;
-        clampSpeed(predator.vel, 0.36f, 0.85f, 1.25f);
+        glm::vec2 target = boids_[best].pos;
+        if (model_ == Murmuration) {
+            glm::vec2 centroid(0.0f);
+            for (const auto& boid : boids_) {
+                centroid += boid.pos;
+            }
+            centroid /= static_cast<float>(boids_.size());
+            target = centroid * 0.65f + target * 0.35f;
+        }
+
+        predator.vel += separation * paramPredatorSeparation_;
+        predator.vel += (target - predator.pos) * paramChase_ * paramPredatorPressure_ * (model_ == Schooling ? 1.15f : 0.55f);
+        if (model_ == Murmuration) {
+            glm::vec2 heading = predator.vel;
+            if (glm::dot(heading, heading) > 0.0001f) {
+                heading = glm::normalize(heading);
+                glm::vec2 side(-heading.y, heading.x);
+                const float weave = std::sin(predator.pos.x * 0.12f + predator.pos.y * 0.17f);
+                predator.vel += side * weave * paramNoise_ * 2.0f;
+            }
+        }
+        clampSpeed(predator.vel, model_ == Schooling ? 0.42f : 0.32f, 0.82f, model_ == Schooling ? 1.32f : 1.18f);
         predator.pos = wrapPosition(predator.pos + predator.vel * (1.0f + dtScale));
         depositTrail(predator.pos, paramTrailDeposit_ * 1.4f);
     }
@@ -415,12 +634,14 @@ void FlockingLayer::syncTexture() {
     }
 
     const int preyRadius = std::max(0, static_cast<int>(std::round(paramPointSize_ * 0.5f)) - 1);
-    const int predRadius = std::max(preyRadius, static_cast<int>(std::round(paramPointSize_ * 0.5f)));
+    const int predRadius = std::max(preyRadius + 2, static_cast<int>(std::round(paramPointSize_ * 1.35f)) + 1);
     for (const auto& boid : boids_) {
         stampMarker(pixels_, boid.pos, preyColor, preyRadius);
     }
-    for (const auto& predator : predators_) {
-        stampMarker(pixels_, predator.pos, predColor, predRadius);
+    if (predatorsActive()) {
+        for (const auto& predator : predators_) {
+            stampPredator(pixels_, predator, predColor, predRadius);
+        }
     }
 
     texture_.loadData(pixels_);
@@ -448,15 +669,73 @@ void FlockingLayer::clampSpeed(glm::vec2& vel, float target, float minScale, flo
     vel *= scale;
 }
 
+int FlockingLayer::behaviorMode() const {
+    return static_cast<int>(std::round(ofClamp(paramMode_, 0.0f, static_cast<float>(kModeCount - 1))));
+}
+
+bool FlockingLayer::predatorsActive() const {
+    return paramPredatorEnabled_ && paramPredatorPressure_ > 0.0f && !predators_.empty();
+}
+
 void FlockingLayer::stampMarker(ofFloatPixels& pixels, const glm::vec2& pos, const ofFloatColor& color, int radius) const {
     const int cx = static_cast<int>(std::round(pos.x));
     const int cy = static_cast<int>(std::round(pos.y));
+    const float radius2 = static_cast<float>(radius * radius) + 0.25f;
     for (int dy = -radius; dy <= radius; ++dy) {
         for (int dx = -radius; dx <= radius; ++dx) {
             const int x = cx + dx;
             const int y = cy + dy;
             if (x < 0 || x >= textureSize_.x || y < 0 || y >= textureSize_.y) continue;
+            if (radius > 0 && static_cast<float>(dx * dx + dy * dy) > radius2) continue;
             pixels.setColor(x, y, color);
+        }
+    }
+}
+
+void FlockingLayer::stampPredator(ofFloatPixels& pixels, const Boid& predator, const ofFloatColor& color, int radius) const {
+    glm::vec2 heading = predator.vel;
+    if (glm::dot(heading, heading) < 0.0001f) {
+        heading = { 1.0f, 0.0f };
+    } else {
+        heading = glm::normalize(heading);
+    }
+    const glm::vec2 side(-heading.y, heading.x);
+    const glm::vec2 headOffset = heading * (static_cast<float>(radius) * 0.62f);
+    const glm::vec2 tailOffset = -heading * (static_cast<float>(radius) * 0.72f);
+    const float bodyLength = std::max(2.8f, static_cast<float>(radius) * 1.75f);
+    const float bodyWidth = std::max(1.5f, static_cast<float>(radius) * 0.78f);
+    const int bounds = static_cast<int>(std::ceil(static_cast<float>(radius) * 2.4f)) + 1;
+    const int cx = static_cast<int>(std::round(predator.pos.x));
+    const int cy = static_cast<int>(std::round(predator.pos.y));
+
+    for (int dy = -bounds; dy <= bounds; ++dy) {
+        for (int dx = -bounds; dx <= bounds; ++dx) {
+            const int x = cx + dx;
+            const int y = cy + dy;
+            if (x < 0 || x >= textureSize_.x || y < 0 || y >= textureSize_.y) continue;
+
+            const glm::vec2 rel(static_cast<float>(dx), static_cast<float>(dy));
+            const float along = glm::dot(rel, heading);
+            const float across = glm::dot(rel, side);
+            const float taper = ofClamp(1.0f - std::abs(along) / (bodyLength + 0.001f) * 0.42f, 0.48f, 1.0f);
+            const float edgeRipple = 0.9f + 0.1f * std::sin(static_cast<float>(x) * 1.7f + static_cast<float>(y) * 2.3f);
+            const bool body = ((along * along) / (bodyLength * bodyLength) +
+                               (across * across) / (bodyWidth * bodyWidth * taper * taper)) <= edgeRipple;
+
+            const glm::vec2 headRel = rel - headOffset;
+            const bool head = glm::dot(headRel, headRel) <= bodyWidth * bodyWidth * 0.85f;
+
+            const glm::vec2 leftTail = rel - (tailOffset + side * bodyWidth * 0.55f);
+            const glm::vec2 rightTail = rel - (tailOffset - side * bodyWidth * 0.55f);
+            const float tailRadius = bodyWidth * 0.55f;
+            const bool tail = glm::dot(leftTail, leftTail) <= tailRadius * tailRadius ||
+                              glm::dot(rightTail, rightTail) <= tailRadius * tailRadius;
+
+            const bool dorsal = std::abs(along + bodyLength * 0.12f) < bodyLength * 0.4f &&
+                                std::abs(across) < bodyWidth * (0.18f + 0.12f * edgeRipple);
+            if (body || head || tail || dorsal) {
+                pixels.setColor(x, y, color);
+            }
         }
     }
 }

@@ -14,6 +14,39 @@ Default motion has been slowed again: `Evolution Speed`, `Gravity`, `Cluster Swi
 
 Organic-field revision: the web now uses full-screen blue-noise-style seed placement instead of macro clumps squeezed into the center of the frame. Filament paths are measured and drawn as curved organic paths with deterministic wobble, and the growth field receives an additional warped Voronoi-style ridge pass so axon structure can arise between neighboring web sites instead of only along straight nearest-neighbor chords. Matter spawning now keeps a diffuse screen-wide star dust population alive while the field slowly condenses it into brighter nuclei and ridges. `Audio: Glow` and `Audio: Twinkle` expose direct audio mappings for luminosity, halo lift, star shimmer, and glow radius.
 
+Performance correction: the organic-field pass was too expensive for live use. The growth grid is reduced to 72 x 40, default matter count is back to 1800, hidden satellite web nodes are capped to a lighter multiplier, high-node graphs connect more sparsely, curve samples are reused per edge, and warped Voronoi site positions are cached once per paint pass instead of recomputed inside every cell/site comparison. The visual target remains organic full-screen star dust condensing into nuclei and axons, but the implementation is now biased toward live frame rate over maximum simulation detail.
+
+Current implementation pass: the 2D scale architecture is now being folded into the active engine. Each macro web node owns deterministic child nuclei and short child axons derived from the same seed, so zooming in reveals local galaxy-cluster structure instead of only magnifying the coarse growth grid. Primary and child filament curve samples are cached once per update and reused by both field painting and drawing, which keeps the organic paths while avoiding repeated curve math in the hottest render path. New controls are `Clusters: Detail Amount`, `Clusters: Detail Scale`, and `Clusters: Detail Glow`; these tune nested structure without introducing a separate visual mode.
+
+## Scale Architecture Decision
+
+Decision: focus the next implementation pass on a 2D projected universe model that works across multiple apparent scales. The live layer should not become a full 3D cosmology simulator yet. The immediate goal is one coherent 2D engine where the same seeded field can read as a whole-screen cosmic web from far away, then reveal a single galaxy-cluster-scale formation region when zoomed in.
+
+The model should be hierarchical but still 2D:
+
+```text
+screen-scale cosmic web
+-> macro nodes and axons
+-> cluster subnodes
+-> local galaxy-like condensations
+-> star dust, glow, and twinkle detail
+```
+
+The important implementation shift is deterministic level-of-detail. A parent web node should own substructure generated from its seed, so zooming in reveals additional detail instead of only magnifying the existing 72 x 40 growth grid. Far-scale ridges should become mid-scale cluster filaments; mid-scale nuclei should become local galaxy-cluster condensations. The same field channels still apply at every scale: density, ridge conductivity, node activation, void pressure, luminosity, accumulated signal energy, and matter transport.
+
+2D resources worth considering:
+
+- `delaunator-cpp`: fast 2D Delaunay triangulation. Candidate for organic web topology, replacing or improving hand-built nearest-neighbor edges.
+- `nanoflann`: header-only C++ KD-tree nearest-neighbor search. Candidate if node, star, or cluster-subnode counts grow enough that brute-force neighborhood checks become a frame-rate problem.
+- `FastNoiseLite`: portable C++ noise with cellular/Voronoi noise and domain warp. Candidate for scale-dependent density, void texture, turbulent gas, and local cluster detail.
+
+3D and scientific simulation resources to keep as references, not immediate dependencies:
+
+- `GADGET-4`: parallel cosmological N-body/SPH code for cosmic structure formation. Useful as scientific inspiration for hierarchical clustering, density fields, and dark-matter/gas language, but too heavy for a live layer dependency.
+- `SWIFT`: modern astrophysics/cosmology particle code designed for large simulations. Useful reference for cosmological structure concepts, not appropriate for live rendering integration.
+- `REBOUND`: open-source N-body integrator for stars, planets, moons, rings, and dust. More relevant to the solar-system layer than the cosmic-web layer.
+- `Voro++`: 3D Voronoi cell library. Worth revisiting only if the cosmos layer becomes a true navigable 3D volume instead of a projected 2D universe map.
+
 ## Goal
 
 The current `CosmosFormationLayer` still reads as an orbital cluster system: matter settles into a distinct ring, stars sweep through the interior, and motion appears driven by shifting gravitational points.

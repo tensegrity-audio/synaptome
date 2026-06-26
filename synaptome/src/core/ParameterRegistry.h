@@ -181,11 +181,15 @@ namespace parameter_label_detail {
             "Color: ",
             "Count: ",
             "Force: ",
+            "General: ",
             "Glow: ",
+            "Growth: ",
+            "Input: ",
             "Motion: ",
             "Scale: ",
             "Seed: ",
             "Time: ",
+            "Visibility: ",
         };
         for (const char* prefix : prefixes) {
             if (label.rfind(prefix, 0) == 0) {
@@ -216,13 +220,19 @@ namespace parameter_label_detail {
                                 "trailb", "bgcolor", "background color" })) {
             return "Color";
         }
-        if (containsAny(text, { "alpha", "opacity", "transparent", "coverage", "mask", "fade",
-                                "vignette", "mix" })) {
-            return "Alpha";
+        if (containsAny(text, { "alpha", "opacity", "transparent", "coverage", "mask",
+                                "visible", "visibility", "enabled" })) {
+            return "Visibility";
         }
-        if (containsAny(text, { "audio", "bass", "mid", "high", "peak", "waveform", "mic-",
-                                "sensor", "input", "gain" })) {
+        if (containsAny(text, { "source", "routing", "route", "osc", "midi", "input mode",
+                                "input source" })) {
+            return "Input";
+        }
+        if (containsAny(text, { "audio", "bass", "mid", "high", "peak", "waveform", "mic-" })) {
             return "Audio";
+        }
+        if (containsAny(text, { "growth", "grow", "emergence", "uplift" })) {
+            return "Growth";
         }
         if (containsAny(text, { "bpm", "beat", "time", "evolution", "smoothing", "decay",
                                 "duration", "persistence", "memory", "rate", "frequency",

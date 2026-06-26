@@ -40,8 +40,8 @@
     ]
   },
   "counts": {
-    "validLayerAssets": 61,
-    "hudWidgets": 7,
+    "validLayerAssets": 54,
+    "hudWidgets": 5,
     "consoleLayers": 8,
     "slotAssignments": 0
   },
@@ -154,40 +154,24 @@
             "target": "projector"
           },
           {
-            "id": "hud.layers",
-            "column": 1,
+            "id": "hud.debug.terminal",
+            "column": 0,
             "visible": true,
             "collapsed": false,
             "band": "hud",
             "target": "projector"
           },
           {
-            "id": "hud.menu",
-            "column": 1,
+            "id": "hud.scene.preview",
+            "column": 2,
             "visible": true,
             "collapsed": false,
             "band": "hud",
-            "target": "projector"
+            "target": "controller"
           },
           {
             "id": "hud.sensors",
             "column": 1,
-            "visible": true,
-            "collapsed": false,
-            "band": "hud",
-            "target": "projector"
-          },
-          {
-            "id": "hud.status",
-            "column": 0,
-            "visible": true,
-            "collapsed": false,
-            "band": "hud",
-            "target": "projector"
-          },
-          {
-            "id": "hud.telemetry",
-            "column": 0,
             "visible": true,
             "collapsed": false,
             "band": "hud",
@@ -212,40 +196,24 @@
             "target": "projector"
           },
           {
-            "id": "hud.layers",
-            "column": 1,
+            "id": "hud.debug.terminal",
+            "column": 0,
             "visible": true,
             "collapsed": false,
             "band": "hud",
             "target": "projector"
           },
           {
-            "id": "hud.menu",
-            "column": 1,
+            "id": "hud.scene.preview",
+            "column": 2,
             "visible": true,
             "collapsed": false,
             "band": "hud",
-            "target": "projector"
+            "target": "controller"
           },
           {
             "id": "hud.sensors",
             "column": 1,
-            "visible": true,
-            "collapsed": false,
-            "band": "hud",
-            "target": "projector"
-          },
-          {
-            "id": "hud.status",
-            "column": 0,
-            "visible": true,
-            "collapsed": false,
-            "band": "hud",
-            "target": "projector"
-          },
-          {
-            "id": "hud.telemetry",
-            "column": 0,
             "visible": true,
             "collapsed": false,
             "band": "hud",

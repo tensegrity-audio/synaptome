@@ -1,0 +1,97 @@
+{
+  "globals": {
+    "transport.bpm": 120.0,
+    "globals.speed": 1.0,
+    "fx.master": 0.0,
+    "camera.dist": 1720.0,
+    "ui.hud": true
+  },
+  "effects": {
+    "dither": {
+      "route": 0
+    },
+    "ascii": {
+      "route": 0,
+      "block": 8.0,
+      "colorMode": 0.0,
+      "characterSet": 2.0,
+      "aspect": 0.0,
+      "padding": 0.0,
+      "gamma": 1.0,
+      "jitter": 0.0
+    },
+    "crt": {
+      "route": 0,
+      "scanline": 0.10,
+      "vignette": 0.18,
+      "bleed": 0.03
+    }
+  },
+  "console": {
+    "slots": [
+      {
+        "index": 1,
+        "assetId": "generative.mountainIsland",
+        "active": true,
+        "opacity": 1.0,
+        "parameters": {
+          "console.layer1.alpha": 1.0,
+          "console.layer1.sceneScale": 0.92,
+          "console.layer1.sceneOffsetY": -42.0,
+          "console.layer1.sceneOffsetZ": 0.0,
+          "console.layer1.spinAngle": 0.0,
+          "console.layer1.spinSpeed": 3.2,
+          "console.layer1.waterRadius": 820.0,
+          "console.layer1.waterLevel": 0.0,
+          "console.layer1.waterRimDepth": 76.0,
+          "console.layer1.waterHighlight": 0.72,
+          "console.layer1.waterWaveAmount": 3.5,
+          "console.layer1.shoreGlow": 0.78,
+          "console.layer1.submergedLandDepth": 76.0,
+          "console.layer1.solidWorldAlpha": 0.92,
+          "console.layer1.islandRadius": 430.0,
+          "console.layer1.pointCount": 720.0,
+          "console.layer1.boundaryPoints": 144.0,
+          "console.layer1.triangleTargetLength": 90.0,
+          "console.layer1.mountainHeight": 310.0,
+          "console.layer1.roughness": 0.58,
+          "console.layer1.shorelineJitter": 0.22,
+          "console.layer1.peakCount": 5.0,
+          "console.layer1.snowLine": 0.76,
+          "console.layer1.treeLine": 0.42,
+          "console.layer1.sandHeight": 115.0,
+          "console.layer1.upliftRadius": 0.88,
+          "console.layer1.upliftScatter": 0.82,
+          "console.layer1.upliftFalloff": 0.95,
+          "console.layer1.seabedUndulation": 22.0,
+          "console.layer1.edgeUndulation": 34.0,
+          "console.layer1.wireAlpha": 0.18,
+          "console.layer1.growth": 0.55,
+          "console.layer1.autoGrow": true,
+          "console.layer1.growthRate": 0.035,
+          "console.layer1.growthCurve": 1.15,
+          "console.layer1.cloudCount": 7.0,
+          "console.layer1.cloudPuffCount": 11.0,
+          "console.layer1.cloudFacetSegments": 12.0,
+          "console.layer1.cloudFacetRings": 7.0,
+          "console.layer1.cloudScale": 1.0,
+          "console.layer1.cloudDensity": 0.92,
+          "console.layer1.cloudBaseHeight": 520.0,
+          "console.layer1.cloudLayerDepth": 220.0,
+          "console.layer1.cloudClearance": 150.0,
+          "console.layer1.cloudWindAngle": -28.0,
+          "console.layer1.cloudWindSpeed": 24.0,
+          "console.layer1.cloudTurbulence": 0.62,
+          "console.layer1.cloudMountainAvoidance": 1.65,
+          "console.layer1.cloudUpdraft": 0.0,
+          "console.layer1.cloudShadowAlpha": 0.06,
+          "console.layer1.audioAmount": 0.55,
+          "console.layer1.audioSmoothing": 0.42,
+          "console.layer1.bassLift": 0.42,
+          "console.layer1.highsGlint": 0.86,
+          "console.layer1.seed": 20260623.0
+        }
+      }
+    ]
+  }
+}

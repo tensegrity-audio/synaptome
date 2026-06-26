@@ -79,24 +79,16 @@
         {
           "band": "hud",
           "collapsed": false,
+          "column": 2,
+          "id": "hud.scene.preview",
+          "target": "controller",
+          "visible": true
+        },
+        {
+          "band": "hud",
+          "collapsed": false,
           "column": 0,
           "id": "hud.controls",
-          "target": "projector",
-          "visible": true
-        },
-        {
-          "band": "hud",
-          "collapsed": false,
-          "column": 1,
-          "id": "hud.layers",
-          "target": "projector",
-          "visible": true
-        },
-        {
-          "band": "hud",
-          "collapsed": false,
-          "column": 1,
-          "id": "hud.menu",
           "target": "projector",
           "visible": true
         },
@@ -112,15 +104,7 @@
           "band": "hud",
           "collapsed": false,
           "column": 0,
-          "id": "hud.status",
-          "target": "projector",
-          "visible": true
-        },
-        {
-          "band": "hud",
-          "collapsed": false,
-          "column": 0,
-          "id": "hud.telemetry",
+          "id": "hud.debug.terminal",
           "target": "projector",
           "visible": true
         }
@@ -141,24 +125,16 @@
         {
           "band": "hud",
           "collapsed": false,
+          "column": 2,
+          "id": "hud.scene.preview",
+          "target": "controller",
+          "visible": true
+        },
+        {
+          "band": "hud",
+          "collapsed": false,
           "column": 0,
           "id": "hud.controls",
-          "target": "projector",
-          "visible": true
-        },
-        {
-          "band": "hud",
-          "collapsed": false,
-          "column": 1,
-          "id": "hud.layers",
-          "target": "projector",
-          "visible": true
-        },
-        {
-          "band": "hud",
-          "collapsed": false,
-          "column": 1,
-          "id": "hud.menu",
           "target": "projector",
           "visible": true
         },
@@ -174,15 +150,7 @@
           "band": "hud",
           "collapsed": false,
           "column": 0,
-          "id": "hud.status",
-          "target": "projector",
-          "visible": true
-        },
-        {
-          "band": "hud",
-          "collapsed": false,
-          "column": 0,
-          "id": "hud.telemetry",
+          "id": "hud.debug.terminal",
           "target": "projector",
           "visible": true
         }

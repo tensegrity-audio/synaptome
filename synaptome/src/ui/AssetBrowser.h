@@ -4,6 +4,8 @@
 #include "MenuController.h"
 #include "../visuals/LayerLibrary.h"
 #include <functional>
+#include <set>
+#include <string>
 #include <vector>
 
 class AssetBrowser : public MenuController::State {
@@ -27,6 +29,22 @@ public:
     void onExit(MenuController& controller) override;
 
 private:
+    struct Row {
+        enum Kind {
+            Category,
+            Group,
+            Asset
+        };
+        Kind kind = Asset;
+        std::string key;
+        std::string label;
+        std::string description;
+        int depth = 0;
+        bool expandable = false;
+        bool expanded = false;
+        const LayerLibrary::Entry* entry = nullptr;
+    };
+
     const LayerLibrary* library_ = nullptr;
     std::function<bool(const std::string&)> presenceQuery_;
     std::function<bool(const std::string&)> activeQuery_;
@@ -36,6 +54,7 @@ private:
     MenuController* controller_ = nullptr;
     bool active_ = false;
     int selected_ = 0;
+    std::set<std::string> collapsedKeys_;
 
     const std::string stateId = "ui.assets";
     const std::string stateLabel = "Asset Browser";
@@ -44,5 +63,8 @@ private:
     void clampSelection();
     const LayerLibrary::Entry* currentEntry() const;
     std::vector<std::reference_wrapper<const LayerLibrary::Entry>> visibleEntries() const;
+    std::vector<Row> visibleRows() const;
+    bool isExpanded(const std::string& key) const;
+    void setExpanded(const std::string& key, bool expanded);
     void notifyViewModel();
 };

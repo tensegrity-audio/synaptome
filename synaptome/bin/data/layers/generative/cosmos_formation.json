@@ -9,7 +9,7 @@
   "defaults": {
     "visible": true,
     "alpha": 1.0,
-    "particleCount": 2400,
+    "particleCount": 1800,
     "clusterCount": 64,
     "radius": 1.28,
     "originRadius": 0.018,
@@ -26,6 +26,9 @@
     "clusterSpread": 1.20,
     "clusterDrift": 0.04,
     "clusterSoftness": 1.08,
+    "substructureAmount": 0.82,
+    "substructureScale": 0.48,
+    "substructureGlow": 0.95,
     "shear": 0.12,
     "voidPressure": 0.42,
     "turbulence": 0.46,

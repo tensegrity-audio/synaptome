@@ -216,6 +216,7 @@ private:
     struct ParameterRow {
         std::string id;
         std::string label;
+        std::string section;
         std::string category;
         std::string subcategory;
         bool isFloat = false;
@@ -238,6 +239,15 @@ private:
         std::string savedSceneId;
         std::string savedScenePath;
         std::string oscInputField;
+    };
+
+    struct GridItem {
+        bool sectionHeader = false;
+        int rowIndex = -1;
+        std::string sectionName;
+        std::string sectionKey;
+        int childCount = 0;
+        bool expanded = true;
     };
 
     struct CategorySection {
@@ -305,6 +315,7 @@ private:
         std::array<bool, static_cast<int>(Column::kCount)> columnVisibility{};
         std::string selectedColumnKey = "value";
         std::vector<std::string> collapsedCategories;
+        std::vector<std::string> collapsedParameterSections;
         bool hudVisible = true;
         std::unordered_map<std::string, HudWidgetPreference> hudWidgets;
         std::unordered_map<std::string, HudLayoutPlacement> controllerHudWidgets;
@@ -445,7 +456,9 @@ private:
     mutable MenuController::StateView cachedView_;
     mutable ParameterTableModel tableModel_;
     mutable const std::vector<int>* activeRowSet_ = nullptr;
+    mutable std::vector<GridItem> activeGridItems_;
     mutable int selectedRow_ = -1;
+    mutable std::string selectedGridSectionKey_;
     mutable Column selectedColumn_ = Column::kValue;
     mutable int selectedTreeNodeIndex_ = 0;
     mutable FocusPane focusPane_ = FocusPane::kGrid;
@@ -514,6 +527,7 @@ private:
     mutable int treeScrollOffset_ = 0;
     mutable int gridScrollOffset_ = 0;
     mutable std::unordered_map<std::string, bool> treeExpansionState_;
+    mutable std::unordered_map<std::string, bool> parameterSectionExpansionState_;
     // optional telemetry/event callback sink (mutable so it can be set from non-const callers)
     mutable std::function<void(const std::string&)> eventCallback_;
     BioAmpState bioAmpState_;
@@ -537,12 +551,15 @@ private:
 
     void rebuildView() const;
     void rebuildModel() const;
+    std::string selectedAssetKey() const;
     std::string selectedAssetId() const;
     std::string selectedAssetLabel() const;
     void clampSelection() const;
     void invalidateRowCache() const;
     const std::vector<int>& activeRowIndices() const;
     const std::vector<int>* resolveActiveRowSet() const;
+    const std::vector<GridItem>& activeGridItems() const;
+    const GridItem* selectedGridItem() const;
     int activeRowSlot() const;
     std::vector<std::string> columnHeaders() const;
     std::vector<int> visibleColumns() const;
@@ -561,6 +578,13 @@ private:
     static Column columnFromKey(const std::string& key);
     bool isCategoryExpanded(const std::string& name) const;
     void setCategoryExpanded(const std::string& name, bool expanded) const;
+    bool isParameterSectionExpanded(const std::string& key) const;
+    void setParameterSectionExpanded(const std::string& key, bool expanded) const;
+    std::string activeGridScopeKey() const;
+    std::string parameterSectionExpansionKey(const std::string& sectionName) const;
+    static std::string parameterSectionForLabel(const std::string& label);
+    static std::string parameterDisplayLabelForLabel(const std::string& label);
+    static int parameterSectionSortOrder(const std::string& sectionName);
     void replayTreeSelection(const std::string& category,
                              const std::string& subcategory,
                              const std::string& asset = std::string()) const;
@@ -1356,17 +1380,18 @@ inline void ControlMappingHubState::draw() const {
                        false);
     }
 
-    const auto& activeRows = activeRowIndices();
+    const auto& activeItems = activeGridItems();
     auto oscSources = oscSummaryActive() ? oscBrowserSources() : std::vector<MidiRouter::OscSourceInfo>{};
     int rowCount = oscSummaryActive() ? static_cast<int>(oscSources.size())
-                                      : static_cast<int>(activeRows.size());
+                                      : static_cast<int>(activeItems.size());
     float gridRowTop = layout.gridY + layout.treeHeaderHeight;
     if (!oscSummaryActive()) {
         int gridStart = std::min(gridScrollOffset_, std::max(0, rowCount - layout.gridVisibleRows));
         for (int i = 0; i < layout.gridVisibleRows && gridStart + i < rowCount; ++i) {
-            int rowIndex = activeRows[gridStart + i];
-            const auto& row = tableModel_.rows[rowIndex];
-            bool rowSelected = (rowIndex == selectedRow_);
+            const auto& item = activeItems[static_cast<std::size_t>(gridStart + i)];
+            bool rowSelected = item.sectionHeader
+                ? (!selectedGridSectionKey_.empty() && item.sectionKey == selectedGridSectionKey_)
+                : (selectedGridSectionKey_.empty() && item.rowIndex == selectedRow_);
             float cellTop = gridRowTop + i * layout.gridRowHeight;
             if (rowSelected) {
                 ofSetColor(skin_.palette.gridSelectionFill);
@@ -1376,6 +1401,41 @@ inline void ControlMappingHubState::draw() const {
                                   layout.gridRowHeight - 2.0f,
                                   skin_.metrics.borderRadius * 0.5f);
             }
+            if (item.sectionHeader) {
+                ofSetColor(skin_.palette.gridDivider);
+                ofDrawLine(layout.gridX + skin_.metrics.padding,
+                           cellTop + layout.gridRowHeight - 1.0f,
+                           layout.gridX + layout.gridWidth - skin_.metrics.padding,
+                           cellTop + layout.gridRowHeight - 1.0f);
+                const std::string sectionLabel =
+                    std::string(item.expanded ? "- " : "+ ") +
+                    item.sectionName +
+                    " (" + ofToString(item.childCount) + ")";
+                ofColor textColor = rowSelected && focusPane_ == FocusPane::kGrid
+                    ? skin_.palette.gridSelection
+                    : skin_.palette.headerText;
+                drawTextStyled(ellipsize(sectionLabel, layout.gridWidth - skin_.metrics.padding * 2.0f),
+                               layout.gridX + skin_.metrics.padding,
+                               cellTop + layout.gridRowHeight * 0.7f,
+                               textColor,
+                               true);
+                if (rowSelected && focusPane_ == FocusPane::kGrid) {
+                    ofNoFill();
+                    ofSetColor(skin_.palette.gridSelection);
+                    ofSetLineWidth(skin_.metrics.focusStroke);
+                    ofDrawRectRounded(layout.gridX + 4.0f,
+                                      cellTop + 2.0f,
+                                      layout.gridWidth - 8.0f,
+                                      layout.gridRowHeight - 4.0f,
+                                      skin_.metrics.borderRadius * 0.5f);
+                    ofSetLineWidth(1.0f);
+                    ofFill();
+                }
+                continue;
+            }
+
+            int rowIndex = item.rowIndex;
+            const auto& row = tableModel_.rows[rowIndex];
             for (int idx : visibleCols) {
                 Column column = static_cast<Column>(idx);
                 std::string cell;
@@ -2113,8 +2173,8 @@ inline bool ControlMappingHubState::handleInput(MenuController& controller, int 
         return true;
 
     case OF_KEY_PAGE_UP: {
-        const auto& rows = activeRowIndices();
-        if (!rows.empty()) {
+        const auto& items = activeGridItems();
+        if (!items.empty()) {
             int slot = activeRowSlot();
             if (slot < 0) slot = 0;
             setActiveRowSlot(slot - 10);
@@ -2124,8 +2184,8 @@ inline bool ControlMappingHubState::handleInput(MenuController& controller, int 
     }
 
     case OF_KEY_PAGE_DOWN: {
-        const auto& rows = activeRowIndices();
-        if (!rows.empty()) {
+        const auto& items = activeGridItems();
+        if (!items.empty()) {
             int slot = activeRowSlot();
             if (slot < 0) slot = 0;
             setActiveRowSlot(slot + 10);
@@ -2140,15 +2200,22 @@ inline bool ControlMappingHubState::handleInput(MenuController& controller, int 
         return true;
 
     case OF_KEY_END: {
-        const auto& rows = activeRowIndices();
-        if (!rows.empty()) {
-            setActiveRowSlot(static_cast<int>(rows.size()) - 1);
+        const auto& items = activeGridItems();
+        if (!items.empty()) {
+            setActiveRowSlot(static_cast<int>(items.size()) - 1);
             controller.requestViewModelRefresh();
         }
         return true;
     }
 
     case OF_KEY_LEFT:
+        if (!oscSummaryActive() && focusPane_ == FocusPane::kGrid && !selectedGridSectionKey_.empty()) {
+            if (isParameterSectionExpanded(selectedGridSectionKey_)) {
+                setParameterSectionExpanded(selectedGridSectionKey_, false);
+            }
+            controller.requestViewModelRefresh();
+            return true;
+        }
 
         moveColumn(-1);
 
@@ -2157,6 +2224,15 @@ inline bool ControlMappingHubState::handleInput(MenuController& controller, int 
         return true;
 
     case OF_KEY_RIGHT:
+        if (!oscSummaryActive() && focusPane_ == FocusPane::kGrid && !selectedGridSectionKey_.empty()) {
+            if (!isParameterSectionExpanded(selectedGridSectionKey_)) {
+                setParameterSectionExpanded(selectedGridSectionKey_, true);
+            } else {
+                moveRow(1);
+            }
+            controller.requestViewModelRefresh();
+            return true;
+        }
 
         moveColumn(1);
 
@@ -2431,13 +2507,24 @@ inline void ControlMappingHubState::rebuildView() const {
         cachedView_.entries.push_back(entry);
         cachedView_.selectedIndex = std::max(0, oscPickerSelection_);
     } else {
-        const auto& activeRows = activeRowIndices();
+        const auto& activeItems = activeGridItems();
 
-        cachedView_.entries.reserve(activeRows.size());
+        cachedView_.entries.reserve(activeItems.size());
 
-        for (int rowIndex : activeRows) {
+        for (const auto& item : activeItems) {
+            if (item.sectionHeader) {
+                MenuController::EntryView entry;
+                entry.id = "section." + item.sectionKey;
+                entry.label = std::string(item.expanded ? "- " : "+ ") + item.sectionName;
+                entry.description = "Parameter section with " + ofToString(item.childCount) + " entr" +
+                    (item.childCount == 1 ? "y" : "ies");
+                entry.selectable = true;
+                entry.selected = (!selectedGridSectionKey_.empty() && item.sectionKey == selectedGridSectionKey_);
+                cachedView_.entries.push_back(std::move(entry));
+                continue;
+            }
 
-            const auto& row = tableModel_.rows[rowIndex];
+            const auto& row = tableModel_.rows[item.rowIndex];
 
             MenuController::EntryView entry;
 
@@ -2474,7 +2561,7 @@ inline void ControlMappingHubState::rebuildView() const {
 
             entry.selectable = true;
 
-            entry.selected = (rowIndex == selectedRow_);
+            entry.selected = (selectedGridSectionKey_.empty() && item.rowIndex == selectedRow_);
 
             cachedView_.entries.push_back(std::move(entry));
 
@@ -2499,13 +2586,13 @@ inline void ControlMappingHubState::rebuildView() const {
 
     cachedView_.hotkeys.push_back(MenuController::KeyHint{OF_KEY_END, "End", "Last row"});
 
-    cachedView_.hotkeys.push_back(MenuController::KeyHint{OF_KEY_LEFT, "Left", "Previous column"});
+    cachedView_.hotkeys.push_back(MenuController::KeyHint{OF_KEY_LEFT, "Left", "Previous column / collapse section"});
 
-    cachedView_.hotkeys.push_back(MenuController::KeyHint{OF_KEY_RIGHT, "Right", "Next column"});
+    cachedView_.hotkeys.push_back(MenuController::KeyHint{OF_KEY_RIGHT, "Right", "Next column / expand section"});
 
     cachedView_.hotkeys.push_back(MenuController::KeyHint{OF_KEY_TAB, "Tab", "Swap tree/grid focus"});
 
-    cachedView_.hotkeys.push_back(MenuController::KeyHint{OF_KEY_RETURN, "Enter", "Edit value / assign slot / arm learn"});
+    cachedView_.hotkeys.push_back(MenuController::KeyHint{OF_KEY_RETURN, "Enter", "Edit value / arm learn"});
 
     cachedView_.hotkeys.push_back(MenuController::KeyHint{'N', "N", "OSC learn (next message)"});
 
@@ -2527,6 +2614,7 @@ inline void ControlMappingHubState::rebuildModel() const {
     tableModel_.allRowIndices.clear();
     tableModel_.tree.clear();
     activeRowSet_ = nullptr;
+    activeGridItems_.clear();
 
     if (!registry_) {
         tableModel_.dirty = false;
@@ -2551,7 +2639,9 @@ inline void ControlMappingHubState::rebuildModel() const {
     auto appendFloatRow = [&](const ParameterRegistry::FloatParam& param) {
         ParameterRow row;
         row.id = param.meta.id;
-        row.label = param.meta.label.empty() ? param.meta.id : param.meta.label;
+        const std::string label = param.meta.label.empty() ? param.meta.id : param.meta.label;
+        row.section = parameterSectionForLabel(label);
+        row.label = parameterDisplayLabelForLabel(label);
         row.category = param.meta.group.empty() ? std::string("General") : param.meta.group;
         row.subcategory = subcategoryForId(row.id);
         row.isFloat = true;
@@ -2565,7 +2655,9 @@ inline void ControlMappingHubState::rebuildModel() const {
     auto appendBoolRow = [&](const ParameterRegistry::BoolParam& param) {
         ParameterRow row;
         row.id = param.meta.id;
-        row.label = param.meta.label.empty() ? param.meta.id : param.meta.label;
+        const std::string label = param.meta.label.empty() ? param.meta.id : param.meta.label;
+        row.section = parameterSectionForLabel(label);
+        row.label = parameterDisplayLabelForLabel(label);
         row.category = param.meta.group.empty() ? std::string("General") : param.meta.group;
         row.subcategory = subcategoryForId(row.id);
         row.isFloat = false;
@@ -2579,7 +2671,9 @@ inline void ControlMappingHubState::rebuildModel() const {
     auto appendStringRow = [&](const ParameterRegistry::StringParam& param) {
         ParameterRow row;
         row.id = param.meta.id;
-        row.label = param.meta.label.empty() ? param.meta.id : param.meta.label;
+        const std::string label = param.meta.label.empty() ? param.meta.id : param.meta.label;
+        row.section = parameterSectionForLabel(label);
+        row.label = parameterDisplayLabelForLabel(label);
         row.category = param.meta.group.empty() ? std::string("General") : param.meta.group;
         row.subcategory = subcategoryForId(row.id);
         row.isFloat = false;
@@ -2610,6 +2704,10 @@ inline void ControlMappingHubState::rebuildModel() const {
         if (a.category != b.category) return a.category < b.category;
         if (a.subcategory != b.subcategory) return a.subcategory < b.subcategory;
         if (a.assetLabel != b.assetLabel) return a.assetLabel < b.assetLabel;
+        int sectionA = parameterSectionSortOrder(a.section);
+        int sectionB = parameterSectionSortOrder(b.section);
+        if (sectionA != sectionB) return sectionA < sectionB;
+        if (a.section != b.section) return a.section < b.section;
         return a.label < b.label;
     });
 
@@ -2906,23 +3004,52 @@ inline void ControlMappingHubState::clampSelection() const {
         return;
     }
     const auto& rows = activeRowIndices();
-    if (rows.empty()) {
+    const auto& items = activeGridItems();
+    if (rows.empty() || items.empty()) {
         selectedRow_ = -1;
+        selectedGridSectionKey_.clear();
         cancelValueEdit();
         return;
     }
-    if (selectedRow_ < 0) {
-        selectedRow_ = rows.front();
-    }
-    if (std::find(rows.begin(), rows.end(), selectedRow_) == rows.end()) {
-        selectedRow_ = rows.front();
-    }
-    if (editingValueActive_) {
-        const auto& row = tableModel_.rows[selectedRow_];
-        if (row.id != editingValueRowId_) {
+    if (!selectedGridSectionKey_.empty()) {
+        auto headerIt = std::find_if(items.begin(), items.end(), [&](const GridItem& item) {
+            return item.sectionHeader && item.sectionKey == selectedGridSectionKey_;
+        });
+        if (headerIt != items.end()) {
+            selectedRow_ = -1;
             cancelValueEdit();
+            return;
         }
     }
+    if (selectedRow_ >= 0) {
+        auto rowIt = std::find_if(items.begin(), items.end(), [&](const GridItem& item) {
+            return !item.sectionHeader && item.rowIndex == selectedRow_;
+        });
+        if (rowIt != items.end()) {
+            selectedGridSectionKey_.clear();
+            if (editingValueActive_) {
+                const auto& row = tableModel_.rows[selectedRow_];
+                if (row.id != editingValueRowId_) {
+                    cancelValueEdit();
+                }
+            }
+            return;
+        }
+    }
+
+    auto rowItemIt = std::find_if(items.begin(), items.end(), [](const GridItem& item) {
+        return !item.sectionHeader;
+    });
+    if (rowItemIt != items.end()) {
+        selectedGridSectionKey_.clear();
+        selectedRow_ = rowItemIt->rowIndex;
+        return;
+    }
+
+    const auto& first = items.front();
+    selectedGridSectionKey_ = first.sectionKey;
+    selectedRow_ = -1;
+    cancelValueEdit();
 }
 
 inline std::vector<std::string> ControlMappingHubState::columnHeaders() const {
@@ -3303,18 +3430,41 @@ inline std::string ControlMappingHubState::summarizeHudStatusFeed(const ofJson& 
 }
 
 inline std::string ControlMappingHubState::summarizeHudSensorsFeed(const ofJson& payload) const {
-    auto indicatorLabel = [](const ofJson& node) -> std::string {
-        if (node.contains("indicator")) {
-            return node["indicator"].get<std::string>();
-        }
-        return "[ ]";
-    };
     std::vector<std::string> parts;
-    if (payload.contains("deck") && payload["deck"].is_object()) {
-        parts.push_back("Deck " + indicatorLabel(payload["deck"]));
-    }
-    if (payload.contains("matrix") && payload["matrix"].is_object()) {
-        parts.push_back("Matrix " + indicatorLabel(payload["matrix"]));
+    if (payload.contains("devices") && payload["devices"].is_array()) {
+        int connected = 0;
+        int total = 0;
+        std::vector<std::string> labels;
+        for (const auto& device : payload["devices"]) {
+            if (!device.is_object()) continue;
+            ++total;
+            if (!device.value("connected", false)) {
+                continue;
+            }
+            ++connected;
+            std::string kind = device.value("kind", std::string());
+            std::string label = device.value("label", std::string());
+            if (!kind.empty()) {
+                labels.push_back(kind);
+            } else if (!label.empty()) {
+                labels.push_back(label);
+            }
+        }
+        parts.push_back("Devices: " + ofToString(connected) + "/" + ofToString(total) + " connected");
+        if (!labels.empty()) {
+            std::size_t limit = std::min<std::size_t>(labels.size(), 3);
+            std::string joined;
+            for (std::size_t i = 0; i < limit; ++i) {
+                if (i > 0) {
+                    joined += ", ";
+                }
+                joined += labels[i];
+            }
+            if (labels.size() > limit) {
+                joined += ", ...";
+            }
+            parts.push_back(joined);
+        }
     }
     if (payload.contains("oscHistory") && payload["oscHistory"].is_array()) {
         parts.push_back("Recent OSC: " + ofToString(static_cast<int>(payload["oscHistory"].size())));
@@ -4608,6 +4758,7 @@ inline void ControlMappingHubState::appendOscInputRows() const {
         ParameterRow row;
         row.id = "osc.input." + field;
         row.label = label;
+        row.section = "Input";
         row.category = "OSC";
         row.subcategory = "Input";
         row.familyLabel = "OSC";
@@ -4680,6 +4831,7 @@ inline void ControlMappingHubState::appendSceneBrowserRows() const {
             ParameterRow placeholder;
             placeholder.id = "scene.current.slot." + ofToString(slot.index);
             placeholder.label = slot.assetId.empty() ? "Empty slot" : "No parameter shortcuts available";
+            placeholder.section = "Action";
             placeholder.category = "Scenes";
             placeholder.subcategory = "Current";
             placeholder.isAsset = true;
@@ -4699,6 +4851,7 @@ inline void ControlMappingHubState::appendSceneBrowserRows() const {
     ParameterRow saveAsRow;
     saveAsRow.id = "scene.saved.save_as";
     saveAsRow.label = "+ Save Scene As";
+    saveAsRow.section = "Action";
     saveAsRow.category = "Scenes";
     saveAsRow.subcategory = "Saved";
     saveAsRow.isString = true;
@@ -4718,6 +4871,7 @@ inline void ControlMappingHubState::appendSceneBrowserRows() const {
         ParameterRow overwriteRow;
         overwriteRow.id = "scene.saved.overwrite";
         overwriteRow.label = "Overwrite Current Scene";
+        overwriteRow.section = "Action";
         overwriteRow.category = "Scenes";
         overwriteRow.subcategory = "Saved";
         overwriteRow.isSavedSceneRow = true;
@@ -4731,6 +4885,7 @@ inline void ControlMappingHubState::appendSceneBrowserRows() const {
         ParameterRow emptyRow;
         emptyRow.id = "scene.saved.empty";
         emptyRow.label = "No saved scenes found";
+        emptyRow.section = "Action";
         emptyRow.category = "Scenes";
         emptyRow.subcategory = "Saved";
         emptyRow.isSavedSceneRow = true;
@@ -4747,6 +4902,7 @@ inline void ControlMappingHubState::appendSceneBrowserRows() const {
         if (scene.active) {
             row.label += " (current)";
         }
+        row.section = "Action";
         row.category = "Scenes";
         row.subcategory = "Saved";
         row.isSavedSceneRow = true;
@@ -4960,7 +5116,9 @@ inline void ControlMappingHubState::appendAssetPlaceholders(const std::unordered
                 const auto& param = offlineFloats[static_cast<std::size_t>(idx)];
                 ParameterRow row;
                 row.id = param.meta.id;
-                row.label = param.meta.label.empty() ? param.meta.id : param.meta.label;
+                const std::string label = param.meta.label.empty() ? param.meta.id : param.meta.label;
+                row.section = parameterSectionForLabel(label);
+                row.label = parameterDisplayLabelForLabel(label);
                 row.isFloat = true;
                 row.floatParam = &param;
                 appendCommon(row);
@@ -4975,7 +5133,9 @@ inline void ControlMappingHubState::appendAssetPlaceholders(const std::unordered
                 const auto& param = offlineBools[static_cast<std::size_t>(idx)];
                 ParameterRow row;
                 row.id = param.meta.id;
-                row.label = param.meta.label.empty() ? param.meta.id : param.meta.label;
+                const std::string label = param.meta.label.empty() ? param.meta.id : param.meta.label;
+                row.section = parameterSectionForLabel(label);
+                row.label = parameterDisplayLabelForLabel(label);
                 row.boolParam = &param;
                 appendCommon(row);
             }
@@ -4989,7 +5149,9 @@ inline void ControlMappingHubState::appendAssetPlaceholders(const std::unordered
                 const auto& param = offlineStrings[static_cast<std::size_t>(idx)];
                 ParameterRow row;
                 row.id = param.meta.id;
-                row.label = param.meta.label.empty() ? param.meta.id : param.meta.label;
+                const std::string label = param.meta.label.empty() ? param.meta.id : param.meta.label;
+                row.section = parameterSectionForLabel(label);
+                row.label = parameterDisplayLabelForLabel(label);
                 row.isString = true;
                 row.stringParam = &param;
                 appendCommon(row);
@@ -4999,6 +5161,7 @@ inline void ControlMappingHubState::appendAssetPlaceholders(const std::unordered
             ParameterRow row;
             row.id = "asset.unhydrated." + meta.key;
             row.label = baseLabel + " (unhydrated)";
+            row.section = "Action";
             row.category = family;
             row.subcategory = subcategory;
             row.isAsset = true;
@@ -5029,6 +5192,7 @@ inline void ControlMappingHubState::appendBioAmpRows() const {
         ParameterRow row;
         row.id = def.id;
         row.label = def.label;
+        row.section = "Audio";
         row.category = "Sensors";
         row.subcategory = "BioAmp EXG Pill";
         row.isFloat = true;
@@ -5133,7 +5297,7 @@ inline void ControlMappingHubState::hydrateOfflineAssetsIfNeeded() const {
         if (!prefix.empty()) {
             auto opacityStore = std::make_unique<float>(entryOpacity);
             ParameterRegistry::Descriptor opacityMeta;
-            opacityMeta.label = "Layer Opacity";
+            opacityMeta.label = "Visibility: Layer Opacity";
             opacityMeta.group = "Visibility";
             opacityMeta.description = "Base opacity for this layer before FX or modifiers";
             opacityMeta.range.min = 0.0f;
@@ -6346,7 +6510,6 @@ inline void ControlMappingHubState::setBannerMessage(const std::string& message,
 
 inline void ControlMappingHubState::setActiveRowSlot(int slot) const {
     cancelHudColumnPicker();
-    const auto& rows = activeRowIndices();
     if (oscSummaryActive()) {
         const auto sources = oscBrowserSources();
         if (sources.empty()) {
@@ -6361,16 +6524,28 @@ inline void ControlMappingHubState::setActiveRowSlot(int slot) const {
         }
         return;
     }
-    if (rows.empty()) {
+    const auto& items = activeGridItems();
+    if (items.empty()) {
         selectedRow_ = -1;
+        selectedGridSectionKey_.clear();
         cancelValueEdit();
         return;
     }
-    slot = std::clamp(slot, 0, static_cast<int>(rows.size()) - 1);
-    int newRowIndex = rows[slot];
-    if (newRowIndex != selectedRow_) {
+    slot = std::clamp(slot, 0, static_cast<int>(items.size()) - 1);
+    const auto& item = items[static_cast<std::size_t>(slot)];
+    if (item.sectionHeader) {
+        if (selectedGridSectionKey_ != item.sectionKey) {
+            cancelValueEdit();
+            selectedGridSectionKey_ = item.sectionKey;
+            selectedRow_ = -1;
+            routingPopoverVisible_ = false;
+        }
+        return;
+    }
+    if (item.rowIndex != selectedRow_ || !selectedGridSectionKey_.empty()) {
         cancelValueEdit();
-        selectedRow_ = newRowIndex;
+        selectedGridSectionKey_.clear();
+        selectedRow_ = item.rowIndex;
         routingPopoverVisible_ = false;
     }
 }
@@ -6649,36 +6824,92 @@ inline bool ControlMappingHubState::runControlHubValidation() const {
 
 
 inline const ControlMappingHubState::ParameterRow* ControlMappingHubState::selectedRowData() const {
+    if (!selectedGridSectionKey_.empty()) {
+        return nullptr;
+    }
     if (selectedRow_ < 0 || selectedRow_ >= static_cast<int>(tableModel_.rows.size())) {
         return nullptr;
     }
     return &tableModel_.rows[selectedRow_];
 }
 
-inline std::string ControlMappingHubState::selectedAssetId() const {
+inline std::string ControlMappingHubState::selectedAssetKey() const {
     const auto* row = selectedRowData();
-    if (!row || row->assetKey.empty()) {
+    if (row && !row->assetKey.empty()) {
+        return row->assetKey;
+    }
+
+    const auto& rows = activeRowIndices();
+    std::string sharedAssetKey;
+    for (int rowIndex : rows) {
+        if (rowIndex < 0 || rowIndex >= static_cast<int>(tableModel_.rows.size())) {
+            continue;
+        }
+        const auto& candidate = tableModel_.rows[static_cast<std::size_t>(rowIndex)];
+        if (candidate.assetKey.empty()) {
+            continue;
+        }
+        if (sharedAssetKey.empty()) {
+            sharedAssetKey = candidate.assetKey;
+        } else if (sharedAssetKey != candidate.assetKey) {
+            sharedAssetKey.clear();
+            break;
+        }
+    }
+    if (!sharedAssetKey.empty()) {
+        return sharedAssetKey;
+    }
+
+    if (selectedTreeNodeIndex_ < 0 || selectedTreeNodeIndex_ >= static_cast<int>(tableModel_.tree.size())) {
         return std::string();
     }
-    auto it = assetCatalog_.find(row->assetKey);
+    const auto& node = tableModel_.tree[static_cast<std::size_t>(selectedTreeNodeIndex_)];
+    if (node.categoryIndex < 0 || node.categoryIndex >= static_cast<int>(tableModel_.categories.size())) {
+        return std::string();
+    }
+    if (node.subcategoryIndex < 0) {
+        return std::string();
+    }
+    const auto& subcats = tableModel_.categories[static_cast<std::size_t>(node.categoryIndex)].subcategories;
+    if (node.subcategoryIndex >= static_cast<int>(subcats.size())) {
+        return std::string();
+    }
+    const auto& assetGroups = subcats[static_cast<std::size_t>(node.subcategoryIndex)].assetGroups;
+    if (node.assetGroupIndex >= 0 && node.assetGroupIndex < static_cast<int>(assetGroups.size())) {
+        return assetGroups[static_cast<std::size_t>(node.assetGroupIndex)].assetKey;
+    }
+    if (assetGroups.size() == 1) {
+        return assetGroups.front().assetKey;
+    }
+    return std::string();
+}
+
+inline std::string ControlMappingHubState::selectedAssetId() const {
+    const std::string assetKey = selectedAssetKey();
+    if (assetKey.empty()) {
+        return std::string();
+    }
+    auto it = assetCatalog_.find(assetKey);
     if (it != assetCatalog_.end() && !it->second.assetId.empty()) {
         return it->second.assetId;
     }
-    return row->assetKey;
+    return assetKey;
 }
 
 inline std::string ControlMappingHubState::selectedAssetLabel() const {
     const auto* row = selectedRowData();
-    if (!row) {
-        return std::string();
-    }
-    if (!row->assetLabel.empty()) {
+    if (row && !row->assetLabel.empty()) {
         return row->assetLabel;
     }
-    if (!row->subcategory.empty()) {
+    const std::string assetKey = selectedAssetKey();
+    auto it = assetCatalog_.find(assetKey);
+    if (it != assetCatalog_.end() && !it->second.label.empty()) {
+        return it->second.label;
+    }
+    if (row && !row->subcategory.empty()) {
         return row->subcategory;
     }
-    return row->label;
+    return row ? row->label : std::string();
 }
 
 inline const ControlMappingHubState::ParameterRow* ControlMappingHubState::rowForId(const std::string& id) const {
@@ -6730,12 +6961,19 @@ inline bool ControlMappingHubState::debugBeginMidiLearn(const std::string& id) {
 
 inline bool ControlMappingHubState::debugSetGridSelection(int rowIndex, int columnIndex) {
     rebuildView();
-    const auto& rows = activeRowIndices();
-    if (rowIndex < 0 || rowIndex >= static_cast<int>(rows.size())) {
+    const auto& items = activeGridItems();
+    if (rowIndex < 0 || rowIndex >= static_cast<int>(items.size())) {
         return false;
     }
     focusPane_ = FocusPane::kGrid;
-    selectedRow_ = rows[rowIndex];
+    const auto& item = items[static_cast<std::size_t>(rowIndex)];
+    if (item.sectionHeader) {
+        selectedGridSectionKey_ = item.sectionKey;
+        selectedRow_ = -1;
+    } else {
+        selectedGridSectionKey_.clear();
+        selectedRow_ = item.rowIndex;
+    }
     if (columnIndex < 0) {
         columnIndex = 0;
     }
@@ -6998,6 +7236,124 @@ inline bool ControlMappingHubState::adjustMidiRange(const ParameterRow& row, flo
     return true;
 }
 
+inline std::string ControlMappingHubState::parameterSectionForLabel(const std::string& label) {
+    auto trim = [](std::string value) {
+        while (!value.empty() && std::isspace(static_cast<unsigned char>(value.front()))) {
+            value.erase(value.begin());
+        }
+        while (!value.empty() && std::isspace(static_cast<unsigned char>(value.back()))) {
+            value.pop_back();
+        }
+        return value;
+    };
+    const auto pos = label.find(':');
+    if (pos != std::string::npos && pos > 0 && pos <= 24) {
+        std::string section = trim(label.substr(0, pos));
+        if (!section.empty()) {
+            return section;
+        }
+    }
+    return "General";
+}
+
+inline std::string ControlMappingHubState::parameterDisplayLabelForLabel(const std::string& label) {
+    auto trim = [](std::string value) {
+        while (!value.empty() && std::isspace(static_cast<unsigned char>(value.front()))) {
+            value.erase(value.begin());
+        }
+        while (!value.empty() && std::isspace(static_cast<unsigned char>(value.back()))) {
+            value.pop_back();
+        }
+        return value;
+    };
+    const auto pos = label.find(':');
+    if (pos != std::string::npos && pos + 1 < label.size() && pos <= 24) {
+        std::string display = trim(label.substr(pos + 1));
+        if (!display.empty()) {
+            return display;
+        }
+    }
+    return label.empty() ? std::string("(unnamed)") : label;
+}
+
+inline int ControlMappingHubState::parameterSectionSortOrder(const std::string& sectionName) {
+    static const std::array<const char*, 14> kOrder = {{
+        "Action",
+        "Growth",
+        "Motion",
+        "Scale",
+        "Count",
+        "Force",
+        "Time",
+        "Audio",
+        "Glow",
+        "Alpha",
+        "Input",
+        "Color",
+        "Seed",
+        "General"
+    }};
+    for (std::size_t i = 0; i < kOrder.size(); ++i) {
+        if (sectionName == kOrder[i]) {
+            return static_cast<int>(i);
+        }
+    }
+    return static_cast<int>(kOrder.size());
+}
+
+inline std::string ControlMappingHubState::activeGridScopeKey() const {
+    if (tableModel_.tree.empty() ||
+        selectedTreeNodeIndex_ < 0 ||
+        selectedTreeNodeIndex_ >= static_cast<int>(tableModel_.tree.size())) {
+        return "all";
+    }
+    const auto& node = tableModel_.tree[static_cast<std::size_t>(selectedTreeNodeIndex_)];
+    std::string key = node.categoryName.empty() ? std::string("all") : node.categoryName;
+    if (!node.subcategoryName.empty()) {
+        key += "/" + node.subcategoryName;
+    }
+    if (!node.assetGroupName.empty()) {
+        key += "/" + node.assetGroupName;
+    }
+    if (node.oscSummary) {
+        key += "/osc";
+    }
+    return key;
+}
+
+inline std::string ControlMappingHubState::parameterSectionExpansionKey(const std::string& sectionName) const {
+    return activeGridScopeKey() + "::section::" + (sectionName.empty() ? std::string("General") : sectionName);
+}
+
+inline bool ControlMappingHubState::isParameterSectionExpanded(const std::string& key) const {
+    if (key.empty()) {
+        return true;
+    }
+    auto it = parameterSectionExpansionState_.find(key);
+    if (it != parameterSectionExpansionState_.end()) {
+        return it->second;
+    }
+    return true;
+}
+
+inline void ControlMappingHubState::setParameterSectionExpanded(const std::string& key, bool expanded) const {
+    if (key.empty()) {
+        return;
+    }
+    parameterSectionExpansionState_[key] = expanded;
+    auto& collapsed = preferences_.collapsedParameterSections;
+    auto it = std::find(collapsed.begin(), collapsed.end(), key);
+    if (!expanded) {
+        if (it == collapsed.end()) {
+            collapsed.push_back(key);
+        }
+    } else if (it != collapsed.end()) {
+        collapsed.erase(it);
+    }
+    activeGridItems_.clear();
+    markPreferencesDirty();
+}
+
 inline std::string ControlMappingHubState::subcategoryForId(const std::string& id) const {
     auto pos = id.find_last_of('.');
     if (pos == std::string::npos) {
@@ -7045,9 +7401,10 @@ inline void ControlMappingHubState::moveRow(int delta) const {
         }
         return;
     }
-    const auto& rows = activeRowIndices();
-    if (rows.empty()) {
+    const auto& items = activeGridItems();
+    if (items.empty()) {
         selectedRow_ = -1;
+        selectedGridSectionKey_.clear();
         cancelValueEdit();
         return;
     }
@@ -7055,9 +7412,17 @@ inline void ControlMappingHubState::moveRow(int delta) const {
     if (slot < 0) {
         slot = 0;
     }
-    int count = static_cast<int>(rows.size());
+    int count = static_cast<int>(items.size());
     slot = std::clamp(slot + delta, 0, count - 1);
-    selectedRow_ = rows[slot];
+    const auto& item = items[static_cast<std::size_t>(slot)];
+    if (item.sectionHeader) {
+        selectedGridSectionKey_ = item.sectionKey;
+        selectedRow_ = -1;
+        cancelValueEdit();
+        return;
+    }
+    selectedGridSectionKey_.clear();
+    selectedRow_ = item.rowIndex;
     if (editingValueActive_) {
         const auto& row = tableModel_.rows[selectedRow_];
         if (row.id != editingValueRowId_) {
@@ -7118,6 +7483,7 @@ inline bool ControlMappingHubState::activateSelection(MenuController& controller
 
 inline void ControlMappingHubState::invalidateRowCache() const {
     activeRowSet_ = nullptr;
+    activeGridItems_.clear();
 }
 
 inline const std::vector<int>& ControlMappingHubState::activeRowIndices() const {
@@ -7127,6 +7493,69 @@ inline const std::vector<int>& ControlMappingHubState::activeRowIndices() const 
     }
     static const std::vector<int> kEmpty;
     return kEmpty;
+}
+
+inline const std::vector<ControlMappingHubState::GridItem>& ControlMappingHubState::activeGridItems() const {
+    activeGridItems_.clear();
+    if (oscSummaryActive()) {
+        return activeGridItems_;
+    }
+
+    const auto& rows = activeRowIndices();
+    if (rows.empty()) {
+        return activeGridItems_;
+    }
+
+    std::unordered_map<std::string, int> sectionCounts;
+    sectionCounts.reserve(rows.size());
+    for (int rowIndex : rows) {
+        if (rowIndex < 0 || rowIndex >= static_cast<int>(tableModel_.rows.size())) {
+            continue;
+        }
+        const auto& row = tableModel_.rows[static_cast<std::size_t>(rowIndex)];
+        const std::string section = row.section.empty() ? std::string("General") : row.section;
+        ++sectionCounts[section];
+    }
+
+    std::string currentSection;
+    for (int rowIndex : rows) {
+        if (rowIndex < 0 || rowIndex >= static_cast<int>(tableModel_.rows.size())) {
+            continue;
+        }
+        const auto& row = tableModel_.rows[static_cast<std::size_t>(rowIndex)];
+        const std::string section = row.section.empty() ? std::string("General") : row.section;
+        if (section != currentSection) {
+            currentSection = section;
+            GridItem header;
+            header.sectionHeader = true;
+            header.sectionName = section;
+            header.sectionKey = parameterSectionExpansionKey(section);
+            header.childCount = sectionCounts[section];
+            header.expanded = isParameterSectionExpanded(header.sectionKey);
+            activeGridItems_.push_back(std::move(header));
+        }
+        if (isParameterSectionExpanded(parameterSectionExpansionKey(section))) {
+            GridItem item;
+            item.rowIndex = rowIndex;
+            item.sectionName = section;
+            item.sectionKey = parameterSectionExpansionKey(section);
+            item.expanded = true;
+            activeGridItems_.push_back(std::move(item));
+        }
+    }
+    return activeGridItems_;
+}
+
+inline const ControlMappingHubState::GridItem* ControlMappingHubState::selectedGridItem() const {
+    const auto& items = activeGridItems();
+    if (items.empty()) {
+        return nullptr;
+    }
+    int slot = activeRowSlot();
+    if (slot < 0 || slot >= static_cast<int>(items.size())) {
+        return nullptr;
+    }
+    return &items[static_cast<std::size_t>(slot)];
 }
 
 inline const std::vector<int>* ControlMappingHubState::resolveActiveRowSet() const {
@@ -7194,15 +7623,21 @@ inline int ControlMappingHubState::activeRowSlot() const {
         }
         return std::clamp(oscPickerSelection_, 0, static_cast<int>(sources.size()) - 1);
     }
-    const auto& rows = activeRowIndices();
-    if (rows.empty() || selectedRow_ < 0) {
+    const auto& items = activeGridItems();
+    if (items.empty()) {
         return -1;
     }
-    auto it = std::find(rows.begin(), rows.end(), selectedRow_);
-    if (it == rows.end()) {
-        return -1;
+    for (std::size_t i = 0; i < items.size(); ++i) {
+        const auto& item = items[i];
+        if (item.sectionHeader) {
+            if (!selectedGridSectionKey_.empty() && item.sectionKey == selectedGridSectionKey_) {
+                return static_cast<int>(i);
+            }
+        } else if (selectedGridSectionKey_.empty() && item.rowIndex == selectedRow_) {
+            return static_cast<int>(i);
+        }
     }
-    return static_cast<int>(std::distance(rows.begin(), it));
+    return -1;
 }
 
 inline std::vector<int> ControlMappingHubState::visibleColumns() const {
@@ -7337,8 +7772,8 @@ inline void ControlMappingHubState::ensureGridSelectionVisible(int visibleRows) 
         gridScrollOffset_ = std::clamp(gridScrollOffset_, 0, maxOffset);
         return;
     }
-    const auto& rows = activeRowIndices();
-    if (rows.empty()) {
+    const auto& items = activeGridItems();
+    if (items.empty()) {
         gridScrollOffset_ = 0;
         return;
     }
@@ -7352,7 +7787,7 @@ inline void ControlMappingHubState::ensureGridSelectionVisible(int visibleRows) 
     } else if (slot >= gridScrollOffset_ + visibleRows) {
         gridScrollOffset_ = slot - visibleRows + 1;
     }
-    int maxOffset = std::max(0, static_cast<int>(rows.size()) - visibleRows);
+    int maxOffset = std::max(0, static_cast<int>(items.size()) - visibleRows);
     gridScrollOffset_ = std::clamp(gridScrollOffset_, 0, maxOffset);
 }
 
@@ -7424,8 +7859,8 @@ inline ControlMappingHubState::ViewportSnapshot ControlMappingHubState::snapshot
     if (oscSummaryActive()) {
         snapshot.gridRowCount = static_cast<int>(oscBrowserSources().size());
     } else {
-        const auto& rows = activeRowIndices();
-        snapshot.gridRowCount = static_cast<int>(rows.size());
+        const auto& items = activeGridItems();
+        snapshot.gridRowCount = static_cast<int>(items.size());
     }
     snapshot.gridScrollOffset = gridScrollOffset_;
     snapshot.gridVisibleRows = ctx.gridVisibleRows;
@@ -7522,6 +7957,8 @@ inline void ControlMappingHubState::applyTreeSelection(int nodeIndex, bool userD
     }
     if (selectedTreeNodeIndex_ != previousIndex) {
         gridScrollOffset_ = 0;
+        selectedGridSectionKey_.clear();
+        selectedRow_ = -1;
     }
     invalidateRowCache();
     clampSelection();
@@ -7683,6 +8120,14 @@ inline void ControlMappingHubState::loadPreferences() {
                 }
             }
         }
+        preferences_.collapsedParameterSections.clear();
+        if (json.contains("collapsedParameterSections") && json["collapsedParameterSections"].is_array()) {
+            for (const auto& entry : json["collapsedParameterSections"]) {
+                if (entry.is_string()) {
+                    preferences_.collapsedParameterSections.push_back(entry.get<std::string>());
+                }
+            }
+        }
         preferences_.hudWidgets.clear();
         if (json.contains("hudWidgets") && json["hudWidgets"].is_array()) {
             for (const auto& widgetEntry : json["hudWidgets"]) {
@@ -7728,6 +8173,10 @@ inline void ControlMappingHubState::loadPreferences() {
         for (const auto& name : preferences_.collapsedCategories) {
             treeExpansionState_[name] = false;
         }
+        parameterSectionExpansionState_.clear();
+        for (const auto& name : preferences_.collapsedParameterSections) {
+            parameterSectionExpansionState_[name] = false;
+        }
         pendingCategoryPref_ = preferences_.categoryName;
         pendingSubcategoryPref_ = preferences_.subcategoryName;
         pendingAssetPref_ = preferences_.assetName;
@@ -7767,6 +8216,7 @@ inline void ControlMappingHubState::flushPreferences() const {
     json["hudVisible"] = preferences_.hudVisible;
     json["selectedColumn"] = columnKey(selectedColumn_);
     json["collapsedCategories"] = preferences_.collapsedCategories;
+    json["collapsedParameterSections"] = preferences_.collapsedParameterSections;
     ofJson visible = ofJson::object();
     for (int i = 0; i < static_cast<int>(Column::kCount); ++i) {
         visible[columnKey(static_cast<Column>(i))] = preferences_.columnVisibility[i];

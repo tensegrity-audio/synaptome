@@ -8,6 +8,7 @@ Project Ops provides reusable operating structure; Synaptome pins the reusable f
 
 - `.project_ops/config.json` defines Synaptome's Project Ops paths, scope labels, privacy posture, and validation commands.
 - `docs/project_ops/roadmap.md` records active, completed, and planned Project Ops-managed work.
+- `docs/project_ops/synaptome_layer_design_standards.md` records canonical visual-layer model, mode, manifest, parameter, Browser grouping, and validation standards.
 - `docs/project_ops/in_progress/_REQUEST_TEMPLATE.md` defines the request artifact shape for future work.
 - `docs/project_ops/reports/changelog.md` records meaningful project-operations changes.
 - `docs/project_ops/governance/README.md` records local Project Ops policy.

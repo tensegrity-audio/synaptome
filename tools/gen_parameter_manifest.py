@@ -13,9 +13,13 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import layer_package_discovery
+import layer_package_parameter_manifest
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 APP_ROOT = REPO_ROOT / "synaptome"
 DEFAULT_OUTPUT = REPO_ROOT / "docs" / "contracts" / "parameter_manifest.json"
+DEFAULT_COMBINED_OUTPUT = REPO_ROOT / "tools" / "testdata" / "layer_packages" / "expected_combined_parameter_manifest.json"
 
 PARAM_ID_RE = re.compile(r"^[A-Za-z][A-Za-z0-9_]*(?:\.[A-Za-z0-9_]+)+$")
 CONSOLE_PATTERN_RE = re.compile(r"^console\.layer\{slot\}(?:\.[A-Za-z0-9_]+)+$")
@@ -280,7 +284,10 @@ def is_catalog_surface_without_layer_params(layer_type: str) -> bool:
     return layer_type.startswith("fx.") or layer_type == "ui.hud.widget" or layer_type == "text"
 
 
-def build_manifest() -> dict[str, Any]:
+def build_manifest(
+    include_packages: bool = False,
+    package_roots: list[Path] | tuple[Path, ...] | None = None,
+) -> dict[str, Any]:
     of_app = APP_ROOT / "src" / "ofApp.cpp"
     factory_types = parse_factory_types(of_app)
     layer_templates, explicit_parameters = parse_layer_templates(factory_types)
@@ -383,6 +390,50 @@ def build_manifest() -> dict[str, Any]:
             },
         )
 
+    selected_package_roots = tuple(package_roots or layer_package_discovery.fixture_roots())
+    package_manifest: dict[str, Any] | None = None
+    package_errors: list[str] = []
+    package_parameter_conflicts: list[dict[str, Any]] = []
+    if include_packages:
+        package_manifest, package_errors = layer_package_parameter_manifest.build_manifest(selected_package_roots)
+        if not package_errors:
+            for package_entry in package_manifest.get("parameters", []):
+                if not isinstance(package_entry, dict):
+                    continue
+                param_id = package_entry.get("id")
+                if not isinstance(param_id, str):
+                    continue
+                if param_id in parameters:
+                    package_parameter_conflicts.append(
+                        {
+                            "id": param_id,
+                            "existingSource": parameters[param_id].get("source"),
+                            "packageSource": package_entry.get("source"),
+                        }
+                    )
+                    continue
+                add_unique(parameters, package_entry)
+
+            for package_template in package_manifest.get("consoleSlotTemplates", []):
+                if not isinstance(package_template, dict):
+                    continue
+                suffix = package_template.get("suffix")
+                kind = package_template.get("kind")
+                if not isinstance(suffix, str) or not isinstance(kind, str):
+                    continue
+                console_key = (f".{suffix}", kind)
+                existing = console_templates.get(console_key)
+                if existing is None:
+                    console_templates[console_key] = dict(package_template)
+                    continue
+                for field in ("sourcePackages", "sourceLayerTypes"):
+                    existing_values = existing.setdefault(field, [])
+                    if not isinstance(existing_values, list):
+                        existing_values = []
+                    package_values = package_template.get(field, [])
+                    if isinstance(package_values, list):
+                        existing[field] = sorted(set(existing_values) | {str(item) for item in package_values})
+
     console_template_list = sorted(console_templates.values(), key=lambda item: item["idPattern"])
     for template in console_template_list:
         template["sourceLayerTypes"] = sorted(set(template["sourceLayerTypes"]))
@@ -408,7 +459,7 @@ def build_manifest() -> dict[str, Any]:
         if count >= 3
     ]
 
-    return {
+    manifest: dict[str, Any] = {
         "schemaVersion": 1,
         "status": "generated",
         "generator": "tools/gen_parameter_manifest.py",
@@ -436,6 +487,19 @@ def build_manifest() -> dict[str, Any]:
         "catalogAssetsWithoutLayerParameters": catalog_assets_without_layer_parameters,
         "unresolvedAssets": unresolved_assets,
     }
+    if include_packages:
+        manifest["status"] = "draft-combined"
+        manifest["sourceStrategy"].append(
+            "Draft layer package parameter declarations are appended through tools/layer_package_parameter_manifest.py."
+        )
+        manifest["sources"].extend([rel(root) for root in selected_package_roots])
+        manifest["sources"].append("tools/layer_package_parameter_manifest.py")
+        manifest["packageDiscovery"] = layer_package_discovery.root_report(selected_package_roots)
+        manifest["packageErrors"] = package_errors
+        manifest["packageParameterConflicts"] = package_parameter_conflicts
+        manifest["counts"]["packageParameters"] = int((package_manifest or {}).get("counts", {}).get("parameters", 0))
+        manifest["counts"]["packageParameterConflicts"] = len(package_parameter_conflicts)
+    return manifest
 
 
 def validate_manifest(manifest: dict[str, Any]) -> list[str]:
@@ -458,6 +522,11 @@ def validate_manifest(manifest: dict[str, Any]) -> list[str]:
         pattern = entry.get("idPattern")
         if not isinstance(pattern, str) or not CONSOLE_PATTERN_RE.match(pattern):
             errors.append(f"consoleSlotTemplates[{idx}].idPattern is invalid: {pattern}")
+    for error in manifest.get("packageErrors", []):
+        errors.append(f"layer package error: {error}")
+    for conflict in manifest.get("packageParameterConflicts", []):
+        if isinstance(conflict, dict):
+            errors.append(f"package parameter conflicts with existing manifest id: {conflict.get('id')}")
     return errors
 
 
@@ -467,19 +536,22 @@ def dumps_manifest(manifest: dict[str, Any]) -> str:
 
 def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description="Generate/check the Synaptome parameter manifest")
-    parser.add_argument("--output", default=str(DEFAULT_OUTPUT), help="Manifest path")
+    parser.add_argument("--output", default=None, help="Manifest path")
     parser.add_argument("--write", action="store_true", help="Write the manifest")
     parser.add_argument("--check", action="store_true", help="Fail if the checked-in manifest is stale")
+    parser.add_argument("--include-packages", action="store_true", help="Append draft layer package parameter entries")
+    parser.add_argument("--package-root", type=Path, action="append", help="Package discovery root for --include-packages")
     args = parser.parse_args(argv)
 
-    manifest = build_manifest()
+    package_roots = layer_package_discovery.roots_from_args(args.package_root, layer_package_discovery.fixture_roots())
+    manifest = build_manifest(include_packages=args.include_packages, package_roots=package_roots)
     errors = validate_manifest(manifest)
     if errors:
         for error in errors:
             print(f"error: {error}", file=sys.stderr)
         return 1
 
-    output = Path(args.output)
+    output = Path(args.output) if args.output else (DEFAULT_COMBINED_OUTPUT if args.include_packages else DEFAULT_OUTPUT)
     rendered = dumps_manifest(manifest)
     if args.write:
         output.parent.mkdir(parents=True, exist_ok=True)

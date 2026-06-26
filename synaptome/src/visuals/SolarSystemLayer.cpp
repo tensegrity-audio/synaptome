@@ -8,7 +8,9 @@
 #include <array>
 #include <cmath>
 #include <cstddef>
+#include <iomanip>
 #include <random>
+#include <sstream>
 #include <utility>
 
 namespace {
@@ -264,7 +266,12 @@ void SolarSystemLayer::configure(const ofJson& config) {
     paramShowAsteroids_ = def.value("showAsteroids", paramShowAsteroids_);
     paramShowComets_ = def.value("showComets", paramShowComets_);
     paramShowWaveformBelt_ = def.value("showWaveformBelt", paramShowWaveformBelt_);
+    paramShowCallouts_ = def.value("showCallouts", paramShowCallouts_);
+    paramCalloutCompact_ = def.value("calloutCompact", paramCalloutCompact_);
     paramAlpha_ = def.value("alpha", paramAlpha_);
+    paramCalloutAlpha_ = def.value("calloutAlpha", paramCalloutAlpha_);
+    paramCalloutBackgroundAlpha_ = def.value("calloutBackgroundAlpha", paramCalloutBackgroundAlpha_);
+    paramCalloutScale_ = def.value("calloutScale", paramCalloutScale_);
     paramScale_ = def.value("scale", paramScale_);
     paramSceneZoom_ = def.value("sceneZoom", paramSceneZoom_);
     paramOrbitSpread_ = def.value("orbitSpread", paramOrbitSpread_);
@@ -334,94 +341,103 @@ void SolarSystemLayer::setup(ParameterRegistry& registry) {
 
     ParameterRegistry::Descriptor meta;
     meta.group = "Solar System";
-    meta.label = "Solar System Visible";
+    meta.label = "Layer: Visible";
     registry.addBool(prefix + ".visible", &paramEnabled_, paramEnabled_, meta);
 
-    meta.label = "White Orbit Guides";
+    meta.label = "Orbit: Guides";
     registry.addBool(prefix + ".showOrbits", &paramShowOrbits_, paramShowOrbits_, meta);
 
-    meta.label = "Planet Travel Trails";
+    meta.label = "Trail: Visible";
     registry.addBool(prefix + ".showTrails", &paramShowTrails_, paramShowTrails_, meta);
 
-    meta.label = "Solar System Moons";
+    meta.label = "Moon: Visible";
     registry.addBool(prefix + ".showMoons", &paramShowMoons_, paramShowMoons_, meta);
 
-    meta.label = "Solar System Rings";
+    meta.label = "Rings: Visible";
     registry.addBool(prefix + ".showRings", &paramShowRings_, paramShowRings_, meta);
 
-    meta.label = "Solar System Asteroids";
+    meta.label = "Asteroids: Visible";
     registry.addBool(prefix + ".showAsteroids", &paramShowAsteroids_, paramShowAsteroids_, meta);
 
-    meta.label = "Solar System Comets";
+    meta.label = "Comets: Visible";
     registry.addBool(prefix + ".showComets", &paramShowComets_, paramShowComets_, meta);
 
-    meta.label = "Heliosphere Field";
+    meta.label = "Heliosphere: Visible";
     registry.addBool(prefix + ".showWaveformBelt", &paramShowWaveformBelt_, paramShowWaveformBelt_, meta);
 
-    registerFloat(registry, prefix + ".alpha", &paramAlpha_, paramAlpha_, "Orrery Alpha", 0.0f, 1.0f, 0.01f, "normalized");
-    registerFloat(registry, prefix + ".scale", &paramScale_, paramScale_, "Orrery Scale", 0.25f, 1.5f, 0.01f);
-    registerFloat(registry, prefix + ".sceneZoom", &paramSceneZoom_, paramSceneZoom_, "Scene Zoom", 0.35f, 2.5f, 0.01f);
-    registerFloat(registry, prefix + ".orbitSpread", &paramOrbitSpread_, paramOrbitSpread_, "Orbit Spread", 0.65f, 2.25f, 0.01f);
-    registerFloat(registry, prefix + ".orbitSpeed", &paramOrbitSpeed_, paramOrbitSpeed_, "Orrery Speed", -3.0f, 3.0f, 0.01f);
-    registerFloat(registry, prefix + ".orbitTilt", &paramOrbitTilt_, paramOrbitTilt_, "Orrery Tilt", -80.0f, 80.0f, 1.0f, "deg");
-    registerFloat(registry, prefix + ".orbitRotation", &paramOrbitRotation_, paramOrbitRotation_, "Orrery Rotation", -180.0f, 180.0f, 1.0f, "deg");
-    registerFloat(registry, prefix + ".orbitPlaneVariation", &paramOrbitPlaneVariation_, paramOrbitPlaneVariation_, "Orbit Plane Variation", 0.0f, 2.0f, 0.01f);
-    registerFloat(registry, prefix + ".eccentricity", &paramEccentricity_, paramEccentricity_, "Observed Eccentricity Lift", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".depth", &paramDepth_, paramDepth_, "Orrery Depth", 0.1f, 2.5f, 0.01f);
-    registerFloat(registry, prefix + ".starSize", &paramStarSize_, paramStarSize_, "Star Size", 0.01f, 0.14f, 0.001f, "viewport");
-    registerFloat(registry, prefix + ".starGlow", &paramStarGlow_, paramStarGlow_, "Star Glow", 0.0f, 5.0f, 0.01f);
-    registerFloat(registry, prefix + ".starRadiance", &paramStarRadiance_, paramStarRadiance_, "Star Radiance", 0.0f, 4.0f, 0.01f);
-    registerFloat(registry, prefix + ".starEmissionAudio", &paramStarEmissionAudio_, paramStarEmissionAudio_, "Star Audio Emission", 0.0f, 3.0f, 0.01f);
-    registerFloat(registry, prefix + ".starSurfaceTurbulence", &paramStarSurfaceTurbulence_, paramStarSurfaceTurbulence_, "Star Surface Turbulence", 0.0f, 2.5f, 0.01f);
-    registerFloat(registry, prefix + ".solarBurstIntensity", &paramSolarBurstIntensity_, paramSolarBurstIntensity_, "Solar Burst Intensity", 0.0f, 3.0f, 0.01f);
-    registerFloat(registry, prefix + ".sideFillLight", &paramSideFillLight_, paramSideFillLight_, "Side Fill Light", 0.0f, 1.5f, 0.01f);
-    registerFloat(registry, prefix + ".visitorEvents", &paramVisitorEvents_, paramVisitorEvents_, "Visitor Events", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".artifactActivity", &paramArtifactActivity_, paramArtifactActivity_, "Orbital Artifacts", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".planetSize", &paramPlanetSize_, paramPlanetSize_, "Planet Size", 0.25f, 3.0f, 0.01f);
-    registerFloat(registry, prefix + ".observedDiversity", &paramObservedDiversity_, paramObservedDiversity_, "Observed Diversity", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".planetVariation", &paramPlanetVariation_, paramPlanetVariation_, "Planet Variation", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".asteroidDensity", &paramAsteroidDensity_, paramAsteroidDensity_, "Asteroid Density", 0.0f, 2.0f, 0.01f);
-    registerFloat(registry, prefix + ".cometDensity", &paramCometDensity_, paramCometDensity_, "Comet Density", 0.0f, 2.0f, 0.01f);
-    registerFloat(registry, prefix + ".orbitAlpha", &paramOrbitAlpha_, paramOrbitAlpha_, "Orbit Alpha", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".orbitThickness", &paramOrbitThickness_, paramOrbitThickness_, "Orbit Thickness", 0.5f, 6.0f, 0.1f, "px");
-    registerFloat(registry, prefix + ".trailAlpha", &paramTrailAlpha_, paramTrailAlpha_, "Orbit Trail Alpha", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".trailLength", &paramTrailLength_, paramTrailLength_, "Orbit Trail Length", 0.02f, 1.0f, 0.01f, "orbit");
-    registerFloat(registry, prefix + ".trailSteps", &paramTrailSteps_, paramTrailSteps_, "Trail Steps", 8.0f, 96.0f, 1.0f);
-    registerFloat(registry, prefix + ".trailStampGain", &paramTrailStampGain_, paramTrailStampGain_, "Trail Audio Stamp Gain", 0.0f, 3.0f, 0.01f);
-    registerFloat(registry, prefix + ".trailStampLife", &paramTrailStampLife_, paramTrailStampLife_, "Trail Stamp Life", 2.0f, 36.0f, 0.1f, "s");
-    registerFloat(registry, prefix + ".atmosphereGrowth", &paramAtmosphereGrowth_, paramAtmosphereGrowth_, "Atmosphere Audio Growth", 0.0f, 2.0f, 0.01f);
-    registerFloat(registry, prefix + ".lifeReactivity", &paramLifeReactivity_, paramLifeReactivity_, "Planet Life Reactivity", 0.0f, 3.0f, 0.01f);
-    registerFloat(registry, prefix + ".biosphereThreshold", &paramBiosphereThreshold_, paramBiosphereThreshold_, "Biosphere Threshold", 0.05f, 1.2f, 0.01f);
-    registerFloat(registry, prefix + ".civilizationGrowth", &paramCivilizationGrowth_, paramCivilizationGrowth_, "Satellite Emergence", 0.0f, 2.0f, 0.01f);
-    registerFloat(registry, prefix + ".moonSize", &paramMoonSize_, paramMoonSize_, "Moon Size", 0.0f, 2.0f, 0.01f);
-    registerFloat(registry, prefix + ".moonSpeed", &paramMoonSpeed_, paramMoonSpeed_, "Moon Speed", -4.0f, 4.0f, 0.01f);
-    registerFloat(registry, prefix + ".audioAmount", &paramAudioAmount_, paramAudioAmount_, "Orrery Audio Amount", 0.0f, 3.0f, 0.01f);
-    registerFloat(registry, prefix + ".audioSmoothing", &paramAudioSmoothing_, paramAudioSmoothing_, "Orrery Audio Smoothing", 0.0f, 0.98f, 0.01f);
-    registerFloat(registry, prefix + ".bassScale", &paramBassScale_, paramBassScale_, "Bass Solar Bloom", 0.0f, 1.5f, 0.01f);
-    registerFloat(registry, prefix + ".midsSpeed", &paramMidsSpeed_, paramMidsSpeed_, "Mids Solar Wind", 0.0f, 3.0f, 0.01f);
-    registerFloat(registry, prefix + ".highsSparkle", &paramHighsSparkle_, paramHighsSparkle_, "Highs Sparkle", 0.0f, 3.0f, 0.01f);
-    registerFloat(registry, prefix + ".waveformAmount", &paramWaveformAmount_, paramWaveformAmount_, "Waveform Field Ripple", 0.0f, 0.20f, 0.001f);
+    meta.label = "Action: Callouts Visible";
+    registry.addBool(prefix + ".showCallouts", &paramShowCallouts_, paramShowCallouts_, meta);
+
+    meta.label = "Action: Compact Callouts";
+    registry.addBool(prefix + ".calloutCompact", &paramCalloutCompact_, paramCalloutCompact_, meta);
+
+    registerFloat(registry, prefix + ".alpha", &paramAlpha_, paramAlpha_, "Layer: Opacity", 0.0f, 1.0f, 0.01f, "normalized");
+    registerFloat(registry, prefix + ".calloutAlpha", &paramCalloutAlpha_, paramCalloutAlpha_, "Alpha: Callout Text", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".calloutBackgroundAlpha", &paramCalloutBackgroundAlpha_, paramCalloutBackgroundAlpha_, "Alpha: Callout Background", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".calloutScale", &paramCalloutScale_, paramCalloutScale_, "Scale: Callout Size", 0.65f, 1.35f, 0.01f);
+    registerFloat(registry, prefix + ".scale", &paramScale_, paramScale_, "View: Scale", 0.25f, 1.5f, 0.01f);
+    registerFloat(registry, prefix + ".sceneZoom", &paramSceneZoom_, paramSceneZoom_, "View: Zoom", 0.35f, 2.5f, 0.01f);
+    registerFloat(registry, prefix + ".orbitSpread", &paramOrbitSpread_, paramOrbitSpread_, "Orbit: Spread", 0.65f, 2.25f, 0.01f);
+    registerFloat(registry, prefix + ".orbitSpeed", &paramOrbitSpeed_, paramOrbitSpeed_, "Orbit: Speed", -3.0f, 3.0f, 0.01f);
+    registerFloat(registry, prefix + ".orbitTilt", &paramOrbitTilt_, paramOrbitTilt_, "View: Tilt", -80.0f, 80.0f, 1.0f, "deg");
+    registerFloat(registry, prefix + ".orbitRotation", &paramOrbitRotation_, paramOrbitRotation_, "View: Rotation", -180.0f, 180.0f, 1.0f, "deg");
+    registerFloat(registry, prefix + ".orbitPlaneVariation", &paramOrbitPlaneVariation_, paramOrbitPlaneVariation_, "Orbit: Plane Variation", 0.0f, 2.0f, 0.01f);
+    registerFloat(registry, prefix + ".eccentricity", &paramEccentricity_, paramEccentricity_, "Orbit: Eccentricity Lift", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".depth", &paramDepth_, paramDepth_, "View: Depth", 0.1f, 2.5f, 0.01f);
+    registerFloat(registry, prefix + ".starSize", &paramStarSize_, paramStarSize_, "Sun: Size", 0.01f, 0.14f, 0.001f, "viewport");
+    registerFloat(registry, prefix + ".starGlow", &paramStarGlow_, paramStarGlow_, "Sun: Glow", 0.0f, 5.0f, 0.01f);
+    registerFloat(registry, prefix + ".starRadiance", &paramStarRadiance_, paramStarRadiance_, "Sun: Radiance", 0.0f, 4.0f, 0.01f);
+    registerFloat(registry, prefix + ".starEmissionAudio", &paramStarEmissionAudio_, paramStarEmissionAudio_, "Sun: Emission Lift", 0.0f, 3.0f, 0.01f);
+    registerFloat(registry, prefix + ".starSurfaceTurbulence", &paramStarSurfaceTurbulence_, paramStarSurfaceTurbulence_, "Sun: Surface Turbulence", 0.0f, 2.5f, 0.01f);
+    registerFloat(registry, prefix + ".solarBurstIntensity", &paramSolarBurstIntensity_, paramSolarBurstIntensity_, "Sun: Burst Intensity", 0.0f, 3.0f, 0.01f);
+    registerFloat(registry, prefix + ".sideFillLight", &paramSideFillLight_, paramSideFillLight_, "Lighting: Side Fill", 0.0f, 1.5f, 0.01f);
+    registerFloat(registry, prefix + ".visitorEvents", &paramVisitorEvents_, paramVisitorEvents_, "Visitors: Events", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".artifactActivity", &paramArtifactActivity_, paramArtifactActivity_, "Artifacts: Activity", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".planetSize", &paramPlanetSize_, paramPlanetSize_, "Planet: Size", 0.25f, 3.0f, 0.01f);
+    registerFloat(registry, prefix + ".observedDiversity", &paramObservedDiversity_, paramObservedDiversity_, "System: Observed Diversity", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".planetVariation", &paramPlanetVariation_, paramPlanetVariation_, "Planet: Variation", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".asteroidDensity", &paramAsteroidDensity_, paramAsteroidDensity_, "Asteroids: Density", 0.0f, 2.0f, 0.01f);
+    registerFloat(registry, prefix + ".cometDensity", &paramCometDensity_, paramCometDensity_, "Comets: Density", 0.0f, 2.0f, 0.01f);
+    registerFloat(registry, prefix + ".orbitAlpha", &paramOrbitAlpha_, paramOrbitAlpha_, "Orbit: Alpha", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".orbitThickness", &paramOrbitThickness_, paramOrbitThickness_, "Orbit: Thickness", 0.5f, 6.0f, 0.1f, "px");
+    registerFloat(registry, prefix + ".trailAlpha", &paramTrailAlpha_, paramTrailAlpha_, "Trail: Alpha", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".trailLength", &paramTrailLength_, paramTrailLength_, "Trail: Length", 0.02f, 1.0f, 0.01f, "orbit");
+    registerFloat(registry, prefix + ".trailSteps", &paramTrailSteps_, paramTrailSteps_, "Trail: Steps", 8.0f, 96.0f, 1.0f);
+    registerFloat(registry, prefix + ".trailStampGain", &paramTrailStampGain_, paramTrailStampGain_, "Trail: Wave Amount", 0.0f, 3.0f, 0.01f);
+    registerFloat(registry, prefix + ".trailStampLife", &paramTrailStampLife_, paramTrailStampLife_, "Trail: Wave Frequency", 1.0f, 14.0f, 0.1f, "cycles");
+    registerFloat(registry, prefix + ".atmosphereGrowth", &paramAtmosphereGrowth_, paramAtmosphereGrowth_, "Atmosphere: Growth", 0.0f, 2.0f, 0.01f);
+    registerFloat(registry, prefix + ".lifeReactivity", &paramLifeReactivity_, paramLifeReactivity_, "Biosphere: Reactivity", 0.0f, 3.0f, 0.01f);
+    registerFloat(registry, prefix + ".biosphereThreshold", &paramBiosphereThreshold_, paramBiosphereThreshold_, "Biosphere: Threshold", 0.05f, 1.2f, 0.01f);
+    registerFloat(registry, prefix + ".civilizationGrowth", &paramCivilizationGrowth_, paramCivilizationGrowth_, "Satellites: Emergence", 0.0f, 2.0f, 0.01f);
+    registerFloat(registry, prefix + ".moonSize", &paramMoonSize_, paramMoonSize_, "Moon: Size", 0.0f, 2.0f, 0.01f);
+    registerFloat(registry, prefix + ".moonSpeed", &paramMoonSpeed_, paramMoonSpeed_, "Moon: Speed", -4.0f, 4.0f, 0.01f);
+    registerFloat(registry, prefix + ".audioAmount", &paramAudioAmount_, paramAudioAmount_, "Signal: Amount", 0.0f, 3.0f, 0.01f);
+    registerFloat(registry, prefix + ".audioSmoothing", &paramAudioSmoothing_, paramAudioSmoothing_, "Signal: Smoothing", 0.0f, 0.98f, 0.01f);
+    registerFloat(registry, prefix + ".bassScale", &paramBassScale_, paramBassScale_, "Sun: Bloom Lift", 0.0f, 1.5f, 0.01f);
+    registerFloat(registry, prefix + ".midsSpeed", &paramMidsSpeed_, paramMidsSpeed_, "Solar Wind: Amount", 0.0f, 3.0f, 0.01f);
+    registerFloat(registry, prefix + ".highsSparkle", &paramHighsSparkle_, paramHighsSparkle_, "Heliosphere: Sparkle", 0.0f, 3.0f, 0.01f);
+    registerFloat(registry, prefix + ".waveformAmount", &paramWaveformAmount_, paramWaveformAmount_, "Heliosphere: Ripple", 0.0f, 0.20f, 0.001f);
 
     meta = {};
     meta.group = "Solar System";
-    meta.label = "Solar System Reseed";
+    meta.label = "Action: Reseed";
     meta.description = "Generate a new observed-data-driven 3D system. Seed 0 uses a fresh random seed.";
     registry.addBool(prefix + ".reseed", &paramReseedRequested_, paramReseedRequested_, meta);
 
-    registerFloat(registry, prefix + ".seed", &paramSeed_, paramSeed_, "Solar System Seed", 0.0f, 99999.0f, 1.0f, "0 = random on setup/reseed");
-    registerFloat(registry, prefix + ".bgAlpha", &paramBgAlpha_, paramBgAlpha_, "Orrery Bg Alpha", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".bgR", &paramBgR_, paramBgR_, "Orrery Bg R", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".bgG", &paramBgG_, paramBgG_, "Orrery Bg G", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".bgB", &paramBgB_, paramBgB_, "Orrery Bg B", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".starR", &paramStarR_, paramStarR_, "Star R", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".starG", &paramStarG_, paramStarG_, "Star G", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".starB", &paramStarB_, paramStarB_, "Star B", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".orbitR", &paramOrbitR_, paramOrbitR_, "Orbit R", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".orbitG", &paramOrbitG_, paramOrbitG_, "Orbit G", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".orbitB", &paramOrbitB_, paramOrbitB_, "Orbit B", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".trailR", &paramTrailR_, paramTrailR_, "Trail R", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".trailG", &paramTrailG_, paramTrailG_, "Trail G", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".trailB", &paramTrailB_, paramTrailB_, "Trail B", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".seed", &paramSeed_, paramSeed_, "System: Seed", 0.0f, 99999.0f, 1.0f, "0 = random on setup/reseed");
+    registerFloat(registry, prefix + ".bgAlpha", &paramBgAlpha_, paramBgAlpha_, "Background: Alpha", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".bgR", &paramBgR_, paramBgR_, "Background: Color R", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".bgG", &paramBgG_, paramBgG_, "Background: Color G", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".bgB", &paramBgB_, paramBgB_, "Background: Color B", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".starR", &paramStarR_, paramStarR_, "Sun: Color R", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".starG", &paramStarG_, paramStarG_, "Sun: Color G", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".starB", &paramStarB_, paramStarB_, "Sun: Color B", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".orbitR", &paramOrbitR_, paramOrbitR_, "Orbit: Color R", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".orbitG", &paramOrbitG_, paramOrbitG_, "Orbit: Color G", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".orbitB", &paramOrbitB_, paramOrbitB_, "Orbit: Color B", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".trailR", &paramTrailR_, paramTrailR_, "Trail: Color R", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".trailG", &paramTrailG_, paramTrailG_, "Trail: Color G", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".trailB", &paramTrailB_, paramTrailB_, "Trail: Color B", 0.0f, 1.0f, 0.01f);
 
     resetSystem();
 }
@@ -457,28 +473,17 @@ void SolarSystemLayer::update(const LayerUpdateParams& params) {
     if (atmosphereEnergy_.size() != bodies_.size()) {
         atmosphereEnergy_.assign(bodies_.size(), 0.0f);
     }
-    if (trailStamps_.size() != bodies_.size()) {
-        trailStamps_.assign(bodies_.size(), {});
-    }
     if (lifeStates_.size() != bodies_.size()) {
         initializeLifeStates();
-    }
-    if (lastTrailStampAngle_.size() != bodies_.size()) {
-        lastTrailStampAngle_.assign(bodies_.size(), -10000.0f);
     }
 
     const float audioEnergy = hasAudio_
         ? ofClamp(level_ * 0.62f + bass_ * 0.34f + peak_ * 0.42f, 0.0f, 1.7f)
         : 0.0f;
-    const float globalStampEnergy = hasAudio_
-        ? ofClamp(peak_ * 0.78f + level_ * 0.36f + highs_ * 0.18f, 0.0f, 1.6f)
-        : 0.0f;
     for (std::size_t i = 0; i < bodies_.size(); ++i) {
         const auto& body = bodies_[i];
         auto& life = lifeStates_[i];
         const float planetBandTarget = planetBandEnergyFor(i);
-        const float stampEnergy = ofClamp(globalStampEnergy * 0.42f + planetBandTarget * (0.96f + life.affinity * 0.24f), 0.0f, 1.9f);
-        const bool strongStamp = stampEnergy > 0.18f;
         const float bandFollow = planetBandTarget > life.bandEnergy
             ? ofClamp(dt * (1.35f + paramLifeReactivity_ * 0.90f), 0.0f, 1.0f)
             : ofClamp(dt * 0.22f, 0.0f, 1.0f);
@@ -519,38 +524,6 @@ void SolarSystemLayer::update(const LayerUpdateParams& params) {
         life.civilizationEnergy = ofClamp(life.civilizationEnergy + dt * (civilizationRise - civilizationDecay),
                                           0.0f,
                                           1.0f);
-
-        for (auto& stamp : trailStamps_[i]) {
-            stamp.age += dt;
-        }
-        trailStamps_[i].erase(std::remove_if(trailStamps_[i].begin(),
-                                             trailStamps_[i].end(),
-                                             [](const TrailStamp& stamp) {
-                                                 return stamp.age >= stamp.lifetime;
-                                             }),
-                              trailStamps_[i].end());
-
-        if (strongStamp && paramTrailStampGain_ > 0.0f && paramShowTrails_) {
-            const float angle = orbitTime_ * body.speed * TWO_PI + body.phase;
-            const float direction = paramOrbitSpeed_ >= 0.0f ? 1.0f : -1.0f;
-            const float angleDelta = lastTrailStampAngle_[i] < -9999.0f
-                ? 1.0f
-                : wrap01((angle - lastTrailStampAngle_[i]) * direction / TWO_PI);
-            const float minAngleGap = ofClamp(0.012f + (1.0f - stampEnergy) * 0.030f, 0.010f, 0.048f);
-            if (angleDelta >= minAngleGap || stampEnergy > 0.78f) {
-                TrailStamp stamp;
-                stamp.angle = angle;
-                stamp.strength = ofClamp(stampEnergy * paramTrailStampGain_, 0.0f, 2.4f);
-                stamp.age = 0.0f;
-                stamp.lifetime = paramTrailStampLife_ * (0.72f + stamp.strength * 0.22f);
-                stamp.seed = body.seed + static_cast<float>(trailStamps_[i].size()) * 17.0f + orbitTime_ * 11.0f;
-                trailStamps_[i].push_back(stamp);
-                if (trailStamps_[i].size() > 48) {
-                    trailStamps_[i].erase(trailStamps_[i].begin(), trailStamps_[i].begin() + static_cast<std::ptrdiff_t>(trailStamps_[i].size() - 48));
-                }
-                lastTrailStampAngle_[i] = angle;
-            }
-        }
     }
 }
 
@@ -778,6 +751,10 @@ void SolarSystemLayer::draw(const LayerDrawParams& params) {
     drawStarEmissionOverlay(width, height, starRadius * paramSceneZoom_, alpha, params.time);
     ofPopView();
 
+    if (paramShowCallouts_) {
+        drawPlanetCallouts(params, width, height, radiusScale, alpha);
+    }
+
     ofEnableBlendMode(OF_BLENDMODE_ALPHA);
     ofPopStyle();
 }
@@ -785,6 +762,225 @@ void SolarSystemLayer::draw(const LayerDrawParams& params) {
 void SolarSystemLayer::setExternalEnabled(bool enabled) {
     paramEnabled_ = enabled;
     enabled_ = enabled;
+}
+
+void SolarSystemLayer::drawPlanetCallouts(const LayerDrawParams& params,
+                                          float width,
+                                          float height,
+                                          float radiusScale,
+                                          float alpha) const {
+    if (alpha <= 0.0f || paramCalloutAlpha_ <= 0.0f || bodies_.empty()) {
+        return;
+    }
+
+    struct Metric {
+        std::string label;
+        float value = 0.0f;
+    };
+
+    struct Callout {
+        glm::vec2 anchor;
+        glm::vec2 attach;
+        ofRectangle panel;
+        std::string title;
+        std::string idLine;
+        std::string bandLine;
+        std::string footerLine;
+        std::vector<Metric> metrics;
+        float activity = 0.0f;
+    };
+
+    const float scale = ofClamp(paramCalloutScale_, 0.65f, 1.35f) * (paramCalloutCompact_ ? 0.78f : 1.0f);
+    const float panelW = (paramCalloutCompact_ ? 212.0f : 246.0f) * scale;
+    const float lineH = 12.0f * scale;
+    const float metricH = 14.0f * scale;
+    const float pad = 9.0f * scale;
+    const float margin = 8.0f * scale;
+    const float offsetX = 42.0f * scale;
+    const float offsetY = 34.0f * scale;
+    const ofRectangle viewport(0.0f, 0.0f, width, height);
+
+    auto fmt = [](float value, int precision) {
+        std::ostringstream out;
+        out << std::fixed << std::setprecision(precision) << value;
+        return out.str();
+    };
+
+    auto serialFor = [](std::size_t bodyIndex) {
+        std::ostringstream out;
+        out << "PL-" << std::setfill('0') << std::setw(3) << (bodyIndex + 1);
+        return out.str();
+    };
+
+    auto truncate = [](const std::string& value, std::size_t limit) {
+        if (value.size() <= limit) {
+            return value;
+        }
+        return value.substr(0, limit > 1 ? limit - 1 : limit) + "~";
+    };
+
+    std::vector<Callout> callouts;
+    callouts.reserve(bodies_.size());
+    for (std::size_t bodyIndex = 0; bodyIndex < bodies_.size(); ++bodyIndex) {
+        const Body& body = bodies_[bodyIndex];
+        const float angle = orbitTime_ * body.speed * TWO_PI + body.phase;
+        glm::vec3 world = orbitPointFor(body, angle, radiusScale, body.phase);
+        world.y *= paramDepth_;
+        world = rotateY(world, paramOrbitRotation_ / kRadToDeg);
+        world = rotateX(world, paramOrbitTilt_ / kRadToDeg);
+        world *= paramSceneZoom_;
+
+        const glm::vec3 screen = params.camera.worldToScreen(world, viewport);
+        if (!std::isfinite(screen.x) || !std::isfinite(screen.y)) {
+            continue;
+        }
+        if (screen.x < -width * 0.12f || screen.x > width * 1.12f || screen.y < -height * 0.12f || screen.y > height * 1.12f) {
+            continue;
+        }
+
+        const LifeState* life = bodyIndex < lifeStates_.size() ? &lifeStates_[bodyIndex] : nullptr;
+        const float atmosphere = bodyIndex < atmosphereEnergy_.size() ? atmosphereEnergy_[bodyIndex] : 0.0f;
+        const float bandCenter = life != nullptr ? life->bandCenter : 0.0f;
+        const float bandEnergy = life != nullptr ? life->bandEnergy : 0.0f;
+        const float biosphere = life != nullptr ? life->biosphereEnergy : 0.0f;
+        const float stability = life != nullptr ? life->stability : 0.0f;
+        const float civilization = life != nullptr ? life->civilizationEnergy : 0.0f;
+        const float liveBand = planetBandEnergyFor(bodyIndex);
+        const float activity = ofClamp(atmosphere * 0.22f + biosphere * 0.28f + stability * 0.20f + civilization * 0.30f + liveBand * 0.18f,
+                                       0.0f,
+                                       1.0f);
+
+        std::vector<Metric> metrics;
+        metrics.push_back({ "ATM", atmosphere });
+        metrics.push_back({ "BIO", biosphere });
+        metrics.push_back({ "STB", stability });
+        metrics.push_back({ "CIV", civilization });
+
+        const float panelH = pad * 2.0f +
+                             19.0f * scale +
+                             lineH * 2.0f +
+                             static_cast<float>(metrics.size()) * metricH +
+                             lineH +
+                             3.0f * scale;
+        float panelX = screen.x + offsetX;
+        float panelY = screen.y - panelH - offsetY;
+        panelX = ofClamp(panelX, margin, std::max(margin, width - panelW - margin));
+        panelY = ofClamp(panelY, margin, std::max(margin, height - panelH - margin));
+
+        Callout callout;
+        callout.anchor = glm::vec2(screen.x, screen.y);
+        callout.panel = ofRectangle(panelX, panelY, panelW, panelH);
+        callout.attach = glm::vec2(panelX, panelY + panelH);
+        callout.title = serialFor(bodyIndex) + " LIFE TRACE";
+        callout.idLine = "ID   " + truncate(body.sourceName.empty() ? sourceSystem_ : body.sourceName, 23);
+        callout.bandLine = "BAND " + fmt(bandCenter, 2) + " LIVE " + fmt(liveBand, 2);
+        callout.footerLine = "MOON " + std::to_string(body.moons.size()) + " RING " + std::string(body.rings ? "Y" : "N") +
+                             " SIG " + fmt(bandEnergy, 2);
+        callout.metrics = std::move(metrics);
+        callout.activity = activity;
+        callouts.push_back(std::move(callout));
+    }
+
+    if (callouts.empty()) {
+        return;
+    }
+
+    ofPushView();
+    ofViewport(0, 0, static_cast<int>(width), static_cast<int>(height));
+    ofSetupScreenOrtho(static_cast<int>(width), static_cast<int>(height), -1, 1);
+    ofEnableBlendMode(OF_BLENDMODE_ALPHA);
+
+    const float overlayAlpha = alpha * paramCalloutAlpha_;
+    const float backgroundAlpha = alpha * paramCalloutBackgroundAlpha_;
+    const ofColor textColor(106, 255, 160, static_cast<int>(ofClamp(overlayAlpha * 245.0f, 0.0f, 255.0f)));
+    const ofColor mutedTextColor(72, 190, 120, static_cast<int>(ofClamp(overlayAlpha * 210.0f, 0.0f, 255.0f)));
+
+#ifndef TARGET_OPENGLES
+    glLineWidth(std::max(1.0f, 1.35f * scale));
+#endif
+    for (const auto& callout : callouts) {
+        const int leaderAlpha = static_cast<int>(ofClamp(overlayAlpha * (110.0f + callout.activity * 115.0f), 0.0f, 255.0f));
+        ofSetColor(0, 255, 132, leaderAlpha);
+        ofDrawLine(callout.anchor.x, callout.anchor.y, callout.attach.x, callout.attach.y);
+        const float tick = 4.5f * scale;
+        ofDrawLine(callout.anchor.x - tick, callout.anchor.y, callout.anchor.x + tick, callout.anchor.y);
+        ofDrawLine(callout.anchor.x, callout.anchor.y - tick, callout.anchor.x, callout.anchor.y + tick);
+    }
+
+    auto drawScaledText = [&](const std::string& text, float x, float y, const ofColor& color, bool bold) {
+        ofSetColor(color);
+        ofPushMatrix();
+        ofTranslate(x, y);
+        ofScale(scale, scale);
+        ofDrawBitmapString(text, 0.0f, 0.0f);
+        if (bold) {
+            ofDrawBitmapString(text, 1.0f, 0.0f);
+        }
+        ofPopMatrix();
+    };
+
+    auto drawMeter = [&](const Metric& metric, const ofRectangle& panel, float baselineY, float activity) {
+        const float labelW = 34.0f * scale;
+        const float valueW = 34.0f * scale;
+        const float barGap = 6.0f * scale;
+        const float barX = panel.x + pad + labelW;
+        const float barW = std::max(20.0f * scale, panel.width - pad * 2.0f - labelW - valueW - barGap * 2.0f);
+        const float barH = 6.5f * scale;
+        const float barY = baselineY - 8.4f * scale;
+        const float amount = ofClamp(metric.value, 0.0f, 1.0f);
+
+        drawScaledText(metric.label, panel.x + pad, baselineY, textColor, false);
+        ofFill();
+        ofSetColor(0, 14, 6, static_cast<int>(ofClamp(backgroundAlpha * 220.0f, 0.0f, 255.0f)));
+        ofDrawRectangle(barX, barY, barW, barH);
+        ofSetColor(0, 255, 118, static_cast<int>(ofClamp(overlayAlpha * (115.0f + activity * 115.0f), 0.0f, 255.0f)));
+        ofDrawRectangle(barX + 1.0f * scale,
+                        barY + 1.0f * scale,
+                        std::max(0.0f, (barW - 2.0f * scale) * amount),
+                        std::max(0.0f, barH - 2.0f * scale));
+        ofNoFill();
+        ofSetColor(248, 255, 250, static_cast<int>(ofClamp(overlayAlpha * 215.0f, 0.0f, 255.0f)));
+        ofDrawRectangle(barX, barY, barW, barH);
+        ofFill();
+        drawScaledText(fmt(amount, 2), barX + barW + barGap, baselineY, textColor, false);
+    };
+
+    for (const auto& callout : callouts) {
+        const int panelAlpha = static_cast<int>(ofClamp(backgroundAlpha * 255.0f, 0.0f, 255.0f));
+        const int borderAlpha = static_cast<int>(ofClamp(overlayAlpha * (145.0f + callout.activity * 85.0f), 0.0f, 255.0f));
+        ofFill();
+        ofSetColor(0, 6, 4, panelAlpha);
+        ofDrawRectangle(callout.panel);
+        ofNoFill();
+        ofSetColor(0, 255, 132, borderAlpha);
+        ofDrawRectangle(callout.panel);
+        ofDrawLine(callout.panel.x, callout.panel.y + 18.0f * scale, callout.panel.x + callout.panel.width, callout.panel.y + 18.0f * scale);
+        ofFill();
+
+        const float left = callout.panel.x + pad;
+        float y = callout.panel.y + 14.0f * scale;
+        drawScaledText(callout.title, left, y, textColor, true);
+        y += 19.0f * scale;
+        drawScaledText(callout.idLine, left, y, mutedTextColor, false);
+        y += lineH;
+        drawScaledText(callout.bandLine, left, y, textColor, false);
+        y += lineH + 2.0f * scale;
+        for (const auto& metric : callout.metrics) {
+            drawMeter(metric, callout.panel, y, callout.activity);
+            y += metricH;
+        }
+        y += 1.0f * scale;
+        drawScaledText(callout.footerLine, left, y, mutedTextColor, false);
+
+        const float pulse = 0.20f + callout.activity * 0.80f;
+        ofSetColor(0, 255, 132, static_cast<int>(ofClamp(overlayAlpha * (45.0f + pulse * 120.0f), 0.0f, 255.0f)));
+        ofDrawRectangle(callout.panel.x + callout.panel.width - 5.0f * scale,
+                        callout.panel.y + 4.0f * scale,
+                        2.0f * scale,
+                        std::max(5.0f * scale, (callout.panel.height - 8.0f * scale) * pulse));
+    }
+
+    ofPopView();
 }
 
 void SolarSystemLayer::registerFloat(ParameterRegistry& registry,
@@ -819,6 +1015,9 @@ void SolarSystemLayer::readColor(const ofJson& defaults, const char* key, float&
 
 void SolarSystemLayer::clampParams() {
     paramAlpha_ = ofClamp(paramAlpha_, 0.0f, 1.0f);
+    paramCalloutAlpha_ = ofClamp(paramCalloutAlpha_, 0.0f, 1.0f);
+    paramCalloutBackgroundAlpha_ = ofClamp(paramCalloutBackgroundAlpha_, 0.0f, 1.0f);
+    paramCalloutScale_ = ofClamp(paramCalloutScale_, 0.65f, 1.35f);
     paramScale_ = ofClamp(paramScale_, 0.25f, 1.5f);
     paramSceneZoom_ = ofClamp(paramSceneZoom_, 0.35f, 2.5f);
     paramOrbitSpread_ = ofClamp(paramOrbitSpread_, 0.65f, 2.25f);
@@ -848,7 +1047,7 @@ void SolarSystemLayer::clampParams() {
     paramTrailLength_ = ofClamp(paramTrailLength_, 0.02f, 1.0f);
     paramTrailSteps_ = std::round(ofClamp(paramTrailSteps_, 8.0f, 96.0f));
     paramTrailStampGain_ = ofClamp(paramTrailStampGain_, 0.0f, 3.0f);
-    paramTrailStampLife_ = ofClamp(paramTrailStampLife_, 2.0f, 36.0f);
+    paramTrailStampLife_ = ofClamp(paramTrailStampLife_, 1.0f, 14.0f);
     paramAtmosphereGrowth_ = ofClamp(paramAtmosphereGrowth_, 0.0f, 2.0f);
     paramLifeReactivity_ = ofClamp(paramLifeReactivity_, 0.0f, 3.0f);
     paramBiosphereThreshold_ = ofClamp(paramBiosphereThreshold_, 0.05f, 1.2f);
@@ -1009,6 +1208,7 @@ void SolarSystemLayer::resetSystem() {
     }
 
     asteroids_.clear();
+    fieldAsteroids_.clear();
     const int asteroidCount = static_cast<int>(std::round((85.0f + static_cast<float>(bodies_.size()) * 11.0f + largestGap * 130.0f) * paramAsteroidDensity_));
     for (int i = 0; i < asteroidCount; ++i) {
         const float beltRoll = randRange(rng, 0.0f, 1.0f);
@@ -1035,6 +1235,25 @@ void SolarSystemLayer::resetSystem() {
                                       0.35f + randRange(rng, 0.0f, 0.08f),
                                       1.0f);
         asteroids_.push_back(asteroid);
+    }
+
+    const int fieldAsteroidCount = static_cast<int>(std::round((42.0f + static_cast<float>(bodies_.size()) * 6.0f + largestGap * 44.0f) * paramAsteroidDensity_));
+    for (int i = 0; i < fieldAsteroidCount; ++i) {
+        const float rareBoulder = randRange(rng, 0.0f, 1.0f);
+        Asteroid asteroid;
+        asteroid.orbit = randRange(rng, 0.24f, 1.28f);
+        asteroid.angle = randRange(rng, 0.0f, TWO_PI);
+        asteroid.speed = randRange(rng, 0.004f, 0.048f) * (randRange(rng, 0.0f, 1.0f) < 0.38f ? -1.0f : 1.0f);
+        asteroid.eccentricity = ofClamp(randRange(rng, 0.0f, 0.34f) + maxEccentricity * 0.05f, 0.0f, 0.46f);
+        asteroid.inclination = randRange(rng, -1.42f, 1.42f);
+        asteroid.orbitYaw = randRange(rng, -TWO_PI * 0.5f, TWO_PI * 0.5f);
+        asteroid.radius = randRange(rng, 0.55f, 2.35f) * (rareBoulder < 0.06f ? 1.85f : 1.0f);
+        asteroid.seed = randRange(rng, 1.0f, 10000.0f);
+        asteroid.color = ofFloatColor(0.34f + randRange(rng, 0.0f, 0.13f),
+                                      0.36f + randRange(rng, 0.0f, 0.12f),
+                                      0.40f + randRange(rng, 0.0f, 0.14f),
+                                      1.0f);
+        fieldAsteroids_.push_back(asteroid);
     }
 
     comets_.clear();
@@ -1121,10 +1340,8 @@ void SolarSystemLayer::resetSystem() {
     }
 
     orbitTime_ = randRange(rng, 0.0f, 100.0f);
-    trailStamps_.assign(bodies_.size(), {});
     initializeLifeStates();
     atmosphereEnergy_.assign(bodies_.size(), 0.0f);
-    lastTrailStampAngle_.assign(bodies_.size(), -10000.0f);
     systemReady_ = true;
 }
 
@@ -1536,8 +1753,8 @@ void SolarSystemLayer::drawLivingStarSurface(float starRadius, float alpha, floa
     const float bassDrive = bass_ * paramBassScale_ * audio;
     const float peakDrive = peak_ * audio;
     const float highDrive = highs_ * paramHighsSparkle_ * audio;
-    const float turbulence = paramStarSurfaceTurbulence_ * (0.58f + bassDrive * 0.72f + peakDrive * 0.55f + pulseEnvelope_ * 0.85f);
-    const float flow = timeSeconds * (0.34f + mids_ * paramMidsSpeed_ * audio * 0.18f + paramStarSurfaceTurbulence_ * 0.06f);
+    const float turbulence = paramStarSurfaceTurbulence_ * (0.42f + bassDrive * 0.28f + peakDrive * 0.12f + pulseEnvelope_ * 0.18f);
+    const float flow = timeSeconds * (0.16f + mids_ * paramMidsSpeed_ * audio * 0.035f + paramStarSurfaceTurbulence_ * 0.025f);
     const float seed = static_cast<float>(seedState_) * 0.001f + 19.31f;
 
     struct StarSurfaceVertex {
@@ -1551,29 +1768,29 @@ void SolarSystemLayer::drawLivingStarSurface(float starRadius, float alpha, floa
         const float convection = ofNoise(unit.x * 3.7f + seed,
                                          unit.y * 3.7f + flow * 0.19f,
                                          unit.z * 3.7f - flow * 0.13f);
-        const float licks = std::pow(ofNoise(unit.x * 12.0f - flow * 0.58f,
+        const float licks = std::pow(ofNoise(unit.x * 12.0f - flow * 0.22f,
                                              unit.y * 12.0f + seed * 0.43f,
-                                             unit.z * 12.0f + flow * 0.42f),
-                                     2.6f);
-        const float needles = std::pow(ofNoise(unit.x * 28.0f + flow * 1.45f + seed,
-                                               unit.y * 28.0f - flow * 1.16f,
-                                               unit.z * 28.0f + seed * 0.27f),
-                                       6.2f);
-        const float burstNeedles = std::pow(ofNoise(unit.x * 44.0f - flow * 2.55f,
-                                                    unit.y * 44.0f + flow * 2.05f + seed,
-                                                    unit.z * 44.0f - seed * 0.31f),
-                                            9.0f);
-        const float surfaceWave = (convection - 0.44f) * 0.115f * turbulence;
-        const float spike = (licks * 0.125f + needles * 0.43f + burstNeedles * (0.58f + peakDrive * 0.44f)) *
+                                             unit.z * 12.0f + flow * 0.16f),
+                                     2.8f);
+        const float needles = std::pow(ofNoise(unit.x * 26.0f + flow * 0.12f + seed,
+                                               unit.y * 26.0f - flow * 0.09f,
+                                               unit.z * 26.0f + seed * 0.27f),
+                                       6.4f);
+        const float burstNeedles = std::pow(ofNoise(unit.x * 36.0f + seed * 0.61f + flow * 0.035f,
+                                                    unit.y * 36.0f + seed * 0.17f - flow * 0.025f,
+                                                    unit.z * 36.0f - seed * 0.31f),
+                                            8.2f);
+        const float surfaceWave = (convection - 0.46f) * 0.082f * turbulence;
+        const float spike = (licks * 0.060f + needles * 0.16f + burstNeedles * (0.14f + peakDrive * 0.08f)) *
                             turbulence *
-                            (0.76f + highDrive * 0.28f);
-        const float breathing = std::sin(timeSeconds * 1.45f + unit.x * 2.1f + unit.z * 2.7f) * 0.018f * (1.0f + bassDrive);
-        const float radiusScale = ofClamp(1.0f + surfaceWave + spike + breathing, 0.82f, 1.84f);
+                            (0.58f + highDrive * 0.08f);
+        const float breathing = std::sin(timeSeconds * 1.12f + unit.x * 2.1f + unit.z * 2.7f) * 0.010f * (1.0f + bassDrive * 0.24f);
+        const float radiusScale = ofClamp(1.0f + surfaceWave + spike + breathing, 0.90f, 1.36f);
 
         StarSurfaceVertex out;
         out.position = unit * starRadius * radiusScale;
         out.spike = spike;
-        out.heat = ofClamp(0.35f + convection * 0.34f + licks * 0.28f + needles * 0.32f + burstNeedles * 0.42f + bassDrive * 0.16f, 0.0f, 1.65f);
+        out.heat = ofClamp(0.36f + convection * 0.32f + licks * 0.24f + needles * 0.24f + burstNeedles * 0.26f + bassDrive * 0.08f, 0.0f, 1.45f);
         return out;
     };
 
@@ -1594,8 +1811,8 @@ void SolarSystemLayer::drawLivingStarSurface(float starRadius, float alpha, floa
         const ofFloatColor gold = starBase.getLerped(ofFloatColor(1.0f, 0.82f, 0.18f, 1.0f), 0.40f);
         const ofFloatColor whiteHot = ofFloatColor(1.0f, 0.98f, 0.78f, 1.0f);
         ofFloatColor faceColor = ember.getLerped(gold, ofClamp(heat * 0.62f, 0.0f, 1.0f))
-                                      .getLerped(whiteHot, ofClamp(spike * 1.85f + heat * 0.20f, 0.0f, 0.82f));
-        const float emission = ofClamp((0.78f + heat * 0.28f + spike * 0.95f + pulseEnvelope_ * 0.22f) * facet, 0.0f, 1.28f);
+                                      .getLerped(whiteHot, ofClamp(spike * 1.20f + heat * 0.16f, 0.0f, 0.62f));
+        const float emission = ofClamp((0.82f + heat * 0.22f + spike * 0.55f + pulseEnvelope_ * 0.12f) * facet, 0.0f, 1.18f);
         faceColor.r = ofClamp(faceColor.r * emission * alpha, 0.0f, 1.0f);
         faceColor.g = ofClamp(faceColor.g * emission * alpha, 0.0f, 1.0f);
         faceColor.b = ofClamp(faceColor.b * emission * alpha, 0.0f, 1.0f);
@@ -2140,89 +2357,90 @@ void SolarSystemLayer::drawOrbitLine(const Body& body, float radiusScale, float 
 
 void SolarSystemLayer::drawBodyTrail(std::size_t bodyIndex, const Body& body, float radiusScale, float alpha) const {
     const int trailSteps = static_cast<int>(std::round(paramTrailSteps_));
-    const float currentAngle = orbitTime_ * body.speed * TWO_PI + body.phase;
-    const float currentBandEnergy = planetBandEnergyFor(bodyIndex);
-    ofMesh trail;
-    trail.setMode(OF_PRIMITIVE_LINE_STRIP);
-    for (int i = 0; i <= trailSteps; ++i) {
-        const float pct = static_cast<float>(i) / static_cast<float>(std::max(1, trailSteps));
-        const float angle = currentAngle - pct * TWO_PI * paramTrailLength_;
-        const glm::vec3 p = orbitPointFor(body, angle, radiusScale, body.seed * 0.0001f + pct * 0.25f);
-        const float fade = (1.0f - pct) * (1.0f - pct);
-        const ofFloatColor baseTrail(0.72f, 0.78f, 0.86f, 1.0f);
-        const ofFloatColor trailColor = baseTrail.getLerped(body.color, 0.04f);
-        trail.addVertex(p);
-        trail.addColor(colorFrom(trailColor.r,
-                                 trailColor.g,
-                                 trailColor.b,
-                                 alpha * paramTrailAlpha_ * fade * (0.88f + currentBandEnergy * 0.24f)));
-    }
-    trail.draw();
-
-    if (bodyIndex >= trailStamps_.size() || trailStamps_[bodyIndex].empty() || paramTrailStampGain_ <= 0.0f) {
+    if (trailSteps <= 1 || paramTrailAlpha_ <= 0.0f || paramTrailLength_ <= 0.0f) {
         return;
     }
 
-    const float direction = paramOrbitSpeed_ >= 0.0f ? 1.0f : -1.0f;
-    const float tailWindow = std::max(0.035f, paramTrailLength_ * 1.18f);
-    const float stampVisibility = alpha * ofClamp(0.16f + paramTrailAlpha_ * 1.65f, 0.16f, 1.25f);
-    ofEnableBlendMode(OF_BLENDMODE_ADD);
-    for (const auto& stamp : trailStamps_[bodyIndex]) {
-        const float behind = wrap01((currentAngle - stamp.angle) * direction / TWO_PI);
-        if (behind > tailWindow) {
-            continue;
-        }
+    const float currentAngle = orbitTime_ * body.speed * TWO_PI + body.phase;
+    const float currentBandEnergy = planetBandEnergyFor(bodyIndex);
+    const LifeState* life = bodyIndex < lifeStates_.size() ? &lifeStates_[bodyIndex] : nullptr;
+    const float smoothedBandEnergy = life != nullptr ? life->bandEnergy : currentBandEnergy;
+    const float drive = ofClamp(currentBandEnergy * 0.28f + smoothedBandEnergy * 0.72f, 0.0f, 1.35f);
+    const float waveGain = paramTrailStampGain_;
+    const float waveFrequency = paramTrailStampLife_;
+    const float phase = body.seed * 0.019f + orbitTime_ * body.speed * TWO_PI * (1.15f + waveFrequency * 0.035f);
+    const ofFloatColor baseTrail = colorFrom(paramTrailR_, paramTrailG_, paramTrailB_, 1.0f)
+                                       .getLerped(ofFloatColor(0.72f, 0.88f, 1.0f, 1.0f), 0.25f)
+                                       .getLerped(body.color, 0.08f);
 
-        const float ageFade = ofClamp(1.0f - stamp.age / std::max(0.001f, stamp.lifetime), 0.0f, 1.0f);
-        const float distanceFade = ofClamp(1.0f - behind / tailWindow, 0.0f, 1.0f);
-        const float energy = stamp.strength * ageFade * distanceFade;
-        if (energy <= 0.006f) {
-            continue;
-        }
+    struct TrailPoint {
+        glm::vec3 position;
+        glm::vec3 normal;
+        float fade = 0.0f;
+        float wave = 0.0f;
+    };
 
-        const float localSpan = 0.006f + energy * 0.020f;
-        ofMesh knot;
-        knot.setMode(OF_PRIMITIVE_LINE_STRIP);
-        const int knotSteps = 12;
-        for (int i = 0; i <= knotSteps; ++i) {
-            const float pct = static_cast<float>(i) / static_cast<float>(knotSteps);
-            const float offset = (pct - 0.5f) * localSpan * TWO_PI;
-            const glm::vec3 p = orbitPointFor(body, stamp.angle + offset, radiusScale, body.seed * 0.0001f + pct);
-            const float centerFade = 1.0f - std::abs(pct - 0.5f) * 1.65f;
-            const ofFloatColor hot = body.color.getLerped(ofFloatColor(0.90f, 0.96f, 1.0f, 1.0f), 0.66f);
-            knot.addVertex(p);
-            knot.addColor(colorFrom(hot.r,
-                                    hot.g,
-                                    hot.b,
-                                    stampVisibility * energy * std::max(0.0f, centerFade) * 1.55f));
-        }
-#ifndef TARGET_OPENGLES
-        glLineWidth(std::max(1.25f, paramOrbitThickness_ * (2.1f + energy * 10.0f + currentBandEnergy * 1.8f)));
-#endif
-        knot.draw();
-
-        const glm::vec3 spot = orbitPointFor(body, stamp.angle, radiusScale, body.seed * 0.00013f);
-        ofPushMatrix();
-        ofTranslate(spot.x, spot.y, spot.z);
-        const float spotRadius = std::max(2.2f, radiusScale * (0.0065f + energy * 0.024f));
-        const ofFloatColor glow = body.color.getLerped(ofFloatColor(0.84f, 0.94f, 1.0f, 1.0f), 0.58f);
-        drawLowPolySphere(spotRadius * (1.85f + energy * 0.32f),
-                          ofFloatColor(glow.r, glow.g, glow.b, stampVisibility * energy * 0.24f),
-                          stampVisibility * energy * 0.24f,
-                          stamp.seed + 43.0f,
-                          3,
-                          6,
-                          false);
-        drawLowPolySphere(spotRadius,
-                          ofFloatColor(glow.r, glow.g, glow.b, stampVisibility * energy * 0.95f),
-                          stampVisibility * energy * 0.95f,
-                          stamp.seed,
-                          3,
-                          6,
-                          false);
-        ofPopMatrix();
+    std::vector<TrailPoint> points;
+    points.reserve(static_cast<std::size_t>(trailSteps) + 1);
+    for (int i = 0; i <= trailSteps; ++i) {
+        const float pct = static_cast<float>(i) / static_cast<float>(std::max(1, trailSteps));
+        const float angle = currentAngle - pct * TWO_PI * paramTrailLength_;
+        const float tangentStep = 0.0035f;
+        const glm::vec3 center = orbitPointFor(body, angle, radiusScale, body.seed * 0.0001f + pct * 0.25f);
+        const glm::vec3 prev = orbitPointFor(body, angle - tangentStep, radiusScale, body.seed * 0.0001f + pct * 0.25f);
+        const glm::vec3 next = orbitPointFor(body, angle + tangentStep, radiusScale, body.seed * 0.0001f + pct * 0.25f);
+        const glm::vec3 tangent = safeNormalize(next - prev, glm::vec3(1.0f, 0.0f, 0.0f));
+        const glm::vec3 radial = safeNormalize(center, glm::vec3(0.0f, 0.0f, 1.0f));
+        const glm::vec3 orbitNormal = safeNormalize(crossProduct(tangent, radial), glm::vec3(0.0f, 1.0f, 0.0f));
+        const glm::vec3 waveSide = safeNormalize(crossProduct(orbitNormal, tangent), radial);
+        const float fade = std::pow(1.0f - pct, 1.35f);
+        const float envelope = std::pow(1.0f - pct, 0.62f);
+        const float wave = std::sin(pct * waveFrequency * TWO_PI + phase);
+        const float slowWave = std::sin(pct * waveFrequency * TWO_PI * 0.42f + phase * 0.37f + body.seed * 0.003f);
+        const float amplitude = radiusScale * 0.0042f * waveGain * (0.18f + drive * 0.82f) * envelope;
+        TrailPoint point;
+        point.position = center + waveSide * wave * amplitude + orbitNormal * slowWave * amplitude * 0.18f;
+        point.normal = orbitNormal;
+        point.fade = fade;
+        point.wave = wave;
+        points.push_back(point);
     }
-    ofEnableBlendMode(OF_BLENDMODE_ALPHA);
+
+    ofMesh ribbon;
+    ribbon.setMode(OF_PRIMITIVE_TRIANGLE_STRIP);
+    ribbon.getVertices().reserve(points.size() * 2);
+    ribbon.getColors().reserve(points.size() * 2);
+    for (std::size_t i = 0; i < points.size(); ++i) {
+        const TrailPoint& point = points[i];
+        const float pct = points.size() <= 1 ? 0.0f : static_cast<float>(i) / static_cast<float>(points.size() - 1);
+        const float pulse = 0.62f + 0.38f * std::sin(pct * waveFrequency * TWO_PI * 1.65f + phase * 1.22f);
+        const float halfWidth = radiusScale *
+                                (0.0010f + paramOrbitThickness_ * 0.00075f + drive * waveGain * 0.00135f * pulse) *
+                                (0.54f + point.fade * 0.46f);
+        const float alphaScale = alpha * paramTrailAlpha_ * point.fade * (0.52f + drive * 0.62f);
+        ofFloatColor color = baseTrail.getLerped(ofFloatColor(0.72f, 1.0f, 0.90f, 1.0f), drive * 0.24f);
+        color.a = ofClamp(alphaScale, 0.0f, 1.0f);
+        ribbon.addVertex(point.position + point.normal * halfWidth);
+        ribbon.addColor(color);
+        ribbon.addVertex(point.position - point.normal * halfWidth);
+        ribbon.addColor(color);
+    }
+    ribbon.draw();
+
+    ofMesh centerLine;
+    centerLine.setMode(OF_PRIMITIVE_LINE_STRIP);
+    centerLine.getVertices().reserve(points.size());
+    centerLine.getColors().reserve(points.size());
+    for (const auto& point : points) {
+        ofFloatColor lineColor = baseTrail.getLerped(ofFloatColor(0.82f, 1.0f, 0.96f, 1.0f), 0.42f);
+        lineColor.a = ofClamp(alpha * paramTrailAlpha_ * point.fade * (0.34f + drive * 0.34f), 0.0f, 1.0f);
+        centerLine.addVertex(point.position);
+        centerLine.addColor(lineColor);
+    }
+#ifndef TARGET_OPENGLES
+    glLineWidth(std::max(1.0f, paramOrbitThickness_ * (0.85f + drive * 0.80f)));
+#endif
+    centerLine.draw();
 }
 
 void SolarSystemLayer::drawMoonOrbit(const glm::vec3& bodyPosition, const Moon& moon, float planetRadius, float alpha) const {
@@ -2562,30 +2780,41 @@ void SolarSystemLayer::drawHeliosphereField(float radiusScale, float alpha, floa
 }
 
 void SolarSystemLayer::drawAsteroids(float radiusScale, float alpha, float timeSeconds) const {
+    if (asteroids_.empty() && fieldAsteroids_.empty()) {
+        return;
+    }
+
     ofDisableBlendMode();
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
-    for (const auto& asteroid : asteroids_) {
-        const float angle = asteroid.angle + orbitTime_ * asteroid.speed * TWO_PI;
-        const glm::vec3 p = orbitPointFor(asteroid, angle, radiusScale);
-        const float highShimmer = highs_ * paramHighsSparkle_ * paramAudioAmount_;
-        const float flicker = 0.62f + ofNoise(asteroid.seed * 0.01f, timeSeconds * (0.21f + highShimmer * 0.42f)) * (0.18f + highShimmer * 0.16f);
-        const float dim = alpha * 0.62f * flicker;
-        ofPushMatrix();
-        ofTranslate(p.x, p.y, p.z);
-        ofRotateYDeg(std::fmod(timeSeconds * 19.0f + asteroid.seed, 360.0f));
-        ofRotateXDeg(asteroid.seed * 0.07f);
-        ofScale(1.0f, 0.62f + ofNoise(asteroid.seed) * 0.55f, 0.78f + ofNoise(asteroid.seed + 17.0f) * 0.42f);
-        drawLowPolySphere(asteroid.radius,
-                          ofFloatColor(asteroid.color.r * dim, asteroid.color.g * dim, asteroid.color.b * dim, 1.0f),
-                          1.0f,
-                          asteroid.seed,
-                          3,
-                          5,
-                          false);
-        ofPopMatrix();
-    }
+
+    auto drawAsteroidSet = [&](const std::vector<Asteroid>& asteroidSet, float alphaScale, float timeOffset, float sizeScale) {
+        for (const auto& asteroid : asteroidSet) {
+            const float angle = asteroid.angle + orbitTime_ * asteroid.speed * TWO_PI;
+            const glm::vec3 p = orbitPointFor(asteroid, angle, radiusScale);
+            const float highShimmer = highs_ * paramHighsSparkle_ * paramAudioAmount_;
+            const float flicker = 0.58f + ofNoise(asteroid.seed * 0.01f, timeSeconds * (0.17f + highShimmer * 0.32f) + timeOffset) * (0.20f + highShimmer * 0.12f);
+            const float dim = alpha * alphaScale * flicker;
+            ofPushMatrix();
+            ofTranslate(p.x, p.y, p.z);
+            ofRotateYDeg(std::fmod(timeSeconds * (13.0f + timeOffset * 0.07f) + asteroid.seed, 360.0f));
+            ofRotateXDeg(asteroid.seed * 0.07f);
+            ofScale(1.0f, 0.62f + ofNoise(asteroid.seed) * 0.55f, 0.78f + ofNoise(asteroid.seed + 17.0f) * 0.42f);
+            drawLowPolySphere(asteroid.radius * sizeScale,
+                              ofFloatColor(asteroid.color.r * dim, asteroid.color.g * dim, asteroid.color.b * dim, 1.0f),
+                              1.0f,
+                              asteroid.seed,
+                              3,
+                              5,
+                              false);
+            ofPopMatrix();
+        }
+    };
+
+    drawAsteroidSet(asteroids_, 0.62f, 0.0f, 1.0f);
+    drawAsteroidSet(fieldAsteroids_, 0.46f, 37.0f, 0.88f);
+
     glDisable(GL_CULL_FACE);
     ofEnableBlendMode(OF_BLENDMODE_ALPHA);
 }

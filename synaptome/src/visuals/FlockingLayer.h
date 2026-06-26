@@ -19,23 +19,34 @@ private:
         glm::vec2 vel{ 0.0f, 0.0f };
     };
 
-    enum Mode {
-        Murmuration = 0,
-        PredatorPrey = 1
+    enum FlockModel {
+        Schooling = 0,
+        Murmuration = 1
+    };
+
+    enum BehaviorMode {
+        Converge = 0,
+        Diverge = 1,
+        Stressed = 2
     };
 
     void allocateTrail();
     void resetSimulation();
     void fadeTrail();
+    void stepSchooling(float dtScale);
     void stepMurmuration(float dtScale, float time);
-    void stepPredatorPrey(float dtScale);
+    void stepPredators(float dtScale);
     void depositTrail(const glm::vec2& pos, float amount);
     void syncTexture();
     float stepRateFor(const LayerUpdateParams& params) const;
     glm::vec2 wrapPosition(glm::vec2 pos) const;
     void clampSpeed(glm::vec2& vel, float target, float minScale, float maxScale) const;
     void stampMarker(ofFloatPixels& pixels, const glm::vec2& pos, const ofFloatColor& color, int radius) const;
+    void stampPredator(ofFloatPixels& pixels, const Boid& predator, const ofFloatColor& color, int radius) const;
+    int behaviorMode() const;
+    bool predatorsActive() const;
 
+    FlockModel model_ = Murmuration;
     bool paramEnabled_ = true;
     float paramSpeed_ = 12.0f;
     bool paramBpmSync_ = false;
@@ -44,10 +55,14 @@ private:
     bool paramReseedRequested_ = false;
     float paramMode_ = 0.0f;
     float paramBoidCount_ = 42.0f;
+    bool paramPredatorEnabled_ = false;
     float paramPredatorCount_ = 6.0f;
+    float paramPredatorPressure_ = 1.0f;
+    float paramNeighborCount_ = 7.0f;
     float paramCohesion_ = 0.008f;
     float paramAlignment_ = 0.025f;
     float paramSeparation_ = 0.002f;
+    float paramPredatorSeparation_ = 0.018f;
     float paramChase_ = 0.008f;
     float paramEvade_ = 0.012f;
     float paramNoise_ = 0.006f;

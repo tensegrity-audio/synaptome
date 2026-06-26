@@ -59,9 +59,9 @@ std::string composeControlsFromFeed(const ofJson& payload) {
 
 ControlsHudWidget::ControlsHudWidget() {
     metadata_.id = "hud.controls";
-    metadata_.label = "Control Hints";
+    metadata_.label = "Hotkey Guide";
     metadata_.category = "HUD";
-    metadata_.description = "Keyboard and mouse quick reference.";
+    metadata_.description = "Active keyboard, mouse, and controller shortcuts.";
     metadata_.defaultColumn = 0;
     metadata_.defaultHeight = 240.0f;
     metadata_.minHeight = 160.0f;

@@ -48,6 +48,9 @@ bool LayerLibrary::reload(const std::string& rootDir) {
         entry.id = cfg.value("id", file.getBaseName());
         entry.label = cfg.value("label", entry.id);
         entry.category = cfg.value("category", std::string("Unsorted"));
+        entry.layerGroup = cfg.value("layerGroup", std::string());
+        entry.model = cfg.value("model", std::string());
+        entry.stateModel = cfg.value("stateModel", std::string());
         entry.type = cfg.value("type", std::string());
         entry.registryPrefix = cfg.value("registryPrefix", entry.id);
         double rawOpacity = 1.0;
@@ -62,6 +65,22 @@ bool LayerLibrary::reload(const std::string& rootDir) {
         entry.opacity = static_cast<float>(rawOpacity);
         entry.configPath = file.getAbsolutePath();
         entry.config = cfg;
+        if (cfg.contains("modes") && cfg["modes"].is_array()) {
+            for (const auto& modeNode : cfg["modes"]) {
+                if (!modeNode.is_object()) {
+                    continue;
+                }
+                Entry::ModeInfo mode;
+                mode.id = modeNode.value("id", std::string());
+                mode.label = modeNode.value("label", mode.id);
+                mode.kind = modeNode.value("kind", std::string());
+                mode.description = modeNode.value("description", std::string());
+                mode.live = modeNode.value("live", mode.kind == "live");
+                if (!mode.id.empty()) {
+                    entry.modes.push_back(std::move(mode));
+                }
+            }
+        }
         if (cfg.contains("coverage") && cfg["coverage"].is_object()) {
             const auto& coverageNode = cfg["coverage"];
             entry.coverage.defined = true;
@@ -94,6 +113,9 @@ bool LayerLibrary::reload(const std::string& rootDir) {
 
     std::sort(entries_.begin(), entries_.end(), [](const Entry& a, const Entry& b) {
         if (a.category == b.category) {
+            if (a.layerGroup != b.layerGroup) {
+                return a.layerGroup < b.layerGroup;
+            }
             return a.label < b.label;
         }
         return a.category < b.category;

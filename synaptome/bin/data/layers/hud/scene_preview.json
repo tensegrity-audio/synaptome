@@ -1,0 +1,15 @@
+{
+  "id": "hud.scene.preview",
+  "label": "Scene Preview",
+  "category": "HUD",
+  "type": "ui.hud.widget",
+  "registryPrefix": "hud.scene.preview",
+  "description": "Live thumbnail preview of the current scene composite.",
+  "hudWidget": {
+    "module": "scenePreview",
+    "toggleId": "hud.scene.preview",
+    "defaultBand": "hud",
+    "defaultColumn": 2,
+    "telemetry": ["scene.preview"]
+  }
+}

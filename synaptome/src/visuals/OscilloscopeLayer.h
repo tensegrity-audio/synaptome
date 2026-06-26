@@ -1,7 +1,10 @@
 #pragma once
 
 #include "Layer.h"
+
+#include <cstdint>
 #include <deque>
+#include <vector>
 
 class OscilloscopeLayer : public Layer {
 public:
@@ -14,14 +17,37 @@ public:
     void setExternalEnabled(bool enabled) override;
 
 private:
+    struct WaveformTraceFrame {
+        std::vector<glm::vec2> points;
+        float ageSeconds = 0.0f;
+        float energy = 0.0f;
+    };
+
     glm::vec2 basePatternPoint(float timeSeconds) const;
     void drawBackground(float radius, float baseAlpha) const;
     glm::vec2 applyModulation(const glm::vec2& basePoint) const;
+    glm::vec2 applyModulation(const glm::vec2& basePoint, const glm::vec2& rawMod) const;
+    glm::vec2 transformPoint(const glm::vec2& point) const;
+    int signalMode() const;
+    bool updateWaveformState(float dt);
+    void ageWaveformFrames(float dt);
+    void pruneWaveformFrames();
+    bool appendWaveformTraceFrame(int mode);
+    float waveformSampleWrapped(std::size_t index) const;
+    std::size_t waveformTriggerStart() const;
+    glm::vec2 waveformModulationPoint(float timeSeconds) const;
     void clampParams();
     void appendInterpolatedSamples(const glm::vec2& targetPoint);
     void appendSample(const glm::vec2& point);
 
     bool paramEnabled_ = true;
+    float paramSignalMode_ = 0.0f;
+    bool paramTriggerSync_ = true;
+    float paramWaveformGain_ = 1.6f;
+    float paramWaveformMix_ = 0.75f;
+    float paramWaveformDelay_ = 12.0f;
+    float paramWaveformSmoothing_ = 0.30f;
+    float paramWaveformPersistence_ = 0.65f;
     float paramPattern_ = 1.0f;
     float paramModMode_ = 1.0f;
     float paramXInput_ = 0.0f;
@@ -70,4 +96,13 @@ private:
     glm::vec2 lastPoint_{ 0.0f, 0.0f };
     float phaseTime_ = 0.0f;
     std::deque<glm::vec2> history_;
+    std::deque<WaveformTraceFrame> waveformFrames_;
+    std::vector<float> waveform_;
+    bool hasWaveform_ = false;
+    uint64_t lastAudioFrame_ = 0;
+    float audioLevel_ = 0.0f;
+    float audioPeak_ = 0.0f;
+    float audioBass_ = 0.0f;
+    float audioMids_ = 0.0f;
+    float audioHighs_ = 0.0f;
 };

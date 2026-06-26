@@ -2,6 +2,7 @@
 
 #include "Layer.h"
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <string>
@@ -18,6 +19,9 @@ public:
     void setExternalEnabled(bool enabled) override;
 
 private:
+    static constexpr std::size_t kFilamentCurvePointCount = 6;
+    static constexpr std::size_t kDetailCurvePointCount = 5;
+
     struct MatterNode {
         glm::vec2 pos{ 0.0f, 0.0f };
         glm::vec2 prev{ 0.0f, 0.0f };
@@ -107,6 +111,31 @@ private:
         float conductivity = 0.0f;
         float massFlow = 0.0f;
         glm::vec2 bend{ 0.0f, 0.0f };
+        std::array<glm::vec2, kFilamentCurvePointCount> curvePoints{};
+        glm::vec2 boundsMin{ 0.0f, 0.0f };
+        glm::vec2 boundsMax{ 0.0f, 0.0f };
+        bool geometryReady = false;
+    };
+
+    struct DetailNode {
+        int parent = -1;
+        glm::vec2 offset{ 0.0f, 0.0f };
+        float mass = 0.0f;
+        float radius = 0.020f;
+        float heat = 0.0f;
+        float seed = 0.0f;
+        float activationBias = 0.0f;
+    };
+
+    struct DetailEdge {
+        int a = -1;
+        int b = -1;
+        float strength = 1.0f;
+        float seed = 0.0f;
+        glm::vec2 bend{ 0.0f, 0.0f };
+        std::array<glm::vec2, kDetailCurvePointCount> curvePoints{};
+        glm::vec2 boundsMin{ 0.0f, 0.0f };
+        glm::vec2 boundsMax{ 0.0f, 0.0f };
     };
 
     void registerFloat(ParameterRegistry& registry,
@@ -129,6 +158,10 @@ private:
     void resetGrowthField();
     void seedWebNodesFromClusters();
     void buildFilamentEdges();
+    void updateFilamentGeometry(FilamentEdge& edge) const;
+    void buildClusterSubstructure();
+    glm::vec2 detailNodePosition(const DetailNode& node) const;
+    void updateDetailGeometry(DetailEdge& edge) const;
     void updateCosmicWeb(float dt, float timeSeconds);
     void paintCosmicWebIntoField(float dt, float timeSeconds);
     void updateGrowthField(float dt, float timeSeconds, float transportSpeed);
@@ -153,7 +186,7 @@ private:
 
     bool paramEnabled_ = true;
     float paramAlpha_ = 1.0f;
-    float paramParticleCount_ = 2400.0f;
+    float paramParticleCount_ = 1800.0f;
     float paramClusterCount_ = 64.0f;
     float paramRadius_ = 1.28f;
     float paramOriginRadius_ = 0.018f;
@@ -170,6 +203,9 @@ private:
     float paramClusterSpread_ = 1.20f;
     float paramClusterDrift_ = 0.04f;
     float paramClusterSoftness_ = 1.08f;
+    float paramSubstructureAmount_ = 0.82f;
+    float paramSubstructureScale_ = 0.48f;
+    float paramSubstructureGlow_ = 0.95f;
     float paramShear_ = 0.12f;
     float paramVoidPressure_ = 0.42f;
     float paramTurbulence_ = 0.46f;
@@ -237,6 +273,8 @@ private:
     std::vector<Cluster> clusters_;
     std::vector<WebNode> webNodes_;
     std::vector<FilamentEdge> filamentEdges_;
+    std::vector<DetailNode> detailNodes_;
+    std::vector<DetailEdge> detailEdges_;
     std::vector<PressureWave> waves_;
     std::vector<GrowthCell> growthField_;
     std::vector<GrowthCell> growthScratch_;

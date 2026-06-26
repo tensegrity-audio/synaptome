@@ -1,14 +1,19 @@
 #include "OscilloscopeLayer.h"
 
+#include "../io/AudioAnalysisBus.h"
+
 #include "ofGraphics.h"
 #include "ofMath.h"
 
 #include <algorithm>
 #include <cmath>
+#include <utility>
 
 namespace {
     constexpr float kPatternMin = 0.0f;
     constexpr float kPatternMax = 3.0f;
+    constexpr float kSignalModeMin = 0.0f;
+    constexpr float kSignalModeMax = 3.0f;
     constexpr float kModModeMin = 0.0f;
     constexpr float kModModeMax = 6.0f;
     constexpr float kInputMin = -1.0f;
@@ -55,6 +60,20 @@ namespace {
     constexpr float kPointSizeMax = 12.0f;
     constexpr float kColorMin = 0.0f;
     constexpr float kColorMax = 1.5f;
+    constexpr float kWaveformGainMin = 0.1f;
+    constexpr float kWaveformGainMax = 8.0f;
+    constexpr float kWaveformMixMin = 0.0f;
+    constexpr float kWaveformMixMax = 1.0f;
+    constexpr float kWaveformDelayMin = 1.0f;
+    constexpr float kWaveformDelayMax = 128.0f;
+    constexpr float kWaveformSmoothingMin = 0.0f;
+    constexpr float kWaveformSmoothingMax = 0.95f;
+    constexpr float kWaveformPersistenceMin = 0.03f;
+    constexpr float kWaveformPersistenceMax = 3.0f;
+
+    float boostedAudioValue(float value, float gain, float curve) {
+        return std::pow(ofClamp(value * gain, 0.0f, 1.0f), curve);
+    }
 }
 
 void OscilloscopeLayer::configure(const ofJson& config) {
@@ -63,6 +82,13 @@ void OscilloscopeLayer::configure(const ofJson& config) {
     }
 
     const auto& def = config["defaults"];
+    paramSignalMode_ = def.value("signalMode", paramSignalMode_);
+    paramTriggerSync_ = def.value("triggerSync", paramTriggerSync_);
+    paramWaveformGain_ = def.value("waveformGain", paramWaveformGain_);
+    paramWaveformMix_ = def.value("waveformMix", paramWaveformMix_);
+    paramWaveformDelay_ = def.value("waveformDelay", paramWaveformDelay_);
+    paramWaveformSmoothing_ = def.value("waveformSmoothing", paramWaveformSmoothing_);
+    paramWaveformPersistence_ = def.value("waveformPersistence", paramWaveformPersistence_);
     paramPattern_ = def.value("pattern", paramPattern_);
     paramModMode_ = def.value("modMode", paramModMode_);
     paramXInput_ = def.value("xInput", paramXInput_);
@@ -141,6 +167,58 @@ void OscilloscopeLayer::setup(ParameterRegistry& registry) {
     meta.description = "0=Audio XY 1=Circle 2=Lissajous 3=Rose";
     registry.addFloat(prefix + ".pattern", &paramPattern_, paramPattern_, meta);
 
+    meta.label = "Audio: Signal Mode";
+    meta.range.min = kSignalModeMin;
+    meta.range.max = kSignalModeMax;
+    meta.range.step = 1.0f;
+    meta.units.clear();
+    meta.description = "0=Generated 1=Waveform Trace 2=Phase Portrait 3=Hybrid";
+    registry.addFloat(prefix + ".signalMode", &paramSignalMode_, paramSignalMode_, meta);
+
+    meta.label = "Audio: Trigger Sync";
+    meta.range = ParameterRegistry::Range{};
+    meta.description = "Align waveform traces on an upward zero crossing when available.";
+    registry.addBool(prefix + ".triggerSync", &paramTriggerSync_, paramTriggerSync_, meta);
+
+    meta.label = "Audio: Waveform Gain";
+    meta.range.min = kWaveformGainMin;
+    meta.range.max = kWaveformGainMax;
+    meta.range.step = 0.01f;
+    meta.description = "Gain applied to full waveform samples before drawing or hybrid modulation.";
+    registry.addFloat(prefix + ".waveformGain", &paramWaveformGain_, paramWaveformGain_, meta);
+
+    meta.label = "Audio: Waveform Mix";
+    meta.range.min = kWaveformMixMin;
+    meta.range.max = kWaveformMixMax;
+    meta.range.step = 0.01f;
+    meta.description = "Blend between mapped scalar inputs and full waveform modulation in Hybrid mode.";
+    registry.addFloat(prefix + ".waveformMix", &paramWaveformMix_, paramWaveformMix_, meta);
+
+    meta.label = "Time: Phase Delay";
+    meta.range.min = kWaveformDelayMin;
+    meta.range.max = kWaveformDelayMax;
+    meta.range.step = 1.0f;
+    meta.units = "samples";
+    meta.description = "Sample delay for phase-portrait and hybrid waveform coordinates.";
+    registry.addFloat(prefix + ".waveformDelay", &paramWaveformDelay_, paramWaveformDelay_, meta);
+
+    meta.label = "Audio: Waveform Smoothing";
+    meta.range.min = kWaveformSmoothingMin;
+    meta.range.max = kWaveformSmoothingMax;
+    meta.range.step = 0.01f;
+    meta.units = "normalized";
+    meta.description = "Higher values smooth incoming waveform snapshots.";
+    registry.addFloat(prefix + ".waveformSmoothing", &paramWaveformSmoothing_, paramWaveformSmoothing_, meta);
+
+    meta.label = "Time: Waveform Persistence";
+    meta.range.min = kWaveformPersistenceMin;
+    meta.range.max = kWaveformPersistenceMax;
+    meta.range.step = 0.01f;
+    meta.units = "s";
+    meta.description = "How long complete waveform traces remain in phosphor history.";
+    registry.addFloat(prefix + ".waveformPersistence", &paramWaveformPersistence_, paramWaveformPersistence_, meta);
+
+    meta.units.clear();
     meta.label = "Action: Mod Mode";
     meta.range.min = kModModeMin;
     meta.range.max = kModModeMax;
@@ -368,7 +446,16 @@ void OscilloscopeLayer::setup(ParameterRegistry& registry) {
     registry.addFloat(prefix + ".bgColorB", &paramBgColorB_, paramBgColorB_, meta);
 
     history_.clear();
+    waveformFrames_.clear();
+    waveform_.clear();
     hasLastPoint_ = false;
+    hasWaveform_ = false;
+    lastAudioFrame_ = 0;
+    audioLevel_ = 0.0f;
+    audioPeak_ = 0.0f;
+    audioBass_ = 0.0f;
+    audioMids_ = 0.0f;
+    audioHighs_ = 0.0f;
     phaseTime_ = 0.0f;
 }
 
@@ -379,25 +466,33 @@ void OscilloscopeLayer::update(const LayerUpdateParams& params) {
         return;
     }
 
+    const int mode = signalMode();
+    ageWaveformFrames(params.dt);
+    const bool newWaveformFrame = updateWaveformState(params.dt);
+    if (mode == 1 || mode == 2) {
+        if (newWaveformFrame) {
+            appendWaveformTraceFrame(mode);
+        }
+        return;
+    }
+
     float speedFactor = std::max(0.0f, paramSpeed_ + paramSpeedInput_ * paramSpeedModAmount_);
     phaseTime_ += params.dt * speedFactor;
 
     glm::vec2 base = basePatternPoint(phaseTime_);
-    glm::vec2 point = applyModulation(base * paramBaseAmount_);
-    point.x = point.x * paramXScale_ + paramXBias_;
-    point.y = point.y * paramYScale_ + paramYBias_;
+    const glm::vec2 modInput = mode == 3
+        ? waveformModulationPoint(phaseTime_)
+        : glm::vec2(paramXInput_, paramYInput_);
+    glm::vec2 point = transformPoint(applyModulation(base * paramBaseAmount_, modInput));
 
-    float radians = glm::radians(paramRotationDeg_);
-    float s = std::sin(radians);
-    float c = std::cos(radians);
-    glm::vec2 rotated(point.x * c - point.y * s,
-                      point.x * s + point.y * c);
-
-    appendInterpolatedSamples(rotated);
+    appendInterpolatedSamples(point);
 }
 
 void OscilloscopeLayer::draw(const LayerDrawParams& params) {
-    if (!enabled_ || params.slotOpacity <= 0.0f || history_.empty()) {
+    const int mode = signalMode();
+    const bool waveformTraceMode = mode == 1 || mode == 2;
+    if (!enabled_ || params.slotOpacity <= 0.0f ||
+        (waveformTraceMode ? waveformFrames_.empty() : history_.empty())) {
         return;
     }
 
@@ -412,6 +507,58 @@ void OscilloscopeLayer::draw(const LayerDrawParams& params) {
     const float baseAlpha = ofClamp(paramAlpha_ * params.slotOpacity, 0.0f, 1.0f);
 
     drawBackground(radius, baseAlpha);
+
+    if (waveformTraceMode) {
+        const float tailPower = ofMap(paramDecay_, kDecayMin, kDecayMax, 3.25f, 0.85f, true);
+        const float maxAge = std::max(kWaveformPersistenceMin, paramWaveformPersistence_);
+        for (const auto& frame : waveformFrames_) {
+            if (frame.points.size() < 2) {
+                continue;
+            }
+
+            const float ageNorm = ofClamp(1.0f - frame.ageSeconds / maxAge, 0.0f, 1.0f);
+            const float alphaScale = std::pow(ageNorm, tailPower);
+            if (alphaScale <= 0.0f) {
+                continue;
+            }
+
+            ofMesh trace;
+            trace.setMode(OF_PRIMITIVE_LINE_STRIP);
+            const float energyLift = ofClamp(0.65f + frame.energy * 0.85f, 0.65f, 1.35f);
+            for (std::size_t i = 0; i < frame.points.size(); ++i) {
+                const glm::vec2& pt = frame.points[i];
+                const float localAge = frame.points.size() > 1
+                    ? static_cast<float>(i) / static_cast<float>(frame.points.size() - 1)
+                    : 1.0f;
+                const float localAlpha = ofClamp((0.55f + localAge * 0.45f) * alphaScale * baseAlpha * energyLift,
+                                                 0.0f,
+                                                 1.0f);
+                trace.addVertex(glm::vec3(pt.x * radius, -pt.y * radius, 0.0f));
+                trace.addColor(ofFloatColor(ofClamp(paramColorR_ * intensity, 0.0f, 1.0f),
+                                            ofClamp(paramColorG_ * intensity, 0.0f, 1.0f),
+                                            ofClamp(paramColorB_ * intensity, 0.0f, 1.0f),
+                                            localAlpha));
+            }
+
+#ifndef TARGET_OPENGLES
+            glLineWidth(ofClamp(paramThickness_, kThicknessMin, kThicknessMax));
+#endif
+            trace.draw();
+        }
+
+        if (paramPointSize_ > 0.0f && !waveformFrames_.empty() && !waveformFrames_.back().points.empty()) {
+            const glm::vec2& latest = waveformFrames_.back().points.back();
+            ofSetColor(static_cast<int>(ofClamp(paramColorR_ * intensity, 0.0f, 1.0f) * 255.0f),
+                       static_cast<int>(ofClamp(paramColorG_ * intensity, 0.0f, 1.0f) * 255.0f),
+                       static_cast<int>(ofClamp(paramColorB_ * intensity, 0.0f, 1.0f) * 255.0f),
+                       static_cast<int>(baseAlpha * 255.0f));
+            ofDrawCircle(latest.x * radius, -latest.y * radius, paramPointSize_);
+        }
+
+        ofPopView();
+        ofPopStyle();
+        return;
+    }
 
     ofMesh trace;
     trace.setMode(OF_PRIMITIVE_LINE_STRIP);
@@ -505,10 +652,13 @@ void OscilloscopeLayer::drawBackground(float radius, float baseAlpha) const {
 }
 
 glm::vec2 OscilloscopeLayer::applyModulation(const glm::vec2& basePoint) const {
+    return applyModulation(basePoint, glm::vec2(paramXInput_, paramYInput_));
+}
+
+glm::vec2 OscilloscopeLayer::applyModulation(const glm::vec2& basePoint, const glm::vec2& rawMod) const {
     const int modMode = ofClamp(static_cast<int>(std::round(paramModMode_)),
                                 static_cast<int>(kModModeMin),
                                 static_cast<int>(kModModeMax));
-    const glm::vec2 rawMod(paramXInput_, paramYInput_);
 
     if (modMode == 0) {
         return basePoint + rawMod * paramModAmount_;
@@ -524,8 +674,8 @@ glm::vec2 OscilloscopeLayer::applyModulation(const glm::vec2& basePoint) const {
     }
     const glm::vec2 tangent(-radial.y, radial.x);
 
-    float radialInput = paramXInput_ * paramModAmount_;
-    float wiggleInput = paramYInput_ * paramModAmount_;
+    float radialInput = rawMod.x * paramModAmount_;
+    float wiggleInput = rawMod.y * paramModAmount_;
 
     glm::vec2 modulated = basePoint;
     if (modMode == 1 || modMode == 3) {
@@ -536,30 +686,217 @@ glm::vec2 OscilloscopeLayer::applyModulation(const glm::vec2& basePoint) const {
     }
 
     if (modMode == 4) {
-        float orbitAngle = (paramXInput_ + paramYInput_) * paramModAmount_ * paramRadialAmount_;
+        float orbitAngle = (rawMod.x + rawMod.y) * paramModAmount_ * paramRadialAmount_;
         float s = std::sin(orbitAngle);
         float c = std::cos(orbitAngle);
         modulated = glm::vec2(modulated.x * c - modulated.y * s,
                               modulated.x * s + modulated.y * c);
-        modulated += radial * (paramXInput_ * paramRadialAmount_ * 0.25f);
+        modulated += radial * (rawMod.x * paramRadialAmount_ * 0.25f);
     } else if (modMode == 5) {
-        float twist = (paramXInput_ * paramRadialAmount_ + paramYInput_ * paramWiggleAmount_) * paramModAmount_;
+        float twist = (rawMod.x * paramRadialAmount_ + rawMod.y * paramWiggleAmount_) * paramModAmount_;
         float localAngle = twist * std::max(0.25f, radialLength);
         float s = std::sin(localAngle);
         float c = std::cos(localAngle);
         modulated = glm::vec2(modulated.x * c - modulated.y * s,
                               modulated.x * s + modulated.y * c);
-        modulated += radial * (paramXInput_ * paramRadialAmount_ * 0.2f);
-        modulated += tangent * (paramYInput_ * paramWiggleAmount_ * 0.2f);
+        modulated += radial * (rawMod.x * paramRadialAmount_ * 0.2f);
+        modulated += tangent * (rawMod.y * paramWiggleAmount_ * 0.2f);
     } else if (modMode == 6) {
-        float mirror = paramXInput_ * paramRadialAmount_ * paramModAmount_;
-        float shear = paramYInput_ * paramWiggleAmount_ * paramModAmount_;
+        float mirror = rawMod.x * paramRadialAmount_ * paramModAmount_;
+        float shear = rawMod.y * paramWiggleAmount_ * paramModAmount_;
         modulated.x *= 1.0f + mirror;
         modulated.y *= 1.0f - mirror;
         modulated += glm::vec2(basePoint.y, basePoint.x) * shear * 0.5f;
     }
 
     return modulated;
+}
+
+glm::vec2 OscilloscopeLayer::transformPoint(const glm::vec2& point) const {
+    glm::vec2 scaled(point.x * paramXScale_ + paramXBias_,
+                     point.y * paramYScale_ + paramYBias_);
+
+    const float radians = glm::radians(paramRotationDeg_);
+    const float s = std::sin(radians);
+    const float c = std::cos(radians);
+    return glm::vec2(scaled.x * c - scaled.y * s,
+                     scaled.x * s + scaled.y * c);
+}
+
+int OscilloscopeLayer::signalMode() const {
+    return ofClamp(static_cast<int>(std::round(paramSignalMode_)),
+                   static_cast<int>(kSignalModeMin),
+                   static_cast<int>(kSignalModeMax));
+}
+
+bool OscilloscopeLayer::updateWaveformState(float dt) {
+    (void)dt;
+    const auto snapshot = AudioAnalysisBus::instance().snapshot();
+    if (!snapshot.valid || snapshot.waveform.empty()) {
+        hasWaveform_ = false;
+        return false;
+    }
+
+    hasWaveform_ = true;
+    if (snapshot.frame == lastAudioFrame_) {
+        return false;
+    }
+
+    const float follow = 1.0f - ofClamp(paramWaveformSmoothing_,
+                                        kWaveformSmoothingMin,
+                                        kWaveformSmoothingMax);
+    const bool resetWaveform = waveform_.size() != snapshot.waveform.size() || lastAudioFrame_ == 0;
+    if (resetWaveform) {
+        waveform_.resize(snapshot.waveform.size());
+        for (std::size_t i = 0; i < snapshot.waveform.size(); ++i) {
+            waveform_[i] = ofClamp(snapshot.waveform[i], -1.0f, 1.0f);
+        }
+        audioLevel_ = boostedAudioValue(snapshot.level, 3.2f, 0.70f);
+        audioPeak_ = boostedAudioValue(std::max(snapshot.peak, snapshot.level), 2.8f, 0.66f);
+        audioBass_ = boostedAudioValue(snapshot.bass, 2.7f, 0.72f);
+        audioMids_ = boostedAudioValue(snapshot.mids, 3.0f, 0.68f);
+        audioHighs_ = boostedAudioValue(snapshot.highs, 3.2f, 0.66f);
+    } else {
+        for (std::size_t i = 0; i < waveform_.size(); ++i) {
+            waveform_[i] = ofLerp(waveform_[i], ofClamp(snapshot.waveform[i], -1.0f, 1.0f), follow);
+        }
+        audioLevel_ = ofLerp(audioLevel_, boostedAudioValue(snapshot.level, 3.2f, 0.70f), follow);
+        audioPeak_ = ofLerp(audioPeak_, boostedAudioValue(std::max(snapshot.peak, snapshot.level), 2.8f, 0.66f), follow);
+        audioBass_ = ofLerp(audioBass_, boostedAudioValue(snapshot.bass, 2.7f, 0.72f), follow);
+        audioMids_ = ofLerp(audioMids_, boostedAudioValue(snapshot.mids, 3.0f, 0.68f), follow);
+        audioHighs_ = ofLerp(audioHighs_, boostedAudioValue(snapshot.highs, 3.2f, 0.66f), follow);
+    }
+
+    lastAudioFrame_ = snapshot.frame;
+    return true;
+}
+
+void OscilloscopeLayer::ageWaveformFrames(float dt) {
+    for (auto& frame : waveformFrames_) {
+        frame.ageSeconds += std::max(0.0f, dt);
+    }
+    pruneWaveformFrames();
+}
+
+void OscilloscopeLayer::pruneWaveformFrames() {
+    const float maxAge = std::max(kWaveformPersistenceMin, paramWaveformPersistence_);
+    while (!waveformFrames_.empty() && waveformFrames_.front().ageSeconds > maxAge) {
+        waveformFrames_.pop_front();
+    }
+
+    const std::size_t maxFrames = static_cast<std::size_t>(
+        ofClamp(std::ceil(maxAge * 60.0f), 1.0f, 180.0f));
+    while (waveformFrames_.size() > maxFrames) {
+        waveformFrames_.pop_front();
+    }
+}
+
+bool OscilloscopeLayer::appendWaveformTraceFrame(int mode) {
+    if (!hasWaveform_ || waveform_.size() < 2) {
+        return false;
+    }
+
+    const std::size_t start = waveformTriggerStart();
+    const std::size_t delay = std::min<std::size_t>(
+        std::max<std::size_t>(1, static_cast<std::size_t>(std::round(paramWaveformDelay_))),
+        std::max<std::size_t>(1, waveform_.size() - 1));
+    const float amp = ofClamp(paramAmplitude_, kAmplitudeMin, kAmplitudeMax);
+    const float gain = ofClamp(paramWaveformGain_, kWaveformGainMin, kWaveformGainMax) * amp;
+
+    WaveformTraceFrame frame;
+    frame.points.reserve(waveform_.size());
+    float absSum = 0.0f;
+    const float denom = static_cast<float>(std::max<std::size_t>(1, waveform_.size() - 1));
+    for (std::size_t i = 0; i < waveform_.size(); ++i) {
+        const float sample = waveformSampleWrapped(start + i);
+        absSum += std::abs(sample);
+
+        glm::vec2 point;
+        if (mode == 2) {
+            const float delayed = waveformSampleWrapped(start + i + delay);
+            point = glm::vec2(sample * gain, delayed * gain);
+        } else {
+            const float u = static_cast<float>(i) / denom;
+            point = glm::vec2(ofLerp(-amp, amp, u), sample * gain);
+        }
+
+        frame.points.push_back(glm::clamp(transformPoint(point),
+                                          glm::vec2(-1.5f, -1.5f),
+                                          glm::vec2(1.5f, 1.5f)));
+    }
+
+    frame.energy = ofClamp((absSum / static_cast<float>(waveform_.size())) * paramWaveformGain_ * 0.75f +
+                               audioPeak_ * 0.35f,
+                           0.0f,
+                           1.0f);
+    waveformFrames_.push_back(std::move(frame));
+    pruneWaveformFrames();
+    return true;
+}
+
+float OscilloscopeLayer::waveformSampleWrapped(std::size_t index) const {
+    if (waveform_.empty()) {
+        return 0.0f;
+    }
+    return ofClamp(waveform_[index % waveform_.size()], -1.0f, 1.0f);
+}
+
+std::size_t OscilloscopeLayer::waveformTriggerStart() const {
+    if (!paramTriggerSync_ || waveform_.size() < 3) {
+        return 0;
+    }
+
+    std::size_t best = 0;
+    float bestSlope = 0.0f;
+    bool foundCrossing = false;
+    for (std::size_t i = 1; i < waveform_.size(); ++i) {
+        const float prev = waveform_[i - 1];
+        const float curr = waveform_[i];
+        if (prev <= 0.0f && curr > 0.0f) {
+            const float slope = curr - prev;
+            if (!foundCrossing || slope > bestSlope) {
+                best = i;
+                bestSlope = slope;
+                foundCrossing = true;
+            }
+        }
+    }
+
+    if (foundCrossing) {
+        return best;
+    }
+
+    float peak = 0.0f;
+    for (std::size_t i = 0; i < waveform_.size(); ++i) {
+        const float value = std::abs(waveform_[i]);
+        if (value > peak) {
+            peak = value;
+            best = i;
+        }
+    }
+    return best;
+}
+
+glm::vec2 OscilloscopeLayer::waveformModulationPoint(float timeSeconds) const {
+    const glm::vec2 scalar(paramXInput_, paramYInput_);
+    if (!hasWaveform_ || waveform_.empty()) {
+        return scalar;
+    }
+
+    const std::size_t delay = std::min<std::size_t>(
+        std::max<std::size_t>(1, static_cast<std::size_t>(std::round(paramWaveformDelay_))),
+        std::max<std::size_t>(1, waveform_.size() - 1));
+    const float scanRate = ofLerp(0.18f, 0.72f, ofClamp(audioMids_ * 0.55f + audioHighs_ * 0.45f, 0.0f, 1.0f));
+    const float wrapped = std::fmod(std::max(0.0f, timeSeconds) *
+                                        static_cast<float>(waveform_.size()) *
+                                        scanRate,
+                                    static_cast<float>(waveform_.size()));
+    const std::size_t index = static_cast<std::size_t>(wrapped);
+    const float lift = ofClamp(0.65f + audioLevel_ * 0.55f + audioPeak_ * 0.45f, 0.65f, 1.65f);
+    const glm::vec2 wave(ofClamp(waveformSampleWrapped(index) * paramWaveformGain_ * lift, -1.0f, 1.0f),
+                         ofClamp(waveformSampleWrapped(index + delay) * paramWaveformGain_ * lift, -1.0f, 1.0f));
+
+    return glm::mix(scalar, wave, ofClamp(paramWaveformMix_, kWaveformMixMin, kWaveformMixMax));
 }
 
 glm::vec2 OscilloscopeLayer::basePatternPoint(float timeSeconds) const {
@@ -598,6 +935,12 @@ glm::vec2 OscilloscopeLayer::basePatternPoint(float timeSeconds) const {
 }
 
 void OscilloscopeLayer::clampParams() {
+    paramSignalMode_ = ofClamp(paramSignalMode_, kSignalModeMin, kSignalModeMax);
+    paramWaveformGain_ = ofClamp(paramWaveformGain_, kWaveformGainMin, kWaveformGainMax);
+    paramWaveformMix_ = ofClamp(paramWaveformMix_, kWaveformMixMin, kWaveformMixMax);
+    paramWaveformDelay_ = ofClamp(paramWaveformDelay_, kWaveformDelayMin, kWaveformDelayMax);
+    paramWaveformSmoothing_ = ofClamp(paramWaveformSmoothing_, kWaveformSmoothingMin, kWaveformSmoothingMax);
+    paramWaveformPersistence_ = ofClamp(paramWaveformPersistence_, kWaveformPersistenceMin, kWaveformPersistenceMax);
     paramPattern_ = ofClamp(paramPattern_, kPatternMin, kPatternMax);
     paramModMode_ = ofClamp(paramModMode_, kModModeMin, kModModeMax);
     paramXInput_ = ofClamp(paramXInput_, kInputMin, kInputMax);
@@ -640,6 +983,7 @@ void OscilloscopeLayer::clampParams() {
     while (history_.size() > maxPoints) {
         history_.pop_front();
     }
+    pruneWaveformFrames();
 }
 
 void OscilloscopeLayer::appendInterpolatedSamples(const glm::vec2& targetPoint) {

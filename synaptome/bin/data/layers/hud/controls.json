@@ -1,10 +1,10 @@
 {
   "id": "hud.controls",
-  "label": "Control Hints",
+  "label": "Hotkey Guide",
   "category": "HUD",
   "type": "ui.hud.widget",
   "registryPrefix": "hud.controls",
-  "description": "Keyboard and mouse quick reference mirrored from CMH scopes.",
+  "description": "Active keyboard, mouse, and controller shortcuts.",
   "hudWidget": {
     "module": "controls",
     "toggleId": "hud.controls",

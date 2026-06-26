@@ -135,14 +135,6 @@ private:
         ofFloatColor color;
     };
 
-    struct TrailStamp {
-        float angle = 0.0f;
-        float strength = 0.0f;
-        float age = 0.0f;
-        float lifetime = 10.0f;
-        float seed = 0.0f;
-    };
-
     struct LifeState {
         float bandCenter = 0.5f;
         float bandEnergy = 0.0f;
@@ -206,6 +198,11 @@ private:
                            float planetRadius,
                            float alpha,
                            float timeSeconds) const;
+    void drawPlanetCallouts(const LayerDrawParams& params,
+                            float width,
+                            float height,
+                            float radiusScale,
+                            float alpha) const;
     void drawHeliosphereField(float radiusScale, float alpha, float timeSeconds) const;
     void drawAsteroids(float radiusScale, float alpha, float timeSeconds) const;
     void drawComets(float radiusScale, float alpha, float timeSeconds) const;
@@ -218,7 +215,12 @@ private:
     bool paramShowAsteroids_ = true;
     bool paramShowComets_ = true;
     bool paramShowWaveformBelt_ = true;
+    bool paramShowCallouts_ = true;
+    bool paramCalloutCompact_ = false;
     float paramAlpha_ = 1.0f;
+    float paramCalloutAlpha_ = 0.88f;
+    float paramCalloutBackgroundAlpha_ = 0.82f;
+    float paramCalloutScale_ = 0.92f;
     float paramScale_ = 0.92f;
     float paramSceneZoom_ = 1.0f;
     float paramOrbitSpread_ = 1.32f;
@@ -232,8 +234,8 @@ private:
     float paramStarGlow_ = 3.0f;
     float paramStarRadiance_ = 2.8f;
     float paramStarEmissionAudio_ = 1.35f;
-    float paramStarSurfaceTurbulence_ = 1.15f;
-    float paramSolarBurstIntensity_ = 1.25f;
+    float paramStarSurfaceTurbulence_ = 0.82f;
+    float paramSolarBurstIntensity_ = 0.90f;
     float paramSideFillLight_ = 0.34f;
     float paramVisitorEvents_ = 0.55f;
     float paramArtifactActivity_ = 0.65f;
@@ -244,11 +246,11 @@ private:
     float paramCometDensity_ = 0.25f;
     float paramOrbitAlpha_ = 0.12f;
     float paramOrbitThickness_ = 0.85f;
-    float paramTrailAlpha_ = 0.26f;
-    float paramTrailLength_ = 0.12f;
-    float paramTrailSteps_ = 36.0f;
-    float paramTrailStampGain_ = 1.45f;
-    float paramTrailStampLife_ = 14.0f;
+    float paramTrailAlpha_ = 0.36f;
+    float paramTrailLength_ = 0.30f;
+    float paramTrailSteps_ = 56.0f;
+    float paramTrailStampGain_ = 0.85f;
+    float paramTrailStampLife_ = 5.5f;
     float paramAtmosphereGrowth_ = 0.95f;
     float paramLifeReactivity_ = 1.20f;
     float paramBiosphereThreshold_ = 0.46f;
@@ -303,13 +305,12 @@ private:
     ofFloatColor sourceStarColor_;
     std::vector<Body> bodies_;
     std::vector<Asteroid> asteroids_;
+    std::vector<Asteroid> fieldAsteroids_;
     std::vector<Comet> comets_;
     std::vector<Visitor> visitors_;
     std::vector<Artifact> artifacts_;
-    std::vector<std::vector<TrailStamp>> trailStamps_;
     std::vector<LifeState> lifeStates_;
     std::vector<float> atmosphereEnergy_;
-    std::vector<float> lastTrailStampAngle_;
     std::vector<BackgroundStar> backgroundStars_;
     std::vector<float> waveform_;
 };

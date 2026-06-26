@@ -636,25 +636,13 @@ If icebergs still read flat:
 
 ## Cleanup From Previous Prototype
 
-The earlier separate layers can remain in the catalog temporarily:
-
-```text
-generative.constellationStarfield
-generative.auroraCurtains
-generative.arcticSeaIcebergs
-```
-
-But the show preset should stop using them. Replace the public arctic scene preset with:
+The earlier separate arctic prototype layers have been removed from the runtime catalog. Keep the public arctic scene preset on:
 
 ```text
 generative.arcticAuroraScene
 ```
 
-After `ArcticAuroraSceneLayer` is approved, decide whether to:
-
-- keep old layers as experimental components,
-- hide them from the Browser,
-- or remove them before merging.
+Do not reintroduce the separate starfield, aurora curtain, or sea-ice layer assets unless a future show explicitly needs the componentized prototype.
 
 ## Suggested Commit Message
 

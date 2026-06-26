@@ -2,11 +2,19 @@
   "id": "generative.physarum",
   "label": "Physarum",
   "category": "Generative",
+  "layerGroup": "Adaptive Trail",
+  "model": "physarumParticles",
+  "stateModel": "continuous chemotactic particles over a diffusing trail field",
   "type": "agentField",
   "registryPrefix": "generative.physarum",
   "opacity": 1.0,
+  "modes": [
+    { "id": "balanced", "label": "Balanced", "kind": "live", "live": true },
+    { "id": "explore", "label": "Explore", "kind": "live", "live": true },
+    { "id": "exploit", "label": "Exploit", "kind": "live", "live": true }
+  ],
   "defaults": {
-    "mode": 2,
+    "mode": 0,
     "speed": 10.0,
     "bpmSync": true,
     "bpmMultiplier": 2.0,

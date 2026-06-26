@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Synaptome Layer Preset",
+  "description": "A named bundle of parameter suffix values for one layer asset.",
+  "type": "object",
+  "required": ["schemaVersion", "assetId", "presetId", "label", "parameters"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1 },
+    "assetId": { "type": "string", "minLength": 1 },
+    "packageId": { "type": "string", "minLength": 1 },
+    "presetId": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-z][A-Za-z0-9_.-]*$"
+    },
+    "label": { "type": "string", "minLength": 1 },
+    "description": { "type": "string" },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "parameters": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "oneOf": [
+          { "type": "number" },
+          { "type": "boolean" },
+          { "type": "string" },
+          {
+            "type": "array",
+            "items": { "type": "number" }
+          }
+        ]
+      }
+    }
+  }
+}

@@ -2,11 +2,19 @@
   "id": "generative.slimeMold",
   "label": "Slime Mold",
   "category": "Generative",
+  "layerGroup": "Adaptive Trail",
+  "model": "slimeMold",
+  "stateModel": "branching chemotactic trail field with energy and decay",
   "type": "agentField",
   "registryPrefix": "generative.slimeMold",
   "opacity": 1.0,
+  "modes": [
+    { "id": "balanced", "label": "Balanced", "kind": "live", "live": true },
+    { "id": "explore", "label": "Explore", "kind": "live", "live": true },
+    { "id": "exploit", "label": "Exploit", "kind": "live", "live": true }
+  ],
   "defaults": {
-    "mode": 1,
+    "mode": 0,
     "speed": 12.0,
     "bpmSync": true,
     "bpmMultiplier": 3.0,

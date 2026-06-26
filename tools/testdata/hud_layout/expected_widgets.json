@@ -26,12 +26,12 @@
   ],
   "hudColumnCount": 4,
   "counts": {
-    "hudWidgets": 7,
-    "feedIds": 16,
-    "controlPrefsWidgets": 7,
-    "controllerPrefsWidgets": 7,
+    "hudWidgets": 5,
+    "feedIds": 13,
+    "controlPrefsWidgets": 5,
+    "controllerPrefsWidgets": 5,
     "consoleLayoutTargets": 2,
-    "consoleLayoutWidgets": 14
+    "consoleLayoutWidgets": 10
   },
   "hudWidgets": [
     {
@@ -50,7 +50,7 @@
     },
     {
       "id": "hud.controls",
-      "label": "Control Hints",
+      "label": "Hotkey Guide",
       "module": "controls",
       "toggleId": "hud.controls",
       "defaultBand": "hud",
@@ -62,90 +62,61 @@
       "path": "synaptome/bin/data/layers/hud/controls.json"
     },
     {
-      "id": "hud.layers",
-      "label": "Layer Summary",
-      "module": "layers",
-      "toggleId": "hud.layers",
+      "id": "hud.debug.terminal",
+      "label": "Debug Terminal",
+      "module": "debugTerminal",
+      "toggleId": "hud.debug.terminal",
       "defaultBand": "hud",
-      "defaultColumn": 1,
+      "defaultColumn": 0,
       "telemetryFeeds": [
-        "slots",
-        "fxRoutes"
+        "runtime",
+        "feeds",
+        "events"
       ],
-      "path": "synaptome/bin/data/layers/hud/layers.json"
+      "path": "synaptome/bin/data/layers/hud/debug_terminal.json"
     },
     {
-      "id": "hud.menu",
-      "label": "Menu Mirror",
-      "module": "menu",
-      "toggleId": "hud.menu",
+      "id": "hud.scene.preview",
+      "label": "Scene Preview",
+      "module": "scenePreview",
+      "toggleId": "hud.scene.preview",
       "defaultBand": "hud",
-      "defaultColumn": 1,
+      "defaultColumn": 2,
       "telemetryFeeds": [
-        "breadcrumbs",
-        "hotkeys"
+        "scene.preview"
       ],
-      "path": "synaptome/bin/data/layers/hud/menu.json"
+      "path": "synaptome/bin/data/layers/hud/scene_preview.json"
     },
     {
       "id": "hud.sensors",
-      "label": "Sensor Telemetry",
-      "module": "sensors",
+      "label": "Connected Devices",
+      "module": "connectedDevices",
       "toggleId": "hud.sensors",
       "defaultBand": "hud",
       "defaultColumn": 1,
       "telemetryFeeds": [
-        "imu",
-        "mic",
+        "devices",
+        "midi",
+        "audio",
         "osc"
       ],
       "path": "synaptome/bin/data/layers/hud/sensors.json"
-    },
-    {
-      "id": "hud.status",
-      "label": "HUD Status",
-      "module": "status",
-      "toggleId": "hud.status",
-      "defaultBand": "hud",
-      "defaultColumn": 0,
-      "telemetryFeeds": [
-        "midi",
-        "collector",
-        "timing"
-      ],
-      "path": "synaptome/bin/data/layers/hud/status.json"
-    },
-    {
-      "id": "hud.telemetry",
-      "label": "HUD Telemetry",
-      "module": "telemetry",
-      "toggleId": "hud.telemetry",
-      "defaultBand": "hud",
-      "defaultColumn": 1,
-      "telemetryFeeds": [
-        "fps",
-        "gpu"
-      ],
-      "path": "synaptome/bin/data/layers/hud/telemetry.json"
     }
   ],
   "feedIds": [
+    "audio",
     "audio.level",
     "audio.peak",
     "audio.waveform",
-    "breadcrumbs",
-    "collector",
     "conflicts",
-    "fps",
-    "fxRoutes",
-    "gpu",
+    "devices",
+    "events",
+    "feeds",
     "hotkeys",
-    "imu",
-    "mic",
     "midi",
     "osc",
-    "slots",
-    "timing"
+    "runtime",
+    "scene.preview"
   ],
   "controlHubPrefs": {
     "hudLayoutTarget": "controller",
@@ -167,15 +138,15 @@
         "visible": true
       },
       {
-        "id": "hud.layers",
-        "column": 1,
+        "id": "hud.debug.terminal",
+        "column": 0,
         "band": "hud",
         "collapsed": false,
         "visible": true
       },
       {
-        "id": "hud.menu",
-        "column": 1,
+        "id": "hud.scene.preview",
+        "column": 2,
         "band": "hud",
         "collapsed": false,
         "visible": true
@@ -183,20 +154,6 @@
       {
         "id": "hud.sensors",
         "column": 1,
-        "band": "hud",
-        "collapsed": false,
-        "visible": true
-      },
-      {
-        "id": "hud.status",
-        "column": 0,
-        "band": "hud",
-        "collapsed": false,
-        "visible": true
-      },
-      {
-        "id": "hud.telemetry",
-        "column": 0,
         "band": "hud",
         "collapsed": false,
         "visible": true
@@ -216,32 +173,20 @@
         "collapsed": false
       },
       {
-        "id": "hud.layers",
-        "column": 1,
+        "id": "hud.debug.terminal",
+        "column": 0,
         "band": "hud",
         "collapsed": false
       },
       {
-        "id": "hud.menu",
-        "column": 1,
+        "id": "hud.scene.preview",
+        "column": 2,
         "band": "hud",
         "collapsed": false
       },
       {
         "id": "hud.sensors",
         "column": 1,
-        "band": "hud",
-        "collapsed": false
-      },
-      {
-        "id": "hud.status",
-        "column": 0,
-        "band": "hud",
-        "collapsed": false
-      },
-      {
-        "id": "hud.telemetry",
-        "column": 0,
         "band": "hud",
         "collapsed": false
       }
@@ -268,40 +213,24 @@
           "target": "projector"
         },
         {
-          "id": "hud.layers",
-          "column": 1,
+          "id": "hud.debug.terminal",
+          "column": 0,
           "band": "hud",
           "collapsed": false,
           "visible": true,
           "target": "projector"
         },
         {
-          "id": "hud.menu",
-          "column": 1,
+          "id": "hud.scene.preview",
+          "column": 2,
           "band": "hud",
           "collapsed": false,
           "visible": true,
-          "target": "projector"
+          "target": "controller"
         },
         {
           "id": "hud.sensors",
           "column": 1,
-          "band": "hud",
-          "collapsed": false,
-          "visible": true,
-          "target": "projector"
-        },
-        {
-          "id": "hud.status",
-          "column": 0,
-          "band": "hud",
-          "collapsed": false,
-          "visible": true,
-          "target": "projector"
-        },
-        {
-          "id": "hud.telemetry",
-          "column": 0,
           "band": "hud",
           "collapsed": false,
           "visible": true,
@@ -326,40 +255,24 @@
           "target": "projector"
         },
         {
-          "id": "hud.layers",
-          "column": 1,
+          "id": "hud.debug.terminal",
+          "column": 0,
           "band": "hud",
           "collapsed": false,
           "visible": true,
           "target": "projector"
         },
         {
-          "id": "hud.menu",
-          "column": 1,
+          "id": "hud.scene.preview",
+          "column": 2,
           "band": "hud",
           "collapsed": false,
           "visible": true,
-          "target": "projector"
+          "target": "controller"
         },
         {
           "id": "hud.sensors",
           "column": 1,
-          "band": "hud",
-          "collapsed": false,
-          "visible": true,
-          "target": "projector"
-        },
-        {
-          "id": "hud.status",
-          "column": 0,
-          "band": "hud",
-          "collapsed": false,
-          "visible": true,
-          "target": "projector"
-        },
-        {
-          "id": "hud.telemetry",
-          "column": 0,
           "band": "hud",
           "collapsed": false,
           "visible": true,

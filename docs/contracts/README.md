@@ -6,7 +6,7 @@ This index names the contracts that the standalone Synaptome runtime owns: app c
 
 Fixture inventory: [fixtures.md](fixtures.md)
 
-Known follow-up debt: [contract_gaps.md](contract_gaps.md)
+Known follow-up debt index: [contract_gaps.md](contract_gaps.md)
 
 Public extraction planning:
 - [synaptome_public_extraction_manifest.json](synaptome_public_extraction_manifest.json) is the allowlist/exclusion manifest for a clean `synaptome` repo.
@@ -23,16 +23,40 @@ Cross-repo stream routing note: [Signal Control Integration](signal_control_inte
 Architecture contract drafts:
 - [Synaptome External Contracts](../architecture/synaptome_external_contracts.md) maps MIDI, OSC, helper repos, microphones, webcams, media files, displays, and hotkeys as outside-world boundaries.
 - [Synaptome Artist SDK And Compatibility Layer](../architecture/synaptome_artist_sdk.md) maps the public layer/parameter/catalog surface for openFrameworks artists.
+- [Synaptome Layer System Roadmap](../architecture/synaptome_layer_system_roadmap.md) owns package, folder discovery, generated layer assets, presets, mapping presets, validation, and bench follow-up.
+- [Synaptome Transport And Reactivity Contract](../architecture/synaptome_transport_reactivity.md) owns BPM, beat detection, transport source, confidence, onset/downbeat, and mapping-visible timing follow-up.
+- [Synaptome Public Runtime Contract Roadmap](../architecture/synaptome_public_runtime_contract_roadmap.md) owns non-layer scene, HUD, console/display, media, device, external boundary, and host audio follow-up.
 
 Parameter contract artifacts:
 - [parameter_manifest.json](parameter_manifest.json) is the generated static parameter ID snapshot.
 - [parameter_vocabulary.md](parameter_vocabulary.md) is the first public naming vocabulary for reusable Synaptome parameters.
+
+Draft layer package artifacts:
+
+These are draft layer-system contracts. They prove package metadata can be
+validated and compared with current runtime surfaces, but they do not mean the
+app runtime loads packages yet.
+
+- [layer_package.schema.json](../schemas/layer_package.schema.json) is the draft package manifest schema.
+- [layer_preset.schema.json](../schemas/layer_preset.schema.json) is the draft layer preset schema.
+- [Signal Bloom package fixture](../examples/layer_packages/signal_bloom/layer.package.json) is the first package-declared layer example.
+- `python tools\layer_package_discovery.py` reports the fixture package root, future runtime package root, and legacy/package coexistence rule.
+- `python tools\validate_layer_packages.py --check` validates current package fixtures.
+- `python tools\layer_package_catalog_regression.py --check` validates the package-derived catalog snapshot.
+- `python tools\layer_package_parameter_manifest.py --check` validates the package-derived parameter manifest snapshot.
+- `python tools\layer_catalog_regression.py --include-packages --check` validates the draft combined package/runtime catalog snapshot.
+- `python tools\gen_parameter_manifest.py --include-packages --check` validates the draft combined package/runtime parameter manifest snapshot.
 
 Coverage commands:
 
 ```powershell
 python tools\validate_configs.py --public-app
 python tools\validate_parameter_targets.py --strict --contract-fixtures
+python tools\validate_layer_packages.py --check
+python tools\layer_package_catalog_regression.py --check
+python tools\layer_package_parameter_manifest.py --check
+python tools\layer_catalog_regression.py --include-packages --check
+python tools\gen_parameter_manifest.py --include-packages --check
 ```
 
 Strict public contract mode reads committed fixtures from `tools/testdata/**` and examples under `docs/examples/**`. Live app-written files under `synaptome/bin/data/config/` and `synaptome/bin/data/layers/scenes/` remain runtime smoke state unless intentionally promoted into fixtures.

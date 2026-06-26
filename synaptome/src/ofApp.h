@@ -31,14 +31,10 @@
 #include "visuals/AgentFieldLayer.h"
 #include "visuals/FlockingLayer.h"
 #include "visuals/FlowFieldLayer.h"
-#include "visuals/ConstellationStarfieldLayer.h"
-#include "visuals/AuroraCurtainLayer.h"
-#include "visuals/ArcticSeaIcebergLayer.h"
+#include "visuals/RiverFormationLayer.h"
 #include "visuals/ArcticAuroraSceneLayer.h"
-#include "visuals/CosmicWebLayer.h"
-#include "visuals/GalaxySpiralLayer.h"
+#include "visuals/MountainIslandLayer.h"
 #include "visuals/SolarSystemLayer.h"
-#include "visuals/BigBangLayer.h"
 #include "visuals/CosmosFormationLayer.h"
 #include "visuals/VideoGrabberLayer.h"
 #include "visuals/VideoClipLayer.h"
@@ -79,7 +75,10 @@ public:
     std::string composeHudStatus() const;
     std::string composeHudSensors() const;
     std::string composeHudMenu() const;
+    std::string composeHudDebugTerminal() const;
     std::optional<HudFeedRegistry::FeedEntry> latestHudFeed(const std::string& widgetId) const;
+    bool hasScenePreview() const;
+    void drawScenePreview(const ofRectangle& bounds) const;
     ofColor secondaryDisplayBackgroundColor() const;
     std::string secondaryDisplayLabel() const;
 
@@ -93,12 +92,10 @@ public:
 
     // time / ui
     bool hudShowControls = true;
-    bool hudShowStatus = true;
-    bool hudShowLayers = true;
     bool hudShowSensors = true;
-    bool hudShowMenu = true;
-    bool hudShowTelemetry = true;
     bool hudShowAudioWaveform = true;
+    bool hudShowScenePreview = true;
+    bool hudShowDebugTerminal = true;
     bool paused = false;
     float speed = 1.0f;
     float t = 0.0f;

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "packageId": "examples.signal_bloom",
+  "assetId": "examples.signal_bloom",
+  "presetId": "calm",
+  "label": "Calm",
+  "description": "Softer slower settings for calmer passages.",
+  "parameters": {
+    "speed": 0.38,
+    "bpmMultiplier": 0.5,
+    "scale": 0.72,
+    "alpha": 0.62,
+    "gain": 0.35,
+    "lineOpacity": 0.48,
+    "colorR": 0.08,
+    "colorG": 0.54,
+    "colorB": 0.86,
+    "bgColorR": 0.01,
+    "bgColorG": 0.02,
+    "bgColorB": 0.04,
+    "speedInput": 0.0
+  }
+}

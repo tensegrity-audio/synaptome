@@ -2,9 +2,17 @@
   "id": "generative.antTunnels",
   "label": "Ant Tunnels",
   "category": "Generative",
+  "layerGroup": "Adaptive Trail",
+  "model": "antTunnels",
+  "stateModel": "discrete pheromone-routing agents over a trail field",
   "type": "agentField",
   "registryPrefix": "generative.antTunnels",
   "opacity": 1.0,
+  "modes": [
+    { "id": "balanced", "label": "Balanced", "kind": "live", "live": true },
+    { "id": "explore", "label": "Explore", "kind": "live", "live": true },
+    { "id": "exploit", "label": "Exploit", "kind": "live", "live": true }
+  ],
   "defaults": {
     "mode": 0,
     "speed": 14.0,

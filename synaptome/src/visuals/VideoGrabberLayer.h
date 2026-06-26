@@ -47,6 +47,7 @@ public:
     void setDeviceIndex(int index);
     int deviceCount() const { return static_cast<int>(devices_.size()); }
     int selectedDeviceIndex() const { return selectedDeviceIndex_; }
+    bool isCaptureInitialized() const { return grabber_ && grabber_->isInitialized(); }
     std::string deviceLabel(int index) const;
     std::string currentDeviceLabel() const;
     float gain() const { return paramGain_; }

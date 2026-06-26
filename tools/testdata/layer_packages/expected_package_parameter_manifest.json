@@ -1,0 +1,721 @@
+{
+  "schemaVersion": 1,
+  "status": "draft",
+  "generator": "tools/layer_package_parameter_manifest.py",
+  "sourceStrategy": [
+    "Package parameter declarations are expanded through asset.registryPrefix.",
+    "Console slot templates use package parameter suffixes and do not imply runtime registration yet."
+  ],
+  "discovery": {
+    "schemaVersion": 1,
+    "manifestName": "layer.package.json",
+    "legacyLayerAssetRoot": "synaptome/bin/data/layers",
+    "coexistenceRule": "Layer packages are discovered from package roots. Legacy *.json layer assets remain the runtime catalog source until package loading is explicitly enabled; duplicate asset IDs between the two surfaces are treated as conflicts by combined checks.",
+    "roots": [
+      {
+        "path": "docs/examples/layer_packages",
+        "role": "fixture",
+        "purpose": "Tracked example packages used by docs, schemas, and regression tests.",
+        "exists": true,
+        "packageCount": 1,
+        "packages": [
+          "docs/examples/layer_packages/signal_bloom/layer.package.json"
+        ]
+      }
+    ]
+  },
+  "sources": [
+    "docs/examples/layer_packages",
+    "docs/schemas/layer_package.schema.json",
+    "tools/layer_package_discovery.py",
+    "tools/validate_layer_packages.py"
+  ],
+  "counts": {
+    "packages": 1,
+    "assets": 1,
+    "parameters": 18,
+    "consoleSlotTemplates": 18
+  },
+  "parameters": [
+    {
+      "id": "examples.signal_bloom.alpha",
+      "kind": "float",
+      "scope": "layer-package",
+      "family": "Visibility",
+      "units": "",
+      "packageId": "examples.signal_bloom",
+      "assetId": "examples.signal_bloom",
+      "layerType": "example.signalBloom",
+      "registryPrefix": "examples.signal_bloom",
+      "suffix": "alpha",
+      "label": "Visibility: Alpha",
+      "default": 0.86,
+      "source": {
+        "path": "docs/examples/layer_packages/signal_bloom/layer.package.json",
+        "kind": "layer.package.json"
+      },
+      "range": {
+        "min": 0.0,
+        "max": 1.0,
+        "step": 0.01
+      },
+      "deprecated": {
+        "replacement": "opacity",
+        "reason": "New layers should prefer opacity/visibility naming, but this fixture preserves the current public SDK parameter."
+      }
+    },
+    {
+      "id": "examples.signal_bloom.bgColorB",
+      "kind": "float",
+      "scope": "layer-package",
+      "family": "Color",
+      "units": "",
+      "packageId": "examples.signal_bloom",
+      "assetId": "examples.signal_bloom",
+      "layerType": "example.signalBloom",
+      "registryPrefix": "examples.signal_bloom",
+      "suffix": "bgColorB",
+      "label": "Color: Background Blue",
+      "default": 0.08,
+      "source": {
+        "path": "docs/examples/layer_packages/signal_bloom/layer.package.json",
+        "kind": "layer.package.json"
+      },
+      "range": {
+        "min": 0.0,
+        "max": 1.0,
+        "step": 0.01
+      }
+    },
+    {
+      "id": "examples.signal_bloom.bgColorG",
+      "kind": "float",
+      "scope": "layer-package",
+      "family": "Color",
+      "units": "",
+      "packageId": "examples.signal_bloom",
+      "assetId": "examples.signal_bloom",
+      "layerType": "example.signalBloom",
+      "registryPrefix": "examples.signal_bloom",
+      "suffix": "bgColorG",
+      "label": "Color: Background Green",
+      "default": 0.04,
+      "source": {
+        "path": "docs/examples/layer_packages/signal_bloom/layer.package.json",
+        "kind": "layer.package.json"
+      },
+      "range": {
+        "min": 0.0,
+        "max": 1.0,
+        "step": 0.01
+      }
+    },
+    {
+      "id": "examples.signal_bloom.bgColorR",
+      "kind": "float",
+      "scope": "layer-package",
+      "family": "Color",
+      "units": "",
+      "packageId": "examples.signal_bloom",
+      "assetId": "examples.signal_bloom",
+      "layerType": "example.signalBloom",
+      "registryPrefix": "examples.signal_bloom",
+      "suffix": "bgColorR",
+      "label": "Color: Background Red",
+      "default": 0.02,
+      "source": {
+        "path": "docs/examples/layer_packages/signal_bloom/layer.package.json",
+        "kind": "layer.package.json"
+      },
+      "range": {
+        "min": 0.0,
+        "max": 1.0,
+        "step": 0.01
+      }
+    },
+    {
+      "id": "examples.signal_bloom.bpmMultiplier",
+      "kind": "float",
+      "scope": "layer-package",
+      "family": "Time",
+      "units": "multiplier",
+      "packageId": "examples.signal_bloom",
+      "assetId": "examples.signal_bloom",
+      "layerType": "example.signalBloom",
+      "registryPrefix": "examples.signal_bloom",
+      "suffix": "bpmMultiplier",
+      "label": "Time: BPM Multiplier",
+      "default": 1.0,
+      "source": {
+        "path": "docs/examples/layer_packages/signal_bloom/layer.package.json",
+        "kind": "layer.package.json"
+      },
+      "range": {
+        "min": 0.25,
+        "max": 8.0,
+        "step": 0.25
+      }
+    },
+    {
+      "id": "examples.signal_bloom.bpmSync",
+      "kind": "bool",
+      "scope": "layer-package",
+      "family": "Time",
+      "units": "",
+      "packageId": "examples.signal_bloom",
+      "assetId": "examples.signal_bloom",
+      "layerType": "example.signalBloom",
+      "registryPrefix": "examples.signal_bloom",
+      "suffix": "bpmSync",
+      "label": "Time: BPM Sync",
+      "default": true,
+      "source": {
+        "path": "docs/examples/layer_packages/signal_bloom/layer.package.json",
+        "kind": "layer.package.json"
+      }
+    },
+    {
+      "id": "examples.signal_bloom.colorB",
+      "kind": "float",
+      "scope": "layer-package",
+      "family": "Color",
+      "units": "",
+      "packageId": "examples.signal_bloom",
+      "assetId": "examples.signal_bloom",
+      "layerType": "example.signalBloom",
+      "registryPrefix": "examples.signal_bloom",
+      "suffix": "colorB",
+      "label": "Color: Blue",
+      "default": 1.0,
+      "source": {
+        "path": "docs/examples/layer_packages/signal_bloom/layer.package.json",
+        "kind": "layer.package.json"
+      },
+      "range": {
+        "min": 0.0,
+        "max": 1.0,
+        "step": 0.01
+      }
+    },
+    {
+      "id": "examples.signal_bloom.colorG",
+      "kind": "float",
+      "scope": "layer-package",
+      "family": "Color",
+      "units": "",
+      "packageId": "examples.signal_bloom",
+      "assetId": "examples.signal_bloom",
+      "layerType": "example.signalBloom",
+      "registryPrefix": "examples.signal_bloom",
+      "suffix": "colorG",
+      "label": "Color: Green",
+      "default": 0.78,
+      "source": {
+        "path": "docs/examples/layer_packages/signal_bloom/layer.package.json",
+        "kind": "layer.package.json"
+      },
+      "range": {
+        "min": 0.0,
+        "max": 1.0,
+        "step": 0.01
+      }
+    },
+    {
+      "id": "examples.signal_bloom.colorR",
+      "kind": "float",
+      "scope": "layer-package",
+      "family": "Color",
+      "units": "",
+      "packageId": "examples.signal_bloom",
+      "assetId": "examples.signal_bloom",
+      "layerType": "example.signalBloom",
+      "registryPrefix": "examples.signal_bloom",
+      "suffix": "colorR",
+      "label": "Color: Red",
+      "default": 0.12,
+      "source": {
+        "path": "docs/examples/layer_packages/signal_bloom/layer.package.json",
+        "kind": "layer.package.json"
+      },
+      "range": {
+        "min": 0.0,
+        "max": 1.0,
+        "step": 0.01
+      }
+    },
+    {
+      "id": "examples.signal_bloom.gain",
+      "kind": "float",
+      "scope": "layer-package",
+      "family": "Force",
+      "units": "multiplier",
+      "packageId": "examples.signal_bloom",
+      "assetId": "examples.signal_bloom",
+      "layerType": "example.signalBloom",
+      "registryPrefix": "examples.signal_bloom",
+      "suffix": "gain",
+      "label": "Force: Sensor Gain",
+      "default": 0.62,
+      "source": {
+        "path": "docs/examples/layer_packages/signal_bloom/layer.package.json",
+        "kind": "layer.package.json"
+      },
+      "range": {
+        "min": 0.0,
+        "max": 2.0,
+        "step": 0.01
+      }
+    },
+    {
+      "id": "examples.signal_bloom.lineOpacity",
+      "kind": "float",
+      "scope": "layer-package",
+      "family": "Visibility",
+      "units": "",
+      "packageId": "examples.signal_bloom",
+      "assetId": "examples.signal_bloom",
+      "layerType": "example.signalBloom",
+      "registryPrefix": "examples.signal_bloom",
+      "suffix": "lineOpacity",
+      "label": "Visibility: Line Opacity",
+      "default": 0.72,
+      "source": {
+        "path": "docs/examples/layer_packages/signal_bloom/layer.package.json",
+        "kind": "layer.package.json"
+      },
+      "range": {
+        "min": 0.0,
+        "max": 1.0,
+        "step": 0.01
+      }
+    },
+    {
+      "id": "examples.signal_bloom.rotationDeg",
+      "kind": "float",
+      "scope": "layer-package",
+      "family": "Motion",
+      "units": "deg",
+      "packageId": "examples.signal_bloom",
+      "assetId": "examples.signal_bloom",
+      "layerType": "example.signalBloom",
+      "registryPrefix": "examples.signal_bloom",
+      "suffix": "rotationDeg",
+      "label": "Motion: Rotation",
+      "default": 0.0,
+      "source": {
+        "path": "docs/examples/layer_packages/signal_bloom/layer.package.json",
+        "kind": "layer.package.json"
+      },
+      "range": {
+        "min": -180.0,
+        "max": 180.0,
+        "step": 1.0
+      }
+    },
+    {
+      "id": "examples.signal_bloom.scale",
+      "kind": "float",
+      "scope": "layer-package",
+      "family": "Scale",
+      "units": "multiplier",
+      "packageId": "examples.signal_bloom",
+      "assetId": "examples.signal_bloom",
+      "layerType": "example.signalBloom",
+      "registryPrefix": "examples.signal_bloom",
+      "suffix": "scale",
+      "label": "Scale: Size",
+      "default": 0.82,
+      "source": {
+        "path": "docs/examples/layer_packages/signal_bloom/layer.package.json",
+        "kind": "layer.package.json"
+      },
+      "range": {
+        "min": 0.1,
+        "max": 2.0,
+        "step": 0.01
+      }
+    },
+    {
+      "id": "examples.signal_bloom.speed",
+      "kind": "float",
+      "scope": "layer-package",
+      "family": "Motion",
+      "units": "multiplier",
+      "packageId": "examples.signal_bloom",
+      "assetId": "examples.signal_bloom",
+      "layerType": "example.signalBloom",
+      "registryPrefix": "examples.signal_bloom",
+      "suffix": "speed",
+      "label": "Motion: Speed",
+      "default": 0.65,
+      "source": {
+        "path": "docs/examples/layer_packages/signal_bloom/layer.package.json",
+        "kind": "layer.package.json"
+      },
+      "range": {
+        "min": 0.0,
+        "max": 4.0,
+        "step": 0.01
+      }
+    },
+    {
+      "id": "examples.signal_bloom.speedInput",
+      "kind": "float",
+      "scope": "layer-package",
+      "family": "Input",
+      "units": "",
+      "packageId": "examples.signal_bloom",
+      "assetId": "examples.signal_bloom",
+      "layerType": "example.signalBloom",
+      "registryPrefix": "examples.signal_bloom",
+      "suffix": "speedInput",
+      "label": "Input: Speed",
+      "default": 0.0,
+      "source": {
+        "path": "docs/examples/layer_packages/signal_bloom/layer.package.json",
+        "kind": "layer.package.json"
+      },
+      "range": {
+        "min": 0.0,
+        "max": 1.0,
+        "step": 0.001
+      }
+    },
+    {
+      "id": "examples.signal_bloom.visible",
+      "kind": "bool",
+      "scope": "layer-package",
+      "family": "Visibility",
+      "units": "",
+      "packageId": "examples.signal_bloom",
+      "assetId": "examples.signal_bloom",
+      "layerType": "example.signalBloom",
+      "registryPrefix": "examples.signal_bloom",
+      "suffix": "visible",
+      "label": "Visibility: Visible",
+      "default": true,
+      "source": {
+        "path": "docs/examples/layer_packages/signal_bloom/layer.package.json",
+        "kind": "layer.package.json"
+      }
+    },
+    {
+      "id": "examples.signal_bloom.xInput",
+      "kind": "float",
+      "scope": "layer-package",
+      "family": "Input",
+      "units": "",
+      "packageId": "examples.signal_bloom",
+      "assetId": "examples.signal_bloom",
+      "layerType": "example.signalBloom",
+      "registryPrefix": "examples.signal_bloom",
+      "suffix": "xInput",
+      "label": "Input: X",
+      "default": 0.5,
+      "source": {
+        "path": "docs/examples/layer_packages/signal_bloom/layer.package.json",
+        "kind": "layer.package.json"
+      },
+      "range": {
+        "min": 0.0,
+        "max": 1.0,
+        "step": 0.001
+      }
+    },
+    {
+      "id": "examples.signal_bloom.yInput",
+      "kind": "float",
+      "scope": "layer-package",
+      "family": "Input",
+      "units": "",
+      "packageId": "examples.signal_bloom",
+      "assetId": "examples.signal_bloom",
+      "layerType": "example.signalBloom",
+      "registryPrefix": "examples.signal_bloom",
+      "suffix": "yInput",
+      "label": "Input: Y",
+      "default": 0.5,
+      "source": {
+        "path": "docs/examples/layer_packages/signal_bloom/layer.package.json",
+        "kind": "layer.package.json"
+      },
+      "range": {
+        "min": 0.0,
+        "max": 1.0,
+        "step": 0.001
+      }
+    }
+  ],
+  "consoleSlotTemplates": [
+    {
+      "idPattern": "console.layer{slot}.alpha",
+      "kind": "float",
+      "suffix": "alpha",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourcePackages": [
+        "examples.signal_bloom"
+      ],
+      "sourceLayerTypes": [
+        "example.signalBloom"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.bgColorB",
+      "kind": "float",
+      "suffix": "bgColorB",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourcePackages": [
+        "examples.signal_bloom"
+      ],
+      "sourceLayerTypes": [
+        "example.signalBloom"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.bgColorG",
+      "kind": "float",
+      "suffix": "bgColorG",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourcePackages": [
+        "examples.signal_bloom"
+      ],
+      "sourceLayerTypes": [
+        "example.signalBloom"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.bgColorR",
+      "kind": "float",
+      "suffix": "bgColorR",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourcePackages": [
+        "examples.signal_bloom"
+      ],
+      "sourceLayerTypes": [
+        "example.signalBloom"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.bpmMultiplier",
+      "kind": "float",
+      "suffix": "bpmMultiplier",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourcePackages": [
+        "examples.signal_bloom"
+      ],
+      "sourceLayerTypes": [
+        "example.signalBloom"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.bpmSync",
+      "kind": "bool",
+      "suffix": "bpmSync",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourcePackages": [
+        "examples.signal_bloom"
+      ],
+      "sourceLayerTypes": [
+        "example.signalBloom"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.colorB",
+      "kind": "float",
+      "suffix": "colorB",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourcePackages": [
+        "examples.signal_bloom"
+      ],
+      "sourceLayerTypes": [
+        "example.signalBloom"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.colorG",
+      "kind": "float",
+      "suffix": "colorG",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourcePackages": [
+        "examples.signal_bloom"
+      ],
+      "sourceLayerTypes": [
+        "example.signalBloom"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.colorR",
+      "kind": "float",
+      "suffix": "colorR",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourcePackages": [
+        "examples.signal_bloom"
+      ],
+      "sourceLayerTypes": [
+        "example.signalBloom"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.gain",
+      "kind": "float",
+      "suffix": "gain",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourcePackages": [
+        "examples.signal_bloom"
+      ],
+      "sourceLayerTypes": [
+        "example.signalBloom"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.lineOpacity",
+      "kind": "float",
+      "suffix": "lineOpacity",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourcePackages": [
+        "examples.signal_bloom"
+      ],
+      "sourceLayerTypes": [
+        "example.signalBloom"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.rotationDeg",
+      "kind": "float",
+      "suffix": "rotationDeg",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourcePackages": [
+        "examples.signal_bloom"
+      ],
+      "sourceLayerTypes": [
+        "example.signalBloom"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.scale",
+      "kind": "float",
+      "suffix": "scale",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourcePackages": [
+        "examples.signal_bloom"
+      ],
+      "sourceLayerTypes": [
+        "example.signalBloom"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.speed",
+      "kind": "float",
+      "suffix": "speed",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourcePackages": [
+        "examples.signal_bloom"
+      ],
+      "sourceLayerTypes": [
+        "example.signalBloom"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.speedInput",
+      "kind": "float",
+      "suffix": "speedInput",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourcePackages": [
+        "examples.signal_bloom"
+      ],
+      "sourceLayerTypes": [
+        "example.signalBloom"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.visible",
+      "kind": "bool",
+      "suffix": "visible",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourcePackages": [
+        "examples.signal_bloom"
+      ],
+      "sourceLayerTypes": [
+        "example.signalBloom"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.xInput",
+      "kind": "float",
+      "suffix": "xInput",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourcePackages": [
+        "examples.signal_bloom"
+      ],
+      "sourceLayerTypes": [
+        "example.signalBloom"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.yInput",
+      "kind": "float",
+      "suffix": "yInput",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourcePackages": [
+        "examples.signal_bloom"
+      ],
+      "sourceLayerTypes": [
+        "example.signalBloom"
+      ]
+    }
+  ]
+}

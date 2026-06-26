@@ -11,69 +11,31 @@
 
 namespace {
 std::string composeSensorsFromFeed(const ofJson& payload) {
-    auto indicator = [](const ofJson& node) -> std::string {
-        return node.value("indicator", std::string("[ ]"));
-    };
-    auto categoryLine = [&](const char* label, const ofJson& node) -> std::string {
-        std::ostringstream line;
-        line << label << " " << indicator(node);
-        if (node.value("hasValue", false)) {
-            line << " " << ofToString(node.value("lastValue", 0.0f), 3);
-        }
-        std::string metric = node.value("lastMetric", std::string());
-        if (!metric.empty()) {
-            line << " (" << metric << ")";
-        }
-        float ageMs = node.value("ageMs", 0.0f);
-        if (ageMs > 0.0f) {
-            line << "  (" << ofToString(ageMs / 1000.0f, 1) << "s ago)";
-        }
-        return line.str();
-    };
-
     std::ostringstream out;
-    out << "\n\nSensor HUD:";
-    if (payload.contains("deck") && payload["deck"].is_object()) {
-        const auto& deck = payload["deck"];
-        out << "\n  Cyberdeck TLVs " << indicator(deck);
-        if (deck.contains("categories") && deck["categories"].is_object()) {
-            const auto& cats = deck["categories"];
-            if (cats.contains("hr")) {
-                out << "\n    HR " << categoryLine("HR", cats["hr"]);
+    out << "Connected Devices:";
+    if (payload.contains("devices") && payload["devices"].is_array()) {
+        for (const auto& entry : payload["devices"]) {
+            if (!entry.is_object()) continue;
+            const bool connected = entry.value("connected", false);
+            const std::string label = entry.value("label", std::string("Device"));
+            const std::string kind = entry.value("kind", std::string());
+            const std::string detail = entry.value("detail", std::string());
+            out << "\n  " << (connected ? "[*] " : "[ ] ");
+            if (!kind.empty()) {
+                out << kind << ": ";
             }
-            if (cats.contains("imu")) {
-                out << "\n    IMU " << categoryLine("IMU", cats["imu"]);
-            }
-            if (cats.contains("aux")) {
-                out << "\n    AUX " << categoryLine("AUX", cats["aux"]);
-            }
-        }
-    }
-    if (payload.contains("matrix") && payload["matrix"].is_object()) {
-        const auto& matrix = payload["matrix"];
-        out << "\n  Matrix TLVs " << indicator(matrix);
-        if (matrix.contains("categories") && matrix["categories"].is_object()) {
-            const auto& cats = matrix["categories"];
-            if (cats.contains("mic")) {
-                out << "\n    MIC " << categoryLine("MIC", cats["mic"]);
-            }
-            if (cats.contains("bio")) {
-                out << "\n    BIO " << categoryLine("BIO", cats["bio"]);
-            }
-            if (cats.contains("imu")) {
-                out << "\n    IMU " << categoryLine("IMU", cats["imu"]);
-            }
-            if (cats.contains("aux")) {
-                out << "\n    AUX " << categoryLine("AUX", cats["aux"]);
+            out << label;
+            if (!detail.empty()) {
+                out << "  " << detail;
             }
         }
     }
-    out << "\n\nRecent OSC:";
     if (payload.contains("oscHistory") && payload["oscHistory"].is_array()) {
+        out << "\nRecent OSC:";
         for (const auto& entry : payload["oscHistory"]) {
             if (!entry.is_object()) continue;
-            std::string address = entry.value("address", std::string());
-            float value = entry.value("value", 0.0f);
+            const std::string address = entry.value("address", std::string());
+            const float value = entry.value("value", 0.0f);
             out << "\n  " << address << " -> " << ofToString(value, 4);
         }
     }
@@ -83,12 +45,12 @@ std::string composeSensorsFromFeed(const ofJson& payload) {
 
 SensorsHudWidget::SensorsHudWidget() {
     metadata_.id = "hud.sensors";
-    metadata_.label = "Sensor Activity";
+    metadata_.label = "Connected Devices";
     metadata_.category = "HUD";
-    metadata_.description = "Cyberdeck and matrix telemetry plus recent OSC.";
+    metadata_.description = "Runtime connection summary for cameras, MIDI, audio, OSC, and sensor buses.";
     metadata_.defaultColumn = 1;
-    metadata_.defaultHeight = 360.0f;
-    metadata_.minHeight = 220.0f;
+    metadata_.defaultHeight = 280.0f;
+    metadata_.minHeight = 180.0f;
     metadata_.allowsDetach = false;
     metadata_.band = OverlayWidget::Band::Hud;
 }

@@ -9,6 +9,8 @@
 #include "ui/overlays/TelemetryWidget.h"
 #include "ui/overlays/KeyListWidget.h"
 #include "ui/overlays/AudioMonitorWidget.h"
+#include "ui/overlays/ScenePreviewWidget.h"
+#include "ui/overlays/DebugTerminalWidget.h"
 #include "ui/ControlMappingHubState.h"
 #include "ui/MenuSkin.h"
 #include "ui/ControlHubEventBridge_clean.h"
@@ -41,7 +43,6 @@ namespace {
     constexpr const char* kRunLogArchiveDir = "logs/runs";
     constexpr std::size_t kRetainedRunLogs = 3;
 
-    constexpr uint64_t kHudFreshMs = 1000;
     constexpr uint64_t kHudStaleMs = 5000;
     bool startsWith(const std::string& text, const std::string& prefix) {
         return text.size() >= prefix.size() && text.compare(0, prefix.size(), prefix) == 0;
@@ -610,7 +611,7 @@ namespace {
         if (lowered == "layers") {
             return std::make_unique<LayersHudWidget>();
         }
-        if (lowered == "sensors") {
+        if (lowered == "sensors" || lowered == "connecteddevices" || lowered == "devices") {
             return std::make_unique<SensorsHudWidget>();
         }
         if (lowered == "menu") {
@@ -624,6 +625,12 @@ namespace {
         }
         if (lowered == "audiowaveform" || lowered == "audio" || lowered == "audiomonitor") {
             return std::make_unique<AudioMonitorWidget>();
+        }
+        if (lowered == "scenepreview" || lowered == "scene" || lowered == "preview") {
+            return std::make_unique<ScenePreviewWidget>();
+        }
+        if (lowered == "debugterminal" || lowered == "debug" || lowered == "terminal") {
+            return std::make_unique<DebugTerminalWidget>();
         }
         return nullptr;
     }
@@ -1761,14 +1768,10 @@ void ofApp::setup() {
     factory.registerType("agentField", []() { return std::make_unique<AgentFieldLayer>(); });
     factory.registerType("flocking", []() { return std::make_unique<FlockingLayer>(); });
     factory.registerType("flowField", []() { return std::make_unique<FlowFieldLayer>(); });
-    factory.registerType("constellationStarfield", []() { return std::make_unique<ConstellationStarfieldLayer>(); });
-    factory.registerType("auroraCurtain", []() { return std::make_unique<AuroraCurtainLayer>(); });
-    factory.registerType("arcticSeaIcebergs", []() { return std::make_unique<ArcticSeaIcebergLayer>(); });
+    factory.registerType("riverFormation", []() { return std::make_unique<RiverFormationLayer>(); });
     factory.registerType("arcticAuroraScene", []() { return std::make_unique<ArcticAuroraSceneLayer>(); });
-    factory.registerType("cosmicWeb", []() { return std::make_unique<CosmicWebLayer>(); });
-    factory.registerType("galaxySpiral", []() { return std::make_unique<GalaxySpiralLayer>(); });
+    factory.registerType("mountainIsland", []() { return std::make_unique<MountainIslandLayer>(); });
     factory.registerType("solarSystem", []() { return std::make_unique<SolarSystemLayer>(); });
-    factory.registerType("bigBang", []() { return std::make_unique<BigBangLayer>(); });
     factory.registerType("cosmosFormation", []() { return std::make_unique<CosmosFormationLayer>(); });
     factory.registerType("media.webcam", []() { return std::make_unique<VideoGrabberLayer>(); });
     factory.registerType("media.clip", []() { return std::make_unique<VideoClipLayer>(); });
@@ -1825,12 +1828,11 @@ void ofApp::setup() {
         }
     };
 
-    registerHudToggle("hud.controls", "Controls", "Show key and control hints", &hudShowControls);
-    registerHudToggle("hud.status", "Status", "Show system status summary", &hudShowStatus);
-    registerHudToggle("hud.layers", "Layers", "Show active layer summary", &hudShowLayers);
-    registerHudToggle("hud.sensors", "Sensors", "Show recent sensor telemetry", &hudShowSensors);
-    registerHudToggle("hud.menu", "Menu Mirror", "Show current menu breadcrumbs", &hudShowMenu);
+    registerHudToggle("hud.controls", "Hotkey Guide", "Show active keyboard and controller shortcuts", &hudShowControls);
+    registerHudToggle("hud.sensors", "Connected Devices", "Show cameras, MIDI, audio, OSC, and sensor bus status", &hudShowSensors);
     registerHudToggle("hud.audio.waveform", "Audio Waveform", "Show current audio input waveform", &hudShowAudioWaveform);
+    registerHudToggle("hud.scene.preview", "Scene Preview", "Show a live thumbnail of the current scene composite", &hudShowScenePreview);
+    registerHudToggle("hud.debug.terminal", "Debug Terminal", "Show compact runtime diagnostics and recent HUD feed activity", &hudShowDebugTerminal);
     registerHudWidgetsFromCatalog();
 
     consoleSlots.resize(8);
@@ -2570,7 +2572,7 @@ void ofApp::update() {
     }
     const bool midiConnected = midi.isConnected();
     if (!midiTelemetryInitialized_ || midiConnected != lastMidiConnected_) {
-        publishHudTelemetrySample("hud.status",
+        publishHudTelemetrySample("hud.debug.terminal",
                                   "midi",
                                   midiConnected ? 1.0f : 0.0f,
                                   midiConnected ? midi.connectedPortName() : "disconnected");
@@ -2579,7 +2581,7 @@ void ofApp::update() {
     }
     const bool collectorConnected = collector.isConnected();
     if (!collectorTelemetryInitialized_ || collectorConnected != lastCollectorConnected_) {
-        publishHudTelemetrySample("hud.status",
+        publishHudTelemetrySample("hud.debug.terminal",
                                   "collector",
                                   collectorConnected ? 1.0f : 0.0f,
                                   collectorConnected ? collector.currentPort() : "disconnected");
@@ -2650,7 +2652,7 @@ void ofApp::update() {
         layoutSyncResyncPending_ = false;
     }
     if (nowTelemetryMs - lastHudTimingTelemetryMs_ >= 1000) {
-        publishHudTelemetrySample("hud.status", "timing", frameDt, "frameDt");
+        publishHudTelemetrySample("hud.debug.terminal", "timing", frameDt, "frameDt");
         lastHudTimingTelemetryMs_ = nowTelemetryMs;
     }
     if (!paused) {
@@ -3344,111 +3346,121 @@ std::string ofApp::composeHudStatus() const {
 
 std::string ofApp::composeHudSensors() const {
     uint64_t nowMs = ofGetElapsedTimeMillis();
-    auto indicator = [&](uint64_t lastMs) -> std::string {
-        if (!lastMs) {
-            return "[ ]";
+    auto ageText = [&](uint64_t timestampMs) -> std::string {
+        if (!timestampMs) {
+            return "no recent data";
         }
-        uint64_t age = nowMs >= lastMs ? (nowMs - lastMs) : 0;
-        if (age <= kHudFreshMs) {
-            return "[*]";
-        }
-        if (age <= kHudStaleMs) {
-            return "[~]";
-        }
-        return "[ ]";
+        uint64_t age = nowMs >= timestampMs ? (nowMs - timestampMs) : 0;
+        return ofToString(age / 1000.0f, 1) + "s ago";
     };
-    auto categoryLine = [&](const std::string& label, const HudCategoryActivity& cat) {
-        std::string line = label + " " + indicator(cat.lastSeenMs);
-        if (cat.lastSeenMs) {
-            if (cat.hasValue) {
-                line += " " + ofToString(cat.lastValue, 3);
-            }
-            if (!cat.lastMetric.empty()) {
-                line += " (" + cat.lastMetric + ")";
-            }
-            uint64_t age = nowMs >= cat.lastSeenMs ? (nowMs - cat.lastSeenMs) : 0;
-            line += "  (" + ofToString(age / 1000.0f, 1) + "s ago)";
-        } else {
-            line += " --";
-        }
-        return line;
-    };
-
-    std::ostringstream hud;
-    hud << "\n\nSensor HUD:";
-    hud << "\n  Cyberdeck TLVs " << indicator(hudDeckActivity.lastAnyMs);
-    if (hudDeckActivity.lastAnyMs) {
-        hud << "\n    HR " << categoryLine("HR", hudDeckActivity.hr);
-        hud << "\n    IMU " << categoryLine("IMU", hudDeckActivity.imu);
-        hud << "\n    AUX " << categoryLine("AUX", hudDeckActivity.aux);
-    }
-    hud << "\n  Host Sensors " << indicator(hudHostActivity.lastAnyMs);
-    if (hudHostActivity.lastAnyMs) {
-        hud << "\n    MIC " << categoryLine("MIC", hudHostActivity.mic);
-        hud << "\n    AUX " << categoryLine("AUX", hudHostActivity.aux);
-    }
-    hud << "\n  Matrix TLVs " << indicator(hudMatrixActivity.lastAnyMs);
-    if (hudMatrixActivity.lastAnyMs) {
-        hud << "\n    MIC " << categoryLine("MIC", hudMatrixActivity.mic);
-        hud << "\n    BIO " << categoryLine("BIO", hudMatrixActivity.bio);
-        hud << "\n    IMU " << categoryLine("IMU", hudMatrixActivity.imu);
-        hud << "\n    AUX " << categoryLine("AUX", hudMatrixActivity.aux);
-    }
-
-    hud << "\n\nRecent OSC:";
-    for (const auto& entry : oscHistory) {
-        hud << "\n  " << entry.first << " -> " << ofToString(entry.second, 4);
-    }
-
-    auto categoryJson = [&](const HudCategoryActivity& cat) {
-        ofJson node;
-        node["lastSeenMs"] = cat.lastSeenMs;
-        node["lastValue"] = cat.lastValue;
-        node["lastMetric"] = cat.lastMetric;
-        node["hasValue"] = cat.hasValue;
-        node["ageMs"] = cat.lastSeenMs && nowMs >= cat.lastSeenMs ? (nowMs - cat.lastSeenMs) : 0;
-        node["indicator"] = indicator(cat.lastSeenMs);
-        return node;
-    };
-    auto hubJson = [&](const HudDeckActivity& hub) {
-        ofJson node;
-        node["lastAnyMs"] = hub.lastAnyMs;
-        node["indicator"] = indicator(hub.lastAnyMs);
-        ofJson categories = ofJson::object();
-        categories["hr"] = categoryJson(hub.hr);
-        categories["imu"] = categoryJson(hub.imu);
-        categories["aux"] = categoryJson(hub.aux);
-        node["categories"] = std::move(categories);
-        return node;
-    };
-    auto hostJson = [&](const HudHostActivity& host) {
-        ofJson node;
-        node["lastAnyMs"] = host.lastAnyMs;
-        node["indicator"] = indicator(host.lastAnyMs);
-        ofJson categories = ofJson::object();
-        categories["mic"] = categoryJson(host.mic);
-        categories["aux"] = categoryJson(host.aux);
-        node["categories"] = std::move(categories);
-        return node;
-    };
-    auto matrixJson = [&](const HudMatrixActivity& hub) {
-        ofJson node;
-        node["lastAnyMs"] = hub.lastAnyMs;
-        node["indicator"] = indicator(hub.lastAnyMs);
-        ofJson categories = ofJson::object();
-        categories["mic"] = categoryJson(hub.mic);
-        categories["bio"] = categoryJson(hub.bio);
-        categories["imu"] = categoryJson(hub.imu);
-        categories["aux"] = categoryJson(hub.aux);
-        node["categories"] = std::move(categories);
-        return node;
+    auto freshEnough = [&](uint64_t timestampMs) {
+        return timestampMs && (nowMs >= timestampMs ? (nowMs - timestampMs) : 0) <= kHudStaleMs;
     };
 
     ofJson feed = ofJson::object();
-    feed["timestampMs"] = nowMs;
-    feed["deck"] = hubJson(hudDeckActivity);
-    feed["host"] = hostJson(hudHostActivity);
-    feed["matrix"] = matrixJson(hudMatrixActivity);
+    ofJson devices = ofJson::array();
+    std::ostringstream hud;
+    hud << "Connected Devices:";
+    auto appendDevice = [&](const std::string& kind,
+                            const std::string& label,
+                            bool connected,
+                            const std::string& detail) {
+        ofJson device;
+        device["kind"] = kind;
+        device["label"] = label;
+        device["connected"] = connected;
+        device["detail"] = detail;
+        devices.push_back(std::move(device));
+
+        hud << "\n  " << (connected ? "[*] " : "[ ] ") << kind << ": " << label;
+        if (!detail.empty()) {
+            hud << "  " << detail;
+        }
+    };
+
+    bool sawCameraLayer = false;
+    for (std::size_t i = 0; i < consoleSlots.size(); ++i) {
+        const auto& slot = consoleSlots[i];
+        if (!slot.layer) {
+            continue;
+        }
+        const auto* webcam = dynamic_cast<const VideoGrabberLayer*>(slot.layer.get());
+        if (!webcam) {
+            continue;
+        }
+        sawCameraLayer = true;
+        std::string label = webcam->currentDeviceLabel();
+        if (label.empty()) {
+            label = "Camera";
+        }
+        std::ostringstream detail;
+        detail << "slot " << (i + 1);
+        if (!slot.active) {
+            detail << ", layer off";
+        } else if (webcam->isCaptureInitialized()) {
+            detail << ", capture active";
+        } else {
+            detail << ", waiting";
+        }
+        appendDevice("Camera", label, slot.active && webcam->isCaptureInitialized(), detail.str());
+    }
+    if (!sawCameraLayer) {
+        appendDevice("Camera", "No camera layer loaded", false, "add a webcam layer");
+    }
+
+    std::string midiLabel = midi.connectedPortName();
+    if (midiLabel.empty()) {
+        midiLabel = "MIDI input";
+    }
+    std::string midiDetail = "bank " + (activeMidiBank.empty() ? std::string("global") : activeMidiBank);
+    if (midi.isLearning()) {
+        midiDetail += ", learning " + midi.learningTargetName();
+    }
+    appendDevice("MIDI", midiLabel, midi.isConnected(), midiDetail);
+
+    std::string collectorLabel = collector.currentPort();
+    if (collectorLabel.empty()) {
+        collectorLabel = "Serial collector";
+    }
+    std::ostringstream collectorDetail;
+    collectorDetail << collectorPacketsSeen_ << " packets";
+    if (lastCollectorPacketMs_) {
+        collectorDetail << ", last " << ageText(lastCollectorPacketMs_);
+    }
+    appendDevice("Sensor Bus", collectorLabel, collector.isConnected(), collectorDetail.str());
+
+    const auto audioSnapshot = AudioAnalysisBus::instance().snapshot();
+    std::string audioLabel = audioSnapshot.sourceLabel.empty() ? std::string("Audio input") : audioSnapshot.sourceLabel;
+    std::ostringstream audioDetail;
+    if (audioSnapshot.valid) {
+        audioDetail << "RMS " << ofToString(audioSnapshot.level, 3)
+                    << ", peak " << ofToString(audioSnapshot.peak, 3);
+        if (audioSnapshot.sampleRate > 0) {
+            audioDetail << ", " << audioSnapshot.sampleRate << "Hz";
+        }
+    } else {
+        audioDetail << "no signal";
+    }
+    appendDevice("Audio", audioLabel, audioSnapshot.valid, audioDetail.str());
+
+    appendDevice("Cyberdeck", "TLV sensor bus", freshEnough(hudDeckActivity.lastAnyMs), ageText(hudDeckActivity.lastAnyMs));
+    appendDevice("Host Sensors", "Local host telemetry", freshEnough(hudHostActivity.lastAnyMs), ageText(hudHostActivity.lastAnyMs));
+    appendDevice("Matrix", "TLV sensor bus", freshEnough(hudMatrixActivity.lastAnyMs), ageText(hudMatrixActivity.lastAnyMs));
+
+    const auto& oscSources = midi.getOscSources();
+    std::ostringstream oscDetail;
+    oscDetail << oscSources.size() << " learned sources";
+    if (lastOscMessageValid_) {
+        oscDetail << ", last " << lastOscAddress_ << "=" << ofToString(lastOscValue_, 4)
+                  << " " << ageText(lastOscMessageMs_);
+    }
+    appendDevice("OSC", routerUdpListening_ ? "Router UDP" : "Direct serial", freshEnough(lastOscMessageMs_), oscDetail.str());
+
+    appendDevice("Secondary Display",
+                 secondaryDisplay_.active ? secondaryDisplayLabel() : std::string("Controller display"),
+                 secondaryDisplay_.active,
+                 secondaryDisplay_.enabled ? (secondaryDisplay_.followPrimary ? "following primary" : "independent") : "disabled");
+
     ofJson osc = ofJson::array();
     for (const auto& entry : oscHistory) {
         ofJson sample;
@@ -3456,10 +3468,99 @@ std::string ofApp::composeHudSensors() const {
         sample["value"] = entry.second;
         osc.push_back(std::move(sample));
     }
+
+    feed["timestampMs"] = nowMs;
+    feed["devices"] = std::move(devices);
     feed["oscHistory"] = std::move(osc);
     hudFeedRegistry.publish("hud.sensors", std::move(feed));
 
     return hud.str();
+}
+
+std::string ofApp::composeHudDebugTerminal() const {
+    const uint64_t nowMs = ofGetElapsedTimeMillis();
+    auto ageText = [&](uint64_t timestampMs) -> std::string {
+        if (!timestampMs) {
+            return "n/a";
+        }
+        uint64_t age = nowMs >= timestampMs ? (nowMs - timestampMs) : 0;
+        return ofToString(age / 1000.0f, 1) + "s";
+    };
+
+    int activeSlots = 0;
+    int assignedSlots = 0;
+    for (const auto& slot : consoleSlots) {
+        if (!slot.assetId.empty()) {
+            ++assignedSlots;
+            if (slot.active) {
+                ++activeSlots;
+            }
+        }
+    }
+
+    std::ostringstream out;
+    out << "Debug Terminal";
+    out << "\n> fps " << ofToString(ofGetFrameRate(), 1)
+        << "  dt " << ofToString(ofGetLastFrameTime() * 1000.0f, 1) << "ms";
+    out << "\n> slots " << activeSlots << " active / " << std::max<std::size_t>(consoleSlots.size(), 1)
+        << "  assigned " << assignedSlots;
+    out << "\n> bank " << (activeMidiBank.empty() ? std::string("global") : activeMidiBank);
+    out << "\n> midi " << (midi.isConnected() ? "connected" : "offline");
+    if (!midi.connectedPortName().empty()) {
+        out << "  " << midi.connectedPortName();
+    }
+    out << "\n> collector " << (collector.isConnected() ? "connected" : "searching");
+    if (!collector.currentPort().empty()) {
+        out << "  " << collector.currentPort();
+    }
+    out << "  packets " << collectorPacketsSeen_;
+    out << "\n> osc ";
+    if (lastOscMessageValid_) {
+        out << lastOscAddress_ << "=" << ofToString(lastOscValue_, 4)
+            << "  age " << ageText(lastOscMessageMs_);
+    } else {
+        out << "waiting";
+    }
+    out << "\n> display " << (secondaryDisplay_.active ? secondaryDisplayLabel() : std::string("primary only"));
+
+    auto feeds = hudFeedRegistry.feeds();
+    std::sort(feeds.begin(), feeds.end(), [](const auto& lhs, const auto& rhs) {
+        return lhs.timestampMs > rhs.timestampMs;
+    });
+    out << "\n> recent feeds:";
+    int shown = 0;
+    ofJson feedList = ofJson::array();
+    for (const auto& feed : feeds) {
+        if (feed.widgetId == "hud.debug.terminal") {
+            continue;
+        }
+        ofJson feedNode;
+        feedNode["widgetId"] = feed.widgetId;
+        feedNode["ageMs"] = nowMs >= feed.timestampMs ? (nowMs - feed.timestampMs) : 0;
+        feedList.push_back(std::move(feedNode));
+        if (shown < 5) {
+            out << "\n  " << feed.widgetId << "  age " << ageText(feed.timestampMs);
+            ++shown;
+        }
+    }
+    if (shown == 0) {
+        out << "\n  none yet";
+    }
+
+    ofJson feed = ofJson::object();
+    feed["timestampMs"] = nowMs;
+    feed["fps"] = ofGetFrameRate();
+    feed["frameMs"] = ofGetLastFrameTime() * 1000.0f;
+    feed["activeSlots"] = activeSlots;
+    feed["assignedSlots"] = assignedSlots;
+    feed["activeBank"] = activeMidiBank.empty() ? "global" : activeMidiBank;
+    feed["midiConnected"] = midi.isConnected();
+    feed["collectorConnected"] = collector.isConnected();
+    feed["collectorPackets"] = collectorPacketsSeen_;
+    feed["feeds"] = std::move(feedList);
+    hudFeedRegistry.publish("hud.debug.terminal", std::move(feed));
+
+    return out.str();
 }
 
 std::string ofApp::composeHudMenu() const {
@@ -3526,6 +3627,20 @@ std::string ofApp::composeHudMenu() const {
 
 std::optional<HudFeedRegistry::FeedEntry> ofApp::latestHudFeed(const std::string& widgetId) const {
     return hudFeedRegistry.latest(widgetId);
+}
+
+bool ofApp::hasScenePreview() const {
+    return compositeFbo.isAllocated() && compositeWidth > 0 && compositeHeight > 0;
+}
+
+void ofApp::drawScenePreview(const ofRectangle& bounds) const {
+    if (!hasScenePreview() || bounds.width <= 0.0f || bounds.height <= 0.0f) {
+        return;
+    }
+    ofPushStyle();
+    ofSetColor(255);
+    compositeFbo.draw(bounds.x, bounds.y, bounds.width, bounds.height);
+    ofPopStyle();
 }
 
 void ofApp::ensureConsoleLayerViewports(glm::ivec2 viewport) {
@@ -4678,7 +4793,7 @@ void ofApp::registerConsoleLayerOpacityParam(int layerIndex, ConsoleSlot& slot) 
     float defaultValue = ofClamp(slot.opacity, 0.0f, 1.0f);
     slot.opacity = defaultValue;
     ParameterRegistry::Descriptor meta;
-    meta.label = "Layer Opacity";
+    meta.label = "Visibility: Layer Opacity";
     meta.group = "Visibility";
     meta.description = "Base opacity for this layer before FX or modifiers are applied";
     meta.range.min = 0.0f;
@@ -7010,7 +7125,7 @@ void ofApp::handleHudMappingChangedEvent(const ofJson& event) {
         indicator = reason;
     }
     const float sampleValue = reason == "drift" ? 1.0f : 0.0f;
-    applyHudTelemetryOverride("hud.status", "layout_drift", sampleValue, indicator);
+    applyHudTelemetryOverride("hud.debug.terminal", "layout_drift", sampleValue, indicator);
 }
 
 ofApp::LayoutSyncGuardScope::LayoutSyncGuardScope(ofApp* host, const std::string& reason)
@@ -7283,7 +7398,7 @@ void ofApp::applyHudTelemetryOverride(const std::string& widgetId,
         } else {
             markCategory(hudDeckActivity.aux, hudDeckActivity.lastAnyMs);
         }
-    } else if (widgetId == "hud.status") {
+    } else if (widgetId == "hud.status" || widgetId == "hud.debug.terminal") {
         if (feedId == "midi") {
             lastMidiConnected_ = value >= 0.5f;
             midiTelemetryInitialized_ = true;

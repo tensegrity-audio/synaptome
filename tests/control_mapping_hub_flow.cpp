@@ -588,7 +588,7 @@ bool RunScenario(const std::filesystem::path& artifactPath) {
         bool hudShowControls = false;
         HudRegistry::Toggle toggle;
         toggle.id = "hud.controls";
-        toggle.label = "Control Hints";
+        toggle.label = "Hotkey Guide";
         toggle.description = "Show keyboard and mouse hint banner";
         toggle.defaultValue = false;
         toggle.valuePtr = &hudShowControls;
@@ -598,7 +598,7 @@ bool RunScenario(const std::filesystem::path& artifactPath) {
 
         OverlayWidget::Metadata meta;
         meta.id = "hud.controls";
-        meta.label = "Control Hints";
+        meta.label = "Hotkey Guide";
         HudRegistry::WidgetDescriptor widgetDesc;
         widgetDesc.metadata = meta;
     widgetDesc.factory = [meta]() -> std::unique_ptr<OverlayWidget> { return std::make_unique<SimpleOverlayWidget>(meta); };
@@ -841,7 +841,15 @@ bool RunSlotDropdownFocusScenario() {
         throw std::runtime_error("No parameter rows available for slot dropdown focus scenario");
     }
     const int slotColumn = static_cast<int>(ControlMappingHubState::Column::kSlot);
-    if (!hub.debugSetGridSelection(0, slotColumn)) {
+    const auto& gridItems = hub.activeGridItems();
+    auto rowItemIt = std::find_if(gridItems.begin(), gridItems.end(), [](const ControlMappingHubState::GridItem& item) {
+        return !item.sectionHeader;
+    });
+    if (rowItemIt == gridItems.end()) {
+        throw std::runtime_error("No selectable parameter row available for slot dropdown focus scenario");
+    }
+    int rowItemIndex = static_cast<int>(std::distance(gridItems.begin(), rowItemIt));
+    if (!hub.debugSetGridSelection(rowItemIndex, slotColumn)) {
         throw std::runtime_error("Failed to focus slot column in dropdown focus scenario");
     }
     if (!hub.handleInput(controller, OF_KEY_RETURN)) {
@@ -1425,21 +1433,16 @@ bool RunConsoleSlotHotkeyScenario() {
     MenuController controller;
     hub.onEnter(controller);
     hub.view();
+    hub.replayTreeSelection("Tests", "Test Asset");
+    hub.view();
     hub.rebuildView();
-    int assetRowIndex = -1;
-    for (std::size_t i = 0; i < hub.tableModel_.rows.size(); ++i) {
-        const auto& row = hub.tableModel_.rows[i];
-        if (row.assetKey == "tests.asset.simple") {
-            assetRowIndex = static_cast<int>(i);
-            break;
-        }
+    const auto& groupedItems = hub.activeGridItems();
+    if (groupedItems.size() < 2 || !groupedItems.front().sectionHeader) {
+        throw std::runtime_error("Grouped asset view did not expose a section header before asset rows");
     }
-    if (assetRowIndex < 0) {
-        throw std::runtime_error("Failed to select test asset row for console slot hotkey scenario");
+    if (!hub.debugSetGridSelection(0, static_cast<int>(ControlMappingHubState::Column::kName))) {
+        throw std::runtime_error("Failed to select grouped asset section header for console slot hotkey scenario");
     }
-    hub.selectedRow_ = assetRowIndex;
-    hub.selectedColumn_ = ControlMappingHubState::Column::kName;
-    hub.focusPane_ = ControlMappingHubState::FocusPane::kGrid;
 
     int loadKey = MenuController::HOTKEY_MOD_CTRL | '1';
     hub.handleInput(controller, loadKey);
@@ -1673,7 +1676,7 @@ bool RunConsoleStorePersistenceScenario() {
     state.overlayLayouts.projector.widgets.push_back(projectorWidget);
     state.overlayLayouts.controller.capturedAtMs = 256;
     ConsoleOverlayWidgetPlacement controllerWidget;
-    controllerWidget.id = "hud.menu";
+    controllerWidget.id = "hud.debug.terminal";
     controllerWidget.columnIndex = 3;
     controllerWidget.visible = false;
     controllerWidget.collapsed = true;
@@ -1893,7 +1896,7 @@ bool RunHudAssetPlacementScenario() {
     hub.setMidiRouter(&router);
 
     ParameterRegistry::Descriptor hudMeta;
-    hudMeta.label = "Control Hints";
+    hudMeta.label = "Hotkey Guide";
     hudMeta.group = "HUD";
     hudMeta.description = "Toggle control hints widget";
     bool controlsVisible = true;
@@ -1906,7 +1909,7 @@ bool RunHudAssetPlacementScenario() {
     std::ofstream out(assetPath);
     out << R"JSON({
     "id":"hud.controls",
-    "label":"Control Hints",
+    "label":"Hotkey Guide",
     "category":"HUD",
     "type":"ui.hud.widget",
     "registryPrefix":"hud.controls",
@@ -1978,7 +1981,7 @@ bool RunHudInlinePickerScenario() {
         std::ofstream assetOut(hudAsset);
         assetOut << R"JSON({
     "id":"hud.controls",
-    "label":"Control Hints",
+    "label":"Hotkey Guide",
     "category":"HUD",
     "type":"ui.hud.widget",
     "registryPrefix":"hud.controls",
@@ -2005,7 +2008,7 @@ bool RunHudInlinePickerScenario() {
         hub.setLayerLibrary(&library);
 
         ParameterRegistry::Descriptor hudMeta;
-        hudMeta.label = "Control Hints";
+        hudMeta.label = "Hotkey Guide";
         hudMeta.group = "HUD";
         hudMeta.description = "Toggle control hints widget";
         bool controlsVisible = false;
@@ -2095,7 +2098,7 @@ bool RunHudInlinePickerScenario() {
         hub.setLayerLibrary(&library);
 
         ParameterRegistry::Descriptor hudMeta;
-        hudMeta.label = "Control Hints";
+        hudMeta.label = "Hotkey Guide";
         hudMeta.group = "HUD";
         hudMeta.description = "Toggle control hints widget";
         registry.addBool("hud.controls", &replayToggle, replayToggle, hudMeta);
@@ -2151,7 +2154,7 @@ bool RunHudFeedTelemetryScenario() {
         std::ofstream assetOut(hudAsset);
         assetOut << R"JSON({
     "id":"hud.controls",
-    "label":"Control Hints",
+    "label":"Hotkey Guide",
     "category":"HUD",
     "type":"ui.hud.widget",
     "registryPrefix":"hud.controls",
@@ -2180,7 +2183,7 @@ bool RunHudFeedTelemetryScenario() {
     hub.setLayerLibrary(&library);
 
     ParameterRegistry::Descriptor hudMeta;
-    hudMeta.label = "Control Hints";
+    hudMeta.label = "Hotkey Guide";
     hudMeta.group = "HUD";
     hudMeta.description = "Toggle control hints widget";
     bool controlsVisible = false;

@@ -1,0 +1,251 @@
+{
+  "schemaVersion": 1,
+  "packageId": "examples.signal_bloom",
+  "packageVersion": "0.1.0",
+  "description": "Package fixture for the public Signal Bloom SDK example.",
+  "asset": {
+    "id": "examples.signal_bloom",
+    "label": "Signal Bloom",
+    "category": "Examples",
+    "layerGroup": "Artist SDK",
+    "model": "signal-bloom",
+    "stateModel": "deterministic point field driven by transport, local color, and generic input modulation parameters",
+    "type": "example.signalBloom",
+    "registryPrefix": "examples.signal_bloom",
+    "description": "Public SDK example layer showing package-declared parameters, presets, and visible mapping presets.",
+    "tags": ["artist-sdk", "fixture", "generative"]
+  },
+  "source": {
+    "strategy": "source-registration",
+    "registration": "../../artist_sdk/register_signal_bloom.cpp",
+    "files": [
+      "../../artist_sdk/SignalBloomLayer.h",
+      "../../artist_sdk/SignalBloomLayer.cpp"
+    ]
+  },
+  "parameters": [
+    {
+      "id": "visible",
+      "kind": "bool",
+      "label": "Visibility: Visible",
+      "default": true,
+      "description": "Whether the layer contributes to the current slot."
+    },
+    {
+      "id": "speed",
+      "kind": "float",
+      "label": "Motion: Speed",
+      "default": 0.65,
+      "range": { "min": 0.0, "max": 4.0, "step": 0.01 },
+      "units": "multiplier",
+      "description": "Local signal motion speed."
+    },
+    {
+      "id": "bpmSync",
+      "kind": "bool",
+      "label": "Time: BPM Sync",
+      "default": true,
+      "description": "Whether local motion follows the global transport BPM."
+    },
+    {
+      "id": "bpmMultiplier",
+      "kind": "float",
+      "label": "Time: BPM Multiplier",
+      "default": 1.0,
+      "range": { "min": 0.25, "max": 8.0, "step": 0.25 },
+      "units": "multiplier",
+      "description": "Multiplier applied to global transport BPM when sync is enabled."
+    },
+    {
+      "id": "scale",
+      "kind": "float",
+      "label": "Scale: Size",
+      "default": 0.82,
+      "range": { "min": 0.1, "max": 2.0, "step": 0.01 },
+      "units": "multiplier",
+      "description": "Layer-local visual scale."
+    },
+    {
+      "id": "rotationDeg",
+      "kind": "float",
+      "label": "Motion: Rotation",
+      "default": 0.0,
+      "range": { "min": -180.0, "max": 180.0, "step": 1.0 },
+      "units": "deg",
+      "description": "Layer-local rotation in degrees."
+    },
+    {
+      "id": "alpha",
+      "kind": "float",
+      "label": "Visibility: Alpha",
+      "default": 0.86,
+      "range": { "min": 0.0, "max": 1.0, "step": 0.01 },
+      "description": "Legacy layer-local alpha exposed by the current SDK example.",
+      "deprecated": {
+        "replacement": "opacity",
+        "reason": "New layers should prefer opacity/visibility naming, but this fixture preserves the current public SDK parameter."
+      }
+    },
+    {
+      "id": "gain",
+      "kind": "float",
+      "label": "Force: Sensor Gain",
+      "default": 0.62,
+      "range": { "min": 0.0, "max": 2.0, "step": 0.01 },
+      "units": "multiplier",
+      "description": "Gain applied to generic input modulation."
+    },
+    {
+      "id": "lineOpacity",
+      "kind": "float",
+      "label": "Visibility: Line Opacity",
+      "default": 0.72,
+      "range": { "min": 0.0, "max": 1.0, "step": 0.01 },
+      "description": "Opacity for the signal line stroke."
+    },
+    {
+      "id": "colorR",
+      "kind": "float",
+      "label": "Color: Red",
+      "default": 0.12,
+      "range": { "min": 0.0, "max": 1.0, "step": 0.01 },
+      "description": "Primary color red channel."
+    },
+    {
+      "id": "colorG",
+      "kind": "float",
+      "label": "Color: Green",
+      "default": 0.78,
+      "range": { "min": 0.0, "max": 1.0, "step": 0.01 },
+      "description": "Primary color green channel."
+    },
+    {
+      "id": "colorB",
+      "kind": "float",
+      "label": "Color: Blue",
+      "default": 1.0,
+      "range": { "min": 0.0, "max": 1.0, "step": 0.01 },
+      "description": "Primary color blue channel."
+    },
+    {
+      "id": "bgColorR",
+      "kind": "float",
+      "label": "Color: Background Red",
+      "default": 0.02,
+      "range": { "min": 0.0, "max": 1.0, "step": 0.01 },
+      "description": "Background color red channel."
+    },
+    {
+      "id": "bgColorG",
+      "kind": "float",
+      "label": "Color: Background Green",
+      "default": 0.04,
+      "range": { "min": 0.0, "max": 1.0, "step": 0.01 },
+      "description": "Background color green channel."
+    },
+    {
+      "id": "bgColorB",
+      "kind": "float",
+      "label": "Color: Background Blue",
+      "default": 0.08,
+      "range": { "min": 0.0, "max": 1.0, "step": 0.01 },
+      "description": "Background color blue channel."
+    },
+    {
+      "id": "xInput",
+      "kind": "float",
+      "label": "Input: X",
+      "default": 0.5,
+      "range": { "min": 0.0, "max": 1.0, "step": 0.001 },
+      "description": "Generic horizontal modulation input."
+    },
+    {
+      "id": "yInput",
+      "kind": "float",
+      "label": "Input: Y",
+      "default": 0.5,
+      "range": { "min": 0.0, "max": 1.0, "step": 0.001 },
+      "description": "Generic vertical modulation input."
+    },
+    {
+      "id": "speedInput",
+      "kind": "float",
+      "label": "Input: Speed",
+      "default": 0.0,
+      "range": { "min": 0.0, "max": 1.0, "step": 0.001 },
+      "description": "Generic motion modulation input."
+    }
+  ],
+  "modes": [],
+  "presets": [
+    {
+      "presetId": "default",
+      "label": "Default",
+      "path": "presets/default.json",
+      "description": "Baseline Signal Bloom settings."
+    },
+    {
+      "presetId": "bright",
+      "label": "Bright",
+      "path": "presets/bright.json",
+      "description": "Brighter high-energy color and line settings."
+    },
+    {
+      "presetId": "calm",
+      "label": "Calm",
+      "path": "presets/calm.json",
+      "description": "Softer slower settings for calmer passages."
+    }
+  ],
+  "presetBanks": [
+    {
+      "id": "performance",
+      "label": "Performance",
+      "presets": ["default", "bright", "calm"]
+    }
+  ],
+  "mappingPresets": [
+    {
+      "id": "hostMicMotion",
+      "label": "Host Mic Motion",
+      "description": "Visible OSC defaults that map host mic level into generic Signal Bloom controls.",
+      "mappings": [
+        {
+          "target": "gain",
+          "source": {
+            "kind": "osc",
+            "pattern": "/sensor/host/localmic/mic-level",
+            "in": [0.0, 0.12],
+            "out": [0.0, 1.6],
+            "smooth": 0.25,
+            "deadband": 0.01,
+            "blend": "scale",
+            "relative": true
+          }
+        },
+        {
+          "target": "speedInput",
+          "source": {
+            "kind": "osc",
+            "pattern": "/sensor/host/localmic/mic-bass",
+            "in": [0.0, 0.18],
+            "out": [0.0, 1.0],
+            "smooth": 0.18,
+            "deadband": 0.01,
+            "blend": "set",
+            "relative": false
+          }
+        }
+      ]
+    }
+  ],
+  "media": [],
+  "tests": {
+    "bench": "tests/layer_test.json"
+  },
+  "compatibility": {
+    "noHeavySetupSideEffects": true,
+    "sourceRegistrationRequired": true,
+    "manifestInspectionOnly": true
+  }
+}
