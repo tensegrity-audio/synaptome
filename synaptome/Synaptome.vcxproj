@@ -509,6 +509,9 @@
 		<ClCompile Include="src\visuals\PerlinNoiseLayer.cpp" />
 		<ClCompile Include="src\visuals\StlModelLayer.cpp" />
 		<ClCompile Include="src\visuals\GameOfLifeLayer.cpp" />
+		<ClCompile Include="src\visuals\ReactionDiffusionLayer.cpp" />
+		<ClCompile Include="src\visuals\LeniaLayer.cpp" />
+		<ClCompile Include="src\visuals\ExcitableMediaLayer.cpp" />
 		<ClCompile Include="src\visuals\AgentFieldLayer.cpp" />
 		<ClCompile Include="src\visuals\FlockingLayer.cpp" />
 		<ClCompile Include="src\visuals\FlowFieldLayer.cpp" />
@@ -691,6 +694,9 @@
 		<ClInclude Include="src\visuals\PerlinNoiseLayer.h" />
 		<ClInclude Include="src\visuals\StlModelLayer.h" />
 		<ClInclude Include="src\visuals\GameOfLifeLayer.h" />
+		<ClInclude Include="src\visuals\ReactionDiffusionLayer.h" />
+		<ClInclude Include="src\visuals\LeniaLayer.h" />
+		<ClInclude Include="src\visuals\ExcitableMediaLayer.h" />
 		<ClInclude Include="src\visuals\AgentFieldLayer.h" />
 		<ClInclude Include="src\visuals\FlockingLayer.h" />
 		<ClInclude Include="src\visuals\FlowFieldLayer.h" />

@@ -984,6 +984,15 @@ def _contract_schema_for_resolved_path(resolved: Path):
     if resolved.name == "layer.package.json":
         return BasePath / "docs" / "schemas" / "layer_package.schema.json"
 
+    if resolved.name == "generated_layer.template.json":
+        return BasePath / "docs" / "schemas" / "generated_layer_template.schema.json"
+
+    if resolved.name.endswith(".generated_layer.json"):
+        return BasePath / "docs" / "schemas" / "generated_layer_sidecar.schema.json"
+
+    if rel_path.match("tools/testdata/layer_browser_inspection/expected_layer_browser_inspection_payload.json"):
+        return BasePath / "docs" / "schemas" / "layer_browser_inspection_payload.schema.json"
+
     if (
         "layer_packages" in rel_path.parts
         and resolved.parent.name == "presets"

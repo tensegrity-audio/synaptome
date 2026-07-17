@@ -1,0 +1,49 @@
+{
+  "id": "generative.reactionDiffusion",
+  "label": "Reaction Diffusion",
+  "category": "Generative",
+  "layerGroup": "Cellular Fields",
+  "model": "grayScottReactionDiffusion",
+  "stateModel": "two continuous chemical fields with Gray-Scott diffusion and reaction dynamics",
+  "description": "Gray-Scott chemical pattern formation: feed, kill, diffusion, and injection controls form living membranes, spots, stripes, and coral-like blooms.",
+  "type": "reactionDiffusion",
+  "registryPrefix": "generative.reactionDiffusion",
+  "opacity": 1.0,
+  "modes": [
+    {
+      "id": "bloom",
+      "label": "Bloom",
+      "kind": "live",
+      "live": true,
+      "description": "Stable chemical bloom controlled by feed, kill, and injection parameters."
+    }
+  ],
+  "defaults": {
+    "speed": 26.0,
+    "bpmSync": true,
+    "bpmMultiplier": 6.0,
+    "alpha": 1.0,
+    "paused": false,
+    "autoReseed": false,
+    "autoReseedEveryBeats": 32.0,
+    "feedRate": 0.037,
+    "killRate": 0.061,
+    "diffusionA": 1.0,
+    "diffusionB": 0.50,
+    "injectionRate": 0.025,
+    "injectionAmount": 0.72,
+    "injectionRadius": 7.0,
+    "seed": 1337.0,
+    "seedDensity": 0.12,
+    "contourThreshold": 0.24,
+    "contourWidth": 0.12,
+    "fieldScale": 1.65,
+    "backgroundAlpha": 0.0,
+    "fieldAlpha": 1.0,
+    "contourOpacity": 0.76,
+    "backgroundColor": [0.01, 0.012, 0.018],
+    "fieldColor": [0.10, 0.82, 0.62],
+    "contourColor": [0.95, 0.96, 0.86]
+  },
+  "textureSize": [192, 108]
+}

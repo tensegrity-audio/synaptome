@@ -1,0 +1,22 @@
+{
+  "id": "fx.mirror",
+  "label": "Mirror",
+  "category": "FX",
+  "type": "fx.mirror",
+  "registryPrefix": "effects.mirror",
+  "coverage": {
+    "mode": "upstream",
+    "columns": 0
+  },
+  "opacity": 1.0,
+  "defaults": {
+    "mode": 0,
+    "segments": 6,
+    "angle": 0.0,
+    "originX": 0.5,
+    "originY": 0.5,
+    "zoom": 1.0,
+    "mix": 1.0,
+    "detail": 0.0
+  }
+}

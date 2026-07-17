@@ -686,6 +686,81 @@ void main() {
 }
  )";
 
+    const char* kMirrorFrag = R"(#version 150
+uniform sampler2D tex0;
+uniform vec2 resolution;
+uniform int mirrorMode; // 0=Vertical 1=Horizontal 2=Quadrant TR 3=Radial
+uniform float segments;
+uniform float angle;
+uniform vec2 origin;
+uniform float zoom;
+uniform float mixAmount;
+uniform float detailPreserve;
+in vec2 vTexCoord;
+out vec4 fragColor;
+
+const float PI = 3.14159265358979323846;
+const float TWO_PI = 6.28318530717958647692;
+
+vec2 rotate2d(vec2 p, float radians) {
+    float c = cos(radians);
+    float s = sin(radians);
+    return vec2(c * p.x - s * p.y, s * p.x + c * p.y);
+}
+
+vec2 sampleUvForMirror(vec2 uv) {
+    float safeHeight = max(resolution.y, 1.0);
+    float aspect = max(resolution.x, 1.0) / safeHeight;
+    vec2 p = uv - origin;
+    p.x *= aspect;
+
+    float angleRad = radians(angle);
+    float z = max(zoom, 0.001);
+    int mode = clamp(mirrorMode, 0, 3);
+
+    if (mode == 3) {
+        float count = max(1.0, floor(segments + 0.5));
+        float sector = TWO_PI / count;
+        float radius = length(p) / z;
+        float localAngle = atan(p.y, p.x) - angleRad;
+        localAngle = mod(localAngle + sector * 0.5, sector) - sector * 0.5;
+        float mirroredAngle = abs(localAngle) + angleRad;
+        p = vec2(cos(mirroredAngle), sin(mirroredAngle)) * radius;
+    } else {
+        vec2 q = rotate2d(p, -angleRad);
+        if (mode == 0) {
+            q.x = -abs(q.x);
+        } else if (mode == 1) {
+            q.y = -abs(q.y);
+        } else {
+            q.x = abs(q.x);
+            q.y = -abs(q.y);
+        }
+        p = rotate2d(q / z, angleRad);
+    }
+
+    p.x /= aspect;
+    return clamp(origin + p, vec2(0.0), vec2(1.0));
+}
+
+void main() {
+    vec2 sampleUv = sampleUvForMirror(vTexCoord);
+    vec4 mirrored = texture(tex0, sampleUv);
+    vec4 original = texture(tex0, vTexCoord);
+
+    vec2 texel = 1.0 / max(resolution, vec2(1.0));
+    vec3 lowpass = original.rgb * 0.4;
+    lowpass += texture(tex0, clamp(vTexCoord + vec2(texel.x, 0.0), 0.0, 1.0)).rgb * 0.15;
+    lowpass += texture(tex0, clamp(vTexCoord - vec2(texel.x, 0.0), 0.0, 1.0)).rgb * 0.15;
+    lowpass += texture(tex0, clamp(vTexCoord + vec2(0.0, texel.y), 0.0, 1.0)).rgb * 0.15;
+    lowpass += texture(tex0, clamp(vTexCoord - vec2(0.0, texel.y), 0.0, 1.0)).rgb * 0.15;
+    vec3 sourceDetail = (original.rgb - lowpass) * original.a;
+    vec3 detailedMirror = clamp(mirrored.rgb + sourceDetail * detailPreserve, 0.0, 1.0);
+    vec4 preserved = vec4(detailedMirror, mirrored.a);
+    fragColor = mix(original, preserved, clamp(mixAmount, 0.0, 1.0));
+}
+)";
+
     const char* kAsciiFrag = R"(#version 150
 uniform sampler2D tex0;
 uniform vec2 resolution;
@@ -1204,6 +1279,89 @@ void main() {
         ofShader shader_;
         float* cellSizeParam_ = nullptr;
         float* modeParam_ = nullptr;
+    };
+
+    class MirrorEffect : public PostEffectChain::Effect {
+    public:
+        MirrorEffect(float* modeParam,
+                     float* segmentsParam,
+                     float* angleParam,
+                     float* originXParam,
+                     float* originYParam,
+                     float* zoomParam,
+                     float* mixParam,
+                     float* detailParam)
+            : modeParam_(modeParam)
+            , segmentsParam_(segmentsParam)
+            , angleParam_(angleParam)
+            , originXParam_(originXParam)
+            , originYParam_(originYParam)
+            , zoomParam_(zoomParam)
+            , mixParam_(mixParam)
+            , detailParam_(detailParam) {
+            shader_.setupShaderFromSource(GL_VERTEX_SHADER, kPassThroughVert);
+            shader_.setupShaderFromSource(GL_FRAGMENT_SHADER, kMirrorFrag);
+            shader_.bindDefaults();
+            shader_.linkProgram();
+        }
+
+        void apply(const ofFbo& src, ofFbo& dst) override {
+            dst.begin();
+            bool depthWasEnabled = glIsEnabled(GL_DEPTH_TEST) == GL_TRUE;
+            bool scissorWasEnabled = glIsEnabled(GL_SCISSOR_TEST) == GL_TRUE;
+            if (scissorWasEnabled) {
+                glDisable(GL_SCISSOR_TEST);
+            }
+            ofPushView();
+            ofViewport(0, 0, dst.getWidth(), dst.getHeight());
+            ofSetupScreenOrtho(dst.getWidth(), dst.getHeight(), -1, 1);
+            ofPushStyle();
+            ofClear(0, 0, 0, 0);
+            if (depthWasEnabled) {
+                ofDisableDepthTest();
+            }
+            ofSetColor(255);
+            shader_.begin();
+            shader_.setUniformTexture("tex0", src.getTexture(), 0);
+            shader_.setUniform2f("resolution", src.getWidth(), src.getHeight());
+            int mode = modeParam_ ? static_cast<int>(std::round(ofClamp(*modeParam_, 0.0f, 3.0f))) : 0;
+            float segments = segmentsParam_ ? ofClamp(*segmentsParam_, 1.0f, 16.0f) : 6.0f;
+            float angle = angleParam_ ? ofClamp(*angleParam_, -180.0f, 180.0f) : 0.0f;
+            float originX = originXParam_ ? ofClamp(*originXParam_, 0.0f, 1.0f) : 0.5f;
+            float originY = originYParam_ ? ofClamp(*originYParam_, 0.0f, 1.0f) : 0.5f;
+            float zoom = zoomParam_ ? ofClamp(*zoomParam_, 0.25f, 4.0f) : 1.0f;
+            float mix = mixParam_ ? ofClamp(*mixParam_, 0.0f, 1.0f) : 1.0f;
+            float detail = detailParam_ ? ofClamp(*detailParam_, 0.0f, 1.0f) : 0.0f;
+            shader_.setUniform1i("mirrorMode", mode);
+            shader_.setUniform1f("segments", segments);
+            shader_.setUniform1f("angle", angle);
+            shader_.setUniform2f("origin", originX, originY);
+            shader_.setUniform1f("zoom", zoom);
+            shader_.setUniform1f("mixAmount", mix);
+            shader_.setUniform1f("detailPreserve", detail);
+            src.draw(0, 0, dst.getWidth(), dst.getHeight());
+            shader_.end();
+            ofPopStyle();
+            ofPopView();
+            if (depthWasEnabled) {
+                ofEnableDepthTest();
+            }
+            if (scissorWasEnabled) {
+                glEnable(GL_SCISSOR_TEST);
+            }
+            dst.end();
+        }
+
+    private:
+        ofShader shader_;
+        float* modeParam_ = nullptr;
+        float* segmentsParam_ = nullptr;
+        float* angleParam_ = nullptr;
+        float* originXParam_ = nullptr;
+        float* originYParam_ = nullptr;
+        float* zoomParam_ = nullptr;
+        float* mixParam_ = nullptr;
+        float* detailParam_ = nullptr;
     };
 
     class AsciiEffect : public PostEffectChain::Effect {
@@ -1769,6 +1927,14 @@ void PostEffectChain::setup(ParameterRegistry& registry) {
     const int supersampleFontCount = asciiSupersampleAtlas_->fontCount();
     const float asciiSsFontMax = supersampleFontCount > 0 ? static_cast<float>(supersampleFontCount - 1) : 0.0f;
     asciiSupersampleFontIndex_ = ofClamp(asciiSupersampleFontIndex_, 0.0f, asciiSsFontMax);
+    mirrorMode_ = ofClamp(mirrorMode_, 0.0f, 3.0f);
+    mirrorSegments_ = ofClamp(mirrorSegments_, 1.0f, 16.0f);
+    mirrorAngle_ = ofClamp(mirrorAngle_, -180.0f, 180.0f);
+    mirrorOriginX_ = ofClamp(mirrorOriginX_, 0.0f, 1.0f);
+    mirrorOriginY_ = ofClamp(mirrorOriginY_, 0.0f, 1.0f);
+    mirrorZoom_ = ofClamp(mirrorZoom_, 0.25f, 4.0f);
+    mirrorMix_ = ofClamp(mirrorMix_, 0.0f, 1.0f);
+    mirrorDetail_ = ofClamp(mirrorDetail_, 0.0f, 1.0f);
     registry_ = &registry;
 
     ParameterRegistry::Descriptor routeMeta;
@@ -1792,6 +1958,83 @@ void PostEffectChain::setup(ParameterRegistry& registry) {
     maskMeta.description = "Enable coverage mask (limit effect rendering to upstream window)";
     maskMeta.quickAccess = true;
 
+
+    routeMeta.label = "Mirror Route";
+    routeMeta.quickAccessOrder = 58;
+    registry.addFloat("effects.mirror.route", &mirrorRoute_, mirrorRoute_, routeMeta);
+    coverageMeta.label = "Mirror Coverage";
+    coverageMeta.quickAccessOrder = 58.5f;
+    registry.addFloat("effects.mirror.coverage", &mirrorCoverage_, mirrorCoverage_, coverageMeta);
+    maskMeta.label = "Mirror Coverage Mask";
+    maskMeta.quickAccessOrder = 58.6f;
+    registry.addBool("effects.mirror.coverageMask", &mirrorCoverageMask_, mirrorCoverageMask_, maskMeta);
+
+    ParameterRegistry::Descriptor mirrorModeMeta;
+    mirrorModeMeta.label = "Mirror Mode";
+    mirrorModeMeta.group = "Effects";
+    mirrorModeMeta.range.min = 0.0f;
+    mirrorModeMeta.range.max = 3.0f;
+    mirrorModeMeta.range.step = 1.0f;
+    mirrorModeMeta.description = "0=Left to Right 1=Top to Bottom 2=Top-Right Quadrant 3=Radial";
+    mirrorModeMeta.quickAccess = true;
+    mirrorModeMeta.quickAccessOrder = 59;
+    registry.addFloat("effects.mirror.mode", &mirrorMode_, mirrorMode_, mirrorModeMeta);
+
+    ParameterRegistry::Descriptor mirrorSegmentsMeta = mirrorModeMeta;
+    mirrorSegmentsMeta.label = "Mirror Segments";
+    mirrorSegmentsMeta.range.min = 1.0f;
+    mirrorSegmentsMeta.range.max = 16.0f;
+    mirrorSegmentsMeta.range.step = 1.0f;
+    mirrorSegmentsMeta.description = "Radial mirror segment count";
+    mirrorSegmentsMeta.quickAccessOrder = 59.1f;
+    registry.addFloat("effects.mirror.segments", &mirrorSegments_, mirrorSegments_, mirrorSegmentsMeta);
+
+    ParameterRegistry::Descriptor mirrorAngleMeta = mirrorModeMeta;
+    mirrorAngleMeta.label = "Mirror Angle";
+    mirrorAngleMeta.range.min = -180.0f;
+    mirrorAngleMeta.range.max = 180.0f;
+    mirrorAngleMeta.range.step = 1.0f;
+    mirrorAngleMeta.units = "deg";
+    mirrorAngleMeta.description = "Rotate the mirror axis or radial source wedge";
+    mirrorAngleMeta.quickAccessOrder = 59.2f;
+    registry.addFloat("effects.mirror.angle", &mirrorAngle_, mirrorAngle_, mirrorAngleMeta);
+
+    ParameterRegistry::Descriptor mirrorOriginMeta = mirrorModeMeta;
+    mirrorOriginMeta.label = "Mirror Origin X";
+    mirrorOriginMeta.range.min = 0.0f;
+    mirrorOriginMeta.range.max = 1.0f;
+    mirrorOriginMeta.range.step = 0.01f;
+    mirrorOriginMeta.description = "Horizontal symmetry center";
+    mirrorOriginMeta.quickAccessOrder = 59.3f;
+    registry.addFloat("effects.mirror.originX", &mirrorOriginX_, mirrorOriginX_, mirrorOriginMeta);
+    mirrorOriginMeta.label = "Mirror Origin Y";
+    mirrorOriginMeta.description = "Vertical symmetry center";
+    mirrorOriginMeta.quickAccessOrder = 59.4f;
+    registry.addFloat("effects.mirror.originY", &mirrorOriginY_, mirrorOriginY_, mirrorOriginMeta);
+
+    ParameterRegistry::Descriptor mirrorZoomMeta = mirrorModeMeta;
+    mirrorZoomMeta.label = "Mirror Zoom";
+    mirrorZoomMeta.range.min = 0.25f;
+    mirrorZoomMeta.range.max = 4.0f;
+    mirrorZoomMeta.range.step = 0.01f;
+    mirrorZoomMeta.description = "Scale mirrored sampling around the origin";
+    mirrorZoomMeta.quickAccessOrder = 59.5f;
+    registry.addFloat("effects.mirror.zoom", &mirrorZoom_, mirrorZoom_, mirrorZoomMeta);
+
+    ParameterRegistry::Descriptor mirrorMixMeta = mirrorModeMeta;
+    mirrorMixMeta.label = "Mirror Mix";
+    mirrorMixMeta.range.min = 0.0f;
+    mirrorMixMeta.range.max = 1.0f;
+    mirrorMixMeta.range.step = 0.01f;
+    mirrorMixMeta.description = "Blend between original input and mirrored output";
+    mirrorMixMeta.quickAccessOrder = 59.6f;
+    registry.addFloat("effects.mirror.mix", &mirrorMix_, mirrorMix_, mirrorMixMeta);
+
+    ParameterRegistry::Descriptor mirrorDetailMeta = mirrorMixMeta;
+    mirrorDetailMeta.label = "Mirror Detail";
+    mirrorDetailMeta.description = "Preserve fine source texture inside the mirrored result";
+    mirrorDetailMeta.quickAccessOrder = 59.7f;
+    registry.addFloat("effects.mirror.detail", &mirrorDetail_, mirrorDetail_, mirrorDetailMeta);
 
     routeMeta.label = "Dither Route";
     routeMeta.quickAccessOrder = 60;
@@ -2169,6 +2412,14 @@ void PostEffectChain::setup(ParameterRegistry& registry) {
         transportBpmPtr = bpmParam->value;
     }
 
+    mirrorEffect_ = std::make_unique<MirrorEffect>(&mirrorMode_,
+                                                   &mirrorSegments_,
+                                                   &mirrorAngle_,
+                                                   &mirrorOriginX_,
+                                                   &mirrorOriginY_,
+                                                   &mirrorZoom_,
+                                                   &mirrorMix_,
+                                                   &mirrorDetail_);
     ditherEffect_ = std::make_unique<DitherEffect>(&ditherCellSize_, &ditherMode_);
     asciiEffect_ = std::make_unique<AsciiEffect>(&asciiBlockSize_,
                                                  &asciiColorMode_,
@@ -2222,6 +2473,7 @@ void PostEffectChain::setup(ParameterRegistry& registry) {
 
 void PostEffectChain::resize(int width, int height) {
     ensureBuffers(width, height);
+    if (mirrorEffect_) mirrorEffect_->resize(width, height);
     if (ditherEffect_) ditherEffect_->resize(width, height);
     if (asciiEffect_) asciiEffect_->resize(width, height);
     if (asciiSupersampleEffect_) asciiSupersampleEffect_->resize(width, height);
@@ -2231,6 +2483,7 @@ void PostEffectChain::resize(int width, int height) {
 
 void PostEffectChain::applyConsole(ofFbo& fbo) {
     std::vector<Effect*> active;
+    if (routeFromValue(mirrorRoute_) == Route::Console && mirrorEffect_) active.push_back(mirrorEffect_.get());
     if (routeFromValue(ditherRoute_) == Route::Console && ditherEffect_) active.push_back(ditherEffect_.get());
     if (routeFromValue(asciiRoute_) == Route::Console && asciiEffect_) active.push_back(asciiEffect_.get());
     if (routeFromValue(asciiSupersampleRoute_) == Route::Console && asciiSupersampleEffect_)
@@ -2242,6 +2495,7 @@ void PostEffectChain::applyConsole(ofFbo& fbo) {
 
 void PostEffectChain::applyGlobal(ofFbo& fbo) {
     std::vector<Effect*> active;
+    if (routeFromValue(mirrorRoute_) == Route::Global && mirrorEffect_) active.push_back(mirrorEffect_.get());
     if (routeFromValue(ditherRoute_) == Route::Global && ditherEffect_) active.push_back(ditherEffect_.get());
     if (routeFromValue(asciiRoute_) == Route::Global && asciiEffect_) active.push_back(asciiEffect_.get());
     if (routeFromValue(asciiSupersampleRoute_) == Route::Global && asciiSupersampleEffect_)
@@ -2281,7 +2535,14 @@ void PostEffectChain::applyMotionExtract(const ofFbo& src, ofFbo& dst) {
     }
 }
 
+void PostEffectChain::applyMirror(const ofFbo& src, ofFbo& dst) {
+    if (mirrorEffect_) {
+        mirrorEffect_->apply(src, dst);
+    }
+}
+
 float PostEffectChain::defaultCoverageForType(const std::string& effectType) const {
+    if (effectType == "fx.mirror") return mirrorCoverage_;
     if (effectType == "fx.dither") return ditherCoverage_;
     if (effectType == "fx.ascii") return asciiCoverage_;
     if (effectType == "fx.ascii_supersample") return asciiSupersampleCoverage_;
@@ -2291,6 +2552,7 @@ float PostEffectChain::defaultCoverageForType(const std::string& effectType) con
 }
 
 bool PostEffectChain::coverageMaskEnabled(const std::string& effectType) const {
+    if (effectType == "fx.mirror") return mirrorCoverageMask_;
     if (effectType == "fx.dither") return ditherCoverageMask_;
     if (effectType == "fx.ascii") return asciiCoverageMask_;
     if (effectType == "fx.ascii_supersample") return asciiSupersampleCoverageMask_;

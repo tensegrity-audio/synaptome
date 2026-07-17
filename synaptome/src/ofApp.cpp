@@ -1765,6 +1765,9 @@ void ofApp::setup() {
     factory.registerType("perlin", []() { return std::make_unique<PerlinNoiseLayer>(); });
     factory.registerType("stlModel", []() { return std::make_unique<StlModelLayer>(); });
     factory.registerType("gameOfLife", []() { return std::make_unique<GameOfLifeLayer>(); });
+    factory.registerType("reactionDiffusion", []() { return std::make_unique<ReactionDiffusionLayer>(); });
+    factory.registerType("lenia", []() { return std::make_unique<LeniaLayer>(); });
+    factory.registerType("excitableMedia", []() { return std::make_unique<ExcitableMediaLayer>(); });
     factory.registerType("agentField", []() { return std::make_unique<AgentFieldLayer>(); });
     factory.registerType("flocking", []() { return std::make_unique<FlockingLayer>(); });
     factory.registerType("flowField", []() { return std::make_unique<FlowFieldLayer>(); });
@@ -2169,6 +2172,7 @@ void ofApp::setup() {
             static const std::string kConsolePrefix = "console.layer";
             static const std::string kOpacitySuffix = ".opacity";
             auto effectFromCoverageParam = [](const std::string& id) -> std::optional<std::string> {
+                if (id == "effects.mirror.coverage") return "fx.mirror";
                 if (id == "effects.dither.coverage") return "fx.dither";
                 if (id == "effects.ascii.coverage") return "fx.ascii";
                 if (id == "effects.asciiSupersample.coverage") return "fx.ascii_supersample";
@@ -2973,6 +2977,10 @@ std::string ofApp::composeHudLayerDetails() const {
         }
     };
     out << "\nEffects:";
+    out << " Mirror=" << routeName(postEffects.mirrorRouteValue())
+        << " (mode " << ofToString(static_cast<int>(std::round(postEffects.mirrorModeValue())))
+        << ", seg " << ofToString(static_cast<int>(std::round(postEffects.mirrorSegmentsValue())))
+        << ", detail " << ofToString(postEffects.mirrorDetailValue(), 2) << ")";
     out << " Dither=" << routeName(postEffects.ditherRouteValue())
         << " (cell " << ofToString(static_cast<int>(postEffects.ditherCellSizeValue())) << ")";
     out << " ASCII=" << routeName(postEffects.asciiRouteValue())
@@ -3128,6 +3136,19 @@ std::string ofApp::composeHudLayers() const {
     feed["slots"] = std::move(slotsJson);
 
     ofJson effects = ofJson::object();
+    ofJson mirror;
+    mirror["route"] = routeName(postEffects.mirrorRouteValue());
+    mirror["routeValue"] = postEffects.mirrorRouteValue();
+    mirror["mode"] = static_cast<int>(std::round(postEffects.mirrorModeValue()));
+    mirror["segments"] = static_cast<int>(std::round(postEffects.mirrorSegmentsValue()));
+    mirror["angle"] = postEffects.mirrorAngleValue();
+    mirror["originX"] = postEffects.mirrorOriginXValue();
+    mirror["originY"] = postEffects.mirrorOriginYValue();
+    mirror["zoom"] = postEffects.mirrorZoomValue();
+    mirror["mix"] = postEffects.mirrorMixValue();
+    mirror["detail"] = postEffects.mirrorDetailValue();
+    effects["mirror"] = std::move(mirror);
+
     ofJson dither;
     dither["route"] = routeName(postEffects.ditherRouteValue());
     dither["routeValue"] = postEffects.ditherRouteValue();
@@ -3214,6 +3235,16 @@ std::string ofApp::composeHudStatus() const {
         return entry;
     };
     ofJson fxRoutes = ofJson::object();
+    fxRoutes["mirror"] = captureRoute(postEffects.mirrorRouteValue(), [&](ofJson& entry) {
+        entry["mode"] = static_cast<int>(std::round(postEffects.mirrorModeValue()));
+        entry["segments"] = static_cast<int>(std::round(postEffects.mirrorSegmentsValue()));
+        entry["angle"] = postEffects.mirrorAngleValue();
+        entry["originX"] = postEffects.mirrorOriginXValue();
+        entry["originY"] = postEffects.mirrorOriginYValue();
+        entry["zoom"] = postEffects.mirrorZoomValue();
+        entry["mix"] = postEffects.mirrorMixValue();
+        entry["detail"] = postEffects.mirrorDetailValue();
+    });
     fxRoutes["dither"] = captureRoute(postEffects.ditherRouteValue(), [&](ofJson& entry) {
         entry["cellSize"] = static_cast<int>(postEffects.ditherCellSizeValue());
     });
@@ -3233,7 +3264,8 @@ std::string ofApp::composeHudStatus() const {
     });
     feed["fxRoutes"] = fxRoutes;
 
-    hud << "\nFX routes: Dither=" << routeName(postEffects.ditherRouteValue())
+    hud << "\nFX routes: Mirror=" << routeName(postEffects.mirrorRouteValue())
+        << "  Dither=" << routeName(postEffects.ditherRouteValue())
         << "  ASCII=" << routeName(postEffects.asciiRouteValue())
         << "  CRT=" << routeName(postEffects.crtRouteValue());
 
@@ -3729,6 +3761,8 @@ void ofApp::drawConsole(glm::ivec2 viewport, float beatPhase) {
         return static_cast<int>(std::round(ofClamp(raw, 0.0f, 2.0f)));
     };
 
+    std::vector<bool> slotVisible(layerCount, false);
+
     ofPushStyle();
     for (std::size_t i = 0; i < consoleSlots.size(); ++i) {
         auto& slot = consoleSlots[i];
@@ -3755,6 +3789,8 @@ void ofApp::drawConsole(glm::ivec2 viewport, float beatPhase) {
                 if (window.includesAll) return columnIndex < effectColumn;
                 return columnIndex >= window.firstColumn && columnIndex <= window.lastColumn;
             };
+            std::vector<int> processedColumns;
+            std::vector<int> passthroughColumns;
 
             ensureSlotFbo(slot.layerFbo, viewport);
             ensureSlotFbo(slot.upstreamFbo, viewport);
@@ -3766,10 +3802,12 @@ void ofApp::drawConsole(glm::ivec2 viewport, float beatPhase) {
             bool haveInput = false;
             for (int column = 1; column < effectColumn; ++column) {
                 if (!columnInWindow(column)) continue;
+                if (!slotVisible[column - 1]) continue;
                 const auto& upstreamSlot = consoleSlots[column - 1];
                 if (!upstreamSlot.active) continue;
                 if (!upstreamSlot.layerFbo.isAllocated()) continue;
                 upstreamSlot.layerFbo.draw(0, 0, viewport.x, viewport.y);
+                processedColumns.push_back(column - 1);
                 haveInput = true;
             }
             ofDisableBlendMode();
@@ -3786,7 +3824,9 @@ void ofApp::drawConsole(glm::ivec2 viewport, float beatPhase) {
                 slot.effectFbo.end();
             }
 
+            bool effectApplied = false;
             if (haveInput && applyEffectSlot(slot, slot.upstreamFbo, slot.effectFbo)) {
+                effectApplied = true;
                 slot.layerFbo.begin();
                 ofEnableBlendMode(OF_BLENDMODE_ALPHA);
                 slot.effectFbo.draw(0, 0, viewport.x, viewport.y);
@@ -3798,13 +3838,27 @@ void ofApp::drawConsole(glm::ivec2 viewport, float beatPhase) {
             ofEnableBlendMode(OF_BLENDMODE_ALPHA);
             for (int column = 1; column < effectColumn; ++column) {
                 if (columnInWindow(column)) continue;
+                if (!slotVisible[column - 1]) continue;
                 const auto& upstreamSlot = consoleSlots[column - 1];
                 if (!upstreamSlot.active) continue;
                 if (!upstreamSlot.layerFbo.isAllocated()) continue;
                 upstreamSlot.layerFbo.draw(0, 0, viewport.x, viewport.y);
+                passthroughColumns.push_back(column - 1);
             }
             ofDisableBlendMode();
             slot.layerFbo.end();
+
+            if (effectApplied || !passthroughColumns.empty()) {
+                if (effectApplied) {
+                    for (int columnIndex : processedColumns) {
+                        slotVisible[columnIndex] = false;
+                    }
+                }
+                for (int columnIndex : passthroughColumns) {
+                    slotVisible[columnIndex] = false;
+                }
+                slotVisible[i] = true;
+            }
         } else if (slot.layer) {
             ensureSlotFbo(slot.layerFbo, viewport);
             float slotOpacity = ofClamp(slot.opacity, 0.0f, 1.0f);
@@ -3821,6 +3875,7 @@ void ofApp::drawConsole(glm::ivec2 viewport, float beatPhase) {
             slot.layer->draw(params);
             ofDisableBlendMode();
             slot.layerFbo.end();
+            slotVisible[i] = true;
         } else {
             clearFbo(slot.layerFbo);
         }
@@ -3833,7 +3888,9 @@ void ofApp::drawConsole(glm::ivec2 viewport, float beatPhase) {
     ofClear(0, 0, 0, 0);
     ofPushStyle();
     ofEnableBlendMode(OF_BLENDMODE_ALPHA);
-    for (const auto& slot : consoleSlots) {
+    for (std::size_t i = 0; i < consoleSlots.size(); ++i) {
+        if (!slotVisible[i]) continue;
+        const auto& slot = consoleSlots[i];
         if (!slot.active) continue;
         if (!slot.layerFbo.isAllocated()) continue;
         ofSetColor(255);
@@ -4888,6 +4945,10 @@ bool ofApp::applyEffectSlot(ConsoleSlot& slot, ofFbo& src, ofFbo& dst) {
     if (!src.isAllocated() || !dst.isAllocated()) {
         return false;
     }
+    if (slot.type == "fx.mirror") {
+        postEffects.applyMirror(src, dst);
+        return true;
+    }
     if (slot.type == "fx.dither") {
         postEffects.applyDither(src, dst);
         return true;
@@ -5045,6 +5106,7 @@ void ofApp::registerGameOfLifeMidi(GameOfLifeLayer* layer) {
 
 
 float* ofApp::fxRouteParamForType(const std::string& type) {
+    if (type == "fx.mirror") return postEffects.mirrorRouteParamPtr();
     if (type == "fx.dither") return postEffects.ditherRouteParamPtr();
     if (type == "fx.ascii") return postEffects.asciiRouteParamPtr();
     if (type == "fx.ascii_supersample") return postEffects.asciiSupersampleRouteParamPtr();
@@ -5070,7 +5132,9 @@ const float* ofApp::fxRouteParamForType(const std::string& type) const {
 
 void ofApp::setFxRouteForType(const std::string& type, float routeValue) {
     std::string paramId;
-    if (type == "fx.dither") {
+    if (type == "fx.mirror") {
+        paramId = "effects.mirror.route";
+    } else if (type == "fx.dither") {
         paramId = "effects.dither.route";
     } else if (type == "fx.ascii") {
         paramId = "effects.ascii.route";
@@ -5133,6 +5197,7 @@ void ofApp::syncActiveFxWithConsoleSlots(bool enablePresent) {
     };
 
     if (enablePresent) {
+        enableIfPresent("fx.mirror", "effects.mirror.route");
         enableIfPresent("fx.dither", "effects.dither.route");
         enableIfPresent("fx.ascii", "effects.ascii.route");
         enableIfPresent("fx.ascii_supersample", "effects.asciiSupersample.route");
@@ -5140,6 +5205,7 @@ void ofApp::syncActiveFxWithConsoleSlots(bool enablePresent) {
         enableIfPresent("fx.motion_extract", "effects.motion.route");
     }
 
+    disableIfMissing("fx.mirror", "effects.mirror.route");
     disableIfMissing("fx.dither", "effects.dither.route");
     disableIfMissing("fx.ascii", "effects.ascii.route");
     disableIfMissing("fx.ascii_supersample", "effects.asciiSupersample.route");
@@ -5562,6 +5628,15 @@ ofJson ofApp::encodeSceneJson(const std::string& path) const {
             parent[key] = encodeFloatParam(*param);
         }
     };
+    assignEffectParam(effectsJson["mirror"], "route", "effects.mirror.route");
+    assignEffectParam(effectsJson["mirror"], "mode", "effects.mirror.mode");
+    assignEffectParam(effectsJson["mirror"], "segments", "effects.mirror.segments");
+    assignEffectParam(effectsJson["mirror"], "angle", "effects.mirror.angle");
+    assignEffectParam(effectsJson["mirror"], "originX", "effects.mirror.originX");
+    assignEffectParam(effectsJson["mirror"], "originY", "effects.mirror.originY");
+    assignEffectParam(effectsJson["mirror"], "zoom", "effects.mirror.zoom");
+    assignEffectParam(effectsJson["mirror"], "mix", "effects.mirror.mix");
+    assignEffectParam(effectsJson["mirror"], "detail", "effects.mirror.detail");
     assignEffectParam(effectsJson["dither"], "route", "effects.dither.route");
     assignEffectParam(effectsJson["dither"], "cellSize", "effects.dither.cellSize");
     assignEffectParam(effectsJson["ascii"], "route", "effects.ascii.route");
@@ -5809,6 +5884,18 @@ bool ofApp::applyScenePlan(SceneApplyPlan& plan) {
 
     if (scene.contains("effects") && scene["effects"].is_object()) {
         const auto& effects = scene["effects"];
+        if (effects.contains("mirror")) {
+            const auto& mirror = effects["mirror"];
+            if (mirror.contains("route")) applyValue("effects.mirror.route", mirror["route"]);
+            if (mirror.contains("mode")) applyValue("effects.mirror.mode", mirror["mode"]);
+            if (mirror.contains("segments")) applyValue("effects.mirror.segments", mirror["segments"]);
+            if (mirror.contains("angle")) applyValue("effects.mirror.angle", mirror["angle"]);
+            if (mirror.contains("originX")) applyValue("effects.mirror.originX", mirror["originX"]);
+            if (mirror.contains("originY")) applyValue("effects.mirror.originY", mirror["originY"]);
+            if (mirror.contains("zoom")) applyValue("effects.mirror.zoom", mirror["zoom"]);
+            if (mirror.contains("mix")) applyValue("effects.mirror.mix", mirror["mix"]);
+            if (mirror.contains("detail")) applyValue("effects.mirror.detail", mirror["detail"]);
+        }
         if (effects.contains("dither") && effects["dither"].contains("route")) {
             applyValue("effects.dither.route", effects["dither"]["route"]);
             if (effects["dither"].contains("cellSize")) {

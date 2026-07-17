@@ -47,6 +47,7 @@ public:
     void applyAsciiSupersample(const ofFbo& src, ofFbo& dst);
     void applyCrt(const ofFbo& src, ofFbo& dst);
     void applyMotionExtract(const ofFbo& src, ofFbo& dst);
+    void applyMirror(const ofFbo& src, ofFbo& dst);
 
 public:
     struct Effect {
@@ -71,6 +72,7 @@ private:
     std::unique_ptr<Effect> asciiSupersampleEffect_;
     std::unique_ptr<Effect> crtEffect_;
     std::unique_ptr<Effect> motionEffect_;
+    std::unique_ptr<Effect> mirrorEffect_;
     std::unique_ptr<MotionExtractProcessor> motionProcessor_;
     std::unique_ptr<AsciiSupersampleAtlas> asciiSupersampleAtlas_;
 
@@ -136,6 +138,17 @@ private:
     float motionTailOpacity_ = 0.0f;
     float motionCoverage_ = 0.0f;
     bool motionCoverageMask_ = true;
+    float mirrorRoute_ = 0.0f;
+    float mirrorMode_ = 0.0f;
+    float mirrorSegments_ = 6.0f;
+    float mirrorAngle_ = 0.0f;
+    float mirrorOriginX_ = 0.5f;
+    float mirrorOriginY_ = 0.5f;
+    float mirrorZoom_ = 1.0f;
+    float mirrorMix_ = 1.0f;
+    float mirrorDetail_ = 0.0f;
+    float mirrorCoverage_ = 0.0f;
+    bool mirrorCoverageMask_ = true;
 
     ofFbo pingFbo_;
     ofFbo pongFbo_;
@@ -199,6 +212,10 @@ public:
     const float* motionRouteParamPtr() const { return &motionRoute_; }
     float* motionCoverageParamPtr() { return &motionCoverage_; }
     const float* motionCoverageParamPtr() const { return &motionCoverage_; }
+    float* mirrorRouteParamPtr() { return &mirrorRoute_; }
+    const float* mirrorRouteParamPtr() const { return &mirrorRoute_; }
+    float* mirrorCoverageParamPtr() { return &mirrorCoverage_; }
+    const float* mirrorCoverageParamPtr() const { return &mirrorCoverage_; }
 
 public:
     float* ditherCellSizeParamPtr() { return &ditherCellSize_; }
@@ -237,6 +254,22 @@ public:
     const float* motionMixParamPtr() const { return &motionMix_; }
     float* motionSoftnessParamPtr() { return &motionSoftness_; }
     const float* motionSoftnessParamPtr() const { return &motionSoftness_; }
+    float* mirrorModeParamPtr() { return &mirrorMode_; }
+    const float* mirrorModeParamPtr() const { return &mirrorMode_; }
+    float* mirrorSegmentsParamPtr() { return &mirrorSegments_; }
+    const float* mirrorSegmentsParamPtr() const { return &mirrorSegments_; }
+    float* mirrorAngleParamPtr() { return &mirrorAngle_; }
+    const float* mirrorAngleParamPtr() const { return &mirrorAngle_; }
+    float* mirrorOriginXParamPtr() { return &mirrorOriginX_; }
+    const float* mirrorOriginXParamPtr() const { return &mirrorOriginX_; }
+    float* mirrorOriginYParamPtr() { return &mirrorOriginY_; }
+    const float* mirrorOriginYParamPtr() const { return &mirrorOriginY_; }
+    float* mirrorZoomParamPtr() { return &mirrorZoom_; }
+    const float* mirrorZoomParamPtr() const { return &mirrorZoom_; }
+    float* mirrorMixParamPtr() { return &mirrorMix_; }
+    const float* mirrorMixParamPtr() const { return &mirrorMix_; }
+    float* mirrorDetailParamPtr() { return &mirrorDetail_; }
+    const float* mirrorDetailParamPtr() const { return &mirrorDetail_; }
     float ditherRouteValue() const { return ditherRoute_; }
     float asciiRouteValue() const { return asciiRoute_; }
     float asciiBlockSizeValue() const { return asciiBlockSize_; }
@@ -260,6 +293,16 @@ public:
     float motionMixValue() const { return motionMix_; }
     float motionSoftnessValue() const { return motionSoftness_; }
     float motionCoverageValue() const { return motionCoverage_; }
+    float mirrorRouteValue() const { return mirrorRoute_; }
+    float mirrorModeValue() const { return mirrorMode_; }
+    float mirrorSegmentsValue() const { return mirrorSegments_; }
+    float mirrorAngleValue() const { return mirrorAngle_; }
+    float mirrorOriginXValue() const { return mirrorOriginX_; }
+    float mirrorOriginYValue() const { return mirrorOriginY_; }
+    float mirrorZoomValue() const { return mirrorZoom_; }
+    float mirrorMixValue() const { return mirrorMix_; }
+    float mirrorDetailValue() const { return mirrorDetail_; }
+    float mirrorCoverageValue() const { return mirrorCoverage_; }
     bool coverageMaskEnabled(const std::string& effectType) const;
     float defaultCoverageForType(const std::string& effectType) const;
     MotionExtractProcessor* motionProcessor() { return motionProcessor_.get(); }

@@ -8,14 +8,14 @@ This roadmap is the Project Ops request index for Synaptome. It is not the publi
 State Summary
 - Phase: INTAKE
 - Status: Draft
-- Steps Complete: 2 / 10
-- Progress: Draft package/preset schemas, shared package discovery roots, a Signal Bloom package fixture, static validation, package-derived snapshots, and opt-in combined catalog/manifest checks now exist without changing runtime loading behavior.
-- Last Step Outcome: 2026-06-26 - Added `tools/layer_package_discovery.py`, `--include-packages` paths for catalog/parameter manifest generators, and combined golden snapshots for package/runtime compatibility checks.
-- Next Step: Define the file-backed generated-layer template shape first, then add one docs/example STL/model fixture and generated snapshot without changing Browser/runtime loading.
+- Steps Complete: 3 / 10
+- Progress: Draft package/preset schemas, shared package discovery roots, a Signal Bloom package fixture, package-derived snapshots, opt-in combined catalog/manifest checks, one STL/model generated-layer template fixture, static and dynamic option metadata fixtures, and a schema-checked read-only Browser inspection payload now exist without changing runtime loading behavior.
+- Last Step Outcome: 2026-06-28 - Added one generated-layer `optionsSource` metadata fixture and proved it flows into generated catalog plus inspection snapshots without adding provider lookup, Browser UI, or runtime scanning.
+- Next Step: Expand only in tiny, schema-checked slices, such as one package-owned option metadata example or one additional generated content kind, then consider read-only Browser UI behind an explicit draft path.
 - Dependencies / Overlap: `docs/project_ops/synaptome_layer_design_standards.md`, `docs/architecture/synaptome_layer_system_roadmap.md`, `docs/architecture/synaptome_artist_sdk.md`, `docs/contracts/contract_gaps.md`, `docs/contracts/parameter_manifest.json`, `docs/schemas/layer_asset.schema.json`, `tools/layer_catalog_regression.py`, `tools/gen_parameter_manifest.py`.
 - Blocking Issues / Unknowns: Runtime bench shape depends on an app-native or offscreen layer test seam; generated registration/module loading remains a later architecture decision; beat-reactive mapping presets depend on the separate transport/reactivity contract.
 - Impact / Priority Notes: Promotes package-driven layer authoring, folder/file discovery, visible mapping defaults, preset banks, and validation/bench work into trackable layer-system scaffolding without claiming hot-loaded plugins.
-- Resume From: Intake; start the file-backed generated-layer template fixture while keeping package/runtime combined checks draft-only.
+- Resume From: Intake; keep the read-only inspection payload passing, then add the smallest next metadata expansion without touching Browser/runtime behavior.
 
 ## Completed
 

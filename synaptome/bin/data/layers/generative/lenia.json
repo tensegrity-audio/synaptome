@@ -1,0 +1,50 @@
+{
+  "id": "generative.lenia",
+  "label": "Lenia",
+  "category": "Generative",
+  "layerGroup": "Cellular Fields",
+  "model": "leniaContinuousAutomata",
+  "stateModel": "continuous scalar cellular automata field with convolution kernels and growth functions",
+  "description": "Continuous cellular automata: kernel radius, growth center, width, mutation, and injection controls form amoeba-like fields and proto-organisms.",
+  "type": "lenia",
+  "registryPrefix": "generative.lenia",
+  "opacity": 1.0,
+  "modes": [
+    {
+      "id": "organism",
+      "label": "Organism",
+      "kind": "live",
+      "live": true,
+      "description": "Continuous Lenia growth controlled by kernel and growth-function parameters."
+    }
+  ],
+  "defaults": {
+    "speed": 18.0,
+    "bpmSync": true,
+    "bpmMultiplier": 4.0,
+    "alpha": 1.0,
+    "paused": false,
+    "autoReseed": false,
+    "autoReseedEveryBeats": 48.0,
+    "seed": 2112.0,
+    "seedDensity": 0.16,
+    "kernelRadius": 8.0,
+    "growthCenter": 0.34,
+    "growthWidth": 0.065,
+    "growthAmplitude": 0.105,
+    "mutationAmount": 0.002,
+    "injectionRate": 0.018,
+    "injectionAmount": 0.78,
+    "injectionRadius": 8.0,
+    "decayRate": 0.006,
+    "fieldScale": 1.8,
+    "edgeGlow": 1.15,
+    "backgroundAlpha": 0.0,
+    "fieldAlpha": 1.0,
+    "edgeOpacity": 0.72,
+    "backgroundColor": [0.012, 0.010, 0.018],
+    "fieldColor": [0.88, 0.64, 0.32],
+    "edgeColor": [0.35, 0.95, 0.72]
+  },
+  "textureSize": [160, 90]
+}

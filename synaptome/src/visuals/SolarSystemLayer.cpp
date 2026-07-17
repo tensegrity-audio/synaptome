@@ -272,6 +272,9 @@ void SolarSystemLayer::configure(const ofJson& config) {
     paramCalloutAlpha_ = def.value("calloutAlpha", paramCalloutAlpha_);
     paramCalloutBackgroundAlpha_ = def.value("calloutBackgroundAlpha", paramCalloutBackgroundAlpha_);
     paramCalloutScale_ = def.value("calloutScale", paramCalloutScale_);
+    paramCalloutFocusMode_ = def.value("calloutFocusMode", paramCalloutFocusMode_);
+    paramCalloutMaxVisible_ = def.value("calloutMaxVisible", paramCalloutMaxVisible_);
+    paramCalloutCycleSeconds_ = def.value("calloutCycleSeconds", paramCalloutCycleSeconds_);
     paramScale_ = def.value("scale", paramScale_);
     paramSceneZoom_ = def.value("sceneZoom", paramSceneZoom_);
     paramOrbitSpread_ = def.value("orbitSpread", paramOrbitSpread_);
@@ -375,6 +378,9 @@ void SolarSystemLayer::setup(ParameterRegistry& registry) {
     registerFloat(registry, prefix + ".calloutAlpha", &paramCalloutAlpha_, paramCalloutAlpha_, "Alpha: Callout Text", 0.0f, 1.0f, 0.01f);
     registerFloat(registry, prefix + ".calloutBackgroundAlpha", &paramCalloutBackgroundAlpha_, paramCalloutBackgroundAlpha_, "Alpha: Callout Background", 0.0f, 1.0f, 0.01f);
     registerFloat(registry, prefix + ".calloutScale", &paramCalloutScale_, paramCalloutScale_, "Scale: Callout Size", 0.65f, 1.35f, 0.01f);
+    registerFloat(registry, prefix + ".calloutFocusMode", &paramCalloutFocusMode_, paramCalloutFocusMode_, "Action: Callout Focus Mode", 0.0f, 2.0f, 1.0f, "0 all, 1 cycle, 2 changing");
+    registerFloat(registry, prefix + ".calloutMaxVisible", &paramCalloutMaxVisible_, paramCalloutMaxVisible_, "Count: Callout Panels", 1.0f, 12.0f, 1.0f);
+    registerFloat(registry, prefix + ".calloutCycleSeconds", &paramCalloutCycleSeconds_, paramCalloutCycleSeconds_, "Time: Callout Cycle", 1.0f, 20.0f, 0.1f, "s");
     registerFloat(registry, prefix + ".scale", &paramScale_, paramScale_, "View: Scale", 0.25f, 1.5f, 0.01f);
     registerFloat(registry, prefix + ".sceneZoom", &paramSceneZoom_, paramSceneZoom_, "View: Zoom", 0.35f, 2.5f, 0.01f);
     registerFloat(registry, prefix + ".orbitSpread", &paramOrbitSpread_, paramOrbitSpread_, "Orbit: Spread", 0.65f, 2.25f, 0.01f);
@@ -483,47 +489,70 @@ void SolarSystemLayer::update(const LayerUpdateParams& params) {
     for (std::size_t i = 0; i < bodies_.size(); ++i) {
         const auto& body = bodies_[i];
         auto& life = lifeStates_[i];
+        const float previousAtmosphere = atmosphereEnergy_[i];
+        const float previousBandEnergy = life.bandEnergy;
+        const float previousBiosphere = life.biosphereEnergy;
+        const float previousStability = life.stability;
+        const float previousCivilization = life.civilizationEnergy;
         const float planetBandTarget = planetBandEnergyFor(i);
         const float bandFollow = planetBandTarget > life.bandEnergy
-            ? ofClamp(dt * (1.35f + paramLifeReactivity_ * 0.90f), 0.0f, 1.0f)
-            : ofClamp(dt * 0.22f, 0.0f, 1.0f);
+            ? ofClamp(dt * (1.75f + paramLifeReactivity_ * 1.05f), 0.0f, 1.0f)
+            : ofClamp(dt * 0.28f, 0.0f, 1.0f);
         life.bandEnergy = ofLerp(life.bandEnergy, planetBandTarget, bandFollow);
 
-        const float baseAtmosphere = body.atmosphere * 0.24f;
-        const float atmosphereDrive = ofClamp(audioEnergy * 0.32f + life.bandEnergy * 0.86f, 0.0f, 1.8f);
-        const float targetAtmosphere = ofClamp(baseAtmosphere + atmosphereDrive * paramAtmosphereGrowth_ * (0.36f + body.atmosphere * 0.38f + life.affinity * 0.20f), 0.0f, 1.0f);
+        const float baseAtmosphere = body.atmosphere * 0.34f;
+        const float atmosphereDrive = ofClamp(audioEnergy * 0.46f + life.bandEnergy * 1.08f + body.atmosphere * 0.20f, 0.0f, 2.2f);
+        const float targetAtmosphere = ofClamp(baseAtmosphere + atmosphereDrive * paramAtmosphereGrowth_ * (0.42f + body.atmosphere * 0.40f + life.affinity * 0.24f), 0.0f, 1.0f);
         const float follow = targetAtmosphere > atmosphereEnergy_[i]
-            ? ofClamp(dt * (0.90f + paramAtmosphereGrowth_ * 1.10f), 0.0f, 1.0f)
-            : ofClamp(dt * 0.070f, 0.0f, 1.0f);
+            ? ofClamp(dt * (1.10f + paramAtmosphereGrowth_ * 1.35f), 0.0f, 1.0f)
+            : ofClamp(dt * 0.090f, 0.0f, 1.0f);
         atmosphereEnergy_[i] = ofLerp(atmosphereEnergy_[i], targetAtmosphere, follow);
 
-        const float atmosphereReady = smooth01((atmosphereEnergy_[i] - 0.28f) / 0.46f);
+        const float atmosphereReady = smooth01((atmosphereEnergy_[i] - 0.16f) / 0.38f);
         const float lifeThreshold = ofClamp(paramBiosphereThreshold_ * (1.08f - life.affinity * 0.28f) +
-                                                life.threshold * 0.16f,
-                                            0.08f,
-                                            1.25f);
-        const float lifeDrive = ofClamp(life.bandEnergy * paramLifeReactivity_ * (0.76f + life.affinity * 0.54f) +
-                                            peak_ * 0.16f,
+                                                life.threshold * 0.10f,
+                                            0.05f,
+                                            1.05f);
+        const float lifeDrive = ofClamp(life.bandEnergy * paramLifeReactivity_ * (0.88f + life.affinity * 0.64f) +
+                                            atmosphereEnergy_[i] * 0.20f +
+                                            peak_ * 0.22f,
                                         0.0f,
-                                        2.0f);
-        const float overThreshold = smooth01((lifeDrive - lifeThreshold) / 0.55f);
-        const float biosphereRise = overThreshold * atmosphereReady * (0.035f + life.affinity * 0.075f) * paramLifeReactivity_;
-        const float biosphereDecay = 0.006f + (1.0f - atmosphereReady) * 0.018f;
+                                        2.35f);
+        const float overThreshold = smooth01((lifeDrive - lifeThreshold) / 0.42f);
+        const float biosphereSeed = atmosphereReady * life.affinity * (0.006f + life.bandEnergy * 0.014f);
+        const float biosphereRise = atmosphereReady *
+                                    (overThreshold * (0.040f + life.affinity * 0.085f) + biosphereSeed) *
+                                    paramLifeReactivity_;
+        const float biosphereDecay = 0.0035f + (1.0f - atmosphereReady) * 0.010f;
         life.biosphereEnergy = ofClamp(life.biosphereEnergy + dt * (biosphereRise - biosphereDecay * (1.0f - overThreshold * 0.55f)),
                                        0.0f,
                                        1.0f);
 
-        const float stableWorld = smooth01((life.biosphereEnergy - 0.42f) / 0.46f) * atmosphereReady;
-        const float stabilityRise = stableWorld * (0.030f + life.bandEnergy * 0.055f + life.affinity * 0.035f) * paramCivilizationGrowth_;
-        const float stabilityDecay = 0.004f + (1.0f - stableWorld) * 0.012f;
+        const float stableWorld = smooth01((life.biosphereEnergy - 0.26f) / 0.42f) * atmosphereReady;
+        const float stabilityRise = stableWorld * (0.040f + life.bandEnergy * 0.065f + life.affinity * 0.045f) * paramCivilizationGrowth_;
+        const float stabilityDecay = 0.003f + (1.0f - stableWorld) * 0.008f;
         life.stability = ofClamp(life.stability + dt * (stabilityRise - stabilityDecay), 0.0f, 1.0f);
 
-        const float civilizationGate = smooth01((life.stability - 0.46f) / 0.40f) * stableWorld;
-        const float civilizationRise = civilizationGate * (0.026f + life.biosphereEnergy * 0.045f) * paramCivilizationGrowth_;
-        const float civilizationDecay = 0.0025f + (1.0f - civilizationGate) * 0.006f;
+        const float civilizationGate = smooth01((life.stability - 0.30f) / 0.36f) * stableWorld;
+        const float civilizationRise = civilizationGate * (0.034f + life.biosphereEnergy * 0.060f) * paramCivilizationGrowth_;
+        const float civilizationDecay = 0.0018f + (1.0f - civilizationGate) * 0.0045f;
         life.civilizationEnergy = ofClamp(life.civilizationEnergy + dt * (civilizationRise - civilizationDecay),
                                           0.0f,
                                           1.0f);
+
+        const float invDt = dt > 0.0001f ? 1.0f / dt : 0.0f;
+        const float instantChange = ofClamp((std::abs(atmosphereEnergy_[i] - previousAtmosphere) * 1.3f +
+                                             std::abs(life.bandEnergy - previousBandEnergy) * 0.8f +
+                                             std::abs(life.biosphereEnergy - previousBiosphere) * 2.4f +
+                                             std::abs(life.stability - previousStability) * 1.7f +
+                                             std::abs(life.civilizationEnergy - previousCivilization) * 2.6f) *
+                                                invDt * 0.85f,
+                                            0.0f,
+                                            1.0f);
+        const float changeFollow = instantChange > life.changeEnergy
+            ? ofClamp(dt * 4.8f, 0.0f, 1.0f)
+            : ofClamp(dt * 1.1f, 0.0f, 1.0f);
+        life.changeEnergy = ofLerp(life.changeEnergy, instantChange, changeFollow);
     }
 }
 
@@ -639,30 +668,33 @@ void SolarSystemLayer::draw(const LayerDrawParams& params) {
         const float atmosphereAudio = bodyIndex < atmosphereEnergy_.size() ? atmosphereEnergy_[bodyIndex] : 0.0f;
         const ofFloatColor atmosphereColor = planetColor.getLerped(lifeColor, ofClamp(biosphere * 0.64f + localBandEnergy * 0.10f, 0.0f, 0.88f))
                                                         .getLerped(ofFloatColor(0.52f, 0.76f, 1.0f, 1.0f), body.atmosphere * 0.14f);
-        const float haloAlpha = alpha * (0.060f + body.atmosphere * 0.090f + atmosphereAudio * 0.18f + biosphere * 0.15f +
-                                         civilization * 0.030f + twinkle * 0.045f + localBandEnergy * 0.045f + atmospherePulse * 0.16f +
-                                         highs_ * paramHighsSparkle_ * audio * 0.018f);
+        const float atmosphereStrength = ofClamp(body.atmosphere * 0.35f + atmosphereAudio * 0.82f + biosphere * 0.44f + atmospherePulse * 0.22f,
+                                                 0.0f,
+                                                 1.55f);
+        const float haloAlpha = alpha * (0.035f + atmosphereStrength * 0.18f + civilization * 0.035f +
+                                         twinkle * 0.020f + localBandEnergy * 0.035f +
+                                         highs_ * paramHighsSparkle_ * audio * 0.012f);
 
         ofPushMatrix();
         ofTranslate(position.x, position.y, position.z);
         ofEnableBlendMode(OF_BLENDMODE_ADD);
         glDepthMask(GL_FALSE);
-        drawLowPolySphere(planetRadius * (1.68f + atmosphereAudio * 1.10f + biosphere * 0.72f + localBandEnergy * 0.22f + atmospherePulse * 0.62f),
+        drawLowPolySphere(planetRadius * (1.12f + atmosphereAudio * 0.38f + biosphere * 0.22f + localBandEnergy * 0.08f + atmospherePulse * 0.16f),
                           ofFloatColor(atmosphereColor.r, atmosphereColor.g, atmosphereColor.b, haloAlpha),
                           haloAlpha,
                           body.seed + 2.0f,
                           4,
-                          8,
+                          9,
                           false);
-        const float breathAlpha = alpha * (0.022f + atmospherePulse * 0.18f + biosphere * 0.050f + atmosphereAudio * 0.030f);
+        const float breathAlpha = alpha * (0.010f + atmospherePulse * 0.065f + biosphere * 0.070f + atmosphereAudio * 0.095f);
         if (breathAlpha > 0.004f) {
             const ofFloatColor breathColor = atmosphereColor.getLerped(ofFloatColor(0.70f, 0.92f, 1.0f, 1.0f), 0.28f + atmospherePulse * 0.32f);
-            drawLowPolySphere(planetRadius * (2.20f + atmosphereAudio * 1.25f + biosphere * 0.95f + atmospherePulse * 1.55f),
+            drawLowPolySphere(planetRadius * (1.34f + atmosphereAudio * 0.62f + biosphere * 0.42f + atmospherePulse * 0.42f),
                               ofFloatColor(breathColor.r, breathColor.g, breathColor.b, breathAlpha),
                               breathAlpha,
                               body.seed + 87.0f + atmospherePulse * 13.0f,
-                              3,
-                              6,
+                              4,
+                              8,
                               false);
         }
         glDepthMask(GL_TRUE);
@@ -688,8 +720,8 @@ void SolarSystemLayer::draw(const LayerDrawParams& params) {
             glEnable(GL_CULL_FACE);
             glCullFace(GL_BACK);
             glFrontFace(GL_CCW);
-            const float surfaceAlpha = alpha * biosphere * (0.030f + localBandEnergy * 0.030f);
-            drawLowPolySphere(planetRadius * (1.012f + biosphere * 0.018f),
+            const float surfaceAlpha = alpha * biosphere * (0.070f + localBandEnergy * 0.055f);
+            drawLowPolySphere(planetRadius * (1.018f + biosphere * 0.026f),
                               ofFloatColor(lifeColor.r, lifeColor.g, lifeColor.b, surfaceAlpha),
                               surfaceAlpha,
                               body.seed + 424.0f,
@@ -779,6 +811,7 @@ void SolarSystemLayer::drawPlanetCallouts(const LayerDrawParams& params,
     };
 
     struct Callout {
+        std::size_t bodyIndex = 0;
         glm::vec2 anchor;
         glm::vec2 attach;
         ofRectangle panel;
@@ -788,6 +821,8 @@ void SolarSystemLayer::drawPlanetCallouts(const LayerDrawParams& params,
         std::string footerLine;
         std::vector<Metric> metrics;
         float activity = 0.0f;
+        float change = 0.0f;
+        bool focused = false;
     };
 
     const float scale = ofClamp(paramCalloutScale_, 0.65f, 1.35f) * (paramCalloutCompact_ ? 0.78f : 1.0f);
@@ -845,8 +880,9 @@ void SolarSystemLayer::drawPlanetCallouts(const LayerDrawParams& params,
         const float biosphere = life != nullptr ? life->biosphereEnergy : 0.0f;
         const float stability = life != nullptr ? life->stability : 0.0f;
         const float civilization = life != nullptr ? life->civilizationEnergy : 0.0f;
+        const float change = life != nullptr ? life->changeEnergy : 0.0f;
         const float liveBand = planetBandEnergyFor(bodyIndex);
-        const float activity = ofClamp(atmosphere * 0.22f + biosphere * 0.28f + stability * 0.20f + civilization * 0.30f + liveBand * 0.18f,
+        const float activity = ofClamp(atmosphere * 0.22f + biosphere * 0.28f + stability * 0.20f + civilization * 0.30f + liveBand * 0.18f + change * 0.24f,
                                        0.0f,
                                        1.0f);
 
@@ -855,6 +891,7 @@ void SolarSystemLayer::drawPlanetCallouts(const LayerDrawParams& params,
         metrics.push_back({ "BIO", biosphere });
         metrics.push_back({ "STB", stability });
         metrics.push_back({ "CIV", civilization });
+        metrics.push_back({ "CHG", change });
 
         const float panelH = pad * 2.0f +
                              19.0f * scale +
@@ -868,6 +905,7 @@ void SolarSystemLayer::drawPlanetCallouts(const LayerDrawParams& params,
         panelY = ofClamp(panelY, margin, std::max(margin, height - panelH - margin));
 
         Callout callout;
+        callout.bodyIndex = bodyIndex;
         callout.anchor = glm::vec2(screen.x, screen.y);
         callout.panel = ofRectangle(panelX, panelY, panelW, panelH);
         callout.attach = glm::vec2(panelX, panelY + panelH);
@@ -878,11 +916,49 @@ void SolarSystemLayer::drawPlanetCallouts(const LayerDrawParams& params,
                              " SIG " + fmt(bandEnergy, 2);
         callout.metrics = std::move(metrics);
         callout.activity = activity;
+        callout.change = change;
         callouts.push_back(std::move(callout));
     }
 
     if (callouts.empty()) {
         return;
+    }
+
+    const int focusMode = static_cast<int>(std::round(ofClamp(paramCalloutFocusMode_, 0.0f, 2.0f)));
+    const int maxVisible = std::min<int>(static_cast<int>(callouts.size()),
+                                         std::max<int>(1, static_cast<int>(std::round(paramCalloutMaxVisible_))));
+    if (focusMode == 1) {
+        const int startIndex = bodies_.empty()
+            ? 0
+            : static_cast<int>(std::floor(params.time / std::max(0.1f, paramCalloutCycleSeconds_))) % static_cast<int>(bodies_.size());
+        std::vector<Callout> selected;
+        selected.reserve(static_cast<std::size_t>(maxVisible));
+        for (std::size_t offset = 0; offset < bodies_.size() && selected.size() < static_cast<std::size_t>(maxVisible); ++offset) {
+            const std::size_t target = (static_cast<std::size_t>(startIndex) + offset) % bodies_.size();
+            auto it = std::find_if(callouts.begin(), callouts.end(), [&](const Callout& callout) {
+                return callout.bodyIndex == target;
+            });
+            if (it != callouts.end()) {
+                it->focused = selected.empty();
+                selected.push_back(*it);
+            }
+        }
+        callouts = std::move(selected);
+    } else if (focusMode == 2) {
+        std::stable_sort(callouts.begin(), callouts.end(), [](const Callout& a, const Callout& b) {
+            if (std::abs(a.change - b.change) > 0.0001f) {
+                return a.change > b.change;
+            }
+            return a.activity > b.activity;
+        });
+        if (callouts.size() > static_cast<std::size_t>(maxVisible)) {
+            callouts.resize(static_cast<std::size_t>(maxVisible));
+        }
+        if (!callouts.empty()) {
+            callouts.front().focused = true;
+        }
+    } else if (callouts.size() > static_cast<std::size_t>(maxVisible)) {
+        callouts.resize(static_cast<std::size_t>(maxVisible));
     }
 
     ofPushView();
@@ -899,10 +975,14 @@ void SolarSystemLayer::drawPlanetCallouts(const LayerDrawParams& params,
     glLineWidth(std::max(1.0f, 1.35f * scale));
 #endif
     for (const auto& callout : callouts) {
-        const int leaderAlpha = static_cast<int>(ofClamp(overlayAlpha * (110.0f + callout.activity * 115.0f), 0.0f, 255.0f));
-        ofSetColor(0, 255, 132, leaderAlpha);
+        const int leaderAlpha = static_cast<int>(ofClamp(overlayAlpha * (110.0f + callout.activity * 105.0f + (callout.focused ? 55.0f : 0.0f)), 0.0f, 255.0f));
+        if (callout.focused) {
+            ofSetColor(220, 255, 232, leaderAlpha);
+        } else {
+            ofSetColor(0, 255, 132, leaderAlpha);
+        }
         ofDrawLine(callout.anchor.x, callout.anchor.y, callout.attach.x, callout.attach.y);
-        const float tick = 4.5f * scale;
+        const float tick = (callout.focused ? 6.0f : 4.5f) * scale;
         ofDrawLine(callout.anchor.x - tick, callout.anchor.y, callout.anchor.x + tick, callout.anchor.y);
         ofDrawLine(callout.anchor.x, callout.anchor.y - tick, callout.anchor.x, callout.anchor.y + tick);
     }
@@ -947,12 +1027,16 @@ void SolarSystemLayer::drawPlanetCallouts(const LayerDrawParams& params,
 
     for (const auto& callout : callouts) {
         const int panelAlpha = static_cast<int>(ofClamp(backgroundAlpha * 255.0f, 0.0f, 255.0f));
-        const int borderAlpha = static_cast<int>(ofClamp(overlayAlpha * (145.0f + callout.activity * 85.0f), 0.0f, 255.0f));
+        const int borderAlpha = static_cast<int>(ofClamp(overlayAlpha * (145.0f + callout.activity * 70.0f + (callout.focused ? 65.0f : 0.0f)), 0.0f, 255.0f));
         ofFill();
         ofSetColor(0, 6, 4, panelAlpha);
         ofDrawRectangle(callout.panel);
         ofNoFill();
-        ofSetColor(0, 255, 132, borderAlpha);
+        if (callout.focused) {
+            ofSetColor(220, 255, 232, borderAlpha);
+        } else {
+            ofSetColor(0, 255, 132, borderAlpha);
+        }
         ofDrawRectangle(callout.panel);
         ofDrawLine(callout.panel.x, callout.panel.y + 18.0f * scale, callout.panel.x + callout.panel.width, callout.panel.y + 18.0f * scale);
         ofFill();
@@ -1018,6 +1102,9 @@ void SolarSystemLayer::clampParams() {
     paramCalloutAlpha_ = ofClamp(paramCalloutAlpha_, 0.0f, 1.0f);
     paramCalloutBackgroundAlpha_ = ofClamp(paramCalloutBackgroundAlpha_, 0.0f, 1.0f);
     paramCalloutScale_ = ofClamp(paramCalloutScale_, 0.65f, 1.35f);
+    paramCalloutFocusMode_ = std::round(ofClamp(paramCalloutFocusMode_, 0.0f, 2.0f));
+    paramCalloutMaxVisible_ = std::round(ofClamp(paramCalloutMaxVisible_, 1.0f, 12.0f));
+    paramCalloutCycleSeconds_ = ofClamp(paramCalloutCycleSeconds_, 1.0f, 20.0f);
     paramScale_ = ofClamp(paramScale_, 0.25f, 1.5f);
     paramSceneZoom_ = ofClamp(paramSceneZoom_, 0.35f, 2.5f);
     paramOrbitSpread_ = ofClamp(paramOrbitSpread_, 0.65f, 2.25f);

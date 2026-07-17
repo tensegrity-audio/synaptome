@@ -1,0 +1,291 @@
+{
+  "schemaVersion": 1,
+  "status": "draft",
+  "sourceStrategy": [
+    "Static generated-layer template expansion for docs/examples content files.",
+    "Generated entries are compatibility fixtures only and are not loaded by the runtime.",
+    "Legacy layer catalog IDs are checked so generated content cannot collide silently."
+  ],
+  "sources": [
+    "docs/examples/generated_layers",
+    "docs/schemas/generated_layer_template.schema.json",
+    "docs/schemas/generated_layer_sidecar.schema.json",
+    "tools/generated_layer_catalog_regression.py"
+  ],
+  "counts": {
+    "templates": 1,
+    "generatedEntries": 1,
+    "parameters": 19,
+    "categories": 1,
+    "layerGroups": 1,
+    "legacyConflicts": 0
+  },
+  "categories": {
+    "Generated": 1
+  },
+  "layerGroups": {
+    "Models": 1
+  },
+  "legacyCompatibility": {
+    "conflicts": []
+  },
+  "entries": [
+    {
+      "id": "examples.generated_models.tetrahedron",
+      "label": "Tetrahedron Fixture",
+      "category": "Generated",
+      "layerGroup": "Models",
+      "model": "stl-file",
+      "stateModel": "static mesh content rendered by a reusable model viewer layer",
+      "type": "model.stlViewer",
+      "kind": "generated-content-layer",
+      "registryPrefix": "examples.generated_models.tetrahedron",
+      "templateId": "templates.model.stl",
+      "templatePath": "docs/examples/generated_layers/stl_models/generated_layer.template.json",
+      "content": {
+        "kind": "stl",
+        "path": "docs/examples/generated_layers/stl_models/tetrahedron.stl",
+        "sidecar": "docs/examples/generated_layers/stl_models/tetrahedron.generated_layer.json",
+        "physicalScale": 1.0
+      },
+      "sourceStrategy": "template-generated",
+      "implementationType": "model.stlViewer",
+      "manifestInspectionOnly": true,
+      "runtimeLoadingImplemented": false,
+      "description": "Tiny ASCII STL fixture used to prove generated model-layer catalog output without runtime loading.",
+      "tags": [
+        "fixture",
+        "generated",
+        "low-poly",
+        "model",
+        "stl"
+      ],
+      "parameterCount": 19,
+      "defaultKeys": [
+        "autoCenter",
+        "colorB",
+        "colorG",
+        "colorR",
+        "lighting",
+        "materialMode",
+        "materialPreset",
+        "opacity",
+        "positionX",
+        "positionY",
+        "positionZ",
+        "rotationXDeg",
+        "rotationYDeg",
+        "rotationZDeg",
+        "scale",
+        "showNormals",
+        "spinSpeedDeg",
+        "visible",
+        "wireframe"
+      ],
+      "parameters": [
+        {
+          "id": "autoCenter",
+          "kind": "bool",
+          "label": "Transform: Auto Center",
+          "default": true
+        },
+        {
+          "id": "colorB",
+          "kind": "float",
+          "label": "Material: Blue",
+          "default": 1.0,
+          "range": {
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
+          }
+        },
+        {
+          "id": "colorG",
+          "kind": "float",
+          "label": "Material: Green",
+          "default": 0.9,
+          "range": {
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
+          }
+        },
+        {
+          "id": "colorR",
+          "kind": "float",
+          "label": "Material: Red",
+          "default": 0.72,
+          "range": {
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
+          }
+        },
+        {
+          "id": "lighting",
+          "kind": "bool",
+          "label": "Material: Lighting",
+          "default": true
+        },
+        {
+          "id": "materialMode",
+          "kind": "string",
+          "label": "Material: Mode",
+          "default": "solid",
+          "options": [
+            {
+              "value": "solid",
+              "label": "Solid"
+            },
+            {
+              "value": "wire",
+              "label": "Wireframe"
+            },
+            {
+              "value": "points",
+              "label": "Points"
+            }
+          ]
+        },
+        {
+          "id": "materialPreset",
+          "kind": "string",
+          "label": "Material: Preset",
+          "default": "neutral",
+          "optionsSource": {
+            "id": "runtime.modelMaterialPresets",
+            "value": "id",
+            "label": "label"
+          }
+        },
+        {
+          "id": "opacity",
+          "kind": "float",
+          "label": "Visibility: Opacity",
+          "default": 1.0,
+          "range": {
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
+          },
+          "units": "normalized"
+        },
+        {
+          "id": "positionX",
+          "kind": "float",
+          "label": "Transform: Position X",
+          "default": 0.0,
+          "range": {
+            "min": -10000.0,
+            "max": 10000.0,
+            "step": 1.0
+          },
+          "units": "world"
+        },
+        {
+          "id": "positionY",
+          "kind": "float",
+          "label": "Transform: Position Y",
+          "default": 0.0,
+          "range": {
+            "min": -10000.0,
+            "max": 10000.0,
+            "step": 1.0
+          },
+          "units": "world"
+        },
+        {
+          "id": "positionZ",
+          "kind": "float",
+          "label": "Transform: Position Z",
+          "default": 0.0,
+          "range": {
+            "min": -10000.0,
+            "max": 10000.0,
+            "step": 1.0
+          },
+          "units": "world"
+        },
+        {
+          "id": "rotationXDeg",
+          "kind": "float",
+          "label": "Transform: Rotation X",
+          "default": 0.0,
+          "range": {
+            "min": -180.0,
+            "max": 180.0,
+            "step": 1.0
+          },
+          "units": "deg"
+        },
+        {
+          "id": "rotationYDeg",
+          "kind": "float",
+          "label": "Transform: Rotation Y",
+          "default": 30.0,
+          "range": {
+            "min": -180.0,
+            "max": 180.0,
+            "step": 1.0
+          },
+          "units": "deg"
+        },
+        {
+          "id": "rotationZDeg",
+          "kind": "float",
+          "label": "Transform: Rotation Z",
+          "default": 0.0,
+          "range": {
+            "min": -180.0,
+            "max": 180.0,
+            "step": 1.0
+          },
+          "units": "deg"
+        },
+        {
+          "id": "scale",
+          "kind": "float",
+          "label": "Transform: Scale",
+          "default": 1.25,
+          "range": {
+            "min": 0.001,
+            "max": 100.0,
+            "step": 0.001
+          },
+          "units": "multiplier"
+        },
+        {
+          "id": "showNormals",
+          "kind": "bool",
+          "label": "Material: Show Normals",
+          "default": false
+        },
+        {
+          "id": "spinSpeedDeg",
+          "kind": "float",
+          "label": "Motion: Spin Speed",
+          "default": 12.0,
+          "range": {
+            "min": -360.0,
+            "max": 360.0,
+            "step": 1.0
+          },
+          "units": "deg/s"
+        },
+        {
+          "id": "visible",
+          "kind": "bool",
+          "label": "Visibility: Visible",
+          "default": true
+        },
+        {
+          "id": "wireframe",
+          "kind": "bool",
+          "label": "Material: Wireframe",
+          "default": false
+        }
+      ]
+    }
+  ]
+}

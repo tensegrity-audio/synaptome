@@ -43,6 +43,24 @@ namespace {
         return randomRange(rng, 0.0f, 1.0f);
     }
 
+    float polylineLength(const std::vector<RiverFormationLayer::RiverNode>& nodes) {
+        if (nodes.size() < 2) return 0.0f;
+
+        float length = 0.0f;
+        for (std::size_t i = 1; i < nodes.size(); ++i) {
+            length += glm::length(nodes[i].fieldPosition - nodes[i - 1].fieldPosition);
+        }
+        return length;
+    }
+
+    float polylineSinuosity(const std::vector<RiverFormationLayer::RiverNode>& nodes) {
+        if (nodes.size() < 2) return 1.0f;
+
+        const float length = std::max(kMinSegmentLength, polylineLength(nodes));
+        const float direct = std::max(kMinSegmentLength, glm::length(nodes.back().fieldPosition - nodes.front().fieldPosition));
+        return std::max(1.0f, length / direct);
+    }
+
     struct SegmentApproach {
         float distanceSq = std::numeric_limits<float>::max();
         glm::vec2 first{ 0.0f, 0.0f };
@@ -184,7 +202,7 @@ void RiverFormationLayer::setup(ParameterRegistry& registry) {
     registerFloat(registry, prefix + ".warmupSteps", &paramWarmupSteps_, paramWarmupSteps_, "Time: Warmup Steps", 0.0f, 800.0f, 1.0f,
                   "Optional hidden simulation steps to pre-age the channel after reset. Use 0 for a straight-start reveal.");
 
-    registerFloat(registry, prefix + ".pathPoints", &paramPathPoints_, paramPathPoints_, "Count: Path Points", 48.0f, 300.0f, 1.0f);
+    registerFloat(registry, prefix + ".pathPoints", &paramPathPoints_, paramPathPoints_, "Count: Path Points", 64.0f, 360.0f, 1.0f);
     registerFloat(registry, prefix + ".riverWidth", &paramRiverWidth_, paramRiverWidth_, "Scale: River Width", 1.0f, 18.0f, 0.1f);
     registerFloat(registry, prefix + ".widthVariation", &paramWidthVariation_, paramWidthVariation_, "Scale: Width Variation", 0.0f, 1.4f, 0.01f);
     registerFloat(registry, prefix + ".widthPulse", &paramWidthPulse_, paramWidthPulse_, "Motion: Width Pulse", 0.0f, 1.0f, 0.01f);
@@ -197,7 +215,7 @@ void RiverFormationLayer::setup(ParameterRegistry& registry) {
     registerFloat(registry, prefix + ".trailDecay", &paramTrailDecay_, paramTrailDecay_, "Time: Trail Decay", 0.0f, 0.12f, 0.001f);
     registerFloat(registry, prefix + ".oxbowDecay", &paramOxbowDecay_, paramOxbowDecay_, "Time: Oxbow Decay", 0.0f, 0.05f, 0.001f);
     registerFloat(registry, prefix + ".cutoffFactor", &paramCutoffFactor_, paramCutoffFactor_, "Scale: Cutoff Distance", 0.0f, 6.0f, 0.01f);
-    registerFloat(registry, prefix + ".branchChance", &paramBranchChance_, paramBranchChance_, "Growth: Branch Chance", 0.0f, 0.20f, 0.001f);
+    registerFloat(registry, prefix + ".branchChance", &paramBranchChance_, paramBranchChance_, "Growth: Chute Chance", 0.0f, 0.05f, 0.001f);
     registerFloat(registry, prefix + ".maxBranches", &paramMaxBranches_, paramMaxBranches_, "Count: Max Branches", 0.0f, 12.0f, 1.0f);
     registerFloat(registry, prefix + ".branchLength", &paramBranchLength_, paramBranchLength_, "Scale: Branch Length", 0.15f, 1.6f, 0.01f);
     registerFloat(registry, prefix + ".branchAngle", &paramBranchAngle_, paramBranchAngle_, "Motion: Branch Angle", 0.0f, 1.2f, 0.01f);
@@ -370,7 +388,7 @@ void RiverFormationLayer::clampParams() {
     paramAutoReseedEveryBeats_ = std::round(ofClamp(paramAutoReseedEveryBeats_, 8.0f, 512.0f));
     paramSeed_ = std::round(ofClamp(paramSeed_, 0.0f, 999999.0f));
     paramWarmupSteps_ = std::round(ofClamp(paramWarmupSteps_, 0.0f, 800.0f));
-    paramPathPoints_ = std::round(ofClamp(paramPathPoints_, 48.0f, 300.0f));
+    paramPathPoints_ = std::round(ofClamp(paramPathPoints_, 64.0f, 360.0f));
     paramRiverWidth_ = ofClamp(paramRiverWidth_, 1.0f, 18.0f);
     paramWidthVariation_ = ofClamp(paramWidthVariation_, 0.0f, 1.4f);
     paramWidthPulse_ = ofClamp(paramWidthPulse_, 0.0f, 1.0f);
@@ -382,7 +400,7 @@ void RiverFormationLayer::clampParams() {
     paramTrailDecay_ = ofClamp(paramTrailDecay_, 0.0f, 0.12f);
     paramOxbowDecay_ = ofClamp(paramOxbowDecay_, 0.0f, 0.05f);
     paramCutoffFactor_ = ofClamp(paramCutoffFactor_, 0.0f, 6.0f);
-    paramBranchChance_ = ofClamp(paramBranchChance_, 0.0f, 0.20f);
+    paramBranchChance_ = ofClamp(paramBranchChance_, 0.0f, 0.05f);
     paramMaxBranches_ = std::round(ofClamp(paramMaxBranches_, 0.0f, 12.0f));
     paramBranchLength_ = ofClamp(paramBranchLength_, 0.15f, 1.6f);
     paramBranchAngle_ = ofClamp(paramBranchAngle_, 0.0f, 1.2f);
@@ -424,7 +442,9 @@ void RiverFormationLayer::resetSimulation() {
     abandonedPaths_.clear();
     simAge_ = 0.0f;
     cutoffCooldown_ = 24;
+    cutoffCount_ = 0;
     cutoffPulse_ = 0.0f;
+    lastSinuosity_ = 1.0f;
     stepAccumulator_ = 0.0f;
     for (auto& path : paths_) {
         updatePathGeometry(path);
@@ -504,7 +524,9 @@ RiverFormationLayer::RiverPath RiverFormationLayer::buildBranchFrom(const RiverP
 RiverFormationLayer::RiverPath RiverFormationLayer::buildBranchBetween(const RiverPath& parent, int startIndex, int endIndex, std::mt19937& rng) const {
     RiverPath branch;
     branch.mainStem = false;
-    branch.widthScale = paramBranchWidth_ * randomRange(rng, 0.42f, 0.72f);
+    branch.chute = true;
+    branch.flowShare = 0.24f;
+    branch.widthScale = paramBranchWidth_ * randomRange(rng, 0.40f, 0.62f);
     startIndex = ofClamp(startIndex, 1, static_cast<int>(parent.nodes.size()) - 3);
     endIndex = ofClamp(endIndex, startIndex + 8, static_cast<int>(parent.nodes.size()) - 2);
     const RiverNode& root = parent.nodes[static_cast<std::size_t>(startIndex)];
@@ -518,10 +540,10 @@ RiverFormationLayer::RiverPath RiverFormationLayer::buildBranchBetween(const Riv
     const float parentMidIndex = static_cast<float>(startIndex + endIndex) * 0.5f;
     const float parentMidY = parent.nodes[static_cast<std::size_t>(ofClamp(static_cast<int>(std::round(parentMidIndex)), 0, static_cast<int>(parent.nodes.size()) - 1))].fieldPosition.y;
     const float side = ((root.fieldPosition.y + join.fieldPosition.y) * 0.5f < parentMidY) ? -1.0f : 1.0f;
-    const float sideOffset = reach * ofLerp(0.035f, 0.16f, paramBranchAngle_) * side;
+    const float sideOffset = reach * ofLerp(0.0f, 0.045f, paramBranchAngle_) * side;
     const glm::vec2 control = (root.fieldPosition + join.fieldPosition) * 0.5f + normal * sideOffset;
 
-    const int count = std::max(10, static_cast<int>(std::round(static_cast<float>(endIndex - startIndex) * 0.55f)));
+    const int count = std::max(8, std::min(48, static_cast<int>(std::round(reach / std::max(0.8f, paramRiverWidth_ * 0.55f)))));
     branch.nodes.reserve(static_cast<std::size_t>(count));
     for (int i = 0; i < count; ++i) {
         const float u = static_cast<float>(i) / static_cast<float>(count - 1);
@@ -530,8 +552,8 @@ RiverFormationLayer::RiverPath RiverFormationLayer::buildBranchBetween(const Riv
         const glm::vec2 base = glm::mix(a, b, u);
         const float taper = smootherStep(ofClamp(u * 5.0f, 0.0f, 1.0f)) *
                             smootherStep(ofClamp((1.0f - u) * 5.0f, 0.0f, 1.0f));
-        const float wobble = std::sin(u * PI * randomRange(rng, 0.8f, 1.5f) + randomRange(rng, 0.0f, TWO_PI)) *
-                             std::max(0.35f, paramRiverWidth_ * 0.18f) * taper;
+        const float wobble = std::sin(u * PI + randomRange(rng, -0.35f, 0.35f)) *
+                             std::max(0.08f, paramRiverWidth_ * 0.035f) * taper;
         RiverNode node;
         node.fieldPosition = base + normal * wobble;
         branch.nodes.push_back(node);
@@ -543,27 +565,39 @@ bool RiverFormationLayer::findNeckCandidate(const RiverPath& path, int& startInd
     if (path.nodes.size() < 40) return false;
 
     const int count = static_cast<int>(path.nodes.size());
-    const int minSpacing = std::max(18, count / 10);
-    const float minDistance = std::max(1.25f, paramRiverWidth_ * 1.05f);
-    const float maxDistance = std::max(minDistance + 0.5f, paramRiverWidth_ * ofLerp(2.2f, 7.5f, ofClamp(paramBranchLength_ / 1.6f, 0.0f, 1.0f)));
+    const int minSpacing = std::max(14, count / 16);
+    const float channelWidth = std::max(1.0f, paramRiverWidth_);
+    const float cutoffDistance = channelWidth * std::max(1.6f, paramCutoffFactor_);
+    const float minDistance = std::max(channelWidth * 1.45f, cutoffDistance * 0.70f);
+    const float maxDistance = std::max(minDistance + channelWidth,
+                                       channelWidth * ofLerp(3.8f, 9.0f, ofClamp(paramBranchLength_ / 1.6f, 0.0f, 1.0f)));
     const float maxDistanceSq = maxDistance * maxDistance;
     float bestScore = std::numeric_limits<float>::max();
     int bestI = -1;
     int bestJ = -1;
 
-    for (int i = 4; i < count - minSpacing - 4; ++i) {
-        for (int j = i + minSpacing; j < count - 4; ++j) {
-            const glm::vec2 delta = path.nodes[static_cast<std::size_t>(i)].fieldPosition - path.nodes[static_cast<std::size_t>(j)].fieldPosition;
-            const float distSq = glm::dot(delta, delta);
-            if (distSq > maxDistanceSq) continue;
-            const float dist = std::sqrt(std::max(0.0f, distSq));
+    std::vector<float> cumulative(path.nodes.size(), 0.0f);
+    for (std::size_t i = 1; i < path.nodes.size(); ++i) {
+        cumulative[i] = cumulative[i - 1] + glm::length(path.nodes[i].fieldPosition - path.nodes[i - 1].fieldPosition);
+    }
+
+    for (int i = 3; i < count - minSpacing - 3; ++i) {
+        const glm::vec2 a0 = path.nodes[static_cast<std::size_t>(i)].fieldPosition;
+        const glm::vec2 a1 = path.nodes[static_cast<std::size_t>(i + 1)].fieldPosition;
+        for (int j = i + minSpacing; j < count - 3; ++j) {
+            const glm::vec2 b0 = path.nodes[static_cast<std::size_t>(j)].fieldPosition;
+            const glm::vec2 b1 = path.nodes[static_cast<std::size_t>(j + 1)].fieldPosition;
+            const SegmentApproach approach = closestSegmentApproach(a0, a1, b0, b1);
+            if (approach.distanceSq > maxDistanceSq) continue;
+            const float dist = std::sqrt(std::max(0.0f, approach.distanceSq));
             if (dist < minDistance) continue;
-            const float spacingScore = static_cast<float>(j - i) / static_cast<float>(count);
-            const float score = dist + spacingScore * paramRiverWidth_ * 0.8f;
+            const float loopLength = cumulative[static_cast<std::size_t>(j)] - cumulative[static_cast<std::size_t>(i)];
+            const float shortcutAdvantage = ofClamp((loopLength - dist) / std::max(channelWidth, loopLength), 0.0f, 1.0f);
+            const float score = dist - shortcutAdvantage * channelWidth * 1.35f;
             if (score < bestScore) {
                 bestScore = score;
-                bestI = i;
-                bestJ = j;
+                bestI = i + (approach.firstT > 0.5f ? 1 : 0);
+                bestJ = j + (approach.secondT > 0.5f ? 1 : 0);
             }
         }
     }
@@ -580,24 +614,36 @@ void RiverFormationLayer::simulateStep() {
 
     if (!paths_.empty()) {
         RiverPath& main = paths_.front();
+        const auto mainTargetCount = [&]() {
+            const float targetSpacing = std::max(1.0f, paramRiverWidth_ * 0.68f);
+            const int dynamicCount = static_cast<int>(std::ceil(polylineLength(main.nodes) / targetSpacing));
+            return std::max(static_cast<int>(std::round(paramPathPoints_)), std::min(std::max(dynamicCount, 64), 360));
+        };
         migratePath(main);
         smoothPath(main);
-        resamplePath(main, static_cast<int>(std::round(paramPathPoints_)));
+        resamplePath(main, mainTargetCount());
         constrainPathProgress(main);
         updatePathGeometry(main);
+        const int cutoffCountBefore = cutoffCount_;
         maybeApplyCutoff(main);
-        resamplePath(main, static_cast<int>(std::round(paramPathPoints_)));
+        if (cutoffCount_ != cutoffCountBefore && paths_.size() > 1) {
+            paths_.erase(paths_.begin() + 1, paths_.end());
+        }
+        resamplePath(main, mainTargetCount());
         constrainPathProgress(main);
         updatePathGeometry(main);
+        lastSinuosity_ = polylineSinuosity(main.nodes);
         main.age += 1.0f;
 
         if (paths_.size() > 1) {
+            const float chuteMaxAge = ofLerp(90.0f, 320.0f, ofClamp(paramBranchLength_ / 1.6f, 0.0f, 1.0f));
             paths_.erase(std::remove_if(paths_.begin() + 1,
                                         paths_.end(),
                                         [&](const RiverPath& path) {
                                             return path.attachStartIndex < 0 ||
                                                    path.attachEndIndex >= static_cast<int>(main.nodes.size()) ||
-                                                   path.attachEndIndex - path.attachStartIndex < 8;
+                                                   path.attachEndIndex - path.attachStartIndex < 8 ||
+                                                   (path.chute && path.age > chuteMaxAge);
                                         }),
                          paths_.end());
         }
@@ -608,6 +654,11 @@ void RiverFormationLayer::simulateStep() {
                 path.attachEndIndex < static_cast<int>(main.nodes.size())) {
                 path.nodes.front().fieldPosition = main.nodes[static_cast<std::size_t>(path.attachStartIndex)].fieldPosition;
                 path.nodes.back().fieldPosition = main.nodes[static_cast<std::size_t>(path.attachEndIndex)].fieldPosition;
+            }
+            if (path.chute) {
+                const float maturity = smootherStep(ofClamp(path.age / 95.0f, 0.0f, 1.0f));
+                path.flowShare = ofLerp(0.20f, 0.62f, maturity);
+                path.widthScale = ofLerp(path.widthScale, paramBranchWidth_ * ofLerp(0.48f, 0.88f, maturity), 0.035f);
             }
             migratePath(path);
             smoothPath(path);
@@ -655,6 +706,7 @@ void RiverFormationLayer::fadeFields() {
 
 void RiverFormationLayer::maybeSpawnBranch() {
     if (paths_.empty() || paramMaxBranches_ <= 0.0f) return;
+    if (lastSinuosity_ < 1.16f || cutoffCooldown_ > 0) return;
 
     int branchCount = 0;
     for (const auto& path : paths_) {
@@ -701,8 +753,19 @@ void RiverFormationLayer::migratePath(RiverPath& path) {
 
     const float totalLength = std::max(kMinSegmentLength, cumulative.back());
     const float directLength = std::max(kMinSegmentLength, glm::length(path.nodes.back().fieldPosition - path.nodes.front().fieldPosition));
-    const float sinuosityScale = std::pow(std::max(1.0f, totalLength / directLength), -2.0f / 3.0f);
-    const float memoryDistance = std::max(1.0f, paramCurvatureMemory_ * std::max(1.0f, paramRiverWidth_));
+    const float sinuosity = std::max(1.0f, totalLength / directLength);
+    float averageWidth = 0.0f;
+    for (const auto& node : path.nodes) {
+        averageWidth += std::max(0.65f, node.width);
+    }
+    averageWidth = std::max(1.0f, averageWidth / static_cast<float>(path.nodes.size()));
+
+    const float ageRamp = path.mainStem ? ofLerp(0.22f, 1.0f, smootherStep(ofClamp(path.age / 180.0f, 0.0f, 1.0f))) : 0.80f;
+    const float targetSinuosity = path.mainStem ? ofLerp(1.03f, 1.62f, smootherStep(ofClamp(path.age / 720.0f, 0.0f, 1.0f))) : 1.08f;
+    const float sinuosityFeedback = path.mainStem ? ofClamp(1.0f + (targetSinuosity - sinuosity) * 0.78f, 0.45f, 1.55f) : 0.55f;
+    const float sinuosityDamping = std::pow(sinuosity, -0.52f);
+    const float mobilityScale = ageRamp * sinuosityFeedback * sinuosityDamping * (path.chute ? 0.18f : 1.0f);
+    const float memoryDistance = std::max(1.0f, paramCurvatureMemory_ * averageWidth);
 
     for (int i = 1; i + 1 < count; ++i) {
         const glm::vec2 prev = path.nodes[static_cast<std::size_t>(i - 1)].fieldPosition;
@@ -713,7 +776,11 @@ void RiverFormationLayer::migratePath(RiverPath& path) {
         const float denom = std::pow(std::max(kMinSegmentLength, glm::dot(firstDerivative, firstDerivative)), 1.5f);
         const float curvature = cross2d(firstDerivative, secondDerivative) / denom;
         const float dimensionlessCurvature = path.nodes[static_cast<std::size_t>(i)].width * curvature;
-        nominalRate[static_cast<std::size_t>(i)] = paramMigrationRate_ * paramErosionStrength_ * dimensionlessCurvature;
+        const float limitedCurvature = std::tanh(dimensionlessCurvature * 2.6f) / 2.6f;
+        nominalRate[static_cast<std::size_t>(i)] = paramMigrationRate_ *
+                                                   paramErosionStrength_ *
+                                                   path.nodes[static_cast<std::size_t>(i)].width *
+                                                   limitedCurvature;
     }
 
     for (int i = firstEditable; i <= lastEditable; ++i) {
@@ -730,7 +797,7 @@ void RiverFormationLayer::migratePath(RiverPath& path) {
         }
 
         const float upstreamMean = totalWeight > 0.0f ? weightedRate / totalWeight : 0.0f;
-        float migrationRate = (-nominalRate[static_cast<std::size_t>(i)] + 2.5f * upstreamMean) * sinuosityScale;
+        float migrationRate = (-nominalRate[static_cast<std::size_t>(i)] + 2.5f * upstreamMean) * mobilityScale;
         if (!std::isfinite(migrationRate)) migrationRate = 0.0f;
 
         const RiverCell forwardBank = sampleCell(node.fieldPosition + migrationNormal * node.width);
@@ -743,11 +810,11 @@ void RiverFormationLayer::migratePath(RiverPath& path) {
 
         const float fixedBankBias = signedNoise(node.fieldPosition.x * 0.028f + static_cast<float>(seedState_) * 0.03f,
                                                 node.fieldPosition.y * 0.043f,
-                                                path.widthScale * 13.0f) * paramNoiseAmount_ * 0.075f;
-        const float bankContrastBias = (forwardSoftness - reverseSoftness) * paramNoiseAmount_ * 0.065f;
+                                                path.widthScale * 13.0f) * paramNoiseAmount_ * averageWidth * 0.030f * ageRamp;
+        const float bankContrastBias = (forwardSoftness - reverseSoftness) * paramNoiseAmount_ * averageWidth * 0.085f;
         float displacement = migrationRate + fixedBankBias + bankContrastBias;
         const float localSpacing = std::max(1.0f, (spacing[static_cast<std::size_t>(i)] + spacing[static_cast<std::size_t>(i + 1)]) * 0.5f);
-        const float maxDisplacement = std::max(0.05f, localSpacing * paramStabilityClamp_);
+        const float maxDisplacement = std::max(0.05f, std::min(localSpacing * paramStabilityClamp_, node.width * 0.42f));
         displacement = ofClamp(displacement, -maxDisplacement, maxDisplacement);
 
         glm::vec2 delta = migrationNormal * displacement;
@@ -940,8 +1007,16 @@ void RiverFormationLayer::maybeApplyCutoff(RiverPath& path) {
         shortcut.push_back(path.nodes[static_cast<std::size_t>(i)]);
     }
     path.nodes = std::move(shortcut);
-    resamplePath(path, static_cast<int>(std::round(paramPathPoints_)));
+    const float targetSpacing = std::max(1.0f, paramRiverWidth_ * 0.68f);
+    const int dynamicCount = static_cast<int>(std::ceil(polylineLength(path.nodes) / targetSpacing));
+    resamplePath(path, std::max(static_cast<int>(std::round(paramPathPoints_)), std::min(std::max(dynamicCount, 64), 360)));
+    for (int i = 0; i < 2; ++i) {
+        smoothPath(path);
+    }
+    resamplePath(path, std::max(static_cast<int>(std::round(paramPathPoints_)), std::min(std::max(dynamicCount, 64), 360)));
     cutoffPulse_ = 1.0f;
+    ++cutoffCount_;
+    lastSinuosity_ = polylineSinuosity(path.nodes);
     cutoffCooldown_ = std::max(18, count / 5);
 }
 

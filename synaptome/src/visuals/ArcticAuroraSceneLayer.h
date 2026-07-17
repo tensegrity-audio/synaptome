@@ -18,6 +18,20 @@ public:
 
 private:
     struct Iceberg {
+        struct Facet {
+            glm::vec3 a;
+            glm::vec3 b;
+            glm::vec3 c;
+            glm::vec3 centroid;
+            glm::vec3 normal;
+            glm::vec3 drift;
+            glm::vec3 crackA;
+            glm::vec3 crackB;
+            ofFloatColor color;
+            float fractureThreshold = 1.0f;
+            float fractureScale = 1.0f;
+        };
+
         glm::vec3 position;
         float orbitRadius = 0.0f;
         float orbitAngle = 0.0f;
@@ -30,6 +44,7 @@ private:
         ofMesh aboveWater;
         ofMesh belowWater;
         ofMesh rimLines;
+        std::vector<Facet> facets;
     };
 
     struct Star {
@@ -94,6 +109,8 @@ private:
     float paramIcebergScale_ = 1.0f;
     float paramIcebergSpread_ = 3400.0f;
     float paramIcebergRimLight_ = 0.0f;
+    float paramIcebergBreakup_ = 0.28f;
+    float paramIcebergBreakupSpeed_ = 0.025f;
 
     float paramAuroraWidth_ = 2600.0f;
     float paramAuroraBaseY_ = 220.0f;

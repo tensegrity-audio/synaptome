@@ -1,0 +1,293 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Synaptome Layer Browser Inspection Payload",
+  "description": "Draft read-only payload shape for inspecting package and generated-layer metadata before Browser/runtime integration.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "status",
+    "sourceStrategy",
+    "sources",
+    "counts",
+    "categories",
+    "layerGroups",
+    "kinds",
+    "entries"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1 },
+    "status": { "type": "string", "enum": ["draft-read-only"] },
+    "sourceStrategy": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "counts": { "$ref": "#/definitions/counts" },
+    "categories": { "$ref": "#/definitions/countMap" },
+    "layerGroups": { "$ref": "#/definitions/countMap" },
+    "kinds": { "$ref": "#/definitions/countMap" },
+    "entries": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/entry" }
+    }
+  },
+  "definitions": {
+    "counts": {
+      "type": "object",
+      "required": [
+        "entries",
+        "packageEntries",
+        "generatedEntries",
+        "parameters",
+        "presets",
+        "mappingPresets",
+        "categories",
+        "layerGroups"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "entries": { "type": "integer", "minimum": 0 },
+        "packageEntries": { "type": "integer", "minimum": 0 },
+        "generatedEntries": { "type": "integer", "minimum": 0 },
+        "parameters": { "type": "integer", "minimum": 0 },
+        "presets": { "type": "integer", "minimum": 0 },
+        "mappingPresets": { "type": "integer", "minimum": 0 },
+        "categories": { "type": "integer", "minimum": 0 },
+        "layerGroups": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "countMap": {
+      "type": "object",
+      "additionalProperties": { "type": "integer", "minimum": 0 }
+    },
+    "entry": {
+      "type": "object",
+      "required": [
+        "assetId",
+        "label",
+        "category",
+        "layerGroup",
+        "kind",
+        "layerType",
+        "registryPrefix",
+        "source",
+        "inspection",
+        "controls",
+        "presets",
+        "presetBanks",
+        "mappingPresets"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "assetId": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 },
+        "category": { "type": "string", "minLength": 1 },
+        "layerGroup": { "type": "string" },
+        "kind": {
+          "type": "string",
+          "enum": ["package-layer", "generated-content-layer"]
+        },
+        "layerType": { "type": "string", "minLength": 1 },
+        "registryPrefix": { "type": "string", "minLength": 1 },
+        "source": { "$ref": "#/definitions/source" },
+        "inspection": { "$ref": "#/definitions/inspection" },
+        "content": { "$ref": "#/definitions/content" },
+        "controls": { "$ref": "#/definitions/controls" },
+        "presets": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/presetRef" }
+        },
+        "presetBanks": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/presetBank" }
+        },
+        "mappingPresets": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/mappingPreset" }
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "required": ["kind", "strategy"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["layer-package", "generated-content"]
+        },
+        "path": { "type": "string" },
+        "templateId": { "type": "string" },
+        "templatePath": { "type": "string" },
+        "strategy": {
+          "type": "string",
+          "enum": ["source-registration", "template-generated"]
+        },
+        "sourceRegistrationRequired": { "type": "boolean" }
+      }
+    },
+    "inspection": {
+      "type": "object",
+      "required": [
+        "manifestInspectionOnly",
+        "runtimeLoadable",
+        "requiresInstantiation",
+        "mutatesScene"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "manifestInspectionOnly": { "type": "boolean" },
+        "runtimeLoadable": { "type": "boolean", "enum": [false] },
+        "requiresInstantiation": { "type": "boolean", "enum": [false] },
+        "mutatesScene": { "type": "boolean", "enum": [false] }
+      }
+    },
+    "content": {
+      "type": "object",
+      "required": ["kind", "path", "sidecar", "physicalScale"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 },
+        "sidecar": { "type": "string" },
+        "physicalScale": { "type": "number" }
+      }
+    },
+    "controls": {
+      "type": "object",
+      "required": ["count", "sections", "parameters"],
+      "additionalProperties": false,
+      "properties": {
+        "count": { "type": "integer", "minimum": 0 },
+        "sections": { "$ref": "#/definitions/countMap" },
+        "parameters": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/parameter" }
+        }
+      }
+    },
+    "parameter": {
+      "type": "object",
+      "required": ["id", "kind", "label", "section", "default"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": {
+          "type": "string",
+          "enum": ["float", "int", "bool", "string", "color", "vec2", "vec3", "enum"]
+        },
+        "label": { "type": "string", "minLength": 1 },
+        "section": { "type": "string", "minLength": 1 },
+        "default": {
+          "oneOf": [
+            { "type": "number" },
+            { "type": "boolean" },
+            { "type": "string" },
+            {
+              "type": "array",
+              "items": { "type": "number" }
+            }
+          ]
+        },
+        "range": { "$ref": "#/definitions/range" },
+        "units": { "type": "string" },
+        "options": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/option" }
+        },
+        "optionsSource": { "$ref": "#/definitions/optionsSource" },
+        "deprecated": { "$ref": "#/definitions/deprecated" }
+      }
+    },
+    "range": {
+      "type": "object",
+      "required": ["min", "max"],
+      "additionalProperties": false,
+      "properties": {
+        "min": { "type": "number" },
+        "max": { "type": "number" },
+        "step": { "type": "number" }
+      }
+    },
+    "option": {
+      "type": "object",
+      "required": ["value", "label"],
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "number" },
+            { "type": "boolean" }
+          ]
+        },
+        "label": { "type": "string", "minLength": 1 }
+      }
+    },
+    "optionsSource": {
+      "type": "object",
+      "required": ["id", "value", "label"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "value": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 }
+      }
+    },
+    "deprecated": {
+      "type": "object",
+      "required": ["reason"],
+      "additionalProperties": false,
+      "properties": {
+        "replacement": { "type": "string" },
+        "reason": { "type": "string", "minLength": 1 }
+      }
+    },
+    "presetRef": {
+      "type": "object",
+      "required": ["presetId", "label", "path"],
+      "additionalProperties": false,
+      "properties": {
+        "presetId": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 }
+      }
+    },
+    "presetBank": {
+      "type": "object",
+      "required": ["id", "label", "presets"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 },
+        "presets": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "mappingPreset": {
+      "type": "object",
+      "required": ["id", "label", "targets", "patterns"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 },
+        "targets": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "patterns": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

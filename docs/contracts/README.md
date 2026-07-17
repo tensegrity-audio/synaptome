@@ -47,6 +47,28 @@ app runtime loads packages yet.
 - `python tools\layer_catalog_regression.py --include-packages --check` validates the draft combined package/runtime catalog snapshot.
 - `python tools\gen_parameter_manifest.py --include-packages --check` validates the draft combined package/runtime parameter manifest snapshot.
 
+Draft generated-layer artifacts:
+
+These are draft file-backed layer contracts. They prove a content file can be
+expanded into stable catalog-style metadata, but they do not mean the app
+runtime scans STL/model folders yet.
+
+- [generated_layer_template.schema.json](../schemas/generated_layer_template.schema.json) is the draft template schema for generated content-backed layers.
+- [generated_layer_sidecar.schema.json](../schemas/generated_layer_sidecar.schema.json) is the optional per-content metadata sidecar schema.
+- [STL generated-layer fixture](../examples/generated_layers/stl_models/generated_layer.template.json) is the first template-backed content example.
+- `python tools\generated_layer_catalog_regression.py --check` validates generated catalog output, static and dynamic option metadata, and legacy layer asset ID conflicts.
+
+Draft Browser inspection artifacts:
+
+These are draft pre-UI contracts. They prove package and generated-layer
+metadata can be combined for inspection without requiring the Browser to load,
+instantiate, scan, or mutate anything.
+
+- [layer_browser_inspection_payload.schema.json](../schemas/layer_browser_inspection_payload.schema.json) is the draft read-only inspection payload schema.
+- [expected_layer_browser_inspection_payload.json](../../tools/testdata/layer_browser_inspection/expected_layer_browser_inspection_payload.json) is the current package/generated-layer inspection snapshot.
+- `python tools\layer_browser_inspection_payload.py --check` validates the generated payload against the golden snapshot and semantic read-only rules.
+- `python tools\validate_configs.py tools\testdata\layer_browser_inspection\expected_layer_browser_inspection_payload.json` validates the snapshot against the schema.
+
 Coverage commands:
 
 ```powershell
@@ -57,6 +79,9 @@ python tools\layer_package_catalog_regression.py --check
 python tools\layer_package_parameter_manifest.py --check
 python tools\layer_catalog_regression.py --include-packages --check
 python tools\gen_parameter_manifest.py --include-packages --check
+python tools\generated_layer_catalog_regression.py --check
+python tools\layer_browser_inspection_payload.py --check
+python tools\validate_configs.py tools\testdata\layer_browser_inspection\expected_layer_browser_inspection_payload.json
 ```
 
 Strict public contract mode reads committed fixtures from `tools/testdata/**` and examples under `docs/examples/**`. Live app-written files under `synaptome/bin/data/config/` and `synaptome/bin/data/layers/scenes/` remain runtime smoke state unless intentionally promoted into fixtures.

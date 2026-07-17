@@ -1,0 +1,51 @@
+{
+  "id": "generative.excitableMedia",
+  "label": "Excitable Media",
+  "category": "Generative",
+  "layerGroup": "Cellular Fields",
+  "model": "excitableMedia",
+  "stateModel": "resting, excited, and refractory fields with propagating excitation fronts",
+  "description": "Excitable medium simulation: seeded sparks travel as cardiac, neural, or chemical wavefronts through refractory tissue.",
+  "type": "excitableMedia",
+  "registryPrefix": "generative.excitableMedia",
+  "opacity": 1.0,
+  "modes": [
+    {
+      "id": "pulse",
+      "label": "Pulse",
+      "kind": "live",
+      "live": true,
+      "description": "Propagating excitation waves controlled by threshold, refractory time, and spark rate."
+    }
+  ],
+  "defaults": {
+    "speed": 30.0,
+    "bpmSync": true,
+    "bpmMultiplier": 8.0,
+    "alpha": 1.0,
+    "paused": false,
+    "autoReseed": false,
+    "autoReseedEveryBeats": 32.0,
+    "seed": 3773.0,
+    "seedDensity": 0.06,
+    "propagationRate": 1.35,
+    "excitationThreshold": 0.38,
+    "refractoryTime": 16.0,
+    "seedRate": 0.028,
+    "wavefrontWidth": 0.12,
+    "sparkleAmount": 0.38,
+    "fieldDiffusion": 0.08,
+    "decayRate": 0.18,
+    "injectionRadius": 4.0,
+    "fieldScale": 1.4,
+    "backgroundAlpha": 0.0,
+    "excitationAlpha": 1.0,
+    "refractoryAlpha": 0.42,
+    "wavefrontOpacity": 0.86,
+    "backgroundColor": [0.006, 0.012, 0.026],
+    "excitationColor": [0.18, 0.78, 1.0],
+    "refractoryColor": [0.22, 0.16, 0.46],
+    "wavefrontColor": [1.0, 0.94, 0.62]
+  },
+  "textureSize": [192, 108]
+}

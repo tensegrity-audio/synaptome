@@ -17,6 +17,7 @@ private:
     struct Boid {
         glm::vec2 pos{ 0.0f, 0.0f };
         glm::vec2 vel{ 0.0f, 0.0f };
+        float fear = 0.0f;
     };
 
     enum FlockModel {
@@ -33,10 +34,13 @@ private:
     void allocateTrail();
     void resetSimulation();
     void fadeTrail();
-    void stepSchooling(float dtScale);
+    void stepSchooling(float dtScale, float time);
     void stepMurmuration(float dtScale, float time);
     void stepPredators(float dtScale);
     void depositTrail(const glm::vec2& pos, float amount);
+    void depositFear(const glm::vec2& pos, float amount);
+    void propagateFear(float neighborRadius, float threatRadius);
+    glm::vec2 fearSteeringFor(const Boid& boid, float threatRadius, float time) const;
     void syncTexture();
     float stepRateFor(const LayerUpdateParams& params) const;
     glm::vec2 wrapPosition(glm::vec2 pos) const;
@@ -58,6 +62,12 @@ private:
     bool paramPredatorEnabled_ = false;
     float paramPredatorCount_ = 6.0f;
     float paramPredatorPressure_ = 1.0f;
+    bool paramFearWaveEnabled_ = false;
+    float paramFearPropagation_ = 0.38f;
+    float paramFearDecay_ = 0.08f;
+    float paramFearRadius_ = 24.0f;
+    float paramFearForce_ = 1.0f;
+    float paramFearTrailAlpha_ = 0.42f;
     float paramNeighborCount_ = 7.0f;
     float paramCohesion_ = 0.008f;
     float paramAlignment_ = 0.025f;
@@ -90,6 +100,8 @@ private:
     bool dirty_ = true;
     glm::ivec2 textureSize_{ 192, 108 };
     std::vector<float> trail_;
+    std::vector<float> fearTrail_;
+    std::vector<float> fearScratch_;
     ofFloatPixels pixels_;
     ofTexture texture_;
     std::vector<Boid> boids_;

@@ -84,6 +84,13 @@ std::string composeLayersFromFeed(const ofJson& payload) {
         };
         const auto& fx = payload["effects"];
         out << "\nEffects:";
+        if (fx.contains("mirror")) {
+            const auto& mirror = fx["mirror"];
+            out << " Mirror=" << routeName(mirror)
+                << " (mode " << ofToString(mirror.value("mode", 0))
+                << ", seg " << ofToString(mirror.value("segments", 0))
+                << ", detail " << ofToString(mirror.value("detail", 0.0f), 2) << ")";
+        }
         if (fx.contains("dither")) {
             const auto& dither = fx["dither"];
             out << " Dither=" << routeName(dither)

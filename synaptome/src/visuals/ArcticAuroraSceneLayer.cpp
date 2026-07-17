@@ -63,8 +63,7 @@ namespace {
     }
 
     struct AuroraFlow {
-        float angularOffset = 0.0f;
-        float radialOffset = 0.0f;
+        glm::vec2 planarOffset = glm::vec2(0.0f, 0.0f);
         float verticalOffset = 0.0f;
         float energy = 1.0f;
     };
@@ -331,6 +330,8 @@ void ArcticAuroraSceneLayer::configure(const ofJson& config) {
     paramIcebergScale_ = def.value("icebergScale", paramIcebergScale_);
     paramIcebergSpread_ = def.value("icebergSpread", paramIcebergSpread_);
     paramIcebergRimLight_ = def.value("icebergRimLight", paramIcebergRimLight_);
+    paramIcebergBreakup_ = def.value("icebergBreakup", paramIcebergBreakup_);
+    paramIcebergBreakupSpeed_ = def.value("icebergBreakupSpeed", paramIcebergBreakupSpeed_);
     paramAuroraWidth_ = def.value("auroraWidth", paramAuroraWidth_);
     paramAuroraBaseY_ = def.value("auroraBaseY", paramAuroraBaseY_);
     paramAuroraHeight_ = def.value("auroraHeight", paramAuroraHeight_);
@@ -414,6 +415,8 @@ void ArcticAuroraSceneLayer::setup(ParameterRegistry& registry) {
     registerFloat(registry, prefix + ".icebergScale", &paramIcebergScale_, paramIcebergScale_, "Icebergs: Scale", 0.2f, 2.0f, 0.01f);
     registerFloat(registry, prefix + ".icebergSpread", &paramIcebergSpread_, paramIcebergSpread_, "Icebergs: Spread", 100.0f, 5000.0f, 10.0f);
     registerFloat(registry, prefix + ".icebergRimLight", &paramIcebergRimLight_, paramIcebergRimLight_, "Icebergs: Edge Lines", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".icebergBreakup", &paramIcebergBreakup_, paramIcebergBreakup_, "Icebergs: Breakup", 0.0f, 1.0f, 0.01f);
+    registerFloat(registry, prefix + ".icebergBreakupSpeed", &paramIcebergBreakupSpeed_, paramIcebergBreakupSpeed_, "Icebergs: Breakup Speed", 0.0f, 0.16f, 0.001f);
 
     registerFloat(registry, prefix + ".auroraWidth", &paramAuroraWidth_, paramAuroraWidth_, "Aurora: Arc Length", 300.0f, 8000.0f, 10.0f);
     registerFloat(registry, prefix + ".auroraBaseY", &paramAuroraBaseY_, paramAuroraBaseY_, "Aurora: Base Y", -100.0f, 700.0f, 1.0f);
@@ -591,6 +594,8 @@ void ArcticAuroraSceneLayer::clampParams() {
     paramIcebergScale_ = ofClamp(paramIcebergScale_, 0.2f, 2.0f);
     paramIcebergSpread_ = ofClamp(paramIcebergSpread_, 100.0f, 5000.0f);
     paramIcebergRimLight_ = ofClamp(paramIcebergRimLight_, 0.0f, 1.0f);
+    paramIcebergBreakup_ = ofClamp(paramIcebergBreakup_, 0.0f, 1.0f);
+    paramIcebergBreakupSpeed_ = ofClamp(paramIcebergBreakupSpeed_, 0.0f, 0.16f);
     paramAuroraWidth_ = ofClamp(paramAuroraWidth_, 300.0f, 8000.0f);
     paramAuroraBaseY_ = ofClamp(paramAuroraBaseY_, -100.0f, 700.0f);
     paramAuroraHeight_ = ofClamp(paramAuroraHeight_, 100.0f, 900.0f);
@@ -792,6 +797,13 @@ void ArcticAuroraSceneLayer::drawAuroraVolume(const LayerDrawParams& params, flo
     const float baseArc = ofClamp(requestedArc * (1.0f + widthDrive * 0.34f + pulseDrive * 0.08f),
                                   PI * 0.38f,
                                   TWO_PI * 0.36f);
+    const float baseWidth = ofClamp(paramAuroraWidth_ * (1.0f + widthDrive * 0.24f + pulseDrive * 0.045f),
+                                    700.0f,
+                                    std::max(900.0f, paramWaterWidth_ * 1.35f));
+    const float depthSpan = std::max(80.0f, outerRadius - innerRadius);
+    const glm::vec2 windDir = glm::normalize(glm::vec2(0.86f, -0.51f));
+    const glm::vec2 crossWind(-windDir.y, windDir.x);
+    const float windTravel = time * (92.0f + audioDrive * 11.0f + pulseDrive * 5.0f);
 
     const ofFloatColor primary = colorFrom(paramAuroraR_, paramAuroraG_, paramAuroraB_, 1.0f);
     const ofFloatColor secondary = colorFrom(paramAurora2R_, paramAurora2G_, paramAurora2B_, 1.0f);
@@ -819,42 +831,61 @@ void ArcticAuroraSceneLayer::drawAuroraVolume(const LayerDrawParams& params, flo
         return value - std::floor(value);
     };
 
-    auto polarEnergyAt = [&](float theta) {
-        const float sweep = time * 0.010f + audioDrive * 0.006f;
-        return fieldAt(wrap01(theta / TWO_PI - sweep));
+    auto sceneXZAt = [&](float theta, float radius) {
+        const float x = ((theta + HALF_PI) / std::max(0.001f, baseArc)) * baseWidth;
+        return glm::vec2(x, -radius);
     };
 
-    auto sharedPolarFlowAt = [&](float theta, float radiusT, float verticalT) {
-        const float flowTime = time * (0.13f + audioDrive * 0.010f) + pulseDrive * 0.018f;
-        const float polarEnergy = polarEnergyAt(theta);
-        const float path = theta * 0.46f + radiusT * 1.35f;
+    auto scenePointAt = [&](float theta, float radius, float y) {
+        const glm::vec2 xz = sceneXZAt(theta, radius);
+        return glm::vec3(xz.x, y, xz.y);
+    };
+
+    auto sceneEnergyAt = [&](const glm::vec2& xz) {
+        const float advectedAlong = glm::dot(xz, windDir) - windTravel;
+        const float advectedCross = glm::dot(xz, crossWind);
+        const float fieldU = advectedAlong / std::max(520.0f, baseWidth * 0.68f) +
+            advectedCross * 0.00010f;
+        return fieldAt(wrap01(fieldU));
+    };
+
+    auto sharedSceneFlowAt = [&](float theta, float radiusT, float verticalT) {
+        const float baseRadius = ofLerp(innerRadius, outerRadius, radiusT);
+        const glm::vec2 xz = sceneXZAt(theta, baseRadius);
+        const glm::vec2 advected = xz - windDir * windTravel;
+        const float along = glm::dot(advected, windDir);
+        const float across = glm::dot(advected, crossWind);
+        const float flowTime = time * (0.055f + audioDrive * 0.004f) + pulseDrive * 0.010f;
+        const float sceneEnergy = sceneEnergyAt(xz);
+        const float path = along * 0.0018f + across * 0.00036f + radiusT * 1.15f;
         const float vertical = ofClamp(verticalT, 0.0f, 1.0f);
-        const float streamA = signedNoise(path * 0.78f + flowTime * 0.30f,
-                                          radiusT * 1.8f + vertical * 0.46f,
-                                          flowTime * 0.86f);
-        const float streamB = signedNoise(path * 1.64f - flowTime * 0.18f,
-                                          vertical * 1.55f + radiusT * 0.72f,
-                                          flowTime * 0.62f + 17.0f);
-        const float streamC = std::sin(path * 3.4f + vertical * 2.1f + flowTime * 1.18f);
-        const float sharedField = streamA * 0.52f + streamB * 0.22f + streamC * 0.26f;
-        const float shearField = streamB * 0.56f - streamA * 0.24f +
-            std::sin((path + vertical * 0.80f) * 4.6f - flowTime * 0.90f) * 0.20f;
+        const float streamA = signedNoise(along * 0.0011f + flowTime * 0.34f,
+                                          across * 0.0017f + radiusT * 2.2f,
+                                          vertical * 0.42f + flowTime * 0.58f);
+        const float streamB = signedNoise(along * 0.0023f - flowTime * 0.26f + 19.0f,
+                                          across * 0.0010f + vertical * 1.70f,
+                                          radiusT * 0.72f + flowTime * 0.42f);
+        const float streamC = std::sin(path * 2.7f + vertical * 1.8f + flowTime * 1.12f);
+        const float sharedField = streamA * 0.50f + streamB * 0.24f + streamC * 0.26f;
+        const float shearField = streamB * 0.54f - streamA * 0.20f +
+            std::sin((path + vertical * 0.55f) * 3.8f - flowTime * 0.80f) * 0.26f;
         const float radiusWeight = ofLerp(0.82f, 1.14f, smootherStep(radiusT));
         const float verticalWeight = ofLerp(0.48f, 1.12f, smootherStep(vertical));
         const float edgeWeight = std::pow(std::abs(vertical * 2.0f - 1.0f), 1.18f);
         const float flowGain = (1.0f + foldStrength * 0.36f) *
             (1.0f + audioDrive * 0.09f + pulseDrive * 0.06f) *
-            (0.90f + polarEnergy * 0.18f);
+            (0.90f + sceneEnergy * 0.18f);
 
         AuroraFlow flow;
-        flow.angularOffset = (sharedField * 0.018f + shearField * 0.012f) *
+        const float crossOffset = (sharedField * 96.0f + shearField * 42.0f) *
             flowGain * radiusWeight * ofLerp(0.58f, 1.0f, vertical);
-        flow.radialOffset = (sharedField * 70.0f + shearField * 28.0f) *
-            flowGain * radiusWeight * verticalWeight;
+        const float windOffset = (streamB * 22.0f + streamC * 16.0f) *
+            flowGain * verticalWeight;
+        flow.planarOffset = crossWind * crossOffset + windDir * windOffset;
         flow.verticalOffset = (shearField * 30.0f + sharedField * 16.0f) *
             flowGain * ofLerp(0.18f, 1.0f, edgeWeight);
         flow.energy = ofClamp(0.88f + std::abs(sharedField) * 0.24f + std::abs(shearField) * 0.11f +
-                                  polarEnergy * 0.10f + audioDrive * 0.040f + pulseDrive * 0.060f,
+                                  sceneEnergy * 0.10f + audioDrive * 0.040f + pulseDrive * 0.060f,
                               0.72f,
                               1.55f);
         return flow;
@@ -875,7 +906,6 @@ void ArcticAuroraSceneLayer::drawAuroraVolume(const LayerDrawParams& params, flo
     for (int c = 0; c < curtains; ++c) {
         const float layerT = curtains > 1 ? static_cast<float>(c) / static_cast<float>(curtains - 1) : 0.0f;
         const float stackT = layerT - 0.5f;
-        const float depthSpan = std::max(80.0f, outerRadius - innerRadius);
         const float baseRadius = ofClamp(midRadius + stackT * depthSpan * 0.62f,
                                          innerRadius,
                                          outerRadius);
@@ -920,22 +950,26 @@ void ArcticAuroraSceneLayer::drawAuroraVolume(const LayerDrawParams& params, flo
         };
 
         auto verticalShapeAt = [&](float theta, float subBandT, float v) {
-            const float cTheta = std::cos(theta);
-            const float sTheta = std::sin(theta);
+            const float radiusT = ofClamp(layerT + (subBandT - 0.5f) * 0.18f, 0.0f, 1.0f);
+            const float shapeRadius = ofLerp(innerRadius, outerRadius, radiusT);
+            const glm::vec2 xz = sceneXZAt(theta, shapeRadius);
+            const glm::vec2 advected = xz - windDir * windTravel;
+            const float along = glm::dot(advected, windDir);
+            const float across = glm::dot(advected, crossWind);
             const float topWeight = std::pow(ofClamp(v, 0.0f, 1.0f), 1.45f);
             const float midWeight = std::pow(std::max(0.0f, std::sin(v * PI)), 0.70f);
             const float lowerWeight = std::pow(ofClamp(1.0f - v, 0.0f, 1.0f), 1.55f);
             const float tipWeight = std::pow(ofClamp(v, 0.0f, 1.0f), 2.35f);
-            const float polarEnergy = polarEnergyAt(theta);
-            const float broad = signedNoise(cTheta * 1.15f + subBandT * 2.4f,
-                                            sTheta * 1.15f - layerT * 1.7f,
-                                            time * 0.18f + subBandT * 0.65f);
-            const float crest = std::sin(theta * 2.6f + time * 0.43f + layerT * 3.8f + subBandT * 5.4f);
-            const float fineLift = signedNoise(cTheta * 2.2f - subBandT * 1.6f,
-                                               sTheta * 2.2f + layerT * 2.1f,
-                                               time * 0.32f + 31.0f);
+            const float sceneEnergy = sceneEnergyAt(xz);
+            const float broad = signedNoise(along * 0.0010f + subBandT * 2.4f,
+                                            across * 0.0014f - layerT * 1.7f,
+                                            time * 0.10f + subBandT * 0.65f);
+            const float crest = std::sin(along * 0.0035f + across * 0.0007f + time * 0.30f + layerT * 3.8f + subBandT * 5.4f);
+            const float fineLift = signedNoise(along * 0.0028f - subBandT * 1.6f,
+                                               across * 0.0031f + layerT * 2.1f,
+                                               time * 0.24f + 31.0f);
             const float audioColumn = hasAudio_
-                ? ofClamp(audioDrive * 0.36f + pulseDrive * 0.22f + polarEnergy * 0.30f, 0.0f, 1.55f)
+                ? ofClamp(audioDrive * 0.36f + pulseDrive * 0.22f + sceneEnergy * 0.30f, 0.0f, 1.55f)
                 : 0.54f;
             const float audioNorm = smootherStep(ofClamp(audioColumn, 0.0f, 1.0f));
             const float quietTipTaper = (audioNorm - 0.55f) * (0.16f + tipWeight * 0.72f);
@@ -971,12 +1005,11 @@ void ArcticAuroraSceneLayer::drawAuroraVolume(const LayerDrawParams& params, flo
                 const float u = static_cast<float>(x) / static_cast<float>(atmosphereCols);
                 const float sampleU = sampleUAt(u);
                 const float baseTheta = atmosphereCenter + (u - 0.5f) * atmosphereArc;
-                const AuroraFlow flow = sharedPolarFlowAt(baseTheta, layerT, v);
+                const AuroraFlow flow = sharedSceneFlowAt(baseTheta, layerT, v);
                 const glm::vec2 yShape = verticalShapeAt(baseTheta, atmosphereSubBand, v);
-                const float theta = baseTheta + flow.angularOffset * 0.72f;
-                const float localEnergy = fieldAt(sampleU);
+                const float theta = baseTheta;
+                const float localEnergy = sceneEnergyAt(sceneXZAt(baseTheta, baseRadius));
                 const float radius = baseRadius +
-                    flow.radialOffset * 0.64f +
                     std::sin((sampleU * 2.0f + 0.12f + layerT * 0.4f) * TWO_PI + time * 0.32f) * 24.0f +
                     signedNoise(sampleU * 1.8f, v * 1.1f + layerT, time * 0.18f) * 34.0f;
                 const float yPos = paramAuroraBaseY_ - bloom * 54.0f +
@@ -987,7 +1020,10 @@ void ArcticAuroraSceneLayer::drawAuroraVolume(const LayerDrawParams& params, flo
                 const float atmosphereAlpha = glow * bloom * layerStrength *
                     (0.018f + energy * 0.017f + pulseDrive * 0.026f + audioDrive * 0.010f) *
                     brightnessDrive * vertical * edge * flow.energy * (0.68f + localEnergy * 0.40f);
-                atmosphere.addVertex(polarPoint(theta, radius, yPos));
+                glm::vec3 point = scenePointAt(theta, radius, yPos);
+                point.x += flow.planarOffset.x * 0.64f;
+                point.z += flow.planarOffset.y * 0.64f;
+                atmosphere.addVertex(point);
                 atmosphere.addColor(auroraColor(v * 0.28f + localEnergy * 0.12f + layerT * 0.10f,
                                                 1.16f,
                                                 atmosphereAlpha));
@@ -1011,9 +1047,10 @@ void ArcticAuroraSceneLayer::drawAuroraVolume(const LayerDrawParams& params, flo
 
         auto curtainPoint = [&](float u, float v, float expandRadius, float expandY, float looseness, float subBandT) {
             const float sampleU = sampleUAt(u);
-            const float localEnergy = fieldAt(sampleU);
             const float subCenter = subBandCenterAt(subBandT);
             const float subArc = subBandArcAt(subBandT);
+            const float baseTheta = subCenter + (u - 0.5f) * subArc;
+            const float localEnergy = sceneEnergyAt(sceneXZAt(baseTheta, baseRadius));
             const float slow = signedNoise(sampleU * 2.4f + layerT * 3.3f + subBandT * 1.9f,
                                            v * 1.2f + 0.7f,
                                            phase);
@@ -1029,15 +1066,12 @@ void ArcticAuroraSceneLayer::drawAuroraVolume(const LayerDrawParams& params, flo
                 (1.0f - v) *
                 (0.55f + foldStrength * 0.45f) *
                 (1.0f + audioDrive * 0.22f + highs_ * audio * 0.18f);
-            const float baseTheta = subCenter + (u - 0.5f) * subArc;
-            const AuroraFlow flow = sharedPolarFlowAt(baseTheta, layerT, v);
+            const AuroraFlow flow = sharedSceneFlowAt(baseTheta, layerT, v);
             const glm::vec2 yShape = verticalShapeAt(baseTheta, subBandT, v);
             const float theta = baseTheta +
-                flow.angularOffset * (0.90f + looseness * 0.18f) +
                 std::sin(v * PI + phase + sampleU * 3.2f) * (0.010f + foldStrength * 0.010f) * looseness +
                 slow * (0.008f + foldStrength * 0.009f) * (1.0f - v * 0.35f);
             const float radius = baseRadius + expandRadius +
-                flow.radialOffset * (0.72f + looseness * 0.16f) +
                 fold * ofLerp(0.54f, 1.02f, layerT) +
                 std::sin((sampleU * 2.15f + layerT) * TWO_PI + phase) * (18.0f + expandRadius * 0.10f) +
                 signedNoise(sampleU * 1.8f, v * 2.6f + 11.0f, phase * 0.8f) * expandRadius * 0.12f * looseness;
@@ -1061,7 +1095,10 @@ void ArcticAuroraSceneLayer::drawAuroraVolume(const LayerDrawParams& params, flo
                 verticalDrift * (0.42f + edgeWeight * 0.36f) +
                 edgeFlutter +
                 lowerFray;
-            return polarPoint(theta, std::max(10.0f, radius), y);
+            glm::vec3 point = scenePointAt(theta, std::max(10.0f, radius), y);
+            point.x += flow.planarOffset.x * (0.74f + looseness * 0.12f);
+            point.z += flow.planarOffset.y * (0.74f + looseness * 0.12f);
+            return point;
         };
 
         for (int shell = 2; shell >= 0; --shell) {
@@ -1087,8 +1124,9 @@ void ArcticAuroraSceneLayer::drawAuroraVolume(const LayerDrawParams& params, flo
                     const float u = static_cast<float>(x) / static_cast<float>(shellCols);
                     const float sampleU = sampleUAt(u);
                     const float edge = edgeFadeAt(u, 4.2f);
-                    const float localEnergy = fieldAt(u);
-                    const AuroraFlow flow = sharedPolarFlowAt(subCenter + (u - 0.5f) * subArc, layerT, v);
+                    const float sampleTheta = subCenter + (u - 0.5f) * subArc;
+                    const float localEnergy = sceneEnergyAt(sceneXZAt(sampleTheta, baseRadius));
+                    const AuroraFlow flow = sharedSceneFlowAt(sampleTheta, layerT, v);
                     const float shimmer = 0.62f + 0.38f * ofNoise(sampleU * 5.0f + layerT, v * 2.0f, phase + highs_ * audio * 0.85f);
                     shellMesh.addVertex(curtainPoint(u, v, expandRadius, expandY, 1.0f + shellT, subBandT));
                     shellMesh.addColor(auroraColor(v * 0.40f + layerT * 0.34f,
@@ -1126,8 +1164,9 @@ void ArcticAuroraSceneLayer::drawAuroraVolume(const LayerDrawParams& params, flo
                 const float u = static_cast<float>(x) / static_cast<float>(cols);
                 const float sampleU = sampleUAt(u);
                 const float edge = edgeFadeAt(u, 5.4f);
-                const float localEnergy = fieldAt(u);
-                const AuroraFlow flow = sharedPolarFlowAt(coreCenter + (u - 0.5f) * coreArc, layerT, v);
+                const float sampleTheta = coreCenter + (u - 0.5f) * coreArc;
+                const float localEnergy = sceneEnergyAt(sceneXZAt(sampleTheta, baseRadius));
+                const AuroraFlow flow = sharedSceneFlowAt(sampleTheta, layerT, v);
                 const float column = 0.74f + 0.26f * ofNoise(sampleU * 10.5f, layerT * 4.0f, phase * 1.8f);
                 const float coreAlpha = glow * layerStrength *
                     brightnessDrive *
@@ -1164,12 +1203,13 @@ void ArcticAuroraSceneLayer::drawAuroraVolume(const LayerDrawParams& params, flo
                 const float u1 = static_cast<float>(x + 1) / static_cast<float>(cols);
                 const float midU = (u0 + u1) * 0.5f;
                 const float sampleU = sampleUAt(midU);
-                const float localEnergy = fieldAt(sampleU);
                 const float edge = edgeFadeAt(midU, 4.8f);
                 const float edgeSubBand = 0.34f + v * 0.92f;
                 const float edgeCenter = subBandCenterAt(edgeSubBand);
                 const float edgeArc = subBandArcAt(edgeSubBand);
-                const AuroraFlow flow = sharedPolarFlowAt(edgeCenter + (midU - 0.5f) * edgeArc, layerT, v);
+                const float sampleTheta = edgeCenter + (midU - 0.5f) * edgeArc;
+                const float localEnergy = sceneEnergyAt(sceneXZAt(sampleTheta, baseRadius));
+                const AuroraFlow flow = sharedSceneFlowAt(sampleTheta, layerT, v);
                 const float skip = ofNoise(sampleU * 13.0f + v * 3.0f, layerT * 7.0f, phase * 1.4f);
                 if (skip < 0.22f) {
                     continue;
@@ -1197,11 +1237,12 @@ void ArcticAuroraSceneLayer::drawAuroraVolume(const LayerDrawParams& params, flo
                 const float u = static_cast<float>(x) / static_cast<float>(cols);
                 const float sampleU = sampleUAt(u);
                 const float edge = edgeFadeAt(u, 4.6f);
-                const float localEnergy = fieldAt(u);
                 const float raySubBand = 0.42f;
                 const float rayCenter = subBandCenterAt(raySubBand);
                 const float rayArc = subBandArcAt(raySubBand);
-                const AuroraFlow flow = sharedPolarFlowAt(rayCenter + (u - 0.5f) * rayArc, layerT, 0.44f);
+                const float sampleTheta = rayCenter + (u - 0.5f) * rayArc;
+                const float localEnergy = sceneEnergyAt(sceneXZAt(sampleTheta, baseRadius));
+                const AuroraFlow flow = sharedSceneFlowAt(sampleTheta, layerT, 0.44f);
                 const float gate = ofNoise(sampleU * 15.0f + layerT * 3.0f, phase * 2.1f);
                 const float threshold = ofClamp(0.60f - rayDensity * 0.15f - localEnergy * 0.08f - highs_ * audio * 0.14f, 0.28f, 0.74f);
                 if (gate < threshold) {
@@ -1670,6 +1711,7 @@ void ArcticAuroraSceneLayer::buildIcebergMeshes(Iceberg& iceberg, const glm::vec
     iceberg.aboveWater.clear();
     iceberg.belowWater.clear();
     iceberg.rimLines.clear();
+    iceberg.facets.clear();
     iceberg.aboveWater.setMode(OF_PRIMITIVE_TRIANGLES);
     iceberg.belowWater.setMode(OF_PRIMITIVE_TRIANGLES);
     iceberg.rimLines.setMode(OF_PRIMITIVE_LINES);
@@ -1709,6 +1751,55 @@ void ArcticAuroraSceneLayer::buildIcebergMeshes(Iceberg& iceberg, const glm::vec
                                                  shadowColor,
                                                  accentColor);
         addTriangle(iceberg.aboveWater, a, b, c, color);
+
+        const glm::vec3 centroid = (a + b + c) / 3.0f;
+        glm::vec3 normal = glm::normalize(glm::cross(b - a, c - a));
+        if (!std::isfinite(normal.x) || !std::isfinite(normal.y) || !std::isfinite(normal.z)) {
+            normal = glm::vec3(0.0f, 1.0f, 0.0f);
+        }
+        glm::vec3 drift(centroid.x / std::max(1.0f, halfWidth) + randomRange(rng, -0.22f, 0.22f),
+                        -0.08f + randomRange(rng, -0.04f, 0.05f),
+                        centroid.z / std::max(1.0f, halfDepth) + randomRange(rng, -0.22f, 0.22f));
+        if (glm::length(drift) <= 0.0001f) {
+            drift = glm::vec3(normal.x, -0.08f, normal.z);
+        }
+        drift = glm::normalize(drift);
+
+        const float ab = glm::length(a - b);
+        const float bc = glm::length(b - c);
+        const float ca = glm::length(c - a);
+        glm::vec3 crackA = a;
+        glm::vec3 crackB = b;
+        if (bc > ab && bc >= ca) {
+            crackA = b;
+            crackB = c;
+        } else if (ca > ab && ca > bc) {
+            crackA = c;
+            crackB = a;
+        }
+
+        const float radialFracture = ofClamp(glm::length(glm::vec2(centroid.x / std::max(1.0f, halfWidth),
+                                                                    centroid.z / std::max(1.0f, halfDepth))),
+                                             0.0f,
+                                             1.2f);
+        const float stressNoise = ofClamp(0.5f + 0.5f * signedNoise(centroid.x * 0.020f + iceberg.seed * 0.9f,
+                                                                    centroid.z * 0.019f - iceberg.seed * 0.7f,
+                                                                    centroid.y * 0.013f + 6.0f),
+                                          0.0f,
+                                          1.0f);
+        Iceberg::Facet facet;
+        facet.a = a;
+        facet.b = b;
+        facet.c = c;
+        facet.centroid = centroid;
+        facet.normal = normal;
+        facet.drift = drift;
+        facet.crackA = crackA;
+        facet.crackB = crackB;
+        facet.color = color;
+        facet.fractureThreshold = ofClamp(0.20f + radialFracture * 0.38f + stressNoise * 0.26f, 0.16f, 0.92f);
+        facet.fractureScale = ofLerp(0.62f, 1.42f, stressNoise) * ofLerp(0.82f, 1.22f, radialFracture);
+        iceberg.facets.push_back(facet);
 
         const float edgeAlpha = ofClamp((std::abs(a.y - b.y) + std::abs(b.y - c.y) + std::abs(c.y - a.y)) /
                                         std::max(1.0f, visibleHeight) * 0.10f,
@@ -1771,7 +1862,59 @@ void ArcticAuroraSceneLayer::drawIceberg(const Iceberg& iceberg, float alpha) co
     ofEnableBlendMode(OF_BLENDMODE_ALPHA);
     glDepthMask(GL_TRUE);
     drawMeshWithAlpha(iceberg.belowWater, alpha);
-    drawMeshWithAlpha(iceberg.aboveWater, alpha);
+    if (!iceberg.facets.empty() && paramIcebergBreakup_ > 0.001f) {
+        ofMesh fracturedTop;
+        fracturedTop.setMode(OF_PRIMITIVE_TRIANGLES);
+        ofMesh fractureLines;
+        fractureLines.setMode(OF_PRIMITIVE_LINES);
+        const float breakupClock = sceneTime_ * paramIcebergBreakupSpeed_ +
+            paramIcebergBreakup_ * 0.16f +
+            ofNoise(iceberg.seed * 0.37f, 11.0f) * 0.10f;
+        const float maturity = ofClamp(paramIcebergBreakup_ * breakupClock, 0.0f, 1.0f);
+        const ofFloatColor crackColor = colorFrom(0.58f, 0.92f, 1.0f, 0.26f);
+
+        for (const auto& facet : iceberg.facets) {
+            const float progress = smootherStep(ofMap(maturity,
+                                                       facet.fractureThreshold,
+                                                       1.0f,
+                                                       0.0f,
+                                                       1.0f,
+                                                       true));
+            const float subtleProgress = progress * progress;
+            const glm::vec3 driftOffset = facet.drift * (subtleProgress * 18.0f * facet.fractureScale) +
+                facet.normal * (progress * 2.4f);
+            const float shrink = 1.0f - progress * 0.035f;
+            const glm::vec3 a = facet.centroid + (facet.a - facet.centroid) * shrink + driftOffset;
+            const glm::vec3 b = facet.centroid + (facet.b - facet.centroid) * shrink + driftOffset;
+            const glm::vec3 c = facet.centroid + (facet.c - facet.centroid) * shrink + driftOffset;
+            ofFloatColor color = facet.color;
+            color.a = ofClamp(color.a * ofLerp(1.0f, 0.88f, progress), 0.0f, 1.0f);
+            addTriangle(fracturedTop, a, b, c, color);
+
+            if (progress > 0.035f) {
+                const glm::vec3 lineOffset = driftOffset * 0.42f + facet.normal * (progress * 0.8f);
+                ofFloatColor lineColor = crackColor;
+                lineColor.a *= ofClamp(progress * paramIcebergBreakup_ * 1.45f, 0.0f, 1.0f);
+                addLine(fractureLines,
+                        facet.crackA + lineOffset,
+                        facet.crackB + lineOffset,
+                        lineColor);
+            }
+        }
+        drawMeshWithAlpha(fracturedTop, alpha);
+
+        if (fractureLines.getNumVertices() > 0) {
+            ofEnableBlendMode(OF_BLENDMODE_ADD);
+            glDepthMask(GL_FALSE);
+#ifndef TARGET_OPENGLES
+            glLineWidth(1.0f);
+#endif
+            drawMeshWithAlpha(fractureLines, alpha);
+            glDepthMask(GL_TRUE);
+        }
+    } else {
+        drawMeshWithAlpha(iceberg.aboveWater, alpha);
+    }
 
     ofEnableBlendMode(OF_BLENDMODE_ALPHA);
     glDepthMask(GL_FALSE);

@@ -59,6 +59,8 @@
           "console.layer1.icebergScale": 1.0,
           "console.layer1.icebergSpread": 3400.0,
           "console.layer1.icebergRimLight": 0.0,
+          "console.layer1.icebergBreakup": 0.28,
+          "console.layer1.icebergBreakupSpeed": 0.025,
           "console.layer1.auroraWidth": 2600.0,
           "console.layer1.auroraBaseY": 220.0,
           "console.layer1.auroraHeight": 560.0,

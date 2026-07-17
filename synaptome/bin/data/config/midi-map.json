@@ -25,11 +25,6 @@
             "bank": "home",
             "pattern": "/sensor/host/localmic/mic-level",
             "target": "effects.motion.tailColorR"
-        },
-        {
-            "bank": "home",
-            "pattern": "/sensor/host/localmic/mic-level",
-            "target": "console.layer1.trailDeposit"
         }
     ],
     "oscSources": [
@@ -37,7 +32,7 @@
             "blend": "scale",
             "in": [
                 0.0,
-                0.20000000298023224
+                0.25
             ],
             "out": [
                 0.0,

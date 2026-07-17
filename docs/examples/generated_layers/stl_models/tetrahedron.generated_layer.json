@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "templateId": "templates.model.stl",
+  "contentFile": "tetrahedron.stl",
+  "label": "Tetrahedron Fixture",
+  "description": "Tiny ASCII STL fixture used to prove generated model-layer catalog output without runtime loading.",
+  "tags": ["fixture", "low-poly"],
+  "physicalScale": 1.0,
+  "defaults": {
+    "scale": 1.25,
+    "rotationYDeg": 30.0,
+    "colorR": 0.72,
+    "colorG": 0.90,
+    "colorB": 1.0,
+    "spinSpeedDeg": 12.0
+  }
+}

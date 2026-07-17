@@ -3,15 +3,15 @@
 State Summary
 - Phase: INTAKE
 - Status: Draft
-- Steps Complete: 2 / 10
-- Progress: Draft package/preset schemas, shared package discovery roots, a Signal Bloom package fixture, static validation, package-derived snapshots, and opt-in combined catalog/manifest checks now exist without changing runtime loading behavior.
-- Last Step Outcome: 2026-06-26 - Added `tools/layer_package_discovery.py`, `--include-packages` paths for catalog/parameter manifest generators, and combined golden snapshots for package/runtime compatibility checks.
-- Next Step: Define the file-backed generated-layer template shape first, then add one docs/example STL/model fixture and generated snapshot without changing Browser/runtime loading.
+- Steps Complete: 3 / 10
+- Progress: Draft package/preset schemas, shared package discovery roots, a Signal Bloom package fixture, package-derived snapshots, opt-in combined catalog/manifest checks, one STL/model generated-layer template fixture, static and dynamic option metadata fixtures, and a schema-checked read-only Browser inspection payload now exist without changing runtime loading behavior.
+- Last Step Outcome: 2026-06-28 - Added one generated-layer `optionsSource` metadata fixture and proved it flows into generated catalog plus inspection snapshots without adding provider lookup, Browser UI, or runtime scanning.
+- Next Step: Expand only in tiny, schema-checked slices, such as one package-owned option metadata example or one additional generated content kind, then consider read-only Browser UI behind an explicit draft path.
 - Dependencies / Overlap: `docs/project_ops/synaptome_layer_design_standards.md`, `docs/architecture/synaptome_layer_system_roadmap.md`, `docs/architecture/synaptome_artist_sdk.md`, `docs/contracts/contract_gaps.md`, `docs/contracts/parameter_manifest.json`, `docs/schemas/layer_asset.schema.json`, `tools/layer_catalog_regression.py`, `tools/gen_parameter_manifest.py`.
 - Primary Scope: contracts
 - Secondary Scopes: artist-sdk, docs, tests, runtime
 - Blocking Issues / Unknowns: Runtime bench shape depends on an app-native or offscreen layer test seam; generated registration/module loading remains a later architecture decision; beat-reactive mapping presets depend on the separate transport/reactivity contract.
-- Resume From: Intake; start the file-backed generated-layer template fixture while keeping package/runtime combined checks draft-only.
+- Resume From: Intake; keep the read-only inspection payload passing, then add the smallest next metadata expansion without touching Browser/runtime behavior.
 
 ## Current State In Plain English
 
@@ -32,12 +32,21 @@ What is real:
 - Package-only catalog and parameter manifest snapshots.
 - Shared package discovery roots.
 - Opt-in combined package/runtime catalog and parameter manifest checks.
+- One static STL/model generated-layer template fixture with standard model
+  parameters and zero legacy asset ID conflicts.
+- One schema-checked read-only Browser inspection payload combining package and
+  generated-layer fixture metadata.
+- One generated-layer static option fixture (`materialMode`) that flows through
+  the generated catalog and inspection payload.
+- One generated-layer dynamic option-source fixture (`materialPreset`) that
+  names a future runtime provider without resolving it.
 
 What is not real yet:
 
 - Runtime scanning of `synaptome/bin/data/layer_packages`.
 - Browser use of package-discovered catalog entries.
-- Automatic STL/model/media folder drops.
+- Runtime or Browser scanning of STL/model/media folders.
+- Read-only Browser UI for package/generated-layer inspection.
 - Package preset-bank controls in the Browser.
 - Package mapping preset activation in the mapping surface.
 - Runtime/offscreen single-layer bench.
@@ -45,8 +54,11 @@ What is not real yet:
 Risk profile:
 
 - Low risk now, because the work is mostly schemas, fixtures, and tools.
-- Medium risk for the next file-backed/generated-layer fixture, because IDs and
-  folder rules must stay stable.
+- Low risk for the inspection payload itself, because it is read-only fixture
+  output and schema validation prevents it from claiming runtime loading,
+  instantiation, or scene mutation.
+- Medium risk for broader file-backed/generated-layer expansion, because IDs
+  and folder rules must stay stable.
 - Medium-high risk when package data starts feeding Browser state, scenes,
   mappings, or the canonical parameter manifest.
 - High risk only when package loading/generated registration touches runtime
@@ -73,14 +85,24 @@ Risk profile:
 
 ## Next Baby Steps
 
-1. Draft a generated-layer template shape for dropped STL/model files.
-2. Add one tiny docs/example content fixture and optional sidecar metadata.
-3. Generate a package-only/catalog-style snapshot for that fixture.
-4. Add a combined compatibility snapshot proving no ID conflicts with legacy
-   layer assets.
-5. Keep the Browser and runtime untouched.
-6. Only after those checks pass, add read-only Browser inspection of generated
-   package/content metadata.
+1. Done: draft a generated-layer template shape for dropped STL/model files.
+2. Done: add one tiny docs/example content fixture and optional sidecar
+   metadata.
+3. Done: generate a catalog-style snapshot for that fixture.
+4. Done: prove no generated ID conflicts with legacy layer assets.
+5. Done: define a read-only inspection payload that combines package and
+   generated content metadata without adding Browser code.
+6. Done: add a schema for that inspection payload and validate the snapshot
+   against it.
+7. Done: add one static generated-layer option fixture and prove it reaches the
+   generated catalog plus inspection payload.
+8. Done: add one generated-layer `optionsSource` fixture and prove it reaches
+   the generated catalog plus inspection payload.
+9. Next: add only tiny metadata expansions, such as one package-owned option
+   metadata fixture or one more generated content kind, while keeping the
+   inspection payload deterministic.
+10. Then: only after that payload is stable, consider read-only Browser
+   inspection behind an explicit draft path.
 
 ## Milestone Synthesis
 
@@ -143,8 +165,8 @@ Risk profile:
 | LPB-1 | Add package schema and minimal fixture. | Done |
 | LPB-2 | Add folder discovery rules for explicit packages and template-backed content folders. | In Progress |
 | LPB-3 | Add static package validator. | Done |
-| LPB-4 | Add file-backed generated-layer fixture, starting with an STL/model drop template. | Planned |
-| LPB-5 | Add package parameter declarations, static options, and dynamic option source metadata. | Planned |
+| LPB-4 | Add file-backed generated-layer fixture, starting with an STL/model drop template. | Done |
+| LPB-5 | Add package parameter declarations, static options, and dynamic option source metadata. | In Progress |
 | LPB-6 | Generate manifest/catalog entries from package metadata. | In Progress |
 | LPB-7 | Add package OSC mapping preset metadata and validation. | Planned |
 | LPB-8 | Add layer preset schema, preset banks, fixtures, and validation. | Planned |
@@ -159,16 +181,24 @@ Risk profile:
 - 2026-06-26 - Added first package/preset schemas, Signal Bloom package fixture, preset bank, visible OSC mapping preset, bench metadata fixture, and static package validator.
 - 2026-06-26 - Added package-derived catalog and parameter manifest regression tools with golden snapshots under `tools/testdata/layer_packages/`.
 - 2026-06-26 - Added shared package discovery roots plus opt-in combined catalog/parameter manifest checks using `--include-packages`.
+- 2026-06-26 - Added draft generated-layer template/sidecar schemas, an STL docs/example fixture, generated catalog snapshot, and legacy-ID conflict validation.
+- 2026-06-26 - Added a read-only Browser inspection payload, golden snapshot, and schema validation for package/generated-layer fixture metadata without Browser/runtime behavior changes.
+- 2026-06-26 - Narrowed the generated-layer snapshot so it still checks legacy ID conflicts but no longer fails when unrelated runtime layer asset counts change.
+- 2026-06-26 - Added `materialMode` static option metadata to the generated STL template and proved it flows into generated catalog and inspection snapshots.
+- 2026-06-28 - Added `materialPreset` dynamic `optionsSource` metadata to the generated STL template and proved it flows into generated catalog and inspection snapshots without provider lookup or Browser UI.
 
 ## Validation
 
 - Passed: `python tools\validate_layer_packages.py --check`
 - Passed: `python tools\layer_package_catalog_regression.py --check`
 - Passed: `python tools\layer_package_parameter_manifest.py --check`
-- Passed: `python tools\layer_catalog_regression.py --include-packages --check`
-- Passed: `python tools\gen_parameter_manifest.py --include-packages --check`
+- Passed: `python tools\generated_layer_catalog_regression.py --check`
+- Passed: `python tools\layer_browser_inspection_payload.py --check`
+- Passed: `python tools\validate_configs.py tools\testdata\layer_browser_inspection\expected_layer_browser_inspection_payload.json`
+- Passed: `python tools\validate_configs.py docs\examples\generated_layers\stl_models\generated_layer.template.json docs\examples\generated_layers\stl_models\tetrahedron.generated_layer.json docs\examples\layer_packages\signal_bloom\layer.package.json docs\examples\layer_packages\signal_bloom\presets\default.json docs\examples\layer_packages\signal_bloom\presets\bright.json docs\examples\layer_packages\signal_bloom\presets\calm.json tools\testdata\layer_browser_inspection\expected_layer_browser_inspection_payload.json`
+- Current dirty-worktree caveat: `python tools\layer_catalog_regression.py --include-packages --check` and `python tools\gen_parameter_manifest.py --include-packages --check` are implemented but currently fail because unrelated runtime layer/catalog/manifest edits have not been promoted to their snapshots. Do not refresh those runtime-dependent snapshots as part of this non-runtime slice.
 - Not Run: Runtime/offscreen bench; no runtime layer package loader or bench seam exists yet.
-- Manual Evidence: `validate_layer_packages.py` checks the package fixture, parameter declarations, preset values, mapping preset targets, source registration file references, and bench metadata reference. The package catalog and package parameter tools prove the same fixture can produce stable Browser-like catalog output and package-scoped parameter IDs. The opt-in combined checks prove those draft package outputs can sit beside the current runtime catalog/manifest without ID conflicts.
+- Manual Evidence: `validate_layer_packages.py` checks the package fixture, parameter declarations, preset values, mapping preset targets, source registration file references, and bench metadata reference. The package catalog and package parameter tools prove the same fixture can produce stable Browser-like catalog output and package-scoped parameter IDs. The generated-layer tool proves one STL fixture becomes stable catalog-style metadata with static and dynamic option metadata and without legacy ID conflicts. The inspection payload tool proves package and generated metadata can be combined for future Browser inspection without runtime loading, layer instantiation, scene mutation, provider lookup, or canonical manifest changes.
 
 ## Doc Sync
 

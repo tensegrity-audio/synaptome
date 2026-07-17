@@ -27,10 +27,12 @@ public:
     struct RiverPath {
         std::vector<RiverNode> nodes;
         float widthScale = 1.0f;
+        float flowShare = 1.0f;
         float age = 0.0f;
         int attachStartIndex = -1;
         int attachEndIndex = -1;
         bool mainStem = false;
+        bool chute = false;
     };
 
     void configure(const ofJson& config) override;
@@ -116,7 +118,7 @@ private:
     float paramSeed_ = 20260626.0f;
     float paramWarmupSteps_ = 0.0f;
 
-    float paramPathPoints_ = 220.0f;
+    float paramPathPoints_ = 260.0f;
     float paramRiverWidth_ = 2.8f;
     float paramWidthVariation_ = 0.18f;
     float paramWidthPulse_ = 0.0f;
@@ -128,11 +130,11 @@ private:
     float paramTrailDecay_ = 0.0025f;
     float paramOxbowDecay_ = 0.0010f;
     float paramCutoffFactor_ = 3.4f;
-    float paramBranchChance_ = 0.0f;
-    float paramMaxBranches_ = 0.0f;
-    float paramBranchLength_ = 0.58f;
-    float paramBranchAngle_ = 0.34f;
-    float paramBranchWidth_ = 0.36f;
+    float paramBranchChance_ = 0.006f;
+    float paramMaxBranches_ = 1.0f;
+    float paramBranchLength_ = 0.72f;
+    float paramBranchAngle_ = 0.08f;
+    float paramBranchWidth_ = 0.24f;
     float paramNoiseAmount_ = 0.20f;
     float paramValleyConfinement_ = 0.02f;
     float paramMeanderSmoothing_ = 0.035f;
@@ -162,6 +164,8 @@ private:
     float simAge_ = 0.0f;
     float cutoffPulse_ = 0.0f;
     int cutoffCooldown_ = 0;
+    int cutoffCount_ = 0;
+    float lastSinuosity_ = 1.0f;
     std::uint32_t seedState_ = 0;
     int pathPointState_ = 0;
     float fieldSignatureState_ = -1.0f;

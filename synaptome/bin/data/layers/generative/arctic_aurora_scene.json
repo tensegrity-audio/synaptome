@@ -34,6 +34,8 @@
     "icebergScale": 1.0,
     "icebergSpread": 3400.0,
     "icebergRimLight": 0.0,
+    "icebergBreakup": 0.28,
+    "icebergBreakupSpeed": 0.025,
     "auroraWidth": 2600.0,
     "auroraBaseY": 220.0,
     "auroraHeight": 560.0,

@@ -1,0 +1,594 @@
+{
+  "schemaVersion": 1,
+  "status": "draft-read-only",
+  "sourceStrategy": [
+    "Read-only inspection payload assembled from package and generated-layer fixture metadata.",
+    "This payload is a docs/tools contract only and is not consumed by the Browser yet.",
+    "Entries must not require layer instantiation, scene mutation, runtime scanning, or canonical manifest changes."
+  ],
+  "sources": [
+    "tools/layer_package_catalog_regression.py",
+    "tools/generated_layer_catalog_regression.py",
+    "docs/schemas/layer_browser_inspection_payload.schema.json",
+    "docs/examples/layer_packages",
+    "docs/examples/generated_layers"
+  ],
+  "counts": {
+    "entries": 2,
+    "packageEntries": 1,
+    "generatedEntries": 1,
+    "parameters": 37,
+    "presets": 3,
+    "mappingPresets": 1,
+    "categories": 2,
+    "layerGroups": 2
+  },
+  "categories": {
+    "Examples": 1,
+    "Generated": 1
+  },
+  "layerGroups": {
+    "Artist SDK": 1,
+    "Models": 1
+  },
+  "kinds": {
+    "generated-content-layer": 1,
+    "package-layer": 1
+  },
+  "entries": [
+    {
+      "assetId": "examples.signal_bloom",
+      "label": "Signal Bloom",
+      "category": "Examples",
+      "layerGroup": "Artist SDK",
+      "kind": "package-layer",
+      "layerType": "example.signalBloom",
+      "registryPrefix": "examples.signal_bloom",
+      "source": {
+        "kind": "layer-package",
+        "path": "docs/examples/layer_packages/signal_bloom/layer.package.json",
+        "strategy": "source-registration",
+        "sourceRegistrationRequired": true
+      },
+      "inspection": {
+        "manifestInspectionOnly": true,
+        "runtimeLoadable": false,
+        "requiresInstantiation": false,
+        "mutatesScene": false
+      },
+      "controls": {
+        "count": 18,
+        "sections": {
+          "Color": 6,
+          "Force": 1,
+          "Input": 3,
+          "Motion": 2,
+          "Scale": 1,
+          "Time": 2,
+          "Visibility": 3
+        },
+        "parameters": [
+          {
+            "id": "bgColorB",
+            "kind": "float",
+            "label": "Color: Background Blue",
+            "section": "Color",
+            "default": 0.08,
+            "range": {
+              "min": 0.0,
+              "max": 1.0,
+              "step": 0.01
+            }
+          },
+          {
+            "id": "bgColorG",
+            "kind": "float",
+            "label": "Color: Background Green",
+            "section": "Color",
+            "default": 0.04,
+            "range": {
+              "min": 0.0,
+              "max": 1.0,
+              "step": 0.01
+            }
+          },
+          {
+            "id": "bgColorR",
+            "kind": "float",
+            "label": "Color: Background Red",
+            "section": "Color",
+            "default": 0.02,
+            "range": {
+              "min": 0.0,
+              "max": 1.0,
+              "step": 0.01
+            }
+          },
+          {
+            "id": "colorB",
+            "kind": "float",
+            "label": "Color: Blue",
+            "section": "Color",
+            "default": 1.0,
+            "range": {
+              "min": 0.0,
+              "max": 1.0,
+              "step": 0.01
+            }
+          },
+          {
+            "id": "colorG",
+            "kind": "float",
+            "label": "Color: Green",
+            "section": "Color",
+            "default": 0.78,
+            "range": {
+              "min": 0.0,
+              "max": 1.0,
+              "step": 0.01
+            }
+          },
+          {
+            "id": "colorR",
+            "kind": "float",
+            "label": "Color: Red",
+            "section": "Color",
+            "default": 0.12,
+            "range": {
+              "min": 0.0,
+              "max": 1.0,
+              "step": 0.01
+            }
+          },
+          {
+            "id": "gain",
+            "kind": "float",
+            "label": "Force: Sensor Gain",
+            "section": "Force",
+            "default": 0.62,
+            "range": {
+              "min": 0.0,
+              "max": 2.0,
+              "step": 0.01
+            },
+            "units": "multiplier"
+          },
+          {
+            "id": "speedInput",
+            "kind": "float",
+            "label": "Input: Speed",
+            "section": "Input",
+            "default": 0.0,
+            "range": {
+              "min": 0.0,
+              "max": 1.0,
+              "step": 0.001
+            }
+          },
+          {
+            "id": "xInput",
+            "kind": "float",
+            "label": "Input: X",
+            "section": "Input",
+            "default": 0.5,
+            "range": {
+              "min": 0.0,
+              "max": 1.0,
+              "step": 0.001
+            }
+          },
+          {
+            "id": "yInput",
+            "kind": "float",
+            "label": "Input: Y",
+            "section": "Input",
+            "default": 0.5,
+            "range": {
+              "min": 0.0,
+              "max": 1.0,
+              "step": 0.001
+            }
+          },
+          {
+            "id": "rotationDeg",
+            "kind": "float",
+            "label": "Motion: Rotation",
+            "section": "Motion",
+            "default": 0.0,
+            "range": {
+              "min": -180.0,
+              "max": 180.0,
+              "step": 1.0
+            },
+            "units": "deg"
+          },
+          {
+            "id": "speed",
+            "kind": "float",
+            "label": "Motion: Speed",
+            "section": "Motion",
+            "default": 0.65,
+            "range": {
+              "min": 0.0,
+              "max": 4.0,
+              "step": 0.01
+            },
+            "units": "multiplier"
+          },
+          {
+            "id": "scale",
+            "kind": "float",
+            "label": "Scale: Size",
+            "section": "Scale",
+            "default": 0.82,
+            "range": {
+              "min": 0.1,
+              "max": 2.0,
+              "step": 0.01
+            },
+            "units": "multiplier"
+          },
+          {
+            "id": "bpmMultiplier",
+            "kind": "float",
+            "label": "Time: BPM Multiplier",
+            "section": "Time",
+            "default": 1.0,
+            "range": {
+              "min": 0.25,
+              "max": 8.0,
+              "step": 0.25
+            },
+            "units": "multiplier"
+          },
+          {
+            "id": "bpmSync",
+            "kind": "bool",
+            "label": "Time: BPM Sync",
+            "section": "Time",
+            "default": true
+          },
+          {
+            "id": "alpha",
+            "kind": "float",
+            "label": "Visibility: Alpha",
+            "section": "Visibility",
+            "default": 0.86,
+            "range": {
+              "min": 0.0,
+              "max": 1.0,
+              "step": 0.01
+            },
+            "deprecated": {
+              "replacement": "opacity",
+              "reason": "New layers should prefer opacity/visibility naming, but this fixture preserves the current public SDK parameter."
+            }
+          },
+          {
+            "id": "lineOpacity",
+            "kind": "float",
+            "label": "Visibility: Line Opacity",
+            "section": "Visibility",
+            "default": 0.72,
+            "range": {
+              "min": 0.0,
+              "max": 1.0,
+              "step": 0.01
+            }
+          },
+          {
+            "id": "visible",
+            "kind": "bool",
+            "label": "Visibility: Visible",
+            "section": "Visibility",
+            "default": true
+          }
+        ]
+      },
+      "presets": [
+        {
+          "presetId": "default",
+          "label": "Default",
+          "path": "presets/default.json"
+        },
+        {
+          "presetId": "bright",
+          "label": "Bright",
+          "path": "presets/bright.json"
+        },
+        {
+          "presetId": "calm",
+          "label": "Calm",
+          "path": "presets/calm.json"
+        }
+      ],
+      "presetBanks": [
+        {
+          "id": "performance",
+          "label": "Performance",
+          "presets": [
+            "default",
+            "bright",
+            "calm"
+          ]
+        }
+      ],
+      "mappingPresets": [
+        {
+          "id": "hostMicMotion",
+          "label": "Host Mic Motion",
+          "targets": [
+            "gain",
+            "speedInput"
+          ],
+          "patterns": [
+            "/sensor/host/localmic/mic-level",
+            "/sensor/host/localmic/mic-bass"
+          ]
+        }
+      ]
+    },
+    {
+      "assetId": "examples.generated_models.tetrahedron",
+      "label": "Tetrahedron Fixture",
+      "category": "Generated",
+      "layerGroup": "Models",
+      "kind": "generated-content-layer",
+      "layerType": "model.stlViewer",
+      "registryPrefix": "examples.generated_models.tetrahedron",
+      "source": {
+        "kind": "generated-content",
+        "templateId": "templates.model.stl",
+        "templatePath": "docs/examples/generated_layers/stl_models/generated_layer.template.json",
+        "strategy": "template-generated"
+      },
+      "inspection": {
+        "manifestInspectionOnly": true,
+        "runtimeLoadable": false,
+        "requiresInstantiation": false,
+        "mutatesScene": false
+      },
+      "content": {
+        "kind": "stl",
+        "path": "docs/examples/generated_layers/stl_models/tetrahedron.stl",
+        "sidecar": "docs/examples/generated_layers/stl_models/tetrahedron.generated_layer.json",
+        "physicalScale": 1.0
+      },
+      "controls": {
+        "count": 19,
+        "sections": {
+          "Material": 8,
+          "Motion": 1,
+          "Transform": 8,
+          "Visibility": 2
+        },
+        "parameters": [
+          {
+            "id": "colorB",
+            "kind": "float",
+            "label": "Material: Blue",
+            "section": "Material",
+            "default": 1.0,
+            "range": {
+              "min": 0.0,
+              "max": 1.0,
+              "step": 0.01
+            }
+          },
+          {
+            "id": "colorG",
+            "kind": "float",
+            "label": "Material: Green",
+            "section": "Material",
+            "default": 0.9,
+            "range": {
+              "min": 0.0,
+              "max": 1.0,
+              "step": 0.01
+            }
+          },
+          {
+            "id": "lighting",
+            "kind": "bool",
+            "label": "Material: Lighting",
+            "section": "Material",
+            "default": true
+          },
+          {
+            "id": "materialMode",
+            "kind": "string",
+            "label": "Material: Mode",
+            "section": "Material",
+            "default": "solid",
+            "options": [
+              {
+                "value": "solid",
+                "label": "Solid"
+              },
+              {
+                "value": "wire",
+                "label": "Wireframe"
+              },
+              {
+                "value": "points",
+                "label": "Points"
+              }
+            ]
+          },
+          {
+            "id": "materialPreset",
+            "kind": "string",
+            "label": "Material: Preset",
+            "section": "Material",
+            "default": "neutral",
+            "optionsSource": {
+              "id": "runtime.modelMaterialPresets",
+              "value": "id",
+              "label": "label"
+            }
+          },
+          {
+            "id": "colorR",
+            "kind": "float",
+            "label": "Material: Red",
+            "section": "Material",
+            "default": 0.72,
+            "range": {
+              "min": 0.0,
+              "max": 1.0,
+              "step": 0.01
+            }
+          },
+          {
+            "id": "showNormals",
+            "kind": "bool",
+            "label": "Material: Show Normals",
+            "section": "Material",
+            "default": false
+          },
+          {
+            "id": "wireframe",
+            "kind": "bool",
+            "label": "Material: Wireframe",
+            "section": "Material",
+            "default": false
+          },
+          {
+            "id": "spinSpeedDeg",
+            "kind": "float",
+            "label": "Motion: Spin Speed",
+            "section": "Motion",
+            "default": 12.0,
+            "range": {
+              "min": -360.0,
+              "max": 360.0,
+              "step": 1.0
+            },
+            "units": "deg/s"
+          },
+          {
+            "id": "autoCenter",
+            "kind": "bool",
+            "label": "Transform: Auto Center",
+            "section": "Transform",
+            "default": true
+          },
+          {
+            "id": "positionX",
+            "kind": "float",
+            "label": "Transform: Position X",
+            "section": "Transform",
+            "default": 0.0,
+            "range": {
+              "min": -10000.0,
+              "max": 10000.0,
+              "step": 1.0
+            },
+            "units": "world"
+          },
+          {
+            "id": "positionY",
+            "kind": "float",
+            "label": "Transform: Position Y",
+            "section": "Transform",
+            "default": 0.0,
+            "range": {
+              "min": -10000.0,
+              "max": 10000.0,
+              "step": 1.0
+            },
+            "units": "world"
+          },
+          {
+            "id": "positionZ",
+            "kind": "float",
+            "label": "Transform: Position Z",
+            "section": "Transform",
+            "default": 0.0,
+            "range": {
+              "min": -10000.0,
+              "max": 10000.0,
+              "step": 1.0
+            },
+            "units": "world"
+          },
+          {
+            "id": "rotationXDeg",
+            "kind": "float",
+            "label": "Transform: Rotation X",
+            "section": "Transform",
+            "default": 0.0,
+            "range": {
+              "min": -180.0,
+              "max": 180.0,
+              "step": 1.0
+            },
+            "units": "deg"
+          },
+          {
+            "id": "rotationYDeg",
+            "kind": "float",
+            "label": "Transform: Rotation Y",
+            "section": "Transform",
+            "default": 30.0,
+            "range": {
+              "min": -180.0,
+              "max": 180.0,
+              "step": 1.0
+            },
+            "units": "deg"
+          },
+          {
+            "id": "rotationZDeg",
+            "kind": "float",
+            "label": "Transform: Rotation Z",
+            "section": "Transform",
+            "default": 0.0,
+            "range": {
+              "min": -180.0,
+              "max": 180.0,
+              "step": 1.0
+            },
+            "units": "deg"
+          },
+          {
+            "id": "scale",
+            "kind": "float",
+            "label": "Transform: Scale",
+            "section": "Transform",
+            "default": 1.25,
+            "range": {
+              "min": 0.001,
+              "max": 100.0,
+              "step": 0.001
+            },
+            "units": "multiplier"
+          },
+          {
+            "id": "opacity",
+            "kind": "float",
+            "label": "Visibility: Opacity",
+            "section": "Visibility",
+            "default": 1.0,
+            "range": {
+              "min": 0.0,
+              "max": 1.0,
+              "step": 0.01
+            },
+            "units": "normalized"
+          },
+          {
+            "id": "visible",
+            "kind": "bool",
+            "label": "Visibility: Visible",
+            "section": "Visibility",
+            "default": true
+          }
+        ]
+      },
+      "presets": [],
+      "presetBanks": [],
+      "mappingPresets": []
+    }
+  ]
+}

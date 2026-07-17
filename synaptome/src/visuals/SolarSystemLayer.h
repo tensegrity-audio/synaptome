@@ -143,6 +143,7 @@ private:
         float biosphereEnergy = 0.0f;
         float civilizationEnergy = 0.0f;
         float stability = 0.0f;
+        float changeEnergy = 0.0f;
         float satellitePhase = 0.0f;
         float satelliteSpeed = 0.22f;
         float satelliteDistance = 3.3f;
@@ -221,6 +222,9 @@ private:
     float paramCalloutAlpha_ = 0.88f;
     float paramCalloutBackgroundAlpha_ = 0.82f;
     float paramCalloutScale_ = 0.92f;
+    float paramCalloutFocusMode_ = 2.0f;
+    float paramCalloutMaxVisible_ = 3.0f;
+    float paramCalloutCycleSeconds_ = 4.5f;
     float paramScale_ = 0.92f;
     float paramSceneZoom_ = 1.0f;
     float paramOrbitSpread_ = 1.32f;
@@ -251,10 +255,10 @@ private:
     float paramTrailSteps_ = 56.0f;
     float paramTrailStampGain_ = 0.85f;
     float paramTrailStampLife_ = 5.5f;
-    float paramAtmosphereGrowth_ = 0.95f;
-    float paramLifeReactivity_ = 1.20f;
-    float paramBiosphereThreshold_ = 0.46f;
-    float paramCivilizationGrowth_ = 0.64f;
+    float paramAtmosphereGrowth_ = 1.25f;
+    float paramLifeReactivity_ = 1.45f;
+    float paramBiosphereThreshold_ = 0.34f;
+    float paramCivilizationGrowth_ = 0.85f;
     float paramMoonSize_ = 0.45f;
     float paramMoonSpeed_ = 0.35f;
     float paramAudioAmount_ = 0.65f;

@@ -95,11 +95,22 @@ Current package scaffold:
 - `tools/testdata/layer_packages/expected_package_parameter_manifest.json`
 - `tools/testdata/layer_packages/expected_combined_layer_catalog.json`
 - `tools/testdata/layer_packages/expected_combined_parameter_manifest.json`
+- `docs/schemas/generated_layer_template.schema.json`
+- `docs/schemas/generated_layer_sidecar.schema.json`
+- `docs/examples/generated_layers/stl_models/generated_layer.template.json`
+- `docs/examples/generated_layers/stl_models/tetrahedron.stl`
+- `docs/examples/generated_layers/stl_models/tetrahedron.generated_layer.json`
+- `tools/generated_layer_catalog_regression.py`
+- `tools/testdata/generated_layers/expected_generated_layer_catalog.json`
+- `docs/schemas/layer_browser_inspection_payload.schema.json`
+- `tools/layer_browser_inspection_payload.py`
+- `tools/testdata/layer_browser_inspection/expected_layer_browser_inspection_payload.json`
 
 This is still a static package contract. The tools can now produce draft
-package-only snapshots and opt-in combined catalog/manifest snapshots, but
-runtime loading, Browser discovery, and the offscreen bench are still future
-phases.
+package-only snapshots, opt-in combined catalog/manifest snapshots, generated
+content snapshots, and a schema-checked read-only Browser inspection payload,
+but runtime loading, Browser UI discovery, and the offscreen bench are still
+future phases.
 
 ## Where We Stand
 
@@ -120,6 +131,18 @@ What is real today:
 - Tooling can generate package-only catalog and parameter snapshots.
 - Opt-in combined checks can prove package-derived catalog/parameter entries do
   not collide with the current legacy runtime surfaces.
+- A draft STL/model generated-layer template can turn a docs/example `.stl`
+  file into a stable catalog-style entry with standard model parameters and no
+  legacy asset ID conflicts.
+- A draft read-only Browser inspection payload can combine package and
+  generated-layer metadata without layer instantiation, scene mutation, runtime
+  scanning, or canonical manifest changes.
+- Static named option metadata now has one generated-layer fixture
+  (`materialMode`) that flows into the generated catalog and inspection
+  payload.
+- Dynamic option-source metadata now has one generated-layer fixture
+  (`materialPreset`) that names a future runtime provider without resolving it
+  or rendering it in the Browser.
 
 What is only draft tooling:
 
@@ -129,10 +152,19 @@ What is only draft tooling:
 - Package-derived parameters are not yet part of the canonical
   `docs/contracts/parameter_manifest.json`.
 - Package-derived catalog entries are not yet consumed by the Browser.
+- Generated-layer template output is a docs/tools fixture only; it does not
+  mean Synaptome scans model folders at runtime.
+- The Browser inspection payload is a schema-checked docs/tools contract only;
+  the Browser does not yet read or render it.
+- Static option metadata is visible in draft snapshots, but Browser dropdown
+  rendering is not implemented yet.
+- Dynamic option-source metadata is visible in draft snapshots, but no runtime
+  provider lookup or fallback UI exists yet.
 
 What is not implemented yet:
 
-- Dropping an STL/model/media file into a folder and getting an automatic layer.
+- Runtime or Browser scanning of STL/model/media folders.
+- Read-only Browser UI for package/generated-layer inspection.
 - Browser controls for package presets, preset banks, mapping presets, static
   dropdown options, or dynamic option providers.
 - Runtime package loading or generated registration.
@@ -146,6 +178,7 @@ runtime behavior.
 | --- | --- | --- |
 | Static package schemas, fixtures, and validators | Low | They do not change runtime loading and fail in tools first. |
 | File-backed generated layer fixtures | Medium | Generated IDs, folder rules, and standard parameters need to stay stable. |
+| Read-only inspection payload | Low | It is schema-checked fixture output and cannot claim runtime loading, instantiation, or scene mutation. |
 | Browser package/preset/mapping UI | Medium-High | UI state, scenes, and operator edits can conflict if merge rules are vague. |
 | Canonical manifest/catalog integration | Medium-High | Package metadata, runtime registration, scenes, and mappings must not drift. |
 | Runtime package loading or generated registration | High | This touches installation, registration, C++ build/runtime seams, and compatibility policy. |
@@ -184,12 +217,13 @@ Promotion ladder:
 | 0 | Draft package schemas, fixture, validator | None | Package fixture validates. Done. |
 | 1 | Package-only catalog/parameter snapshots | None | Package snapshots are stable. Done. |
 | 2 | Combined package/runtime compatibility snapshots | None | No package/runtime ID conflicts. Done. |
-| 3 | File-backed generated-layer template fixture | None | A dropped-file fixture produces stable generated IDs and parameters. |
-| 4 | Browser read-only package/generated-layer inspection | Read-only UI only | Browser can display package data without loading or mutating scenes. |
-| 5 | Browser opt-in package activation | Controlled UI path | Scene save/load and target validation pass with package-derived entries. |
-| 6 | Canonical manifest/catalog integration | Contract change | Runtime registration agrees with package declarations or has explicit exceptions. |
-| 7 | Runtime package root scanning | Runtime discovery | Disabled-by-default smoke path, strict conflict handling, no source-edit promise. |
-| 8 | Generated registration or loader evolution | Runtime/build behavior | Single-layer bench and compatibility policy are in place. |
+| 3 | File-backed generated-layer template fixture | None | A dropped-file fixture produces stable generated IDs and parameters. Done for one STL fixture. |
+| 4 | Schema-checked read-only inspection payload | None | Package and generated-layer metadata can be inspected without runtime loading, instantiation, or scene mutation. Done for current fixtures. |
+| 5 | Browser read-only package/generated-layer inspection UI | Read-only UI only | Browser can display inspection data without loading or mutating scenes. |
+| 6 | Browser opt-in package activation | Controlled UI path | Scene save/load and target validation pass with package-derived entries. |
+| 7 | Canonical manifest/catalog integration | Contract change | Runtime registration agrees with package declarations or has explicit exceptions. |
+| 8 | Runtime package root scanning | Runtime discovery | Disabled-by-default smoke path, strict conflict handling, no source-edit promise. |
+| 9 | Generated registration or loader evolution | Runtime/build behavior | Single-layer bench and compatibility policy are in place. |
 
 ## Tracked Layer Gaps
 
@@ -270,11 +304,21 @@ reload/recenter actions where relevant.
 
 Deliverables:
 
-- Template schema for file-backed generated assets.
-- Stable generated content IDs.
-- Optional sidecar manifest support for label, tags, thumbnail, physical scale,
-  defaults, and presets.
-- A fixture proving one dropped file becomes a validated catalog entry.
+- Template schema for file-backed generated assets. Done for the first STL
+  template draft.
+- Stable generated content IDs. Done for one docs/example STL fixture.
+- Optional sidecar manifest support for label, tags, physical scale, and
+  defaults. Done for the first sidecar draft.
+- A fixture proving one dropped file becomes a validated catalog entry. Done
+  for `tetrahedron.stl`.
+
+Still pending:
+
+- Runtime/Browser folder scanning.
+- Broader content kinds beyond STL.
+- Thumbnail/media preview metadata.
+- Generated-layer parameter manifest output, if needed before Browser
+  inspection.
 
 ### Phase 4: Package Parameters And Manifest Generation
 
@@ -298,6 +342,11 @@ templates for the fixture. `tools/gen_parameter_manifest.py --include-packages`
 can now create a draft combined manifest for compatibility testing, while the
 default `tools/gen_parameter_manifest.py --check` remains the canonical current
 runtime manifest.
+
+Generated-layer option metadata has also started: the STL template fixture
+declares one static `materialMode` string option list and one dynamic
+`materialPreset` `optionsSource` provider reference. Both now appear in the
+generated-layer catalog snapshot and the read-only Browser inspection payload.
 
 ### Phase 5: Layer Presets And Preset Banks
 
@@ -336,6 +385,11 @@ Make the Browser consume the package system directly.
 
 Deliverables:
 
+- Read-only inspection payload. Done for current package and generated-layer
+  fixtures.
+- Inspection payload schema. Done for the current draft payload.
+- Static and dynamic option metadata fixtures. Done for one generated STL
+  template.
 - Package-discovered catalog sections.
 - Named dropdown rendering for `options[]`.
 - Dynamic option rendering for `optionsSource`.
@@ -406,14 +460,14 @@ without pretending Synaptome has hot-loaded plugins before it does.
 
 Start small:
 
-1. Define a draft template shape for file-backed generated layers, starting
-   with an STL/model drop.
-2. Add one tiny docs/example content fixture and expected generated catalog
-   output.
-3. Validate stable generated IDs, standard model parameters, and optional
-   sidecar metadata without changing Browser/runtime loading.
-4. Only after that, decide when `--include-packages` graduates from a draft
-   compatibility check into Browser discovery.
+1. Keep the read-only Browser inspection payload schema and snapshot passing.
+2. Add only tiny fixture expansions next, such as one package-owned option
+   metadata example or one additional generated content kind, and prove the
+   inspection payload still stays deterministic.
+3. Only after that, decide whether to add read-only Browser UI behind an
+   explicit draft path.
+4. Defer activation, scene writes, package-root scanning, and canonical
+   manifest changes until the Browser can inspect package data safely.
 
 That gives the layer system a real contract before the Browser, manifest
 generator, preset system, or runtime bench depend on it.
