@@ -6,7 +6,7 @@
   "registryPrefix": "media.clip.default",
   "opacity": 1.0,
   "defaults": {
-    "clipId": "default-loop",
+    "clipId": "aurora-veil-r1",
     "gain": 1.0,
     "mirror": false,
     "loop": true

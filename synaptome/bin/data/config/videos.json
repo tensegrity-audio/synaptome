@@ -1,6 +1,44 @@
 {
   "schemaVersion": 1,
   "discoveryMode": "manifest-only",
-  "clips": [],
-  "layers": []
+  "clips": [
+    {
+      "id": "aurora-veil-r1",
+      "label": "Aurora Veil",
+      "path": "../media/public/aurora-veil-r1.mp4",
+      "revision": 1,
+      "sha256": "fdddea31e9509dc90d5bd6a045c1cd5cdf415fee03a050f17715f54c03a6ec8f",
+      "prewarm": false,
+      "loop": true,
+      "provenance": {
+        "sourceType": "generated",
+        "creator": "Synaptome project via OpenAI image generation",
+        "source": "Prompt-generated source frame encoded as a deterministic 12-second breathing loop.",
+        "license": "MIT; distributed as part of the Synaptome public example assets.",
+        "redistribution": "allowed",
+        "notes": "First reviewed public media asset. No source scan or automatic discovery is required.",
+        "generation": {
+          "tool": "Codex imagegen; FFmpeg 8.1.2 libx264",
+          "model": "OpenAI ImageGen (model identifier not exposed)",
+          "prompt": "Create a high-resolution 16:9 abstract visual source for a live-performance video loop called Aurora Veil. Deep near-black navy background, elegant translucent cyan and violet aurora ribbons flowing horizontally, subtle fine star-like particles, soft volumetric glow, balanced negative space, cinematic but restrained, crisp enough for projection, no horizon, no people, no objects, no logos, no typography, no borders. Compose so a very slow centered breathing zoom can loop without exposing edges. This is a source frame for Synaptome's redistributable public example media.",
+          "settings": {
+            "sourceResolution": "1672x941",
+            "outputResolution": "1920x1080",
+            "durationSeconds": 12,
+            "frameRate": 30,
+            "codec": "H.264 High / yuv420p",
+            "encode": "libx264 preset=slow crf=18; centered cosine breathing zoom 1.02..1.04..1.02; no audio"
+          }
+        }
+      }
+    }
+  ],
+  "layers": [
+    {
+      "id": "media.clip.default",
+      "defaultClip": "aurora-veil-r1",
+      "opacity": 1.0,
+      "blendMode": "alpha"
+    }
+  ]
 }

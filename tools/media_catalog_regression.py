@@ -21,6 +21,7 @@ except ImportError:
 
 BASE_PATH = Path(__file__).resolve().parents[1]
 DEFAULT_CATALOG = BASE_PATH / "synaptome/bin/data/config/videos.json"
+RUNTIME_LAYERS_ROOT = BASE_PATH / "synaptome/bin/data/layers"
 SCHEMA_PATH = BASE_PATH / "docs/schemas/media_catalog.schema.json"
 PUBLIC_EXAMPLE = BASE_PATH / "docs/examples/media_catalog_example.json"
 INVALID_CASES = BASE_PATH / "tools/testdata/media_catalog/invalid_catalog_cases.json"
@@ -261,6 +262,38 @@ def validate_document(
     )
 
 
+def runtime_layer_default_errors(catalog_path: Path) -> list[str]:
+    catalog = load_json(catalog_path)
+    runtime_layers: dict[str, tuple[Path, dict[str, Any]]] = {}
+    for path in RUNTIME_LAYERS_ROOT.rglob("*.json"):
+        if "scenes" in path.parts:
+            continue
+        value = load_json(path)
+        if isinstance(value, dict) and isinstance(value.get("id"), str):
+            runtime_layers[str(value["id"])] = (path, value)
+
+    errors: list[str] = []
+    for raw in catalog.get("layers", []):
+        if not isinstance(raw, dict):
+            continue
+        layer_id = raw.get("id")
+        if not isinstance(layer_id, str):
+            continue
+        resolved = runtime_layers.get(layer_id)
+        if resolved is None:
+            errors.append(f"media layer default id '{layer_id}' does not resolve in the runtime layer catalog")
+            continue
+        path, layer = resolved
+        defaults = layer.get("defaults", {})
+        runtime_clip = defaults.get("clipId") if isinstance(defaults, dict) else None
+        if runtime_clip != raw.get("defaultClip"):
+            errors.append(
+                f"{path.relative_to(BASE_PATH).as_posix()} defaults.clipId '{runtime_clip}' "
+                f"does not match videos.json defaultClip '{raw.get('defaultClip')}'"
+            )
+    return errors
+
+
 def validate_negative_fixtures(schema: dict[str, Any]) -> list[str]:
     fixture = load_json(INVALID_CASES)
     errors: list[str] = []
@@ -293,7 +326,11 @@ def main() -> int:
     catalog_path = args.catalog if args.catalog.is_absolute() else (BASE_PATH / args.catalog)
     schema = load_json(SCHEMA_PATH)
     checks = (
-        ("canonical catalog", validate_document(catalog_path, schema, require_files=True, committed_catalog=True)),
+        (
+            "canonical catalog",
+            validate_document(catalog_path, schema, require_files=True, committed_catalog=True)
+            + runtime_layer_default_errors(catalog_path),
+        ),
         ("public empty example", validate_document(PUBLIC_EXAMPLE, schema, require_files=False, committed_catalog=True)),
         ("negative fixtures", validate_negative_fixtures(schema)),
     )
