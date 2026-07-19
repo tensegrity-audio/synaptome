@@ -54,6 +54,11 @@
       "default": 1.0,
       "range": { "min": 0.25, "max": 8.0, "step": 0.25 },
       "units": "multiplier",
+      "options": [
+        { "value": 0.5, "label": "Half Time", "description": "Run at half the transport rate." },
+        { "value": 1.0, "label": "Normal", "description": "Run at the transport rate." },
+        { "value": 2.0, "label": "Double Time", "description": "Run at twice the transport rate." }
+      ],
       "description": "Multiplier applied to global transport BPM when sync is enabled."
     },
     {

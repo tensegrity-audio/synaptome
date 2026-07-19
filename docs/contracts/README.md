@@ -1,6 +1,6 @@
 # Synaptome Public Contract Index
 
-Status: public app/runtime contract coverage is locked for the first Synaptome extraction slice. The current `python tools\validate_configs.py --public-app` report covers 11 public contracts.
+Status: public app/runtime contract coverage is locked for the first Synaptome extraction slice. The current `python tools\validate_configs.py --public-app` report covers 12 public contracts.
 
 This index names the contracts that the standalone Synaptome runtime owns: app configuration, scenes, layer assets, parameter IDs, mappings, HUD/Console state, and the public artist SDK fixture.
 
@@ -69,6 +69,19 @@ instantiate, scan, or mutate anything.
 - `python tools\layer_browser_inspection_payload.py --check` validates the generated payload against the golden snapshot and semantic read-only rules.
 - `python tools\validate_configs.py tools\testdata\layer_browser_inspection\expected_layer_browser_inspection_payload.json` validates the snapshot against the schema.
 
+Media intake artifacts:
+
+- [media_catalog.md](media_catalog.md) locks current discovery to explicit
+  manifests and defines public versus operator-local roots, provenance,
+  replacement, and promotion rules.
+- [media_catalog.schema.json](../schemas/media_catalog.schema.json) requires
+  stable IDs, hashes, provenance, redistribution state, and layer-default
+  references for every future clip.
+- [media_catalog_example.json](../examples/media_catalog_example.json) is the
+  valid empty pre-media baseline; it contains no binary media.
+- `python tools\media_catalog_regression.py --check` validates the canonical
+  empty catalog, public example, and negative semantic fixtures.
+
 Coverage commands:
 
 ```powershell
@@ -82,6 +95,7 @@ python tools\gen_parameter_manifest.py --include-packages --check
 python tools\generated_layer_catalog_regression.py --check
 python tools\layer_browser_inspection_payload.py --check
 python tools\validate_configs.py tools\testdata\layer_browser_inspection\expected_layer_browser_inspection_payload.json
+python tools\media_catalog_regression.py --check
 ```
 
 Strict public contract mode reads committed fixtures from `tools/testdata/**` and examples under `docs/examples/**`. Live app-written files under `synaptome/bin/data/config/` and `synaptome/bin/data/layers/scenes/` remain runtime smoke state unless intentionally promoted into fixtures.
@@ -110,6 +124,7 @@ Strict public contract mode reads committed fixtures from `tools/testdata/**` an
 | Parameter target references | Strict check that persisted scenes, MIDI maps, OSC maps, audio modifiers, device maps, and HUD widget IDs point at known parameter IDs, Console slot templates, or layer catalog IDs. | `app-contract` | App contract owner | `docs/contracts/parameter_manifest.json`, committed runtime-state fixtures | Scene persistence, MIDI map, OSC map, Browser, HUD feeds | Strict validator must pass before release/extraction; intentional non-parameter catalog IDs must resolve through the layer catalog. | `python tools\validate_parameter_targets.py --strict --contract-fixtures` | `tools/testdata/runtime_state/config/*.json`, `tools/testdata/runtime_state/layers/scenes/*.json`, `tools/testdata/device_maps/*.json` | Target ID renames require fixture migration or explicit compatibility aliases; live app-written drift must not block the strict gate. | Current; Validated | No for current fixture set; extend coverage as new target-bearing files are promoted. |
 | Layer asset catalog | JSON layer asset shape loaded by the visual layer library. | `app-contract` | App contract owner | `synaptome/bin/data/layers/**/*.json`, `synaptome/src/visuals/LayerLibrary.*`, `synaptome/src/ofApp.cpp` | Scene runtime, console/layer stack, Browser | Schema version pending; current assets are source examples. | `python tools\layer_catalog_regression.py --check` | `tools/testdata/layer_catalog/expected_catalog.json`, `synaptome/bin/data/layers/**/*.json` | Runtime layer types must map to factory registrations. | Current; Validated | Partial: plugin/source-registration policy remains pending. |
 | Artist SDK example fixture | Minimal public source/catalog/scene bundle for an artist-authored layer. | `artist-sdk` | App contract owner | `docs/examples/artist_sdk/SignalBloomLayer.*`, `docs/examples/artist_sdk/register_signal_bloom.cpp`, `docs/examples/artist_sdk/signal_bloom.layer.json`, `docs/examples/artist_sdk/signal_bloom.scene.json` | Layer authoring docs, Browser catalog, Console scenes, MIDI/OSC/sensor mapping examples, public SDK packaging | Fixture schema v1; source registration remains explicit until the extension/package boundary is chosen. | `python tools\validate_artist_sdk_example.py --check` | `docs/examples/artist_sdk/**`, `tools/testdata/artist_sdk/expected_artist_sdk_example.json` | Parameter suffix, catalog ID, scene target, and registration changes must update the SDK snapshot and docs together. | Current; Validated | Partial: package layout and non-source-edit extension mechanism remain pending. |
+| Media catalog intake | Explicit, provenance-aware video onboarding without folder scanning or undocumented binaries. | `app-contract`, `adapter-contract` | App contract owner | `synaptome/bin/data/config/videos.json`, `docs/schemas/media_catalog.schema.json`, `docs/contracts/media_catalog.md` | `VideoCatalog`, media layers, Browser-facing catalog metadata, artists and operators | Schema version 1; committed media requires a stable ID, revision, SHA-256, redistribution permission, and replacement history when revised. | `python tools\media_catalog_regression.py --check` | `docs/examples/media_catalog_example.json`, `tools/testdata/media_catalog/invalid_catalog_cases.json` | Preserve IDs only for the same conceptual asset; increment revision and record the previous hash; remove defaults/references before deletion. | Current; Validated | No for safe manifest intake; Browser visibility and runtime slot-load fixtures remain follow-up. |
 | Scene persistence schema | Saved scene files and scene-last runtime state. | `app-runtime` | Runtime owner, app contract owner | `ofApp::encodeSceneJson`, `ofApp::loadScene`, committed scene fixtures | Runtime, console/layers, mappings, HUD/window state | Scene schema version is implicit; scene v2 contract is pending. | `python tools\validate_scene_persistence_contract.py --check` | `tools/testdata/scene_persistence/expected_scene_contract.json`, `tools/testdata/runtime_state/layers/scenes/*.json`, `tools/testdata/runtime_state/config/scene-last.json` | Scene transaction implementation and manual smoke have passed; use `--live` for local app-written smoke state. | Current; Validated | Partial: app-native/live-window fixture coverage remains follow-up, not a current extraction blocker. |
 | Device-map schema | Logical device/control slot mapping for controllers and adapters. | `app-contract` | App contract owner | `synaptome/bin/data/device_maps/*.json`, `tools/testdata/device_maps/synthetic_controller.json` | Browser, MIDI/OSC mapping, device adapters | Schema version pending; logical role families are fixture-backed. | `python tools\device_map_regression.py --check` | `synaptome/bin/data/device_maps/MIDI Mix 0.json`, `tools/testdata/device_maps/synthetic_controller.json`, `tools/testdata/device_maps/expected_logical_slots.json` | New device support should be data/schema first; intentional role/binding changes must update the golden logical-slot fixture. | Current; Validated | No for current device-map logical slots; extend when target/action bindings become public. |
 | MIDI mapping persistence | MIDI CC/button/OSC routing persistence for controls. | `app-contract` | App contract owner | `synaptome/bin/data/config/midi-map.json` | `MidiRouter`, Browser, parameter runtime | Config has no explicit version yet; preserve legacy mapping fields. | `python tools\validate_configs.py --public-app` | `docs/examples/midi_bank_example.json` | Add migration notes when target IDs or slot assignment keys change. | Current; Validated | Partial: depends on stable parameter IDs and device-map contract. |

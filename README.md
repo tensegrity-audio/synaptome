@@ -142,6 +142,7 @@ Expected current signals:
 - [Contributing](docs/contributing.md)
 - [Release Policy](docs/release_policy.md)
 - [Artist SDK](docs/architecture/synaptome_artist_sdk.md)
+- [Current roadmap and pre-media safety gate](docs/project_ops/roadmap.md)
 - [External Contracts](docs/architecture/synaptome_external_contracts.md)
 - [Signal Control Integration](docs/contracts/signal_control_integration.md)
 - [MIDI Mapping](docs/midi_mapping.md)

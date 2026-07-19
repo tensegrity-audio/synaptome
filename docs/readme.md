@@ -17,12 +17,25 @@ Synaptome is a public openFrameworks runtime for live visual performance. These 
 - [External contracts](architecture/synaptome_external_contracts.md)
 - [Artist SDK](architecture/synaptome_artist_sdk.md)
 
+## Roadmaps
+
+- [Current priority and pre-media safety gate](project_ops/roadmap.md)
+- [Layer-system sequence](architecture/synaptome_layer_system_roadmap.md)
+- [Public runtime contract sequence](architecture/synaptome_public_runtime_contract_roadmap.md)
+- [Transport and reactivity dependency](architecture/synaptome_transport_reactivity.md)
+- [Biological layer direction](architecture/synaptome_biological_layer_roadmap.md)
+
+The Project Ops roadmap is authoritative for what is active. Architecture and
+show-development roadmaps describe possible sequence but do not establish
+priority by themselves.
+
 ## Contracts And Examples
 
 - [Contract index](contracts/README.md)
 - [Contract gaps](contracts/contract_gaps.md)
 - [Fixtures](contracts/fixtures.md)
 - [Signal Control integration](contracts/signal_control_integration.md)
+- [Media catalog intake](contracts/media_catalog.md)
 - [MIDI mapping](midi_mapping.md)
 - [OSC catalog](osc_catalog.md)
 - [Artist SDK example](examples/artist_sdk/README.md)

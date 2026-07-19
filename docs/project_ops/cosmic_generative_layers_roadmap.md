@@ -1,8 +1,14 @@
 # Cosmic Generative Layers Roadmap
 
-Status: Superseded direction: Cosmos Formation is now a single cosmic-web / universe-map layer; live visual tuning pending.
+Status: Historical/superseded show-development record; reviewed 2026-07-18.
+Cosmos Formation became a single cosmic-web/universe-map layer, so this file no
+longer owns active priority. It preserves visual intent and a possible resume
+sequence only. Any further tuning or new cosmic layer requires a focused
+Project Ops request after the pre-media safety gate.
 Created: 2026-06-18.
 Last detailed pass: 2026-06-21.
+
+Priority and activation are owned by [`roadmap.md`](roadmap.md).
 
 ## Cosmos Formation / Cosmic Web Brief
 
@@ -467,7 +473,9 @@ python tools\validate_parameter_targets.py --strict --contract-fixtures
 python tools\validate_signal_control_receive_contract.py --check
 ```
 
-## Recommended Immediate Backlog
+## Preserved Resume Sequence
+
+This is not an active backlog. If cosmic work is promoted again:
 
 1. Polish **P1 Cosmos Formation / Super-Galaxy** until it reads clearly as blooming, swirling, and settling into galaxies/clusters.
 2. Tune the default preset and scene recipes for low-intensity, high-intensity, and mature-cluster modes.

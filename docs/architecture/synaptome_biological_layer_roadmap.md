@@ -1,9 +1,10 @@
 # Synaptome Biological Layer Roadmap
 
-Status: Architecture roadmap for expanding Synaptome's biological and
-bio-inspired simulation vocabulary. This document turns the current candidate
-set into an implementation order, separating upgrades to existing layers from
-new layer families that need distinct state models.
+Status: Parked supporting architecture; reviewed 2026-07-18. No biological
+layer implementation is currently active. Resume through a focused Project Ops
+request after the pre-media safety gate, package validation, and shared
+field/graph infrastructure are ready. This document preserves the intended
+implementation order for upgrades and new layer families.
 
 Read with: [`synaptome_layer_system_roadmap.md`](synaptome_layer_system_roadmap.md),
 [`synaptome_artist_sdk.md`](synaptome_artist_sdk.md),

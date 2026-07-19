@@ -1,0 +1,105 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Synaptome Media Catalog",
+  "description": "Manifest-only catalog for tracked and operator-selected video clips. Folder scanning is not part of this contract.",
+  "type": "object",
+  "required": ["schemaVersion", "discoveryMode", "clips", "layers"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "discoveryMode": { "const": "manifest-only" },
+    "clips": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/clip" }
+    },
+    "layers": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/layerDefaults" }
+    }
+  },
+  "definitions": {
+    "clip": {
+      "type": "object",
+      "required": ["id", "label", "path", "revision", "sha256", "prewarm", "loop", "provenance"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9_-]*$"
+        },
+        "label": { "type": "string", "minLength": 1 },
+        "path": {
+          "type": "string",
+          "pattern": "^\\.\\./media/(public|local)/[a-z0-9][a-z0-9_./-]*\\.(mp4|mov|mkv|webm)$"
+        },
+        "revision": { "type": "integer", "minimum": 1 },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "prewarm": { "type": "boolean" },
+        "loop": { "type": "boolean" },
+        "replacement": { "$ref": "#/definitions/replacement" },
+        "provenance": { "$ref": "#/definitions/provenance" }
+      }
+    },
+    "replacement": {
+      "type": "object",
+      "required": ["previousSha256", "reason"],
+      "additionalProperties": false,
+      "properties": {
+        "previousSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "reason": { "type": "string", "minLength": 1 }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["sourceType", "creator", "source", "license", "redistribution", "notes"],
+      "additionalProperties": false,
+      "properties": {
+        "sourceType": {
+          "enum": ["generated", "captured", "authored", "third-party"]
+        },
+        "creator": { "type": "string", "minLength": 1 },
+        "source": { "type": "string", "minLength": 1 },
+        "license": { "type": "string", "minLength": 1 },
+        "redistribution": {
+          "enum": ["allowed", "restricted", "prohibited"]
+        },
+        "notes": { "type": "string" },
+        "generation": { "$ref": "#/definitions/generation" }
+      }
+    },
+    "generation": {
+      "type": "object",
+      "required": ["tool", "model", "prompt", "settings"],
+      "additionalProperties": false,
+      "properties": {
+        "tool": { "type": "string", "minLength": 1 },
+        "model": { "type": "string", "minLength": 1 },
+        "prompt": { "type": "string", "minLength": 1 },
+        "settings": { "type": "object" }
+      }
+    },
+    "layerDefaults": {
+      "type": "object",
+      "required": ["id", "defaultClip"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9_-]*$"
+        },
+        "defaultClip": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9_-]*$"
+        },
+        "opacity": { "type": "number", "minimum": 0, "maximum": 1 },
+        "blendMode": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

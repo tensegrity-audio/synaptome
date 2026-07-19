@@ -1,0 +1,123 @@
+{
+  "cases": [
+    {
+      "name": "duplicate clip ID",
+      "catalog": {
+        "schemaVersion": 1,
+        "discoveryMode": "manifest-only",
+        "clips": [
+          {
+            "id": "same-clip",
+            "label": "First",
+            "path": "../media/public/same-clip.mp4",
+            "revision": 1,
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "prewarm": false,
+            "loop": true,
+            "provenance": {
+              "sourceType": "authored",
+              "creator": "Fixture",
+              "source": "Semantic test",
+              "license": "CC0-1.0",
+              "redistribution": "allowed",
+              "notes": "No binary is required for this semantic fixture."
+            }
+          },
+          {
+            "id": "same-clip",
+            "label": "Second",
+            "path": "../media/public/same-clip.mov",
+            "revision": 1,
+            "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "prewarm": false,
+            "loop": true,
+            "provenance": {
+              "sourceType": "authored",
+              "creator": "Fixture",
+              "source": "Semantic test",
+              "license": "CC0-1.0",
+              "redistribution": "allowed",
+              "notes": "No binary is required for this semantic fixture."
+            }
+          }
+        ],
+        "layers": []
+      },
+      "expectedError": "Duplicate clip id 'same-clip'"
+    },
+    {
+      "name": "generated clip without generation record",
+      "catalog": {
+        "schemaVersion": 1,
+        "discoveryMode": "manifest-only",
+        "clips": [
+          {
+            "id": "generated-clip",
+            "label": "Generated Clip",
+            "path": "../media/public/generated-clip.mp4",
+            "revision": 1,
+            "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "prewarm": false,
+            "loop": true,
+            "provenance": {
+              "sourceType": "generated",
+              "creator": "Fixture",
+              "source": "Semantic test",
+              "license": "CC0-1.0",
+              "redistribution": "allowed",
+              "notes": "Generation metadata is intentionally absent."
+            }
+          }
+        ],
+        "layers": []
+      },
+      "expectedError": "generated media requires provenance.generation"
+    },
+    {
+      "name": "dangling layer default",
+      "catalog": {
+        "schemaVersion": 1,
+        "discoveryMode": "manifest-only",
+        "clips": [],
+        "layers": [
+          {
+            "id": "video-main",
+            "defaultClip": "missing-clip",
+            "opacity": 1.0,
+            "blendMode": "alpha"
+          }
+        ]
+      },
+      "expectedError": "defaultClip 'missing-clip' does not resolve"
+    },
+    {
+      "name": "missing media file",
+      "requireFiles": true,
+      "catalog": {
+        "schemaVersion": 1,
+        "discoveryMode": "manifest-only",
+        "clips": [
+          {
+            "id": "missing-file",
+            "label": "Missing File",
+            "path": "../media/public/missing-file.mp4",
+            "revision": 1,
+            "sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+            "prewarm": false,
+            "loop": true,
+            "provenance": {
+              "sourceType": "authored",
+              "creator": "Fixture",
+              "source": "Semantic test",
+              "license": "CC0-1.0",
+              "redistribution": "allowed",
+              "notes": "The referenced binary is intentionally absent."
+            }
+          }
+        ],
+        "layers": []
+      },
+      "expectedError": "path does not exist"
+    }
+  ]
+}

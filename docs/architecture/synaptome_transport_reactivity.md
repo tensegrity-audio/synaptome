@@ -1,8 +1,9 @@
 # Synaptome Transport And Reactivity Contract
 
-Status: Architecture note for runtime-owned timing and reactivity sources. This
-document keeps BPM, beat detection, clock source selection, onset/downbeat
-events, confidence, and fallback policy separate from the layer package roadmap.
+Status: Planned dependency; reviewed 2026-07-18. No detector or clock-source
+implementation is currently active. This document keeps BPM, beat detection,
+clock source selection, onset/downbeat events, confidence, and fallback policy
+separate from the layer package roadmap.
 
 Read with: [`synaptome_layer_system_roadmap.md`](synaptome_layer_system_roadmap.md)
 and [`synaptome_external_contracts.md`](synaptome_external_contracts.md).
@@ -107,3 +108,7 @@ it, but this document owns its meaning and next actions.
 4. Add host-audio beat/onset detection only after the source contract is clear.
 5. Surface beat/onset values as mapping-visible sources.
 6. Add fixtures and runtime tests for confidence, fallback, and scene reload.
+
+Resume condition: promote a focused transport request when beat-reactive
+mapping presets need to move from draft metadata into canonical runtime
+behavior. Do not make layer packages responsible for detecting beats.

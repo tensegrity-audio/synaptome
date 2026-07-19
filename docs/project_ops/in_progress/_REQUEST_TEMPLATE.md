@@ -1,21 +1,37 @@
 # Synaptome Request Artifact Template
 
 State Summary
+- Request ID: <lowercase_filename_stem>
 - Phase: INTAKE
 - Status: Draft
 - Steps Complete: 0 / 0
 - Progress: <one-sentence current state>
-- Last Step Outcome: <date> - <what just happened>
+- Last Step Outcome: <YYYY-MM-DD> - <what just happened>
 - Next Step: <specific next action>
 - Dependencies / Overlap: <related docs, requests, code areas, or N/A>
 - Primary Scope: <runtime | contracts | docs | release | tests | governance>
-- Secondary Scopes: <scope labels or N/A>
+- Secondary Scopes: <configured scope labels or N/A>
 - Blocking Issues / Unknowns: <none or list>
-- Resume From: <phase, state, next action>
+- Impact / Priority Notes: <why this matters or N/A>
+- Priority Score: <integer or N/A>
+- Priority Lane: <Fast-Track | Standard | Review | Deferred | N/A>
+- Ready State: Not Ready
+- Ready Gate: <one-line blocker, exception, or met>
+- Project Ops / Roadmap Updates (timestamped): <YYYY-MM-DD> - <state sync note>
+- Resume From: Phase INTAKE, State Draft, Next Action <command or artifact>
 
 ## Milestone Synthesis
 
-- Milestone ID: <id>
+- Milestone ID: <stable_id>
+- Milestone Name: <human-readable name>
+- Milestone Type: <feature | contract | docs | validation | governance | other>
+- Source Requests: <request IDs or this request ID>
+- Outcome Statement (Done When): <observable completion condition>
+- KPI / Success Signal: <measurable evidence>
+- Target Window: <date, release, event, or explicit dependency window>
+- Dependency Gates: <required decisions, contracts, tests, or N/A>
+- Contract Surfaces: <public IDs, schemas, files, APIs, or N/A>
+- Risk Posture: <low, medium, high, and why>
 - Goal: <outcome>
 - Non-Goals: <what is intentionally out of scope>
 - Owner: <human, agent, team, or N/A>
@@ -23,15 +39,39 @@ State Summary
 ## Roadmap Overlap Review
 
 - Existing roadmap entries checked: <paths or headings>
-- Related active requests: <ids or N/A>
-- Duplicate risk: <low, medium, high>
+- Related active requests: <IDs or N/A>
+- Duplicate risk: <Low | Medium | High>
 - Merge / split decision: <decision>
+- Priority conflict: <conflict or None>
+
+## Prioritization
+
+- Policy Source: <user request, roadmap policy, release need, incident, or other>
+- Priority Score: <integer or N/A>
+- Priority Lane: <Fast-Track | Standard | Review | Deferred | N/A>
+- Due Date / Timing Driver: <date, event, dependency, or N/A>
+- Sort Key: <stable ordering key>
+- Override: <override reason or N/A>
+
+## Definition Of Ready
+
+- Ready State: Not Ready
+- Ready Date: <YYYY-MM-DD or N/A>
+- Ready Owner: <human, agent, team, or N/A>
+- Ready Exceptions: <accepted exceptions or N/A>
+- Decision Links: <RFC/decision IDs or N/A>
+
+Set both Ready State fields to `Ready` only after every required field is
+resolved and decision blockers are closed or explicitly excepted. A request
+must not enter `EXECUTION` before then.
 
 ## Complexity
 
-- Level: <low, medium, high>
+- Level: <Low | Medium | High>
+- Predicted Count: <derived surface/step count>
+- Count Drivers: <what contributes to the count>
 - Drivers: <risk, scope, validation, dependencies>
-- Confidence: <low, medium, high>
+- Confidence: <Low | Medium | High>
 
 ## Intake
 
@@ -42,18 +82,32 @@ State Summary
 ## Form
 
 - Problem Statement: <what needs to change>
+- User / Operational Value: <why the change matters>
+- Change Type: <docs, contract, runtime, validation, release, governance, or mix>
+- Execution Mode: <Strict gated | Assisted | Audit-only | Autonomous docs>
+- Acceptance Criteria: <observable conditions>
 - Constraints: <technical, product, privacy, or timing constraints>
+- Must Not Change: <protected surfaces>
+- Allowed To Change: <authorized surfaces>
 - Inputs Needed: <unknowns or N/A>
 
 ## Analysis
 
-- Touch Map: <files, docs, tools, systems>
+- Touch Map: <files, docs, tools, systems, public interfaces, privacy paths>
 - Risks: <risks or N/A>
 - Alternatives Considered: <alternatives or N/A>
 
+## Design Alignment
+
+- Guiding Principles Affected: <principles or N/A>
+- Systems / Elements / Processes Used: <architecture surfaces or N/A>
+- Alignment Rationale: <why this direction fits>
+- Design Alignment Log Update: <entry ID/update or N/A>
+- Student-Facing Explanation: <plain-language explanation or N/A>
+
 ## Plan
 
-- Steps: <ordered implementation or documentation steps>
+- Steps: <ordered implementation or documentation steps; do not leave blank>
 - Validation Plan: <commands, reviews, manual checks>
 - Rollback / Stop Conditions: <conditions>
 
@@ -61,11 +115,11 @@ State Summary
 
 | Task ID | Description | Status |
 | --- | --- | --- |
-| <TASK-1> | <description> | Planned |
+| <request_id-T1> | <description> | Planned |
 
 ## Execution
 
-- <timestamp> - <what changed>
+- <YYYY-MM-DD> - <what changed>
 
 ## Validation
 
@@ -75,10 +129,10 @@ State Summary
 
 ## Doc Sync
 
-- Roadmap updated: Yes / No / N/A
-- Changelog updated: Yes / No / N/A
-- Related docs updated: Yes / No / N/A
-- Links checked: Yes / No / N/A
+- Roadmap updated: No
+- Changelog updated: No
+- Related docs updated: No
+- Links checked: No
 
 ## Post-Mortem
 
@@ -87,4 +141,5 @@ State Summary
 
 ## Notes
 
-- <freeform notes>
+- Keep the request State Summary identical to its master-roadmap entry when
+  roadmap parity is required.

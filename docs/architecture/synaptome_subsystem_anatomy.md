@@ -729,7 +729,7 @@ Target:
 | Devices | Device maps exist and logical slots are fixture-backed. | New controllers are data-first. | Extend fixture when target/action bindings become public. |
 | MIDI/OSC | Real routing and learn flows, ownership split. | Public mapping lifecycle and route schemas. | Tie mappings to parameter manifest. |
 | Serial/helper input | App-facing OSC examples exist. | Separate helper repo speaks a machine-readable app contract. | Add host parser regression and canonical OSC catalog. |
-| Media | Clip/webcam layers and `videos.json`. | Clear discovery policy. | Decide manifest vs folder scan. |
+| Media | Clip/webcam layers and manifest-only `videos.json`. | Provenance-aware manifest intake with an empty safe baseline. | Add one reviewed asset fixture for Browser visibility and slot loading; defer folder scanning. |
 | Tests | Strong internal harnesses and validators. | Public confidence suite independent of firmware builds. | Add semantic validators and public fixtures. |
 
 ## How This Guides Future Work

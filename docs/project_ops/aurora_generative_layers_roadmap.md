@@ -1,7 +1,12 @@
 # Aurora Generative Layers Roadmap
 
-Status: Draft show-development roadmap.
+Status: Parked show-development direction; reviewed 2026-07-18. No aurora layer
+implementation is currently active. Resume after the pre-media safety gate
+through one focused Waveform Aurora Curtains request; do not begin with an FFT
+upgrade or a multi-layer media pack.
 Created: 2026-06-18.
+
+Priority and activation are owned by [`roadmap.md`](roadmap.md).
 
 This roadmap captures the aurora visual track for Synaptome. The core idea is to make waveform and spectrum data the primary animation source, not just a light modulation input. Aurora layers should feel like music stretched into luminous atmospheric curtains.
 
@@ -241,6 +246,10 @@ Acceptance:
 | FastNoiseLite | Smooth atmospheric drift, turbulence, domain warp. | Good fit for aurora curtains and veil motion. |
 | ofxFlowTools | Fluid-like aurora gas and optical-flow-driven motion. | Optional spike after waveform curtains are working. |
 
-## Recommended Next Step
+## Resume Plan
 
-Build **Waveform Aurora Curtains** first using the current `AudioAnalysisBus`. It gives the strongest aurora identity with the least contract risk. Then add spectrum support only after the waveform layer proves what extra FFT detail would actually improve.
+After the pre-media safety gate, build **Waveform Aurora Curtains** first using
+the current `AudioAnalysisBus`. It gives the strongest aurora identity with the
+least contract risk. Treat it as one layer, one package/catalog path, one
+default preset, and one validation slice. Add spectrum support only after the
+waveform layer proves what extra FFT detail would actually improve.

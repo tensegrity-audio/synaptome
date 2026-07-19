@@ -1,17 +1,24 @@
 # Layer Package And Compatibility Bench Scaffolding
 
 State Summary
-- Phase: INTAKE
-- Status: Draft
-- Steps Complete: 3 / 10
-- Progress: Draft package/preset schemas, shared package discovery roots, a Signal Bloom package fixture, package-derived snapshots, opt-in combined catalog/manifest checks, one STL/model generated-layer template fixture, static and dynamic option metadata fixtures, and a schema-checked read-only Browser inspection payload now exist without changing runtime loading behavior.
-- Last Step Outcome: 2026-06-28 - Added one generated-layer `optionsSource` metadata fixture and proved it flows into generated catalog plus inspection snapshots without adding provider lookup, Browser UI, or runtime scanning.
-- Next Step: Expand only in tiny, schema-checked slices, such as one package-owned option metadata example or one additional generated content kind, then consider read-only Browser UI behind an explicit draft path.
+- Request ID: layer_package_compatibility_bench_scaffolding
+- Phase: EXECUTION
+- Status: In Progress
+- Steps Complete: 3 / 10 (3 additional steps in progress)
+- Progress: Draft package/preset schemas, shared package discovery roots, a Signal Bloom package fixture with package-owned named options, package-derived snapshots, opt-in combined catalog/manifest checks, one STL/model generated-layer template fixture, static and dynamic option metadata fixtures, and a schema-checked read-only Browser inspection payload now exist without changing runtime loading behavior.
+- Last Step Outcome: 2026-07-18 - Added package-owned named BPM multiplier options to Signal Bloom and regenerated deterministic package, combined compatibility, and inspection snapshots.
+- Next Step: Hold at the static safe boundary; promote either one package-owned `optionsSource` fixture or read-only Browser inspection through a separate explicit slice before changing runtime behavior.
 - Dependencies / Overlap: `docs/project_ops/synaptome_layer_design_standards.md`, `docs/architecture/synaptome_layer_system_roadmap.md`, `docs/architecture/synaptome_artist_sdk.md`, `docs/contracts/contract_gaps.md`, `docs/contracts/parameter_manifest.json`, `docs/schemas/layer_asset.schema.json`, `tools/layer_catalog_regression.py`, `tools/gen_parameter_manifest.py`.
 - Primary Scope: contracts
 - Secondary Scopes: artist-sdk, docs, tests, runtime
 - Blocking Issues / Unknowns: Runtime bench shape depends on an app-native or offscreen layer test seam; generated registration/module loading remains a later architecture decision; beat-reactive mapping presets depend on the separate transport/reactivity contract.
-- Resume From: Intake; keep the read-only inspection payload passing, then add the smallest next metadata expansion without touching Browser/runtime behavior.
+- Impact / Priority Notes: Establishes deterministic package and generated-content contracts before more tracked media, Browser activation, or runtime discovery increases compatibility risk.
+- Priority Score: N/A
+- Priority Lane: Fast-Track
+- Ready State: Ready
+- Ready Gate: Met for bounded schema, fixture, snapshot, and documentation slices; runtime activation remains out of scope.
+- Project Ops / Roadmap Updates (timestamped): 2026-06-25 - Promoted layer package scaffolding from backlog. 2026-07-18 - Reconciled the request with the current Project Ops readiness contract and pre-media gate. 2026-07-18 - Completed the bounded package-owned static option slice and paused before runtime promotion.
+- Resume From: Execution; choose one bounded follow-up, record fresh validation evidence, and do not touch Browser activation or runtime loading behavior without explicit promotion.
 
 ## Current State In Plain English
 
@@ -98,15 +105,29 @@ Risk profile:
    generated catalog plus inspection payload.
 8. Done: add one generated-layer `optionsSource` fixture and prove it reaches
    the generated catalog plus inspection payload.
-9. Next: add only tiny metadata expansions, such as one package-owned option
-   metadata fixture or one more generated content kind, while keeping the
-   inspection payload deterministic.
-10. Then: only after that payload is stable, consider read-only Browser
-   inspection behind an explicit draft path.
+9. Done: add one package-owned option-metadata fixture while keeping the
+   inspection payload deterministic and canonical runtime outputs unchanged.
+10. Done in separate request: complete the pre-media safety gate in
+    [`../roadmap.md`](../roadmap.md), including media roots, stable IDs,
+    provenance, and the explicit-manifest-versus-folder-scan policy. Only after
+    that gate is recorded should a separate request add more tracked media.
+11. Next promotion choice: add one package-owned `optionsSource` fixture or
+    consider read-only Browser inspection behind an explicit draft path.
+    Browser activation, scene writes, runtime scanning, and canonical manifest
+    promotion are separate promotion steps.
 
 ## Milestone Synthesis
 
 - Milestone ID: layer-package-compat-bench
+- Milestone Name: Layer Package And Compatibility Bench Scaffolding
+- Milestone Type: Contract and validation scaffolding
+- Source Requests: layer_package_compatibility_bench_scaffolding
+- Outcome Statement (Done When): Package and generated-content metadata can be validated and inspected deterministically, a static package command exists, and the runtime/offscreen bench is either implemented behind a safe seam or explicitly split into a follow-up request.
+- KPI / Success Signal: Package-only, combined compatibility, inspection, canonical catalog/manifest, and public-app checks pass with stable IDs and no unintended runtime behavior change.
+- Target Window: Before the next tracked generated-media or show-content request.
+- Dependency Gates: Stable public IDs, deterministic fixture roots, current runtime catalog compatibility, and a documented media intake/discovery policy.
+- Contract Surfaces: Layer packages, presets, generated-layer templates and sidecars, Browser inspection payload, layer catalog, parameter manifest, scenes, and mappings.
+- Risk Posture: Low for schemas and fixtures; medium-high for Browser/canonical integration; high for runtime scanning or loading.
 - Goal: Make Synaptome layer packages and template-backed content folders declared, validated, discoverable, preset-aware, mapping-aware, and eventually testable in isolation without touching `ofApp.cpp`.
 - Non-Goals: Do not promise hot-loaded plugins, binary module loading, or no-source-edit installation before generated registration or package loading is implemented.
 - Owner: Project Ops / Synaptome runtime.
@@ -117,10 +138,30 @@ Risk profile:
 - Related active requests: N/A.
 - Duplicate risk: Low.
 - Merge / split decision: Promote the previous backlog line "Layer Package And File-Driven Browser Organization" into this request; keep the layer standards doc author-facing and place detailed architecture debt in the layer-system roadmap.
+- Priority conflict: None; show-development roadmaps are parked until the pre-media gate is complete.
+
+## Prioritization
+
+- Policy Source: Explicit user request to clean roadmap state and reach a safe point before generating more media.
+- Priority Score: N/A
+- Priority Lane: Fast-Track
+- Due Date / Timing Driver: Complete the pre-media gate before the next tracked generated-media request.
+- Sort Key: 2026-07-18-pre-media-safety
+- Override: User-directed safety cleanup takes precedence over new show-content work.
+
+## Definition Of Ready
+
+- Ready State: Ready
+- Ready Date: 2026-07-18
+- Ready Owner: Codex / maintainer
+- Ready Exceptions: Runtime package loading, Browser activation, dynamic provider lookup, and the offscreen bench are not authorized by readiness for static contract slices.
+- Decision Links: N/A; unresolved media discovery policy is a pre-media gate item, not a blocker for the next package option-metadata fixture.
 
 ## Complexity
 
 - Level: High.
+- Predicted Count: 12
+- Count Drivers: 3 contract surfaces, 3 generated outputs, 2 runtime compatibility boundaries, 2 Browser/mapping boundaries, 1 media policy dependency, and 1 future test seam.
 - Drivers: Package schema design, folder discovery, file-backed generated assets, legacy asset coexistence, generated manifest changes, Browser dropdown behavior, OSC mapping presets, dynamic runtime providers, preset storage, and runtime/offscreen bench requirements.
 - Confidence: Medium.
 
@@ -133,8 +174,16 @@ Risk profile:
 ## Form
 
 - Problem Statement: Layer authors need a stable package contract, and Synaptome needs validation scaffolding before packages, dropped content files, OSC mapping defaults, preset banks, and layer tests can become installable, inspectable, mappable, preset-aware, and testable in isolation.
+- User / Operational Value: Artists gain a predictable authoring and validation path while operators keep stable scenes, mappings, IDs, and canonical runtime behavior.
+- Change Type: Contracts, fixtures, documentation, validation tooling, then separately promoted runtime integration.
+- Execution Mode: Strict gated
+- Acceptance Criteria: Deterministic package/generated-layer inspection, stable IDs, passing compatibility checks, explicit media intake policy, and no implied runtime loading before its promotion gates exist.
 - Constraints: Keep current source-registration language honest; do not add `contracts/README.md` entries until schemas and validators exist; preserve scene and mapping compatibility through stable IDs.
-- Inputs Needed: Decide the first minimal package fixture and how it coexists with current `*.layer.json` assets.
+- Must Not Change: Canonical runtime loading, public IDs, existing scene/mapping targets, or stored option values without an approved migration and runtime request.
+- Allowed To Change: Draft schemas, fixtures, package-only and inspection snapshots, validators, and roadmap/request documentation within the bounded slice.
+- Inputs Needed: Decide the first media discovery/intake policy before adding
+  tracked media; current `*.layer.json` assets remain canonical until a
+  separately approved promotion changes that rule.
 
 ## Analysis
 
@@ -142,9 +191,17 @@ Risk profile:
 - Risks: Prematurely claiming installable plugins; breaking legacy layer assets; duplicating parameter declarations between runtime and package metadata; generating unstable IDs for dropped files; hiding OSC defaults outside the mapping surface; making Browser option providers silently rewrite stored scene values.
 - Alternatives Considered: Leave all guidance in the layer standards doc. Rejected because architecture and debt tracking need separate homes.
 
+## Design Alignment
+
+- Guiding Principles Affected: Stable public contracts, explicit operator-visible mappings, deterministic validation, and honest extension boundaries.
+- Systems / Elements / Processes Used: Layer package schemas, generated-layer fixtures, Browser inspection payload, Project Ops promotion gates, catalog/manifest regression, and public-app validation.
+- Alignment Rationale: Static evidence must precede Browser or runtime behavior so authoring improvements do not destabilize scenes, mappings, or public IDs.
+- Design Alignment Log Update: N/A; this request applies existing architecture principles and does not introduce a new design principle.
+- Student-Facing Explanation: Describe packages as checked metadata plus source registration today, with runtime discovery and plugin loading clearly identified as future capabilities.
+
 ## Plan
 
-- Steps:
+- Steps: Follow the ordered task graph below; each promotion keeps runtime behavior canonical until its validation gate passes.
   1. Add `layer_package.schema.json` and one minimal package fixture.
   2. Add folder discovery rules for explicit packages and template-backed content folders.
   3. Add a static package validator for IDs, required fields, referenced files, parameters, modes, presets, media, mapping presets, and tests.
@@ -186,6 +243,12 @@ Risk profile:
 - 2026-06-26 - Narrowed the generated-layer snapshot so it still checks legacy ID conflicts but no longer fails when unrelated runtime layer asset counts change.
 - 2026-06-26 - Added `materialMode` static option metadata to the generated STL template and proved it flows into generated catalog and inspection snapshots.
 - 2026-06-28 - Added `materialPreset` dynamic `optionsSource` metadata to the generated STL template and proved it flows into generated catalog and inspection snapshots without provider lookup or Browser UI.
+- 2026-07-18 - Reconciled the request with its task graph, moved it from intake
+  to execution, and linked the pre-media safety gate without expanding runtime
+  scope.
+- 2026-07-18 - Added `bpmMultiplier` named options owned by the Signal Bloom
+  package and regenerated package catalog/manifest, combined compatibility,
+  and read-only inspection snapshots.
 
 ## Validation
 
@@ -194,18 +257,22 @@ Risk profile:
 - Passed: `python tools\layer_package_parameter_manifest.py --check`
 - Passed: `python tools\generated_layer_catalog_regression.py --check`
 - Passed: `python tools\layer_browser_inspection_payload.py --check`
+- Passed: `python tools\layer_catalog_regression.py --include-packages --check`
+- Passed: `python tools\gen_parameter_manifest.py --include-packages --check`
+- Passed: `python tools\validate_configs.py --public-app`
+- Passed: `python ..\project_ops\tools\project_ops_audit.py --repo .`
+- Passed: `python ..\project_ops\tools\project_ops_request_audit.py --repo . --request-id layer_package_compatibility_bench_scaffolding`
 - Passed: `python tools\validate_configs.py tools\testdata\layer_browser_inspection\expected_layer_browser_inspection_payload.json`
 - Passed: `python tools\validate_configs.py docs\examples\generated_layers\stl_models\generated_layer.template.json docs\examples\generated_layers\stl_models\tetrahedron.generated_layer.json docs\examples\layer_packages\signal_bloom\layer.package.json docs\examples\layer_packages\signal_bloom\presets\default.json docs\examples\layer_packages\signal_bloom\presets\bright.json docs\examples\layer_packages\signal_bloom\presets\calm.json tools\testdata\layer_browser_inspection\expected_layer_browser_inspection_payload.json`
-- Current dirty-worktree caveat: `python tools\layer_catalog_regression.py --include-packages --check` and `python tools\gen_parameter_manifest.py --include-packages --check` are implemented but currently fail because unrelated runtime layer/catalog/manifest edits have not been promoted to their snapshots. Do not refresh those runtime-dependent snapshots as part of this non-runtime slice.
 - Not Run: Runtime/offscreen bench; no runtime layer package loader or bench seam exists yet.
 - Manual Evidence: `validate_layer_packages.py` checks the package fixture, parameter declarations, preset values, mapping preset targets, source registration file references, and bench metadata reference. The package catalog and package parameter tools prove the same fixture can produce stable Browser-like catalog output and package-scoped parameter IDs. The generated-layer tool proves one STL fixture becomes stable catalog-style metadata with static and dynamic option metadata and without legacy ID conflicts. The inspection payload tool proves package and generated metadata can be combined for future Browser inspection without runtime loading, layer instantiation, scene mutation, provider lookup, or canonical manifest changes.
 
 ## Doc Sync
 
 - Roadmap updated: Yes.
-- Changelog updated: No.
+- Changelog updated: Yes; added the 2026-07-18 roadmap/pre-media reconciliation entry.
 - Related docs updated: Yes.
-- Links checked: Manual relative-path review.
+- Links checked: Yes; all relative Markdown targets in changed docs resolve.
 
 ## Post-Mortem
 

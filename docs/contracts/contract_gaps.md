@@ -18,6 +18,9 @@ Which roadmap owns this kind of missing contract work?
 Do not add detailed next-action tables here. Put detailed gap status, next
 actions, and sequencing in the owning roadmap.
 
+Gap ownership does not imply active priority. Current priority and promotion
+state live only in [`../project_ops/roadmap.md`](../project_ops/roadmap.md).
+
 ## Roadmap Ownership
 
 | Area | Gap IDs | Owning Roadmap |
@@ -45,7 +48,7 @@ As of the current public app contract snapshot,
 `python tools\validate_configs.py --public-app` reports:
 
 ```text
-validated=11
+validated=12
 ```
 
 Strict public contract mode reads committed fixtures under `tools/testdata/**`

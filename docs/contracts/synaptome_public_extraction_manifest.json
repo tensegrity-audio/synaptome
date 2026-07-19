@@ -265,8 +265,8 @@
       "required": true
     },
     {
-      "pattern": "tools/layer_catalog_regression.py",
-      "reason": "Layer catalog regression.",
+      "pattern": "tools/*_catalog_regression.py",
+      "reason": "Layer, package, and media catalog regression validators.",
       "required": true
     },
     {
@@ -355,8 +355,8 @@
       "required": true
     },
     {
-      "pattern": "tools/testdata/layer_catalog/**",
-      "reason": "Layer catalog golden fixture.",
+      "pattern": "tools/testdata/*_catalog/*",
+      "reason": "Layer and media catalog fixtures.",
       "required": true
     },
     {

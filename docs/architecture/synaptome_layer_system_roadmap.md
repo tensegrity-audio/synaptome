@@ -1,9 +1,11 @@
 # Synaptome Layer System Roadmap
 
-Status: Architecture roadmap for improving Synaptome's layer-based system. This
-document owns the implementation path for packages, folder discovery, generated
-layer assets, package-declared parameters, layer presets, visible mapping
-presets, Browser integration, validation, and single-layer testing.
+Status: Active supporting architecture; reviewed 2026-07-18. Current priority
+and execution state are owned by
+[`../project_ops/roadmap.md`](../project_ops/roadmap.md). This document owns the
+implementation sequence for packages, folder discovery, generated layer
+assets, package-declared parameters, layer presets, visible mapping presets,
+Browser integration, validation, and single-layer testing.
 
 Read with: [`synaptome_artist_sdk.md`](synaptome_artist_sdk.md),
 [`synaptome_biological_layer_roadmap.md`](synaptome_biological_layer_roadmap.md),
@@ -158,6 +160,8 @@ What is only draft tooling:
   the Browser does not yet read or render it.
 - Static option metadata is visible in draft snapshots, but Browser dropdown
   rendering is not implemented yet.
+- Signal Bloom now supplies package-owned named `bpmMultiplier` options, proving
+  `options[]` flows through package catalog/manifest and inspection snapshots.
 - Dynamic option-source metadata is visible in draft snapshots, but no runtime
   provider lookup or fallback UI exists yet.
 
@@ -237,7 +241,7 @@ indexes them, but this document owns their meaning and next actions.
 | CG-11 | Artist SDK compatibility slice | The first public path is honest source registration with a validated source/catalog/scene fixture. | Keep source-registration language honest while package tooling evolves toward generated registration or a loader. |
 | CG-12 | Layer package layout and schema | Draft schemas, a Signal Bloom fixture, shared package discovery roots, and static validation now exist. | Extend the explicit package roots toward template-backed content folders and runtime Browser loading. |
 | CG-13 | Manifest generation from package parameters | Package-derived parameter manifest snapshots expand package suffixes through `registryPrefix`; `gen_parameter_manifest.py --include-packages` now writes/checks a draft combined manifest without changing the canonical manifest. | Decide when package-derived entries become part of the canonical `parameter_manifest.json` rather than a draft combined gate. |
-| CG-14 | Dropdown option metadata and dynamic providers | Static named choices and runtime choices are not yet one shared package contract. | Add package `options[]` and `optionsSource`; implement Browser rendering and runtime providers without silently remapping unavailable stored values. |
+| CG-14 | Dropdown option metadata and dynamic providers | Package-owned static named choices now flow through Signal Bloom snapshots; a generated-layer `optionsSource` reference also exists, but no package-owned dynamic example or runtime provider lookup exists. | Add one package-owned `optionsSource` fixture, then implement Browser rendering and runtime providers without silently remapping unavailable stored values. |
 | CG-15 | Layer preset package contract | Scenes persist parameter values, but layer-local presets are not a package-owned, suffix-based, validated contract. | Add `layer_preset.schema.json`, bundled preset fixtures, package discovery rules, operator-local user preset policy, and scene/preset merge semantics. |
 | CG-16 | Single-layer package validator and runtime bench | Authors cannot yet prove one package can be inspected, configured, registered, updated, and drawn without editing `ofApp.cpp` or launching the full UI. | Start with static package validation, then add a runtime/offscreen bench when the test seam exists. |
 | CG-17 | Folder-driven discovery and file-backed generated layers | Current catalog behavior relies on explicit layer JSON entries; STL-style dropped files do not yet have a standard generated asset/template path. | Define discovery roots, folder-to-Browser rules, stable generated IDs, sidecar overrides, and template schemas for file-backed generated layers. |
@@ -458,16 +462,16 @@ without pretending Synaptome has hot-loaded plugins before it does.
 
 ## Immediate Next Step
 
-Start small:
+The pre-media gate and package-owned static option slice are complete. Hold the
+current static boundary until one next slice is explicitly promoted:
 
-1. Keep the read-only Browser inspection payload schema and snapshot passing.
-2. Add only tiny fixture expansions next, such as one package-owned option
-   metadata example or one additional generated content kind, and prove the
-   inspection payload still stays deterministic.
-3. Only after that, decide whether to add read-only Browser UI behind an
-   explicit draft path.
-4. Defer activation, scene writes, package-root scanning, and canonical
-   manifest changes until the Browser can inspect package data safely.
+1. Keep the read-only Browser inspection payload and package/combined snapshots
+   passing.
+2. Choose either one package-owned `optionsSource` fixture or read-only Browser
+   inspection behind an explicit draft path.
+3. Keep the canonical runtime catalog and parameter manifest unchanged.
+4. Keep activation, scene writes, package-root scanning, dynamic provider
+   lookup, and canonical manifest changes as separate promotion steps.
 
 That gives the layer system a real contract before the Browser, manifest
 generator, preset system, or runtime bench depend on it.

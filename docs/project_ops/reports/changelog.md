@@ -2,6 +2,47 @@
 
 This changelog records Project Ops and administrative workflow changes. Product release versioning remains governed by `docs/release_policy.md`.
 
+## 2026-07-18 - contracts - media_manifest_intake_contract
+
+- Request ID: `media_manifest_intake_contract`
+- Phase / Milestone: Safe media manifest intake complete
+- Summary: Locked media discovery to explicit manifests, replaced the dangling
+  `default-loop` reference with a valid empty baseline, separated public and
+  operator-local roots, required stable IDs, revisions, SHA-256, provenance,
+  generated-media metadata, redistribution permission, and replacement
+  history, and added dependency-free semantic validation plus negative
+  fixtures. The public-app report now covers 12 validated contracts.
+- Request Doc: `docs/project_ops/completed/media_manifest_intake_contract.md`
+- Roadmap Entry: `docs/project_ops/roadmap.md`
+- Validation: `python tools\media_catalog_regression.py --check`; package and
+  combined catalog/manifest checks; Browser inspection payload check;
+  `python tools\validate_configs.py --public-app`;
+  `python tools\validate_synaptome_extraction_manifest.py --check --strict-review`.
+- Follow-Up Actions: Open one bounded request for one reviewed redistributable
+  asset, then add Browser visibility and runtime slot-load evidence without
+  introducing folder scanning.
+
+## 2026-07-18 - docs - roadmap_pre_media_gate
+
+- Request ID: `layer_package_compatibility_bench_scaffolding`
+- Phase / Milestone: Roadmap reconciliation and pre-media cleanup
+- Summary: Made the Project Ops roadmap authoritative for priority, reconciled
+  the active layer-package request with its task graph, labeled supporting and
+  show-development roadmaps as active support, planned, parked, ready for
+  closeout, or historical, and added a concrete safety gate for media policy,
+  stable IDs, provenance, deterministic fixtures, and canonical contract
+  preservation before more tracked media is generated. Updated the local
+  request template to match the pinned Project Ops readiness contract.
+- Request Doc: `docs/project_ops/in_progress/layer_package_compatibility_bench_scaffolding.md`
+- Roadmap Entry: `docs/project_ops/roadmap.md`
+- Validation: Project Ops adapter and active-request audits; package,
+  generated-layer, inspection-payload, combined catalog/manifest, canonical
+  public-app contract, relative Markdown link, and `git diff --check`
+  validation all passed.
+- Follow-Up Actions: Finish one package-owned option-metadata slice, decide
+  CG-08 media discovery/intake policy, record green validation evidence, then
+  open one bounded media request.
+
 ## 2026-05-05 - contracts - osc_route_glob_regression
 - Phase / Milestone: OSC contract hardening
 - Summary: Added the OSC route glob validator to Synaptome's Project Ops validation ladder so built-in mesh-style OSC route coverage is part of the local administrative gate, not only the public contract report.

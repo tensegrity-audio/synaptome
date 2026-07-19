@@ -428,27 +428,41 @@ def validate_videos(data: object, path: Path) -> List[str]:
         return [f"{ctx} must be a JSON object"]
 
     errors: List[str] = []
+    if data.get("schemaVersion") != 1:
+        errors.append("schemaVersion must be 1")
+    if data.get("discoveryMode") != "manifest-only":
+        errors.append("discoveryMode must be 'manifest-only'")
+
     clips = data.get("clips", [])
-    if not isinstance(clips, list) or not clips:
-        errors.append("'clips' must be a non-empty array")
+    seen_ids = set()
+    if not isinstance(clips, list):
+        errors.append("'clips' must be an array")
     else:
-        seen_ids = set()
         for idx, entry in enumerate(clips):
             entry_ctx = f"clips[{idx}]"
             if not isinstance(entry, dict):
                 errors.append(f"{entry_ctx} must be an object")
                 continue
-            for key in ("id", "path"):
+            for key in ("id", "label", "path", "revision", "sha256", "prewarm", "loop", "provenance"):
                 errors.extend(_require_key(entry, key, entry_ctx))
             clip_id = entry.get("id")
             if isinstance(clip_id, str):
                 if clip_id in seen_ids:
                     errors.append(f"Duplicate clip id '{clip_id}'")
                 seen_ids.add(clip_id)
+            elif clip_id is not None:
+                errors.append(f"{entry_ctx}.id must be a string")
+            for key in ("label", "path", "sha256"):
+                if key in entry and not isinstance(entry[key], str):
+                    errors.append(f"{entry_ctx}.{key} must be a string")
+            if "revision" in entry and (not isinstance(entry["revision"], int) or entry["revision"] < 1):
+                errors.append(f"{entry_ctx}.revision must be a positive integer")
             if "prewarm" in entry and not isinstance(entry["prewarm"], bool):
                 errors.append(f"{entry_ctx}.prewarm must be boolean")
             if "loop" in entry and not isinstance(entry["loop"], bool):
                 errors.append(f"{entry_ctx}.loop must be boolean")
+            if "provenance" in entry and not isinstance(entry["provenance"], dict):
+                errors.append(f"{entry_ctx}.provenance must be an object")
 
     layers = data.get("layers", [])
     if not isinstance(layers, list):
@@ -463,6 +477,9 @@ def validate_videos(data: object, path: Path) -> List[str]:
                 errors.extend(_require_key(entry, key, entry_ctx))
                 if key in entry and not isinstance(entry[key], str):
                     errors.append(f"{entry_ctx}.{key} must be a string")
+            default_clip = entry.get("defaultClip")
+            if isinstance(default_clip, str) and default_clip not in seen_ids:
+                errors.append(f"{entry_ctx}.defaultClip '{default_clip}' does not resolve")
             if "opacity" in entry and not isinstance(entry["opacity"], (int, float)):
                 errors.append(f"{entry_ctx}.opacity must be numeric")
             if "blendMode" in entry and not isinstance(entry["blendMode"], str):
@@ -659,6 +676,27 @@ CONTRACT_ENTRIES: tuple[ContractEntry, ...] = (
         ),
         notes="Static public SDK fixture proves a source-registered Layer, Browser catalog entry, Console scene slot, media pairing, reusable parameter suffixes, and MIDI/OSC/sensor route targets. Source registration remains explicit until the extension/package seam is chosen.",
         check_command=(sys.executable, "tools/validate_artist_sdk_example.py", "--check"),
+        public_app=True,
+    ),
+    ContractEntry(
+        name="Media catalog intake",
+        status="validated",
+        sources=(
+            Path("synaptome/bin/data/config/videos.json"),
+            Path("synaptome/src/media/VideoCatalog.cpp"),
+            Path("docs/schemas/media_catalog.schema.json"),
+            Path("docs/contracts/media_catalog.md"),
+            Path("docs/examples/media_catalog_example.json"),
+            Path("tools/media_catalog_regression.py"),
+            Path("tools/testdata/media_catalog/invalid_catalog_cases.json"),
+        ),
+        validator_command="python tools\\media_catalog_regression.py --check",
+        fixtures=(
+            Path("docs/examples/media_catalog_example.json"),
+            Path("tools/testdata/media_catalog/invalid_catalog_cases.json"),
+        ),
+        notes="Locks media discovery to explicit manifests, permits an empty safe baseline, and requires stable IDs, file hashes, provenance, redistribution permission, replacement history, and valid layer-default references before media is committed.",
+        check_command=(sys.executable, "tools/media_catalog_regression.py", "--check"),
         public_app=True,
     ),
     ContractEntry(

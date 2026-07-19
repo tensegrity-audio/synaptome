@@ -1,8 +1,14 @@
 # 3D Arctic Aurora Scene Roadmap
 
-Status: active direction for showable arctic aurora scene work.
+Status: Ready for closeout; reviewed 2026-07-18. Milestones 1 through 4F are
+implemented. The only remaining scope is Milestone 5 default tuning, fixture
+regeneration, and validation. This document is not an active request and must
+not expand into new media or scene features during closeout.
 Created: 2026-06-21.
-Updated: 2026-06-21 for centered polar-world scene revision.
+Last implementation update: 2026-06-21 for centered polar-world scene revision.
+
+Priority and activation are owned by [`roadmap.md`](roadmap.md). Resume only
+through a focused closeout request after the pre-media safety gate is complete.
 
 ## Goal
 

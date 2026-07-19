@@ -1,6 +1,10 @@
 # Synaptome Artist SDK And Compatibility Layer
 
-Status: Architecture draft with validated public SDK example fixture and first public registration decision. This document describes what Synaptome can provide to openFrameworks artists as a reusable library/runtime, and what gaps remain between the current app and that public SDK.
+Status: Supporting architecture draft; reviewed 2026-07-18. The validated
+source-registration example remains the honest public baseline. SDK packaging
+is not an independently active workstream; priority and promotion are owned by
+[`../project_ops/roadmap.md`](../project_ops/roadmap.md). This document describes
+what Synaptome can provide to openFrameworks artists and what gaps remain.
 
 Read with: [`synaptome_system_architecture.md`](synaptome_system_architecture.md),
 [`synaptome_subsystem_anatomy.md`](synaptome_subsystem_anatomy.md),
@@ -360,7 +364,7 @@ For a normal openFrameworks sketch:
 | Transport/reactivity contract | BPM and beat context exist, but clock source, confidence, onset/downbeat, and fallback policy are runtime concerns outside the layer roadmap. | Use `synaptome_transport_reactivity.md` for BPM, beat detection, and timing-source work. |
 | Catalog fixture | Golden static `LayerLibrary` ingestion snapshot plus validated artist-authored source/catalog/scene fixture. | Use both fixtures to tighten the public authoring guide and future package seam. |
 | Mapping lifecycle | Real Browser/MIDI/OSC flows. | Public docs for global/scene/local mapping ownership. |
-| Media onboarding | `videos.json` manifest. | Decided manifest/folder-scan workflow. |
+| Media onboarding | Manifest-only `videos.json` contract with stable IDs, hashes, provenance, replacement rules, and an empty safe baseline. | Add one reviewed redistributable example asset, then prove Browser visibility and slot loading; folder scanning remains deferred. |
 | Display stability | Works, but still coupled to scene-load work. | Transaction-backed display/window contract. |
 | Public tests | Strong internal app tests. | Public SDK/contract fixtures that do not depend on private access. |
 | Browser inspection | Offline hydration can call layer `setup()`. | Manifest-first inspection or explicit no-side-effect setup rule. |
@@ -384,3 +388,9 @@ The smallest useful public SDK slice should include:
 That slice would explain why Synaptome deserves to exist without depending on any specific show scene.
 
 Baseline now exists for the source/catalog/scene portion through `python tools\validate_artist_sdk_example.py --check`. Remaining slice work is packaging and tutorial polish, especially the factory registration mechanism, media onboarding policy, and projection/control-window setup guide.
+
+Before expanding the example with more generated media, complete the pre-media
+safety gate in the Project Ops roadmap. The next SDK-facing slice should then
+document the selected media intake policy and add at most one provenance-aware
+example asset without implying runtime folder discovery or no-source-edit
+installation.

@@ -310,7 +310,12 @@ Current catalog sources:
 - `device_maps/*.json` for controller definitions,
 - saved scene list callbacks from the app.
 
-Important honesty for public docs: current media loading is catalog-driven through `videos.json`. The desired public workflow of "drop a video into a media folder and see it in the Browser" is a good Synaptome feature, but it is not fully contract-backed yet.
+Important honesty for public docs: current media loading is manifest-only
+through `videos.json`, governed by
+[`../contracts/media_catalog.md`](../contracts/media_catalog.md). The committed
+catalog is an intentionally empty safe baseline until a redistributable asset
+is reviewed. "Drop a video into a folder and see it in the Browser" remains a
+future feature, not current behavior.
 
 ### Device Mapper
 
@@ -449,7 +454,10 @@ Add media to a watched folder
   -> gain/mirror/loop/playback parameters appear automatically
 ```
 
-Current status: media layer primitives exist, but cataloging is currently `config/videos.json` based. Folder watch or scan behavior should become an explicit feature.
+Current status: media layer primitives exist and cataloging is explicitly
+`config/videos.json` based. Stable IDs, hashes, provenance, replacement rules,
+and public/local roots are validated. Folder watch or scan behavior would be a
+separate future feature.
 
 ### Adding A MIDI Controller
 

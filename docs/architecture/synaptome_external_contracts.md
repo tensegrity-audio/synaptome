@@ -227,13 +227,17 @@ Current implementation anchors:
 - `synaptome/bin/data/layers/media/clip_default.json`
 
 Current status:
-- Media discovery is manifest-based through `config/videos.json`.
+- Media discovery is locked to explicit manifests through `config/videos.json`.
+- The committed catalog may be empty and currently contains no dangling clip.
+- `docs/contracts/media_catalog.md` defines public/operator-local roots,
+  provenance, hashes, replacement rules, and validation.
 - The desired public workflow of dropping media into a watched folder is a target, not a locked behavior.
 
 Current gaps:
-- Need a decision: explicit manifest, folder scan, or both.
-- Need media path validation and package-copy rules.
-- Need a fixture proving media entries become Browser-visible and slot-loadable.
+- Need one reviewed, redistributable example asset before testing Browser
+  visibility and slot loading.
+- Folder scanning remains a separate future feature with conflict and refresh
+  semantics still undefined.
 
 ## External Display Contract
 
