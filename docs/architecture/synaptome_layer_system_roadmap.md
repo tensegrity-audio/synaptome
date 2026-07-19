@@ -1,6 +1,6 @@
 # Synaptome Layer System Roadmap
 
-Status: Active supporting architecture; reviewed 2026-07-18. Current priority
+Status: Active supporting architecture; reviewed 2026-07-19. Current priority
 and execution state are owned by
 [`../project_ops/roadmap.md`](../project_ops/roadmap.md). This document owns the
 implementation sequence for packages, folder discovery, generated layer
@@ -243,7 +243,7 @@ indexes them, but this document owns their meaning and next actions.
 | CG-13 | Manifest generation from package parameters | Package-derived parameter manifest snapshots expand package suffixes through `registryPrefix`; `gen_parameter_manifest.py --include-packages` now writes/checks a draft combined manifest without changing the canonical manifest. | Decide when package-derived entries become part of the canonical `parameter_manifest.json` rather than a draft combined gate. |
 | CG-14 | Dropdown option metadata and dynamic providers | Package-owned static named choices now flow through Signal Bloom snapshots; a generated-layer `optionsSource` reference also exists, but no package-owned dynamic example or runtime provider lookup exists. | Add one package-owned `optionsSource` fixture, then implement Browser rendering and runtime providers without silently remapping unavailable stored values. |
 | CG-15 | Layer preset package contract | Scenes persist parameter values, but layer-local presets are not a package-owned, suffix-based, validated contract. | Add `layer_preset.schema.json`, bundled preset fixtures, package discovery rules, operator-local user preset policy, and scene/preset merge semantics. |
-| CG-16 | Single-layer package validator and runtime bench | Authors cannot yet prove one package can be inspected, configured, registered, updated, and drawn without editing `ofApp.cpp` or launching the full UI. | Start with static package validation, then add a runtime/offscreen bench when the test seam exists. |
+| CG-16 | Single-layer package validator and runtime bench | Signal Bloom now passes a focused static check and native lifecycle/offscreen bench; full package-vs-runtime descriptor comparison and pixel/non-blank output checks remain. | Compare every runtime descriptor against package declarations, then add optional rendered-output assertions. |
 | CG-17 | Folder-driven discovery and file-backed generated layers | Current catalog behavior relies on explicit layer JSON entries; STL-style dropped files do not yet have a standard generated asset/template path. | Define discovery roots, folder-to-Browser rules, stable generated IDs, sidecar overrides, and template schemas for file-backed generated layers. |
 | CG-18 | Package OSC mapping presets | Layers cannot yet ship suggested OSC/audio/beat mappings that appear as editable Browser mapping rows. | Add package mapping-preset metadata using parameter suffix targets, slot expansion, conflict rules, validation, and scene/operator merge behavior. |
 
@@ -368,6 +368,10 @@ Success means a performer can quickly switch a layer between named parameter
 states without changing scenes, replacing the layer, or hiding an algorithm
 swap.
 
+Current runtime seam: opt-in activation merges package defaults, a selected
+preset, and explicit activation parameters in that order; existing scene load
+then wins. Browser preset-bank selection is still pending.
+
 ### Phase 6: Visible Mapping Presets
 
 Let packages suggest default OSC/audio/control reactions without hiding them.
@@ -382,6 +386,10 @@ Deliverables:
 
 Success means a layer can load with useful reactive defaults, while the user can
 see, disable, retarget, or edit those mappings.
+
+Current ownership rule: mappings are suggestions and activation records but
+does not apply them. Scene/operator mappings retain ownership until an explicit
+Browser apply/edit flow exists.
 
 ### Phase 7: Browser Integration
 
@@ -402,6 +410,10 @@ Deliverables:
 - Manifest-first inspection so browsing a layer does not require expensive or
   side-effectful setup.
 
+Current status: the Browser consumes the runtime inspection payload as a
+separate read-only category. Native coverage proves those rows carry no live
+parameter pointers and do not hydrate or instantiate layers.
+
 Success means the Browser becomes an authoring and performance surface for the
 package contract, not a loose reflection of runtime state.
 
@@ -421,6 +433,12 @@ metadata.
 
 Success means authors can check a package without launching the app.
 
+Implemented first shape:
+
+```powershell
+python tools\synaptome_layer.py check docs\examples\layer_packages\signal_bloom\layer.package.json
+```
+
 ### Phase 9: Runtime/Offscreen Bench
 
 Add the deeper test after the runtime seam exists.
@@ -437,6 +455,12 @@ update deterministically, draw offscreen, and report crashes or blank output.
 
 Success means one layer can prove that it works without launching the full
 performance UI.
+
+Implemented lifecycle seam: `LayerPackageBench` creates Signal Bloom through
+`LayerFactory`, registers 18 parameters, advances 240 frames, draws into an
+offscreen framebuffer, verifies scene-value precedence, and rejects duplicate
+factory registration. Pixel/non-blank image comparison remains future bench
+depth.
 
 ### Phase 10: Registration Evolution
 
@@ -462,16 +486,17 @@ without pretending Synaptome has hot-loaded plugins before it does.
 
 ## Immediate Next Step
 
-The pre-media gate and package-owned static option slice are complete. Hold the
-current static boundary until one next slice is explicitly promoted:
+The safe vertical slice exists. Converge it before broadening it:
 
-1. Keep the read-only Browser inspection payload and package/combined snapshots
-   passing.
-2. Choose either one package-owned `optionsSource` fixture or read-only Browser
-   inspection behind an explicit draft path.
-3. Keep the canonical runtime catalog and parameter manifest unchanged.
-4. Keep activation, scene writes, package-root scanning, dynamic provider
-   lookup, and canonical manifest changes as separate promotion steps.
+1. Generate the optional catalog adapter from reviewed package data. The
+   current regression and bench already reject default, preset, mapping, ID,
+   type, and range drift.
+2. Add one package-owned `optionsSource` fixture and specify unavailable-value
+   behavior.
+3. Then finish Browser option/preset/mapping controls without rewriting stored
+   values or auto-applying mappings.
+4. Keep scanning and generated/plugin registration disabled until duplicate,
+   dependency, rollback, and ABI policy are tested.
 
 That gives the layer system a real contract before the Browser, manifest
 generator, preset system, or runtime bench depend on it.

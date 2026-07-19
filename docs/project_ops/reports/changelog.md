@@ -2,6 +2,38 @@
 
 This changelog records Project Ops and administrative workflow changes. Product release versioning remains governed by `docs/release_policy.md`.
 
+## 2026-07-19 - artist-sdk - package_vertical_slice
+
+- Request ID: `layer_package_compatibility_bench_scaffolding`
+- Phase / Milestone: Safe package vertical slice
+- Summary: Added a focused package check command, manifest-only Browser
+  inspection rows, disabled-by-default source-registered Signal Bloom
+  activation, deterministic preset/override precedence, suggestion-only
+  mappings, and a native headless/offscreen lifecycle bench.
+- Request Doc: `docs/project_ops/in_progress/layer_package_compatibility_bench_scaffolding.md`
+- Roadmap Entry: `docs/project_ops/roadmap.md`
+- Validation: `synaptome-layer check`; `LayerPackageBench.exe`; all 18
+  `BrowserFlowTest` scenarios; package, catalog, manifest, schema, and
+  public-app contract gates.
+- Follow-Up Actions: Converge package/catalog/runtime declarations, then add
+  one package-owned dynamic option source before further Browser promotion.
+
+## 2026-07-19 - media - aurora_veil_public_media
+
+- Request ID: `aurora_veil_public_media`
+- Phase / Milestone: First reviewed public media asset
+- Summary: Generated and reviewed one abstract aurora source, encoded it as a
+  12-second 1920x1080 H.264 loop, recorded the prompt/encoding/license and
+  SHA-256, added it to the manifest, and replaced the dangling default media
+  layer reference without enabling folder scanning.
+- Request Doc: `docs/project_ops/completed/aurora_veil_public_media.md`
+- Roadmap Entry: `docs/project_ops/roadmap.md`
+- Validation: `python tools\media_catalog_regression.py --check`; `python
+  tools\validate_configs.py synaptome\bin\data\config\videos.json`; `python
+  tools\validate_configs.py --public-app`; FFmpeg stream inspection.
+- Follow-Up Actions: Keep the catalog at one reviewed asset until a specific
+  artistic requirement justifies another bounded intake request.
+
 ## 2026-07-18 - contracts - media_manifest_intake_contract
 
 - Request ID: `media_manifest_intake_contract`

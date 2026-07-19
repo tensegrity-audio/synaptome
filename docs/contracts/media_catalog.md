@@ -8,9 +8,11 @@ automatic Browser registration are not part of the current contract.
 
 ## Safe Baseline
 
-The committed catalog is intentionally empty until a redistributable example
-asset is reviewed. An empty catalog is valid runtime state; it is safer than a
-dangling default entry or an undocumented generated replacement.
+The catalog contains one reviewed, redistributable example clip:
+`aurora-veil-r1`. It replaced the former dangling `default-loop` reference only
+after the file, stable ID, SHA-256, prompt, encoding settings, license, and
+redistribution state were recorded. The public example fixture remains empty
+to prove that zero-asset catalogs are still valid.
 
 ## Roots
 
@@ -61,9 +63,15 @@ IDs and paths, duplicate IDs/paths, file existence, SHA-256, generated-media
 provenance, redistribution permission, replacement history, and layer-default
 references. Negative fixtures prove the most important rejection paths.
 
+Current reviewed asset:
+
+| ID | Runtime path | Revision | SHA-256 | Intended use |
+| --- | --- | --- | --- | --- |
+| `aurora-veil-r1` | `../media/public/aurora-veil-r1.mp4` | 1 | `fdddea31e9509dc90d5bd6a045c1cd5cdf415fee03a050f17715f54c03a6ec8f` | Default public media-layer loop and projection-safe SDK example. |
+
 ## Promotion Rule
 
-The first media addition must be one bounded request containing one content
-family, one public destination, one manifest entry, provenance, and validation
-evidence. It must not introduce folder scanning, Browser activation, or package
-loading at the same time.
+Each media addition must be one bounded request containing one content family,
+one public destination, one manifest entry, provenance, and validation
+evidence. Package/runtime work and media are committed at separate rollback
+boundaries even when one user-directed cleanup pass authorizes both.

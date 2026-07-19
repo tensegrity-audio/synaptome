@@ -1,6 +1,6 @@
 # Synaptome Artist SDK And Compatibility Layer
 
-Status: Supporting architecture draft; reviewed 2026-07-18. The validated
+Status: Supporting architecture draft; reviewed 2026-07-19. The validated
 source-registration example remains the honest public baseline. SDK packaging
 is not an independently active workstream; priority and promotion are owned by
 [`../project_ops/roadmap.md`](../project_ops/roadmap.md). This document describes
@@ -364,10 +364,10 @@ For a normal openFrameworks sketch:
 | Transport/reactivity contract | BPM and beat context exist, but clock source, confidence, onset/downbeat, and fallback policy are runtime concerns outside the layer roadmap. | Use `synaptome_transport_reactivity.md` for BPM, beat detection, and timing-source work. |
 | Catalog fixture | Golden static `LayerLibrary` ingestion snapshot plus validated artist-authored source/catalog/scene fixture. | Use both fixtures to tighten the public authoring guide and future package seam. |
 | Mapping lifecycle | Real Browser/MIDI/OSC flows. | Public docs for global/scene/local mapping ownership. |
-| Media onboarding | Manifest-only `videos.json` contract with stable IDs, hashes, provenance, replacement rules, and an empty safe baseline. | Add one reviewed redistributable example asset, then prove Browser visibility and slot loading; folder scanning remains deferred. |
+| Media onboarding | Manifest-only `videos.json` contains one reviewed, provenance-complete public loop, `aurora-veil-r1`, assigned to the Browser-visible default clip layer. | Keep folder scanning deferred and require a bounded request for any additional asset. |
 | Display stability | Works, but still coupled to scene-load work. | Transaction-backed display/window contract. |
 | Public tests | Strong internal app tests. | Public SDK/contract fixtures that do not depend on private access. |
-| Browser inspection | Offline hydration can call layer `setup()`. | Manifest-first inspection or explicit no-side-effect setup rule. |
+| Browser inspection | Package/generated metadata appears in a dedicated read-only Browser category; native coverage proves it does not instantiate or hydrate layers. | Keep inspection separate from activation while adding option/preset/mapping controls. |
 
 ## First Public SDK Slice
 
@@ -387,10 +387,13 @@ The smallest useful public SDK slice should include:
 
 That slice would explain why Synaptome deserves to exist without depending on any specific show scene.
 
-Baseline now exists for the source/catalog/scene portion through `python tools\validate_artist_sdk_example.py --check`. Remaining slice work is packaging and tutorial polish, especially the factory registration mechanism, media onboarding policy, and projection/control-window setup guide.
+The first vertical slice now exists: `synaptome-layer check`, manifest-only
+Browser inspection, default-off Signal Bloom activation, a native lifecycle
+bench, a scene fixture, and one reviewed media loop. Remaining work is
+convergence and tutorial polish, especially removing declaration duplication,
+finishing option/preset/mapping controls, evolving factory registration, and
+documenting projection/control-window setup.
 
-Before expanding the example with more generated media, complete the pre-media
-safety gate in the Project Ops roadmap. The next SDK-facing slice should then
-document the selected media intake policy and add at most one provenance-aware
-example asset without implying runtime folder discovery or no-source-edit
-installation.
+Do not expand the example with more media by default. The safe next SDK slice
+is package/catalog/runtime descriptor convergence; folder discovery and
+no-source-edit installation remain future mechanisms.

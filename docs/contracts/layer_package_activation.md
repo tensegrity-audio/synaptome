@@ -1,0 +1,53 @@
+# Layer Package Activation Contract
+
+Status: Current opt-in source-registration contract, established 2026-07-19.
+
+Synaptome can inspect draft package metadata without loading a layer. Runtime
+activation is a separate, explicit allowlist in
+`synaptome/bin/data/config/layer-packages.json`.
+
+## Safety Boundary
+
+- The top-level `enabled` flag defaults to `false`.
+- Every package also has its own `enabled` flag. Both flags must be true.
+- Activation references a reviewed catalog entry under
+  `synaptome/bin/data/layers-optional/`; it does not scan folders.
+- The layer implementation must already be compiled and registered with
+  `LayerFactory`. This is still source registration, not plugin loading.
+- Browser inspection reads `layer-package-inspection.json` directly and does
+  not instantiate, configure, or call `setup()` on inspected packages.
+
+## Value And Mapping Precedence
+
+Parameter values merge in this order:
+
+```text
+package defaults -> selected package preset -> activation parameters -> scene values
+```
+
+The rightmost value wins. Package mapping presets are suggestions. They remain
+disabled by default and are never silently installed by activation; existing
+scene and operator mappings retain ownership.
+
+## Signal Bloom Example
+
+The committed config is deliberately disabled. To run the vetted example
+locally, set both `enabled` fields to `true`. The selected preset and optional
+`parameters` object are merged before the existing scene-load path applies
+saved values.
+
+## Validation
+
+```powershell
+python tools\synaptome_layer.py check docs\examples\layer_packages\signal_bloom\layer.package.json
+python tools\signal_bloom_runtime_contract.py
+python tools\validate_configs.py synaptome\bin\data\config\layer-packages.json synaptome\bin\data\layers-optional\examples.signal_bloom.json
+msbuild synaptome\tests\LayerPackageBench\LayerPackageBench.vcxproj /p:Configuration=Release /p:Platform=x64
+synaptome\tests\LayerPackageBench\x64\Release\LayerPackageBench.exe
+```
+
+The BrowserFlow native suite additionally proves disabled activation is a
+no-op, explicit activation merges values in the documented order, mapping
+suggestions are not auto-applied, and inspection leaves offline layer storage
+empty. The layer bench compares all 18 runtime IDs, kinds, and float ranges
+against the package.

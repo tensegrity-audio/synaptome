@@ -1,6 +1,6 @@
 # Synaptome Project Ops Roadmap
 
-Status: Active project index, reviewed 2026-07-18.
+Status: Active project index, reviewed 2026-07-19.
 
 This file is the single source of truth for current priority, execution state,
 and the next safe promotion point. Architecture roadmaps describe sequencing
@@ -13,20 +13,22 @@ This roadmap does not replace the public runtime documentation or
 
 ## Current Objective
 
-Status: Achieved 2026-07-18.
+Status: Achieved 2026-07-19.
 
-Synaptome has reached a clean, deterministic pre-media baseline before
-generating or importing more tracked media or adding another show-content
-family.
+Synaptome has reached a safe post-gate baseline: the package path has a real
+read-only Browser surface, focused author check, isolated lifecycle bench, and
+disabled-by-default activation seam; the media catalog has exactly one
+reviewed, provenance-complete public asset.
 
 The baseline is intentionally narrower than runtime package loading. It means:
 
 ```text
 roadmap ownership is unambiguous
-  -> current package/generated-layer fixtures are deterministic
-  -> canonical runtime contracts still pass unchanged
-  -> media ownership, IDs, paths, and discovery policy are explicit
-  -> new media can be added without hiding architecture debt or changing runtime behavior
+  -> package inspection is read-only and side-effect-free
+  -> runtime activation is explicit, source-registered, and off by default
+  -> preset and mapping ownership are deterministic
+  -> one package can be checked and lifecycle-tested in isolation
+  -> one reviewed public clip is manifest-addressed and reproducible
 ```
 
 ## Active Work
@@ -37,26 +39,26 @@ State Summary
 - Request ID: layer_package_compatibility_bench_scaffolding
 - Phase: EXECUTION
 - Status: In Progress
-- Steps Complete: 3 / 10 (3 additional steps in progress)
-- Progress: Draft package/preset schemas, shared package discovery roots, a Signal Bloom package fixture with package-owned named options, package-derived snapshots, opt-in combined catalog/manifest checks, one STL/model generated-layer template fixture, static and dynamic option metadata fixtures, and a schema-checked read-only Browser inspection payload now exist without changing runtime loading behavior.
-- Last Step Outcome: 2026-07-18 - Added package-owned named BPM multiplier options to Signal Bloom and regenerated deterministic package, combined compatibility, and inspection snapshots.
-- Next Step: Hold at the static safe boundary; promote either one package-owned `optionsSource` fixture or read-only Browser inspection through a separate explicit slice before changing runtime behavior.
+- Steps Complete: 7 / 10 (3 additional steps in progress)
+- Progress: The static package contract now has an artist-facing check command, the Browser consumes a runtime copy of package/generated metadata as non-editable rows without instantiation, Signal Bloom has disabled-by-default source-registered activation with deterministic preset/override merge behavior, and a dedicated headless/offscreen lifecycle bench passes.
+- Last Step Outcome: 2026-07-19 - Passed 18 BrowserFlow scenarios and the Signal Bloom bench (18 registered parameters, 240 updates, offscreen draw), including disabled activation, explicit activation, and mapping-suggestion ownership checks.
+- Next Step: Reduce declaration drift between package metadata, the reviewed optional catalog entry, and runtime registration before adding package-root scanning or automatic mapping activation.
 - Dependencies / Overlap: `docs/project_ops/synaptome_layer_design_standards.md`, `docs/architecture/synaptome_layer_system_roadmap.md`, `docs/architecture/synaptome_artist_sdk.md`, `docs/contracts/contract_gaps.md`, `docs/contracts/parameter_manifest.json`, `docs/schemas/layer_asset.schema.json`, `tools/layer_catalog_regression.py`, `tools/gen_parameter_manifest.py`.
 - Primary Scope: contracts
 - Secondary Scopes: artist-sdk, docs, tests, runtime
-- Blocking Issues / Unknowns: Runtime bench shape depends on an app-native or offscreen layer test seam; generated registration/module loading remains a later architecture decision; beat-reactive mapping presets depend on the separate transport/reactivity contract.
+- Blocking Issues / Unknowns: Generated registration/module loading remains a later architecture decision; dynamic option providers and mapping-preset editing still need explicit Browser ownership; beat-reactive mappings depend on the separate transport/reactivity contract.
 - Impact / Priority Notes: Establishes deterministic package and generated-content contracts before more tracked media, Browser activation, or runtime discovery increases compatibility risk.
 - Priority Score: N/A
 - Priority Lane: Fast-Track
 - Ready State: Ready
-- Ready Gate: Met for bounded schema, fixture, snapshot, and documentation slices; runtime activation remains out of scope.
+- Ready Gate: Met for read-only inspection and vetted opt-in source registration; automatic discovery and mapping activation remain out of scope.
 - Project Ops / Roadmap Updates (timestamped): 2026-06-25 - Promoted layer package scaffolding from backlog. 2026-07-18 - Reconciled the request with the current Project Ops readiness contract and pre-media gate. 2026-07-18 - Completed the bounded package-owned static option slice and paused before runtime promotion.
-- Resume From: Execution; choose one bounded follow-up, record fresh validation evidence, and do not touch Browser activation or runtime loading behavior without explicit promotion.
+- Resume From: Execution; converge duplicated declarations and add a package-owned dynamic option fixture before considering any additional runtime promotion.
 Request Doc: docs/project_ops/in_progress/layer_package_compatibility_bench_scaffolding.md
 
-Task breakdown: 3 done, 3 in progress, and 4 planned. Browser activation,
-package-root scanning, canonical manifest promotion, and loader work remain
-outside the current bounded slice.
+Task breakdown: 7 done and 3 in progress. Automatic package-root scanning,
+dynamic option providers, preset-bank/mapping controls, and loader work remain
+outside the safe baseline.
 
 ## Pre-Media Safety Gate
 
@@ -126,34 +128,32 @@ with Browser activation or runtime folder scanning.
 
 ## Horizon
 
-### Next: One Reviewed Media Asset
+### Next: Converge The Vertical Slice
 
-1. Open a request for one asset and one intended use.
-2. Generate or import it into `synaptome/bin/data/media/public/**`.
-3. Record stable ID, revision, SHA-256, creator/source, license,
-   redistribution, and generation details where applicable.
-4. Add exactly one manifest entry and run the media/public contract gates.
-5. Only then add Browser visibility and runtime slot-load evidence for that
-   asset.
+1. Generate the reviewed optional catalog adapter from the package; current
+   regression already rejects default, preset, mapping, ID, type, and range
+   drift across package, adapter, and runtime registration.
+2. Add one package-owned `optionsSource` fixture and define unavailable-value
+   behavior before resolving providers in the Browser.
+3. Run a live-window smoke for Signal Bloom and Aurora Veil; native and static
+   contract gates are already green.
 
-### Then: Read-Only Product Surface
+### Then: Finish Browser Ownership
 
-1. Add read-only Browser inspection behind an explicit draft path.
-2. Prove that inspection does not instantiate layers, mutate scenes, resolve
-   dynamic providers, or rewrite stored values.
-3. Add a focused static package command for author feedback.
+1. Render named options and dynamic option providers without rewriting stored
+   values.
+2. Add preset-bank selection with the locked defaults -> preset -> explicit ->
+   scene precedence.
+3. Add an explicit mapping-preset apply/edit flow; suggestions remain disabled
+   until the operator acts.
 
-### Later: Controlled Runtime Promotion
+### Later: Installation Evolution
 
-1. Add opt-in package activation with scene save/load and target-validation
-   coverage.
-2. Promote package outputs into canonical catalog/manifest contracts only when
-   runtime registration can be compared against package declarations.
-3. Add disabled-by-default package/content-root scanning with strict conflict
-   handling.
-4. Add the single-layer runtime/offscreen bench.
-5. Consider generated registration or a loader only after the bench and a
-   compatibility policy exist.
+1. Add disabled package/content-root discovery with strict duplicate handling.
+2. Replace the hand-edited source registration with generated registration or
+   a versioned module mechanism.
+3. Consider binary/plugin loading only after dependency and ABI policy exist.
+4. Add another media or show-content family only through a new bounded request.
 
 ## Supporting Roadmaps
 
@@ -169,6 +169,29 @@ with Browser activation or runtime folder scanning.
 
 ## Completed
 
+### Aurora Veil Public Media Asset
+
+State Summary
+- Request ID: aurora_veil_public_media
+- Phase: COMPLETE
+- Status: Complete
+- Steps Complete: 5 / 5
+- Progress: One generated visual source was reviewed, encoded as a public video loop, hashed, cataloged with complete provenance, and assigned to the existing Browser-visible media layer.
+- Last Step Outcome: 2026-07-19 - The media catalog and public-app contract gates passed with `aurora-veil-r1` as the sole tracked clip.
+- Next Step: Do not add another media family until there is a specific artistic need; keep folder scanning deferred.
+- Dependencies / Overlap: `docs/contracts/media_catalog.md`, `synaptome/bin/data/config/videos.json`, `synaptome/bin/data/layers/media/clip_default.json`, `tools/media_catalog_regression.py`.
+- Primary Scope: media
+- Secondary Scopes: contracts, runtime, artist-sdk
+- Blocking Issues / Unknowns: None for this asset. Visual acceptance in a live projection remains an artistic review, not a contract blocker.
+- Impact / Priority Notes: Closes the empty-catalog horizon item without reopening discovery or provenance ambiguity.
+- Priority Score: N/A
+- Priority Lane: Fast-Track
+- Ready State: Ready
+- Ready Gate: Met by the completed pre-media safety gate and explicit user authorization to execute the full cleanup sequence.
+- Project Ops / Roadmap Updates (timestamped): 2026-07-19 - Opened and completed one bounded asset intake after the pre-media gate; synchronized the master roadmap, media contract, and changelog.
+- Resume From: Complete; start a new bounded request for any future media asset.
+Request Doc: docs/project_ops/completed/aurora_veil_public_media.md
+
 ### Media Manifest Intake Contract
 
 State Summary
@@ -178,11 +201,11 @@ State Summary
 - Steps Complete: 5 / 5
 - Progress: Synaptome now has a validated manifest-only, zero-asset media baseline with explicit roots, stable IDs, SHA-256, provenance, generated-media metadata, replacement rules, and negative fixtures.
 - Last Step Outcome: 2026-07-18 - Removed the dangling default clip, added the media schema/policy/validator/fixtures, and passed the public-app contract suite with 12 validated contracts.
-- Next Step: Open one bounded request for one reviewed redistributable asset; do not combine it with folder scanning, Browser activation, or package loading.
+- Next Step: The first asset request is complete; keep manifest-only discovery and require a new bounded request for any additional media.
 - Dependencies / Overlap: `docs/project_ops/roadmap.md`, `docs/architecture/synaptome_public_runtime_contract_roadmap.md`, `docs/contracts/media_catalog.md`, `docs/schemas/media_catalog.schema.json`, `synaptome/bin/data/config/videos.json`, `tools/media_catalog_regression.py`.
 - Primary Scope: contracts
 - Secondary Scopes: docs, tests, runtime
-- Blocking Issues / Unknowns: None for safe manifest intake; the first actual asset still needs creative selection, redistribution review, and provenance.
+- Blocking Issues / Unknowns: None for safe manifest intake; live projection review of individual assets remains an artistic acceptance step.
 - Impact / Priority Notes: Prevents undocumented or missing media from entering the public runtime and establishes a reproducible gate before generated media work resumes.
 - Priority Score: N/A
 - Priority Lane: Fast-Track

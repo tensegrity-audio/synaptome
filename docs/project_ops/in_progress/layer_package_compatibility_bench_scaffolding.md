@@ -4,21 +4,21 @@ State Summary
 - Request ID: layer_package_compatibility_bench_scaffolding
 - Phase: EXECUTION
 - Status: In Progress
-- Steps Complete: 3 / 10 (3 additional steps in progress)
-- Progress: Draft package/preset schemas, shared package discovery roots, a Signal Bloom package fixture with package-owned named options, package-derived snapshots, opt-in combined catalog/manifest checks, one STL/model generated-layer template fixture, static and dynamic option metadata fixtures, and a schema-checked read-only Browser inspection payload now exist without changing runtime loading behavior.
-- Last Step Outcome: 2026-07-18 - Added package-owned named BPM multiplier options to Signal Bloom and regenerated deterministic package, combined compatibility, and inspection snapshots.
-- Next Step: Hold at the static safe boundary; promote either one package-owned `optionsSource` fixture or read-only Browser inspection through a separate explicit slice before changing runtime behavior.
+- Steps Complete: 7 / 10 (3 additional steps in progress)
+- Progress: The static package contract now has an artist-facing check command, the Browser consumes a runtime copy of package/generated metadata as non-editable rows without instantiation, Signal Bloom has disabled-by-default source-registered activation with deterministic preset/override merge behavior, and a dedicated headless/offscreen lifecycle bench passes.
+- Last Step Outcome: 2026-07-19 - Passed 18 BrowserFlow scenarios and the Signal Bloom bench (18 registered parameters, 240 updates, offscreen draw), including disabled activation, explicit activation, and mapping-suggestion ownership checks.
+- Next Step: Reduce declaration drift between package metadata, the reviewed optional catalog entry, and runtime registration before adding package-root scanning or automatic mapping activation.
 - Dependencies / Overlap: `docs/project_ops/synaptome_layer_design_standards.md`, `docs/architecture/synaptome_layer_system_roadmap.md`, `docs/architecture/synaptome_artist_sdk.md`, `docs/contracts/contract_gaps.md`, `docs/contracts/parameter_manifest.json`, `docs/schemas/layer_asset.schema.json`, `tools/layer_catalog_regression.py`, `tools/gen_parameter_manifest.py`.
 - Primary Scope: contracts
 - Secondary Scopes: artist-sdk, docs, tests, runtime
-- Blocking Issues / Unknowns: Runtime bench shape depends on an app-native or offscreen layer test seam; generated registration/module loading remains a later architecture decision; beat-reactive mapping presets depend on the separate transport/reactivity contract.
+- Blocking Issues / Unknowns: Generated registration/module loading remains a later architecture decision; dynamic option providers and mapping-preset editing still need explicit Browser ownership; beat-reactive mappings depend on the separate transport/reactivity contract.
 - Impact / Priority Notes: Establishes deterministic package and generated-content contracts before more tracked media, Browser activation, or runtime discovery increases compatibility risk.
 - Priority Score: N/A
 - Priority Lane: Fast-Track
 - Ready State: Ready
-- Ready Gate: Met for bounded schema, fixture, snapshot, and documentation slices; runtime activation remains out of scope.
+- Ready Gate: Met for read-only inspection and vetted opt-in source registration; automatic discovery and mapping activation remain out of scope.
 - Project Ops / Roadmap Updates (timestamped): 2026-06-25 - Promoted layer package scaffolding from backlog. 2026-07-18 - Reconciled the request with the current Project Ops readiness contract and pre-media gate. 2026-07-18 - Completed the bounded package-owned static option slice and paused before runtime promotion.
-- Resume From: Execution; choose one bounded follow-up, record fresh validation evidence, and do not touch Browser activation or runtime loading behavior without explicit promotion.
+- Resume From: Execution; converge duplicated declarations and add a package-owned dynamic option fixture before considering any additional runtime promotion.
 
 ## Current State In Plain English
 
@@ -27,9 +27,10 @@ draft contract. We can now point tooling at a package folder, validate the
 package, generate package-derived catalog and parameter outputs, and compare
 those draft outputs beside the current runtime catalog and manifest.
 
-The app still does not load packages at runtime. Existing `*.layer.json` layer
-assets remain the canonical runtime catalog. The new package outputs are
-deliberately draft-only unless a command is run with `--include-packages`.
+The app does not scan or dynamically load packages. Existing `*.json` layer
+assets remain canonical. One vetted package can be promoted through an
+explicit, disabled-by-default allowlist because its C++ source is compiled and
+registered; this is not plugin loading.
 
 What is real:
 
@@ -43,6 +44,14 @@ What is real:
   parameters and zero legacy asset ID conflicts.
 - One schema-checked read-only Browser inspection payload combining package and
   generated-layer fixture metadata.
+- Browser consumption of that payload as non-editable inspection rows without
+  layer instantiation or offline registry hydration.
+- `python tools/synaptome_layer.py check <layer.package.json>` for focused
+  author feedback.
+- Disabled-by-default Signal Bloom activation with defaults -> preset ->
+  activation override -> scene value precedence.
+- Suggestion-only package mappings that activation never silently applies.
+- A native headless/offscreen Signal Bloom lifecycle bench.
 - One generated-layer static option fixture (`materialMode`) that flows through
   the generated catalog and inspection payload.
 - One generated-layer dynamic option-source fixture (`materialPreset`) that
@@ -51,12 +60,12 @@ What is real:
 What is not real yet:
 
 - Runtime scanning of `synaptome/bin/data/layer_packages`.
-- Browser use of package-discovered catalog entries.
+- Automatic Browser/runtime package discovery.
 - Runtime or Browser scanning of STL/model/media folders.
-- Read-only Browser UI for package/generated-layer inspection.
 - Package preset-bank controls in the Browser.
 - Package mapping preset activation in the mapping surface.
-- Runtime/offscreen single-layer bench.
+- Package-owned dynamic option-provider resolution.
+- Generated registration or binary/plugin loading.
 
 Risk profile:
 
@@ -111,10 +120,13 @@ Risk profile:
     [`../roadmap.md`](../roadmap.md), including media roots, stable IDs,
     provenance, and the explicit-manifest-versus-folder-scan policy. Only after
     that gate is recorded should a separate request add more tracked media.
-11. Next promotion choice: add one package-owned `optionsSource` fixture or
-    consider read-only Browser inspection behind an explicit draft path.
-    Browser activation, scene writes, runtime scanning, and canonical manifest
-    promotion are separate promotion steps.
+11. Done: expose the inspection payload in the Browser as read-only rows.
+12. Done: add a focused package check command and single-layer lifecycle bench.
+13. Done: add disabled-by-default source-registered activation and lock value
+    plus mapping ownership semantics.
+14. Next: eliminate declaration drift, then add one package-owned
+    `optionsSource` fixture. Keep scanning, generated registration, and
+    automatic mapping activation separate.
 
 ## Milestone Synthesis
 
@@ -224,11 +236,11 @@ Risk profile:
 | LPB-3 | Add static package validator. | Done |
 | LPB-4 | Add file-backed generated-layer fixture, starting with an STL/model drop template. | Done |
 | LPB-5 | Add package parameter declarations, static options, and dynamic option source metadata. | In Progress |
-| LPB-6 | Generate manifest/catalog entries from package metadata. | In Progress |
-| LPB-7 | Add package OSC mapping preset metadata and validation. | Planned |
-| LPB-8 | Add layer preset schema, preset banks, fixtures, and validation. | Planned |
-| LPB-9 | Add Browser dropdown rendering, dynamic option providers, mapping preset activation, and preset-bank toggling. | Planned |
-| LPB-10 | Add static package command and later runtime/offscreen single-layer bench. | Planned |
+| LPB-6 | Generate manifest/catalog entries from package metadata. | Done |
+| LPB-7 | Add package OSC mapping preset metadata and validation. | Done |
+| LPB-8 | Add layer preset schema, preset banks, fixtures, and validation. | Done |
+| LPB-9 | Add Browser dropdown rendering, dynamic option providers, mapping preset activation, and preset-bank toggling. | In Progress |
+| LPB-10 | Add static package command and later runtime/offscreen single-layer bench. | Done |
 
 ## Execution
 
@@ -249,6 +261,11 @@ Risk profile:
 - 2026-07-18 - Added `bpmMultiplier` named options owned by the Signal Bloom
   package and regenerated package catalog/manifest, combined compatibility,
   and read-only inspection snapshots.
+- 2026-07-19 - Promoted the inspection payload into non-editable Browser rows,
+  added the focused `synaptome-layer check` command, compiled Signal Bloom as
+  an honest source-registration example behind a disabled allowlist, locked
+  value/mapping merge behavior, and added native Browser plus layer-bench
+  coverage.
 
 ## Validation
 
@@ -264,8 +281,10 @@ Risk profile:
 - Passed: `python ..\project_ops\tools\project_ops_request_audit.py --repo . --request-id layer_package_compatibility_bench_scaffolding`
 - Passed: `python tools\validate_configs.py tools\testdata\layer_browser_inspection\expected_layer_browser_inspection_payload.json`
 - Passed: `python tools\validate_configs.py docs\examples\generated_layers\stl_models\generated_layer.template.json docs\examples\generated_layers\stl_models\tetrahedron.generated_layer.json docs\examples\layer_packages\signal_bloom\layer.package.json docs\examples\layer_packages\signal_bloom\presets\default.json docs\examples\layer_packages\signal_bloom\presets\bright.json docs\examples\layer_packages\signal_bloom\presets\calm.json tools\testdata\layer_browser_inspection\expected_layer_browser_inspection_payload.json`
-- Not Run: Runtime/offscreen bench; no runtime layer package loader or bench seam exists yet.
-- Manual Evidence: `validate_layer_packages.py` checks the package fixture, parameter declarations, preset values, mapping preset targets, source registration file references, and bench metadata reference. The package catalog and package parameter tools prove the same fixture can produce stable Browser-like catalog output and package-scoped parameter IDs. The generated-layer tool proves one STL fixture becomes stable catalog-style metadata with static and dynamic option metadata and without legacy ID conflicts. The inspection payload tool proves package and generated metadata can be combined for future Browser inspection without runtime loading, layer instantiation, scene mutation, provider lookup, or canonical manifest changes.
+- Passed: `python tools\synaptome_layer.py check docs\examples\layer_packages\signal_bloom\layer.package.json`
+- Passed: `LayerPackageBench.exe` (18 parameters, 240 updates, offscreen draw).
+- Passed: `BrowserFlowTest.exe` (18 scenarios, including read-only inspection and opt-in activation).
+- Manual Evidence: Inspection rows carry no runtime parameter pointers and leave offline layer storage empty. Activation is a no-op under the committed disabled config; an explicit test activation merges the bright preset and an overriding speed value while leaving the mapping preset unapplied.
 
 ## Doc Sync
 
