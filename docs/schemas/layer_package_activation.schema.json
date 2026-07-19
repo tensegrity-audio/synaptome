@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://synaptome.local/schemas/layer_package_activation.schema.json",
+  "title": "Synaptome Layer Package Activation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "enabled", "packages"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "enabled": { "type": "boolean", "default": false },
+    "packages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "enabled", "catalogPath"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "enabled": { "type": "boolean", "default": false },
+          "catalogPath": { "type": "string", "minLength": 1 },
+          "preset": { "type": "string" },
+          "mappingPreset": { "type": "string" },
+          "parameters": { "type": "object" }
+        }
+      }
+    }
+  }
+}

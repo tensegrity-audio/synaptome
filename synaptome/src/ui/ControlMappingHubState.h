@@ -90,6 +90,7 @@ public:
     void setParameterRegistry(ParameterRegistry* registry);
     void setMidiRouter(MidiRouter* router);
     void setLayerLibrary(LayerLibrary* library);
+    void setLayerPackageInspectionPath(const std::string& path);
     void setConsoleAssetResolver(std::function<const LayerLibrary::Entry*(const std::string& prefix)> resolver);
     void setDeviceMapsDirectory(const std::string& path);
     void setSlotAssignmentsPath(const std::string& path);
@@ -236,6 +237,8 @@ private:
         bool isSavedSceneSaveRow = false;
         bool isSavedSceneOverwriteRow = false;
         bool isOscInputRow = false;
+        bool isInspectionRow = false;
+        std::string inspectionValue;
         std::string savedSceneId;
         std::string savedScenePath;
         std::string oscInputField;
@@ -431,6 +434,8 @@ private:
     std::string preferencesPath_;
     std::string deviceMapsDirectory_;
     std::string slotAssignmentsPath_;
+    std::string layerPackageInspectionPath_;
+    ofJson layerPackageInspection_;
     mutable std::unordered_map<std::string, AssetMetadata> assetCatalog_;
     mutable std::unordered_map<std::string, std::string> assetKeyById_;
     mutable bool offlineHydrationDirty_ = true;
@@ -690,6 +695,7 @@ private:
     bool applySyntheticAssetMetadata(ParameterRow& row) const;
     void appendSceneBrowserRows() const;
     void appendOscInputRows() const;
+    void appendLayerPackageInspectionRows() const;
     std::string sceneCurrentAssetLabel(const ConsoleLayerInfo& slot) const;
     bool isSavedSceneBrowserRow(const ParameterRow& row) const;
     bool handleSavedSceneRowActivation(const ParameterRow& row) const;
@@ -856,6 +862,28 @@ inline void ControlMappingHubState::setLayerLibrary(LayerLibrary* library) {
     markOfflineHydrationDirty();
     rebuildAssetCatalog();
     tableModel_.dirty = true;
+}
+
+inline void ControlMappingHubState::setLayerPackageInspectionPath(const std::string& path) {
+    layerPackageInspectionPath_ = path;
+    layerPackageInspection_ = ofJson::object();
+    if (!path.empty() && ofFile::doesFileExist(path)) {
+        try {
+            ofJson payload = ofLoadJson(path);
+            if (payload.value("status", std::string()) != "draft-read-only" ||
+                !payload.contains("entries") || !payload["entries"].is_array()) {
+                ofLogWarning("ControlMappingHubState")
+                    << "ignoring invalid layer package inspection payload: " << path;
+            } else {
+                layerPackageInspection_ = std::move(payload);
+            }
+        } catch (const std::exception& e) {
+            ofLogWarning("ControlMappingHubState")
+                << "failed to parse layer package inspection payload " << path << ": " << e.what();
+        }
+    }
+    tableModel_.dirty = true;
+    invalidateRowCache();
 }
 
 inline void ControlMappingHubState::setDeviceMapsDirectory(const std::string& path) {
@@ -2699,6 +2727,7 @@ inline void ControlMappingHubState::rebuildModel() const {
     appendOscInputRows();
     appendBioAmpRows();
     appendAssetPlaceholders(assetKeysPresent);
+    appendLayerPackageInspectionRows();
 
     std::sort(tableModel_.rows.begin(), tableModel_.rows.end(), [](const ParameterRow& a, const ParameterRow& b) {
         if (a.category != b.category) return a.category < b.category;
@@ -2721,7 +2750,7 @@ inline void ControlMappingHubState::rebuildModel() const {
     for (std::size_t i = 0; i < tableModel_.rows.size(); ++i) {
         const auto& row = tableModel_.rows[i];
         sectionMap[row.category][row.subcategory].push_back(static_cast<int>(i));
-        if (row.isAsset && !row.assetLabel.empty()) {
+        if ((row.isAsset || row.isInspectionRow) && !row.assetLabel.empty()) {
             assetSectionMap[row.category][row.subcategory][row.assetLabel].push_back(static_cast<int>(i));
         }
     }
@@ -3082,6 +3111,9 @@ inline std::string ControlMappingHubState::formatValue(const ParameterRow& row) 
     std::string value;
     if (row.isOscInputRow) {
         return formatOscInputValue(row);
+    }
+    if (row.isInspectionRow) {
+        return row.inspectionValue;
     }
     if (row.isHudLayoutEntry) {
         return "Open layout editor";
@@ -5170,6 +5202,93 @@ inline void ControlMappingHubState::appendAssetPlaceholders(const std::unordered
             row.familyLabel = family;
             row.offline = true;
             applyConsoleSlotAnnotations(row);
+            tableModel_.rows.push_back(std::move(row));
+        }
+    }
+}
+
+inline void ControlMappingHubState::appendLayerPackageInspectionRows() const {
+    if (!layerPackageInspection_.contains("entries") || !layerPackageInspection_["entries"].is_array()) {
+        return;
+    }
+
+    auto jsonValue = [](const ofJson& value) {
+        if (value.is_string()) {
+            return value.get<std::string>();
+        }
+        if (value.is_boolean()) {
+            return value.get<bool>() ? std::string("On") : std::string("Off");
+        }
+        if (value.is_number_float()) {
+            return ofToString(value.get<double>(), 3);
+        }
+        if (value.is_number_integer()) {
+            return ofToString(value.get<long long>());
+        }
+        return value.dump();
+    };
+
+    for (const auto& entry : layerPackageInspection_["entries"]) {
+        if (!entry.is_object()) {
+            continue;
+        }
+        const std::string assetId = entry.value("assetId", std::string());
+        if (assetId.empty()) {
+            continue;
+        }
+        const std::string assetLabel = entry.value("label", assetId);
+        const std::string category = entry.value("category", std::string("Unsorted"));
+        const std::string layerGroup = entry.value("layerGroup", std::string());
+        const auto controls = entry.value("controls", ofJson::object());
+        const auto parameters = controls.value("parameters", ofJson::array());
+        const auto presets = entry.value("presets", ofJson::array());
+        const auto mappingPresets = entry.value("mappingPresets", ofJson::array());
+        const bool activated = layerLibrary_ && layerLibrary_->find(assetId) != nullptr;
+
+        ParameterRow summary;
+        summary.id = "inspection." + assetId + ".summary";
+        summary.label = "Package status";
+        summary.section = "Package";
+        summary.category = "SDK Inspection (Read-only)";
+        summary.subcategory = category + (layerGroup.empty() ? std::string() : " / " + layerGroup);
+        summary.assetKey = assetId;
+        summary.assetLabel = assetLabel;
+        summary.isInspectionRow = true;
+        summary.offline = true;
+        summary.inspectionValue = activated ? "Opt-in active" : "Inspection only";
+        summary.inspectionValue += "  |  " + ofToString(controls.value("count", 0)) + " controls";
+        summary.inspectionValue += "  |  " + ofToString(presets.size()) + " presets";
+        summary.inspectionValue += "  |  " + ofToString(mappingPresets.size()) + " mapping suggestions";
+        tableModel_.rows.push_back(std::move(summary));
+
+        if (!parameters.is_array()) {
+            continue;
+        }
+        for (const auto& parameter : parameters) {
+            if (!parameter.is_object()) {
+                continue;
+            }
+            const std::string parameterId = parameter.value("id", std::string());
+            if (parameterId.empty()) {
+                continue;
+            }
+            ParameterRow row;
+            row.id = "inspection." + assetId + "." + parameterId;
+            row.label = parameter.value("label", parameterId);
+            row.section = parameter.value("section", std::string("Other"));
+            row.category = "SDK Inspection (Read-only)";
+            row.subcategory = category + (layerGroup.empty() ? std::string() : " / " + layerGroup);
+            row.assetKey = assetId;
+            row.assetLabel = assetLabel;
+            row.isInspectionRow = true;
+            row.offline = true;
+            row.inspectionValue = parameter.contains("default")
+                ? "Default: " + jsonValue(parameter["default"])
+                : std::string("No default");
+            const std::string kind = parameter.value("kind", std::string());
+            if (!kind.empty()) {
+                row.inspectionValue += "  |  " + kind;
+            }
             tableModel_.rows.push_back(std::move(row));
         }
     }

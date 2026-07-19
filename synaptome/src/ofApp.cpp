@@ -14,6 +14,7 @@
 #include "ui/ControlMappingHubState.h"
 #include "ui/MenuSkin.h"
 #include "ui/ControlHubEventBridge_clean.h"
+#include "../../docs/examples/artist_sdk/SignalBloomLayer.h"
 #ifdef _WIN32
 #ifndef NOMINMAX
 #define NOMINMAX
@@ -1779,9 +1780,14 @@ void ofApp::setup() {
     factory.registerType("media.webcam", []() { return std::make_unique<VideoGrabberLayer>(); });
     factory.registerType("media.clip", []() { return std::make_unique<VideoClipLayer>(); });
     factory.registerType("text", []() { return std::make_unique<TextLayer>(); });
+    // The public SDK example is compiled as an explicit source-registration
+    // example. It remains absent from the catalog unless package activation is
+    // enabled in config/layer-packages.json.
+    factory.registerType("example.signalBloom", []() { return std::make_unique<SignalBloomLayer>(); });
 
     std::string layersRoot = ofToDataPath("layers", true);
     layerLibrary.reload(layersRoot);
+    layerLibrary.loadOptInPackages(ofToDataPath("config/layer-packages.json", true));
 
     midiMapPath = ofToDataPath("config/midi-map.json", true);
     midi.load(midiMapPath);
@@ -2100,6 +2106,8 @@ void ofApp::setup() {
         controlMappingHub->setParameterRegistry(&paramRegistry);
         controlMappingHub->setMidiRouter(&midi);
         controlMappingHub->setLayerLibrary(&layerLibrary);
+        controlMappingHub->setLayerPackageInspectionPath(
+            ofToDataPath("config/layer-package-inspection.json", true));
         controlMappingHub->setDeviceMapsDirectory(deviceMapsDir);
         controlMappingHub->setSlotAssignmentsPath(slotAssignmentsPath);
         controlMappingHub->setOscInputModeChangeCallback([this](const std::string& mode) {

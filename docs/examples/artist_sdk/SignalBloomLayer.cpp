@@ -37,6 +37,13 @@ void SignalBloomLayer::configure(const ofJson& config) {
     xInput_ = normalizedDefault(defaults, "xInput", xInput_);
     yInput_ = normalizedDefault(defaults, "yInput", yInput_);
     speedInput_ = normalizedDefault(defaults, "speedInput", speedInput_);
+    colorR_ = normalizedDefault(defaults, "colorR", colorR_);
+    colorG_ = normalizedDefault(defaults, "colorG", colorG_);
+    colorB_ = normalizedDefault(defaults, "colorB", colorB_);
+    bgColorR_ = normalizedDefault(defaults, "bgColorR", bgColorR_);
+    bgColorG_ = normalizedDefault(defaults, "bgColorG", bgColorG_);
+    bgColorB_ = normalizedDefault(defaults, "bgColorB", bgColorB_);
+    // Array aliases remain accepted for existing SDK example configs.
     readColor(defaults, "color", colorR_, colorG_, colorB_);
     readColor(defaults, "backgroundColor", bgColorR_, bgColorG_, bgColorB_);
 }

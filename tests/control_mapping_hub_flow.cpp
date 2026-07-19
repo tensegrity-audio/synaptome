@@ -2470,4 +2470,101 @@ bool RunDualScreenPhase2Scenario() {
     return true;
 }
 
+bool RunLayerPackageReadOnlyInspectionScenario() {
+    ParameterRegistry registry;
+    ControlMappingHubState hub;
+    hub.setParameterRegistry(&registry);
+    const auto payloadPath =
+        (synaptome_test_paths::dataRoot() / "config" / "layer-package-inspection.json").string();
+    hub.setLayerPackageInspectionPath(payloadPath);
+    hub.rebuildModel();
+
+    int inspectionRows = 0;
+    bool foundSignalBloom = false;
+    for (const auto& row : hub.tableModel_.rows) {
+        if (!row.isInspectionRow) {
+            continue;
+        }
+        ++inspectionRows;
+        if (row.isAsset || row.floatParam || row.boolParam || row.stringParam) {
+            throw std::runtime_error("Inspection row acquired a runtime/editable binding");
+        }
+        if (row.assetKey == "examples.signal_bloom") {
+            foundSignalBloom = true;
+        }
+    }
+    if (!foundSignalBloom || inspectionRows < 2) {
+        throw std::runtime_error("Read-only inspection payload did not populate Browser rows");
+    }
+    if (!hub.offlineLayers_.empty() || !hub.offlineRegistry_.floats().empty() ||
+        !hub.offlineRegistry_.bools().empty() || !hub.offlineRegistry_.strings().empty()) {
+        throw std::runtime_error("Read-only inspection instantiated or hydrated a layer");
+    }
+    return true;
+}
+
+bool RunOptInLayerPackageActivationScenario() {
+    auto require = [](bool condition, const std::string& message) {
+        if (!condition) {
+            throw std::runtime_error(message);
+        }
+    };
+    const auto appRoot = synaptome_test_paths::appRoot();
+    LayerLibrary library;
+    require(library.reload((appRoot / "bin" / "data" / "layers").string()),
+            "canonical layer catalog did not load");
+    const std::size_t baselineCount = library.entries().size();
+    require(library.loadOptInPackages(
+                (appRoot / "bin" / "data" / "config" / "layer-packages.json").string()),
+            "disabled package config should be a successful no-op");
+    require(library.entries().size() == baselineCount,
+            "disabled package activation changed the canonical catalog");
+
+    const auto activationPath =
+        std::filesystem::temp_directory_path() / "synaptome-layer-package-activation-test.json";
+    ofJson activation = {
+        {"schemaVersion", 1},
+        {"enabled", true},
+        {"packages", ofJson::array({{
+            {"id", "examples.signal_bloom"},
+            {"enabled", true},
+            {"catalogPath", (appRoot / "bin" / "data" / "layers-optional" /
+                             "examples.signal_bloom.json").string()},
+            {"preset", "bright"},
+            {"mappingPreset", "hostMicMotion"},
+            {"parameters", {{"speed", 2.25}}}
+        }})}
+    };
+    {
+        std::ofstream out(activationPath, std::ios::trunc);
+        out << std::setw(2) << activation << "\n";
+    }
+    require(library.loadOptInPackages(activationPath.string()),
+            "explicit package activation failed");
+    const auto* entry = library.find("examples.signal_bloom");
+    require(entry != nullptr, "activated package did not enter the layer catalog");
+    require(entry->config["defaults"].value("speed", 0.0) == 2.25,
+            "explicit activation value did not win over the preset");
+    require(entry->config["defaults"].value("alpha", 0.0) == 0.95,
+            "selected package preset was not merged");
+    require(entry->config["packageActivation"].value("mappingApplied", true) == false,
+            "mapping suggestion was applied implicitly");
+
+    activation["packages"][0]["mappingPreset"] = "missingPreset";
+    {
+        std::ofstream out(activationPath, std::ios::trunc);
+        out << std::setw(2) << activation << "\n";
+    }
+    LayerLibrary rejectedLibrary;
+    require(rejectedLibrary.reload((appRoot / "bin" / "data" / "layers").string()),
+            "canonical catalog did not load for rejection case");
+    require(!rejectedLibrary.loadOptInPackages(activationPath.string()),
+            "unknown mapping preset was not rejected");
+    require(rejectedLibrary.find("examples.signal_bloom") == nullptr,
+            "invalid package activation leaked into the runtime catalog");
+    std::error_code cleanupError;
+    std::filesystem::remove(activationPath, cleanupError);
+    return true;
+}
+
 }  // namespace browser_flow

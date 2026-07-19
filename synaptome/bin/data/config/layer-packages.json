@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "enabled": false,
+  "packages": [
+    {
+      "id": "examples.signal_bloom",
+      "enabled": false,
+      "catalogPath": "../layers-optional/examples.signal_bloom.json",
+      "preset": "default",
+      "mappingPreset": ""
+    }
+  ]
+}

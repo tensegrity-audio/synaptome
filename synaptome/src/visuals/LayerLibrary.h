@@ -44,10 +44,15 @@ public:
     };
 
     bool reload(const std::string& rootDir);
+    // Loads only explicitly enabled, source-registered package catalog entries.
+    // A missing/disabled activation file is a successful no-op.
+    bool loadOptInPackages(const std::string& activationPath);
 
     const std::vector<Entry>& entries() const { return entries_; }
     const Entry* find(const std::string& id) const;
 
 private:
+    bool appendConfig(const ofJson& cfg, const std::string& configPath);
+    void sortEntries();
     std::vector<Entry> entries_;
 };

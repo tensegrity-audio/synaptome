@@ -88,6 +88,10 @@ inline void ofDrawRectRounded(float x, float y, float w, float h, float) { ofDra
 inline void ofViewport(float, float, float, float) {}
 inline void ofSetupScreenOrtho(float, float, float, float) {}
 inline void ofDrawLine(float, float, float, float) {}
+inline void ofBeginShape() {}
+inline void ofVertex(float, float) {}
+inline void ofEndShape(bool = false) {}
+inline void ofDrawCircle(float, float, float) {}
 inline void ofDrawBitmapString(const std::string&, float, float) {}
 inline void ofDrawBitmapStringHighlight(const std::string& text, float x, float y) {
     ofDrawBitmapString(text, x, y);

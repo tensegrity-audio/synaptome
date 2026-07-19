@@ -64,6 +64,8 @@ int main() {
         { "hud_feed_telemetry", browser_flow::RunHudFeedTelemetryScenario },
         { "hud_routing_manifest", browser_flow::RunHudRoutingManifestScenario },
         { "dual_screen_phase2", browser_flow::RunDualScreenPhase2Scenario },
+        { "layer_package_read_only_inspection", browser_flow::RunLayerPackageReadOnlyInspectionScenario },
+        { "opt_in_layer_package_activation", browser_flow::RunOptInLayerPackageActivationScenario },
     };
 
     int failures = 0;

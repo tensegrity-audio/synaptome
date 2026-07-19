@@ -1,0 +1,89 @@
+{
+  "id": "examples.signal_bloom",
+  "label": "Signal Bloom",
+  "category": "Examples",
+  "layerGroup": "Artist SDK",
+  "model": "signal-bloom",
+  "stateModel": "deterministic point field driven by transport, local color, and generic input modulation parameters",
+  "type": "example.signalBloom",
+  "registryPrefix": "examples.signal_bloom",
+  "opacity": 1.0,
+  "defaults": {
+    "visible": true,
+    "speed": 0.65,
+    "bpmSync": true,
+    "bpmMultiplier": 1.0,
+    "scale": 0.82,
+    "rotationDeg": 0.0,
+    "alpha": 0.86,
+    "gain": 0.62,
+    "lineOpacity": 0.72,
+    "colorR": 0.12,
+    "colorG": 0.78,
+    "colorB": 1.0,
+    "bgColorR": 0.02,
+    "bgColorG": 0.04,
+    "bgColorB": 0.08,
+    "xInput": 0.5,
+    "yInput": 0.5,
+    "speedInput": 0.0
+  },
+  "presets": {
+    "default": {
+      "visible": true,
+      "speed": 0.65,
+      "bpmSync": true,
+      "bpmMultiplier": 1.0,
+      "scale": 0.82,
+      "rotationDeg": 0.0,
+      "alpha": 0.86,
+      "gain": 0.62,
+      "lineOpacity": 0.72,
+      "colorR": 0.12,
+      "colorG": 0.78,
+      "colorB": 1.0,
+      "bgColorR": 0.02,
+      "bgColorG": 0.04,
+      "bgColorB": 0.08,
+      "xInput": 0.5,
+      "yInput": 0.5,
+      "speedInput": 0.0
+    },
+    "bright": {
+      "speed": 1.15,
+      "scale": 0.92,
+      "alpha": 0.95,
+      "gain": 1.05,
+      "lineOpacity": 0.9,
+      "colorR": 0.2,
+      "colorG": 0.95,
+      "colorB": 1.0,
+      "bgColorR": 0.02,
+      "bgColorG": 0.03,
+      "bgColorB": 0.1,
+      "speedInput": 0.25
+    },
+    "calm": {
+      "speed": 0.38,
+      "bpmMultiplier": 0.5,
+      "scale": 0.72,
+      "alpha": 0.62,
+      "gain": 0.35,
+      "lineOpacity": 0.48,
+      "colorR": 0.08,
+      "colorG": 0.54,
+      "colorB": 0.86,
+      "bgColorR": 0.01,
+      "bgColorG": 0.02,
+      "bgColorB": 0.04,
+      "speedInput": 0.0
+    }
+  },
+  "mappingPresets": [
+    {
+      "id": "hostMicMotion",
+      "appliedByDefault": false,
+      "ownership": "suggestion-only"
+    }
+  ]
+}

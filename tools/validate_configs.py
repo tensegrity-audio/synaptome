@@ -700,6 +700,32 @@ CONTRACT_ENTRIES: tuple[ContractEntry, ...] = (
         public_app=True,
     ),
     ContractEntry(
+        name="Layer package activation",
+        status="validated",
+        sources=(
+            Path("synaptome/bin/data/config/layer-packages.json"),
+            Path("synaptome/bin/data/layers-optional/examples.signal_bloom.json"),
+            Path("synaptome/bin/data/config/layer-package-inspection.json"),
+            Path("synaptome/src/visuals/LayerLibrary.cpp"),
+            Path("synaptome/src/ui/ControlMappingHubState.h"),
+            Path("docs/schemas/layer_package_activation.schema.json"),
+            Path("docs/contracts/layer_package_activation.md"),
+            Path("tools/synaptome_layer.py"),
+            Path("tools/signal_bloom_runtime_contract.py"),
+        ),
+        validator_command="python tools\\validate_configs.py synaptome/bin/data/config/layer-packages.json synaptome/bin/data/layers-optional/examples.signal_bloom.json; python tools\\signal_bloom_runtime_contract.py",
+        fixtures=(
+            Path("docs/examples/layer_packages/signal_bloom"),
+            Path("synaptome/bin/data/config/layer-package-inspection.json"),
+        ),
+        notes="Separates manifest-only Browser inspection from disabled-by-default, source-registered activation; package mapping presets remain suggestion-only.",
+        check_command=(
+            sys.executable,
+            "tools/signal_bloom_runtime_contract.py",
+        ),
+        public_app=True,
+    ),
+    ContractEntry(
         name="Scene persistence schema",
         status="validated",
         sources=(
@@ -1047,6 +1073,12 @@ def _contract_schema_for_resolved_path(resolved: Path):
     if rel_path.match("synaptome/bin/data/layers/**/*.json"):
         return BasePath / "docs" / "schemas" / "layer_asset.schema.json"
 
+    if rel_path.match("synaptome/bin/data/layers-optional/*.json"):
+        return BasePath / "docs" / "schemas" / "layer_asset.schema.json"
+
+    if rel_path == Path("synaptome/bin/data/config/layer-packages.json"):
+        return BasePath / "docs" / "schemas" / "layer_package_activation.schema.json"
+
     return None
 
 
@@ -1069,6 +1101,20 @@ def _append_contract_schema_targets(targets: Dict[Path, ValidationFn]) -> None:
                 continue
             rel_path = path.relative_to(BasePath)
             targets.setdefault(rel_path, _make_schema_validator(layer_schema))
+
+    optional_layers_dir = data_root / "layers-optional"
+    if layer_schema.exists() and optional_layers_dir.exists():
+        for path in optional_layers_dir.glob("*.json"):
+            rel_path = path.relative_to(BasePath)
+            targets.setdefault(rel_path, _make_schema_validator(layer_schema))
+
+    activation_schema = BasePath / "docs" / "schemas" / "layer_package_activation.schema.json"
+    activation_path = data_root / "config" / "layer-packages.json"
+    if activation_schema.exists() and activation_path.exists():
+        targets.setdefault(
+            activation_path.relative_to(BasePath),
+            _make_schema_validator(activation_schema),
+        )
 
     scene_schema = BasePath / "docs" / "schemas" / "scene.schema.json"
     if scene_schema.exists() and scenes_dir.exists():

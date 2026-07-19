@@ -489,6 +489,7 @@
 		<ClCompile Include="src\main.cpp" />
 
 		<ClCompile Include="src\ofApp.cpp" />
+		<ClCompile Include="..\docs\examples\artist_sdk\SignalBloomLayer.cpp" />
 
 		<ClCompile Include="src\io\MidiRouter.cpp" />
 
@@ -676,6 +677,7 @@
 	<ItemGroup>
 
 		<ClInclude Include="src\ofApp.h" />
+		<ClInclude Include="..\docs\examples\artist_sdk\SignalBloomLayer.h" />
 
 		<ClInclude Include="src\io\MidiRouter.h" />
 

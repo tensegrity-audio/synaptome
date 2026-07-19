@@ -17,7 +17,7 @@
     "categories": 8,
     "layerGroups": 4,
     "types": 29,
-    "factoryTypes": 21,
+    "factoryTypes": 22,
     "duplicateIds": 0,
     "unresolvedRuntimeTypes": 0,
     "packageEntries": 1
@@ -80,6 +80,7 @@
     "arcticAuroraScene": "ArcticAuroraSceneLayer",
     "audioWaveform": "AudioWaveformLayer",
     "cosmosFormation": "CosmosFormationLayer",
+    "example.signalBloom": "SignalBloomLayer",
     "excitableMedia": "ExcitableMediaLayer",
     "flocking": "FlockingLayer",
     "flowField": "FlowFieldLayer",

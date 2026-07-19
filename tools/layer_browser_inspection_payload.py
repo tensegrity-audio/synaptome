@@ -234,7 +234,7 @@ def build_payload() -> tuple[dict[str, Any], list[str]]:
         "status": "draft-read-only",
         "sourceStrategy": [
             "Read-only inspection payload assembled from package and generated-layer fixture metadata.",
-            "This payload is a docs/tools contract only and is not consumed by the Browser yet.",
+            "The Browser consumes the runtime copy as read-only metadata and never instantiates these entries for inspection.",
             "Entries must not require layer instantiation, scene mutation, runtime scanning, or canonical manifest changes.",
         ],
         "sources": [
