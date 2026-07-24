@@ -19,7 +19,11 @@ SignalBloomLayer source
   -> media layer paired in the same saved scene
 ```
 
-The fixture is not installed into the runtime project yet. It is a public contract example that proves the shape before Synaptome chooses the final extension/package mechanism.
+The fixture is installed through explicit source registration. The runtime
+project compiles a build-local mirror under `synaptome/src/visuals` so the
+normal openFrameworks `apps/myApps` junction does not depend on repository
+paths outside the application directory. The validator requires the public
+fixture and runtime mirror to remain identical.
 
 ## Files
 

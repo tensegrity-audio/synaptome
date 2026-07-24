@@ -14,7 +14,7 @@
 #include "ui/ControlMappingHubState.h"
 #include "ui/MenuSkin.h"
 #include "ui/ControlHubEventBridge_clean.h"
-#include "../../docs/examples/artist_sdk/SignalBloomLayer.h"
+#include "visuals/SignalBloomLayer.h"
 #ifdef _WIN32
 #ifndef NOMINMAX
 #define NOMINMAX

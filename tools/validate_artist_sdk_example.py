@@ -19,6 +19,9 @@ SOURCE_PATH = EXAMPLE_ROOT / "SignalBloomLayer.cpp"
 REGISTRATION_PATH = EXAMPLE_ROOT / "register_signal_bloom.cpp"
 CATALOG_PATH = EXAMPLE_ROOT / "signal_bloom.layer.json"
 SCENE_PATH = EXAMPLE_ROOT / "signal_bloom.scene.json"
+RUNTIME_HEADER_PATH = REPO_ROOT / "synaptome" / "src" / "visuals" / "SignalBloomLayer.h"
+RUNTIME_SOURCE_PATH = REPO_ROOT / "synaptome" / "src" / "visuals" / "SignalBloomLayer.cpp"
+RUNTIME_PROJECT_PATH = REPO_ROOT / "synaptome" / "Synaptome.vcxproj"
 
 EXPECTED_ASSET_ID = "examples.signal_bloom"
 EXPECTED_TYPE = "example.signalBloom"
@@ -238,7 +241,16 @@ def collect_errors(
 def build_contract() -> tuple[dict[str, Any], list[str]]:
     missing_files = [
         path
-        for path in (HEADER_PATH, SOURCE_PATH, REGISTRATION_PATH, CATALOG_PATH, SCENE_PATH)
+        for path in (
+            HEADER_PATH,
+            SOURCE_PATH,
+            REGISTRATION_PATH,
+            CATALOG_PATH,
+            SCENE_PATH,
+            RUNTIME_HEADER_PATH,
+            RUNTIME_SOURCE_PATH,
+            RUNTIME_PROJECT_PATH,
+        )
         if not path.exists()
     ]
     if missing_files:
@@ -247,6 +259,9 @@ def build_contract() -> tuple[dict[str, Any], list[str]]:
 
     header_text = HEADER_PATH.read_text(encoding="utf-8")
     source_text = SOURCE_PATH.read_text(encoding="utf-8")
+    runtime_header_text = RUNTIME_HEADER_PATH.read_text(encoding="utf-8")
+    runtime_source_text = RUNTIME_SOURCE_PATH.read_text(encoding="utf-8")
+    runtime_project_text = RUNTIME_PROJECT_PATH.read_text(encoding="utf-8")
     registration_text = REGISTRATION_PATH.read_text(encoding="utf-8")
     catalog = load_json(CATALOG_PATH)
     scene = load_json(SCENE_PATH)
@@ -299,6 +314,26 @@ def build_contract() -> tuple[dict[str, Any], list[str]]:
     }
 
     errors = collect_errors(header_text, source_text, registration_text, catalog, scene, parameters)
+    if runtime_header_text != header_text:
+        errors.append("runtime SignalBloomLayer.h must match the public SDK example")
+    if runtime_source_text != source_text:
+        errors.append("runtime SignalBloomLayer.cpp must match the public SDK example")
+
+    runtime_project_entries = (
+        r'ClCompile Include="src\visuals\SignalBloomLayer.cpp"',
+        r'ClInclude Include="src\visuals\SignalBloomLayer.h"',
+    )
+    for entry in runtime_project_entries:
+        if entry not in runtime_project_text:
+            errors.append(f"runtime project is missing build-local entry: {entry}")
+    if r'..\docs\examples\artist_sdk\SignalBloomLayer' in runtime_project_text:
+        errors.append("runtime project must not compile Signal Bloom through the repository docs path")
+    if runtime_project_text.count("<MultiProcessorCompilation>true</MultiProcessorCompilation>") < 2:
+        errors.append("runtime project must enable parallel compilation for Debug and Release")
+    if "<UseMultiToolTask>true</UseMultiToolTask>" not in runtime_project_text:
+        errors.append("runtime project must parallelize compiler invocations with MultiToolTask")
+    if "<MultiProcCL>true</MultiProcCL>" not in runtime_project_text:
+        errors.append("runtime project must enable MultiToolTask for C/C++ compilation")
     return summary, errors
 
 

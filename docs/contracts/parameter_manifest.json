@@ -14,7 +14,7 @@
   ],
   "counts": {
     "parameters": 1347,
-    "layerTemplates": 731,
+    "layerTemplates": 749,
     "consoleTemplates": 517,
     "catalogAssetsWithoutLayerParameters": 12,
     "unresolvedAssets": 0
@@ -22777,6 +22777,204 @@
       "sourceClass": "CosmosFormationLayer"
     },
     {
+      "layerType": "example.signalBloom",
+      "idPattern": "{registryPrefix}.alpha",
+      "kind": "float",
+      "suffix": "alpha",
+      "source": {
+        "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
+        "line": 103
+      },
+      "sourceClass": "SignalBloomLayer"
+    },
+    {
+      "layerType": "example.signalBloom",
+      "idPattern": "{registryPrefix}.bgColorB",
+      "kind": "float",
+      "suffix": "bgColorB",
+      "source": {
+        "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
+        "line": 138
+      },
+      "sourceClass": "SignalBloomLayer"
+    },
+    {
+      "layerType": "example.signalBloom",
+      "idPattern": "{registryPrefix}.bgColorG",
+      "kind": "float",
+      "suffix": "bgColorG",
+      "source": {
+        "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
+        "line": 136
+      },
+      "sourceClass": "SignalBloomLayer"
+    },
+    {
+      "layerType": "example.signalBloom",
+      "idPattern": "{registryPrefix}.bgColorR",
+      "kind": "float",
+      "suffix": "bgColorR",
+      "source": {
+        "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
+        "line": 134
+      },
+      "sourceClass": "SignalBloomLayer"
+    },
+    {
+      "layerType": "example.signalBloom",
+      "idPattern": "{registryPrefix}.bpmMultiplier",
+      "kind": "float",
+      "suffix": "bpmMultiplier",
+      "source": {
+        "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
+        "line": 78
+      },
+      "sourceClass": "SignalBloomLayer"
+    },
+    {
+      "layerType": "example.signalBloom",
+      "idPattern": "{registryPrefix}.bpmSync",
+      "kind": "bool",
+      "suffix": "bpmSync",
+      "source": {
+        "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
+        "line": 70
+      },
+      "sourceClass": "SignalBloomLayer"
+    },
+    {
+      "layerType": "example.signalBloom",
+      "idPattern": "{registryPrefix}.colorB",
+      "kind": "float",
+      "suffix": "colorB",
+      "source": {
+        "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
+        "line": 131
+      },
+      "sourceClass": "SignalBloomLayer"
+    },
+    {
+      "layerType": "example.signalBloom",
+      "idPattern": "{registryPrefix}.colorG",
+      "kind": "float",
+      "suffix": "colorG",
+      "source": {
+        "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
+        "line": 129
+      },
+      "sourceClass": "SignalBloomLayer"
+    },
+    {
+      "layerType": "example.signalBloom",
+      "idPattern": "{registryPrefix}.colorR",
+      "kind": "float",
+      "suffix": "colorR",
+      "source": {
+        "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
+        "line": 127
+      },
+      "sourceClass": "SignalBloomLayer"
+    },
+    {
+      "layerType": "example.signalBloom",
+      "idPattern": "{registryPrefix}.gain",
+      "kind": "float",
+      "suffix": "gain",
+      "source": {
+        "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
+        "line": 111
+      },
+      "sourceClass": "SignalBloomLayer"
+    },
+    {
+      "layerType": "example.signalBloom",
+      "idPattern": "{registryPrefix}.lineOpacity",
+      "kind": "float",
+      "suffix": "lineOpacity",
+      "source": {
+        "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
+        "line": 119
+      },
+      "sourceClass": "SignalBloomLayer"
+    },
+    {
+      "layerType": "example.signalBloom",
+      "idPattern": "{registryPrefix}.rotationDeg",
+      "kind": "float",
+      "suffix": "rotationDeg",
+      "source": {
+        "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
+        "line": 95
+      },
+      "sourceClass": "SignalBloomLayer"
+    },
+    {
+      "layerType": "example.signalBloom",
+      "idPattern": "{registryPrefix}.scale",
+      "kind": "float",
+      "suffix": "scale",
+      "source": {
+        "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
+        "line": 86
+      },
+      "sourceClass": "SignalBloomLayer"
+    },
+    {
+      "layerType": "example.signalBloom",
+      "idPattern": "{registryPrefix}.speed",
+      "kind": "float",
+      "suffix": "speed",
+      "source": {
+        "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
+        "line": 65
+      },
+      "sourceClass": "SignalBloomLayer"
+    },
+    {
+      "layerType": "example.signalBloom",
+      "idPattern": "{registryPrefix}.speedInput",
+      "kind": "float",
+      "suffix": "speedInput",
+      "source": {
+        "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
+        "line": 150
+      },
+      "sourceClass": "SignalBloomLayer"
+    },
+    {
+      "layerType": "example.signalBloom",
+      "idPattern": "{registryPrefix}.visible",
+      "kind": "bool",
+      "suffix": "visible",
+      "source": {
+        "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
+        "line": 57
+      },
+      "sourceClass": "SignalBloomLayer"
+    },
+    {
+      "layerType": "example.signalBloom",
+      "idPattern": "{registryPrefix}.xInput",
+      "kind": "float",
+      "suffix": "xInput",
+      "source": {
+        "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
+        "line": 146
+      },
+      "sourceClass": "SignalBloomLayer"
+    },
+    {
+      "layerType": "example.signalBloom",
+      "idPattern": "{registryPrefix}.yInput",
+      "kind": "float",
+      "suffix": "yInput",
+      "source": {
+        "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
+        "line": 148
+      },
+      "sourceClass": "SignalBloomLayer"
+    },
+    {
       "layerType": "excitableMedia",
       "idPattern": "{registryPrefix}.alpha",
       "kind": "float",
@@ -28925,6 +29123,7 @@
         "arcticAuroraScene",
         "audioWaveform",
         "cosmosFormation",
+        "example.signalBloom",
         "excitableMedia",
         "flocking",
         "flowField",
@@ -29533,6 +29732,7 @@
       ],
       "sourceLayerTypes": [
         "audioWaveform",
+        "example.signalBloom",
         "oscilloscope"
       ]
     },
@@ -29546,6 +29746,7 @@
       ],
       "sourceLayerTypes": [
         "audioWaveform",
+        "example.signalBloom",
         "oscilloscope"
       ]
     },
@@ -29559,6 +29760,7 @@
       ],
       "sourceLayerTypes": [
         "audioWaveform",
+        "example.signalBloom",
         "oscilloscope"
       ]
     },
@@ -29646,6 +29848,7 @@
       ],
       "sourceLayerTypes": [
         "agentField",
+        "example.signalBloom",
         "excitableMedia",
         "flocking",
         "flowField",
@@ -29665,6 +29868,7 @@
       ],
       "sourceLayerTypes": [
         "agentField",
+        "example.signalBloom",
         "excitableMedia",
         "flocking",
         "flowField",
@@ -30332,6 +30536,7 @@
       ],
       "sourceLayerTypes": [
         "audioWaveform",
+        "example.signalBloom",
         "oscilloscope",
         "perlin",
         "riverFormation",
@@ -30396,6 +30601,7 @@
       ],
       "sourceLayerTypes": [
         "audioWaveform",
+        "example.signalBloom",
         "oscilloscope",
         "perlin",
         "riverFormation",
@@ -30412,6 +30618,7 @@
       ],
       "sourceLayerTypes": [
         "audioWaveform",
+        "example.signalBloom",
         "oscilloscope",
         "perlin",
         "riverFormation",
@@ -31367,6 +31574,7 @@
       ],
       "sourceLayerTypes": [
         "audioWaveform",
+        "example.signalBloom",
         "media.clip",
         "media.webcam"
       ]
@@ -31962,6 +32170,7 @@
         8
       ],
       "sourceLayerTypes": [
+        "example.signalBloom",
         "geodesic",
         "stlModel"
       ]
@@ -33154,6 +33363,7 @@
         8
       ],
       "sourceLayerTypes": [
+        "example.signalBloom",
         "oscilloscope"
       ]
     },
@@ -33202,6 +33412,7 @@
         8
       ],
       "sourceLayerTypes": [
+        "example.signalBloom",
         "perlin",
         "solarSystem",
         "stlModel"
@@ -33883,6 +34094,7 @@
       ],
       "sourceLayerTypes": [
         "agentField",
+        "example.signalBloom",
         "excitableMedia",
         "flocking",
         "flowField",
@@ -33903,6 +34115,7 @@
         8
       ],
       "sourceLayerTypes": [
+        "example.signalBloom",
         "oscilloscope"
       ]
     },
@@ -34537,6 +34750,7 @@
         "arcticAuroraScene",
         "audioWaveform",
         "cosmosFormation",
+        "example.signalBloom",
         "excitableMedia",
         "flocking",
         "flowField",
@@ -35196,6 +35410,7 @@
         8
       ],
       "sourceLayerTypes": [
+        "example.signalBloom",
         "oscilloscope"
       ]
     },
@@ -35232,6 +35447,7 @@
         8
       ],
       "sourceLayerTypes": [
+        "example.signalBloom",
         "oscilloscope"
       ]
     },

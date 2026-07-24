@@ -146,7 +146,15 @@
 
 	</ImportGroup>
 
-	<PropertyGroup Label="UserMacros" />
+	<PropertyGroup Label="UserMacros">
+
+		<UseMultiToolTask>true</UseMultiToolTask>
+
+		<MultiProcCL>true</MultiProcCL>
+
+		<EnforceProcessCountAcrossBuilds>true</EnforceProcessCountAcrossBuilds>
+
+	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64' or '$(Configuration)|$(Platform)'=='Debug|ARM64' or '$(Configuration)|$(Platform)'=='Debug|ARM64EC'">
 
@@ -279,6 +287,8 @@
 			<AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SynaptomeThirdPartyRoot);$(SynaptomeOpenFrameworksRoot)\addons\ofxFft\libs;$(SynaptomeOpenFrameworksRoot)\addons\ofxFft\libs\fftw;$(SynaptomeOpenFrameworksRoot)\addons\ofxFft\libs\fftw\include;$(SynaptomeOpenFrameworksRoot)\addons\ofxFft\libs\fftw\lib;$(SynaptomeOpenFrameworksRoot)\addons\ofxFft\libs\kiss;$(SynaptomeOpenFrameworksRoot)\addons\ofxFft\src;$(SynaptomeOpenFrameworksRoot)\addons\ofxGui\src;$(SynaptomeOpenFrameworksRoot)\addons\ofxMidi\libs;$(SynaptomeOpenFrameworksRoot)\addons\ofxMidi\libs\pgmidi;$(SynaptomeOpenFrameworksRoot)\addons\ofxMidi\libs\rtmidi;$(SynaptomeOpenFrameworksRoot)\addons\ofxMidi\src;$(SynaptomeOpenFrameworksRoot)\addons\ofxMidi\src\desktop;$(SynaptomeOpenFrameworksRoot)\addons\ofxMidi\src\ios;$(SynaptomeOpenFrameworksRoot)\addons\ofxOsc\libs;$(SynaptomeOpenFrameworksRoot)\addons\ofxOsc\libs\oscpack;$(SynaptomeOpenFrameworksRoot)\addons\ofxOsc\libs\oscpack\src;$(SynaptomeOpenFrameworksRoot)\addons\ofxOsc\libs\oscpack\src\ip;$(SynaptomeOpenFrameworksRoot)\addons\ofxOsc\libs\oscpack\src\ip\win32;$(SynaptomeOpenFrameworksRoot)\addons\ofxOsc\libs\oscpack\src\osc;$(SynaptomeOpenFrameworksRoot)\addons\ofxOsc\src;$(SynaptomeOpenFrameworksRoot)\addons\ofxVectorGraphics\libs;$(SynaptomeOpenFrameworksRoot)\addons\ofxVectorGraphics\src</AdditionalIncludeDirectories>
 
 			<CompileAs>CompileAsCpp</CompileAs>
+
+			<MultiProcessorCompilation>true</MultiProcessorCompilation>
 
 			<ObjectFileName>$(IntDir)\Build\%(Filename)\</ObjectFileName>
 
@@ -489,7 +499,7 @@
 		<ClCompile Include="src\main.cpp" />
 
 		<ClCompile Include="src\ofApp.cpp" />
-		<ClCompile Include="..\docs\examples\artist_sdk\SignalBloomLayer.cpp" />
+		<ClCompile Include="src\visuals\SignalBloomLayer.cpp" />
 
 		<ClCompile Include="src\io\MidiRouter.cpp" />
 
@@ -677,7 +687,7 @@
 	<ItemGroup>
 
 		<ClInclude Include="src\ofApp.h" />
-		<ClInclude Include="..\docs\examples\artist_sdk\SignalBloomLayer.h" />
+		<ClInclude Include="src\visuals\SignalBloomLayer.h" />
 
 		<ClInclude Include="src\io\MidiRouter.h" />
 
