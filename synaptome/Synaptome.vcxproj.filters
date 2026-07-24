@@ -2556,6 +2556,9 @@
 
 
 		</ns0:ClInclude>
+		<ns0:ClInclude Include="src\core\OptionProviderRegistry.h">
+			<ns0:Filter>src</ns0:Filter>
+		</ns0:ClInclude>
 
 
 

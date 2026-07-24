@@ -687,6 +687,7 @@
 	<ItemGroup>
 
 		<ClInclude Include="src\ofApp.h" />
+		<ClInclude Include="src\core\OptionProviderRegistry.h" />
 		<ClInclude Include="src\visuals\SignalBloomLayer.h" />
 
 		<ClInclude Include="src\io\MidiRouter.h" />

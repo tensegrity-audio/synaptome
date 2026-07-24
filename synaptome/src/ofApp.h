@@ -19,6 +19,7 @@
 #include "ui/overlays/OverlayManager.h"
 #include "core/ParameterRegistry.h"
 #include "core/BankRegistry.h"
+#include "core/OptionProviderRegistry.h"
 #include "visuals/GridLayer.h"
 #include "visuals/GeodesicLayer.h"
 #include "visuals/LayerFactory.h"
@@ -133,6 +134,7 @@ public:
     std::shared_ptr<HudLayoutEditor> hudLayoutEditor;
     ParameterRegistry paramRegistry;
     BankRegistry bankRegistry;
+    OptionProviderRegistry optionProviderRegistry;
     std::string midiMapPath;
     std::string hotkeyMapPath;
     std::string deviceMapsDir;

@@ -2472,8 +2472,19 @@ bool RunDualScreenPhase2Scenario() {
 
 bool RunLayerPackageReadOnlyInspectionScenario() {
     ParameterRegistry registry;
+    OptionProviderRegistry optionProviders;
+    if (!optionProviders.setProvider(
+            "transport.bpmMultipliers",
+            ofJson::array({
+                {{"multiplier", 0.5}, {"label", "Half Time"}},
+                {{"multiplier", 1.0}, {"label", "Normal"}},
+                {{"multiplier", 2.0}, {"label", "Double Time"}}
+            }))) {
+        throw std::runtime_error("Failed to register transport BPM option provider");
+    }
     ControlMappingHubState hub;
     hub.setParameterRegistry(&registry);
+    hub.setOptionProviderRegistry(&optionProviders);
     const auto payloadPath =
         (synaptome_test_paths::dataRoot() / "config" / "layer-package-inspection.json").string();
     hub.setLayerPackageInspectionPath(payloadPath);
@@ -2505,8 +2516,11 @@ bool RunLayerPackageReadOnlyInspectionScenario() {
             foundDynamicSource =
                 row.inspectionValue.find("Default: 1.000") != std::string::npos &&
                 row.inspectionValue.find(
-                    "Options source: transport.bpmMultipliers (unresolved; unavailable values preserved)") !=
-                    std::string::npos;
+                    "Options source: transport.bpmMultipliers (resolved; 3 available)") !=
+                    std::string::npos &&
+                row.inspectionValue.find("Half Time=0.500") != std::string::npos &&
+                row.inspectionValue.find("Normal=1.000") != std::string::npos &&
+                row.inspectionValue.find("Double Time=2.000") != std::string::npos;
         }
     }
     if (!foundSignalBloom || inspectionRows < 2) {
@@ -2517,7 +2531,7 @@ bool RunLayerPackageReadOnlyInspectionScenario() {
     }
     if (!foundDynamicSource) {
         throw std::runtime_error(
-            "Read-only inspection did not render unresolved provider and value-preservation state");
+            "Read-only inspection did not resolve the registered option provider");
     }
     if (hub.layerPackageInspection_.dump() != inspectionPayloadBefore) {
         throw std::runtime_error("Read-only inspection rewrote package metadata or stored values");
@@ -2525,6 +2539,36 @@ bool RunLayerPackageReadOnlyInspectionScenario() {
     if (!hub.offlineLayers_.empty() || !hub.offlineRegistry_.floats().empty() ||
         !hub.offlineRegistry_.bools().empty() || !hub.offlineRegistry_.strings().empty()) {
         throw std::runtime_error("Read-only inspection instantiated or hydrated a layer");
+    }
+
+    if (!optionProviders.setProvider(
+            "transport.bpmMultipliers",
+            ofJson::array({
+                {{"multiplier", 0.5}, {"label", "Half Time"}},
+                {{"multiplier", 2.0}, {"label", "Double Time"}}
+            }))) {
+        throw std::runtime_error("Failed to replace transport BPM option provider");
+    }
+    hub.rebuildModel();
+    bool foundPreservedUnavailableDefault = false;
+    for (const auto& row : hub.tableModel_.rows) {
+        if (row.id == "inspection.examples.signal_bloom.bpmMultiplier") {
+            foundPreservedUnavailableDefault =
+                row.inspectionValue.find(
+                    "Options source: transport.bpmMultipliers (resolved; 2 available)") !=
+                    std::string::npos &&
+                row.inspectionValue.find("Unavailable default: 1.000 (preserved)") !=
+                    std::string::npos;
+            break;
+        }
+    }
+    if (!foundPreservedUnavailableDefault) {
+        throw std::runtime_error(
+            "Provider resolution did not preserve and mark an unavailable default");
+    }
+    if (hub.layerPackageInspection_.dump() != inspectionPayloadBefore) {
+        throw std::runtime_error(
+            "Unavailable provider value handling rewrote package metadata or stored values");
     }
     return true;
 }

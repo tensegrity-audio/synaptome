@@ -2,6 +2,21 @@
 
 This changelog records Project Ops and administrative workflow changes. Product release versioning remains governed by `docs/release_policy.md`.
 
+## 2026-07-24 - artist-sdk - runtime_option_provider_resolution
+
+- Request ID: `layer_package_compatibility_bench_scaffolding`
+- Phase / Milestone: Browser option-provider ownership
+- Summary: Added a revisioned runtime option-provider registry, registered the
+  app-owned transport BPM choices, resolved them in read-only package
+  inspection, and preserved/marked defaults that disappear from a provider.
+- Request Doc: `docs/project_ops/in_progress/layer_package_compatibility_bench_scaffolding.md`
+- Roadmap Entry: `docs/project_ops/roadmap.md`
+- Validation: All 13 public-app contracts, package-only and combined
+  catalog/manifest gates, all 18 BrowserFlow scenarios, Signal Bloom offscreen
+  bench, Release x64 build, and 1.92-second identical incremental build.
+- Follow-Up Actions: Add explicit package preset-bank selection with the
+  locked value precedence before mapping-preset apply/edit controls.
+
 ## 2026-07-24 - artist-sdk - package_vertical_slice_convergence
 
 - Request ID: `layer_package_compatibility_bench_scaffolding`

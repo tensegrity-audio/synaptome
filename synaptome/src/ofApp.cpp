@@ -2109,11 +2109,28 @@ void ofApp::setup() {
     });
 
     std::string slotAssignmentsPath = controlHubSlotAssignmentsPath();
+    ofJson transportBpmMultipliers = ofJson::array();
+    transportBpmMultipliers.push_back({
+        {"multiplier", 0.5},
+        {"label", "Half Time"}
+    });
+    transportBpmMultipliers.push_back({
+        {"multiplier", 1.0},
+        {"label", "Normal"}
+    });
+    transportBpmMultipliers.push_back({
+        {"multiplier", 2.0},
+        {"label", "Double Time"}
+    });
+    optionProviderRegistry.setProvider(
+        "transport.bpmMultipliers",
+        std::move(transportBpmMultipliers));
     controlMappingHub = std::make_shared<ControlMappingHubState>();
     if (controlMappingHub) {
         controlMappingHub->setMenuSkin(menuSkin);
         controlMappingHub->setPreferencesPath(controlHubPrefsPath);
         controlMappingHub->setParameterRegistry(&paramRegistry);
+        controlMappingHub->setOptionProviderRegistry(&optionProviderRegistry);
         controlMappingHub->setMidiRouter(&midi);
         controlMappingHub->setLayerLibrary(&layerLibrary);
         controlMappingHub->setLayerPackageInspectionPath(

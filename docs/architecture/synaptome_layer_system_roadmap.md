@@ -108,11 +108,13 @@ Current package scaffold:
 - `tools/layer_browser_inspection_payload.py`
 - `tools/testdata/layer_browser_inspection/expected_layer_browser_inspection_payload.json`
 
-This is still a static package contract. The tools can now produce draft
+The package contract now has one bounded runtime seam. Tooling produces draft
 package-only snapshots, opt-in combined catalog/manifest snapshots, generated
-content snapshots, and a schema-checked read-only Browser inspection payload,
-but runtime loading, Browser UI discovery, and the offscreen bench are still
-future phases.
+content snapshots, and a schema-checked read-only Browser inspection payload.
+The Browser consumes that payload without instantiating packages, one reviewed
+source-registered package can be activated explicitly, and a focused
+offscreen lifecycle bench exists. Automatic package discovery/loading remains
+a future phase.
 
 ## Where We Stand
 
@@ -139,12 +141,20 @@ What is real today:
 - A draft read-only Browser inspection payload can combine package and
   generated-layer metadata without layer instantiation, scene mutation, runtime
   scanning, or canonical manifest changes.
+- The Browser renders that payload as non-editable inspection rows.
 - Static named option metadata now has one generated-layer fixture
   (`materialMode`) that flows into the generated catalog and inspection
   payload.
 - Dynamic option-source metadata now has one generated-layer fixture
   (`materialPreset`) that names a future runtime provider without resolving it
   or rendering it in the Browser.
+- Signal Bloom declares `transport.bpmMultipliers`; the app registers that
+  provider, Browser inspection resolves its choices, and provider revisions
+  invalidate cached rows.
+- Missing provider defaults are marked and preserved without changing package
+  metadata or stored values.
+- Signal Bloom has explicit default-off source registration and a focused
+  native lifecycle/offscreen bench.
 
 What is only draft tooling:
 
@@ -153,26 +163,21 @@ What is only draft tooling:
   root, but the app does not yet scan it.
 - Package-derived parameters are not yet part of the canonical
   `docs/contracts/parameter_manifest.json`.
-- Package-derived catalog entries are not yet consumed by the Browser.
+- Package-derived catalog entries are not automatically activated by the
+  Browser; inspection remains separate from activation.
 - Generated-layer template output is a docs/tools fixture only; it does not
   mean Synaptome scans model folders at runtime.
-- The Browser inspection payload is a schema-checked docs/tools contract only;
-  the Browser does not yet read or render it.
-- Static option metadata is visible in draft snapshots, but Browser dropdown
-  rendering is not implemented yet.
-- Signal Bloom now supplies package-owned named `bpmMultiplier` options, proving
-  `options[]` flows through package catalog/manifest and inspection snapshots.
-- Dynamic option-source metadata is visible in draft snapshots, but no runtime
-  provider lookup or fallback UI exists yet.
+- Static and resolved dynamic option metadata is visible in read-only Browser
+  inspection; editable dropdown behavior is not implemented yet.
+- The generated-layer `materialPreset` provider remains intentionally
+  unresolved because generated content is still fixture-only.
 
 What is not implemented yet:
 
 - Runtime or Browser scanning of STL/model/media folders.
-- Read-only Browser UI for package/generated-layer inspection.
 - Browser controls for package presets, preset banks, mapping presets, static
   dropdown options, or dynamic option providers.
 - Runtime package loading or generated registration.
-- A single-layer runtime/offscreen bench.
 
 Current breakage risk is low because the new work is mostly schemas, fixtures,
 and opt-in checks. Risk rises when package outputs start changing Browser or
@@ -241,7 +246,7 @@ indexes them, but this document owns their meaning and next actions.
 | CG-11 | Artist SDK compatibility slice | The first public path is honest source registration with a validated source/catalog/scene fixture. | Keep source-registration language honest while package tooling evolves toward generated registration or a loader. |
 | CG-12 | Layer package layout and schema | Draft schemas, a Signal Bloom fixture, shared package discovery roots, and static validation now exist. | Extend the explicit package roots toward template-backed content folders and runtime Browser loading. |
 | CG-13 | Manifest generation from package parameters | Package-derived parameter manifest snapshots expand package suffixes through `registryPrefix`; `gen_parameter_manifest.py --include-packages` now writes/checks a draft combined manifest without changing the canonical manifest. | Decide when package-derived entries become part of the canonical `parameter_manifest.json` rather than a draft combined gate. |
-| CG-14 | Dropdown option metadata and dynamic providers | Package-owned static choices and unresolved `transport.bpmMultipliers` state render in read-only Browser inspection rows. The inspection payload encodes preserve-and-mark-unavailable behavior and native coverage proves the Browser does not mutate it; runtime provider lookup is not implemented. | Add an explicit provider registry and resolve `transport.bpmMultipliers` while preserving missing saved values. |
+| CG-14 | Dropdown option metadata and dynamic providers | A revisioned runtime provider registry resolves app-owned `transport.bpmMultipliers` choices in read-only Browser inspection. Missing defaults are marked and preserved, and native coverage proves package metadata is not mutated. | Add an explicit editable selection surface only after preset ownership and persistence behavior are locked. |
 | CG-15 | Layer preset package contract | Scenes persist parameter values, but layer-local presets are not a package-owned, suffix-based, validated contract. | Add `layer_preset.schema.json`, bundled preset fixtures, package discovery rules, operator-local user preset policy, and scene/preset merge semantics. |
 | CG-16 | Single-layer package validator and runtime bench | Signal Bloom now passes a focused static check and native lifecycle/offscreen bench; full package-vs-runtime descriptor comparison and pixel/non-blank output checks remain. | Compare every runtime descriptor against package declarations, then add optional rendered-output assertions. |
 | CG-17 | Folder-driven discovery and file-backed generated layers | Current catalog behavior relies on explicit layer JSON entries; STL-style dropped files do not yet have a standard generated asset/template path. | Define discovery roots, folder-to-Browser rules, stable generated IDs, sidecar overrides, and template schemas for file-backed generated layers. |
@@ -487,13 +492,13 @@ without pretending Synaptome has hot-loaded plugins before it does.
 ## Immediate Next Step
 
 The safe vertical slice is converged: the optional runtime adapter is generated
-from reviewed package data, Signal Bloom owns a dynamic `optionsSource`
-fixture, unavailable stored values have an explicit preservation policy, and
-the live-window smoke passes.
+from reviewed package data, Signal Bloom's dynamic `optionsSource` resolves
+through an app-owned revisioned registry, unavailable stored values are
+preserved and marked, and the live-window smoke passes.
 
-1. Add an explicit runtime provider registry and resolve
-   `transport.bpmMultipliers` without rewriting unavailable stored values.
-2. Add explicit preset-bank selection and mapping-preset apply/edit controls;
+1. Add explicit preset-bank selection with the locked defaults -> preset ->
+   explicit override -> scene precedence.
+2. Add mapping-preset apply/edit controls;
    never auto-apply package mappings.
 3. Keep scanning and generated/plugin registration disabled until duplicate,
    dependency, rollback, and ABI policy are tested.

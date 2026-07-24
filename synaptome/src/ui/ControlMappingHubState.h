@@ -11,6 +11,7 @@
 #include "ofUtils.h"
 
 #include "../core/ParameterRegistry.h"
+#include "../core/OptionProviderRegistry.h"
 #include "../io/MidiRouter.h"
 #include "../visuals/LayerFactory.h"
 #include "../visuals/LayerLibrary.h"
@@ -88,6 +89,7 @@ public:
     void clearLayoutBand();
     void setMenuSkin(const MenuSkin& skin);
     void setParameterRegistry(ParameterRegistry* registry);
+    void setOptionProviderRegistry(const OptionProviderRegistry* registry);
     void setMidiRouter(MidiRouter* router);
     void setLayerLibrary(LayerLibrary* library);
     void setLayerPackageInspectionPath(const std::string& path);
@@ -410,6 +412,8 @@ private:
 
     std::weak_ptr<MenuController::State> keyMappingState_;
     ParameterRegistry* registry_ = nullptr;
+    const OptionProviderRegistry* optionProviderRegistry_ = nullptr;
+    mutable std::size_t lastOptionProviderRevision_ = 0;
     MidiRouter* midiRouter_ = nullptr;
     LayerLibrary* layerLibrary_ = nullptr;
     std::function<const LayerLibrary::Entry*(const std::string&)> consoleAssetResolver_;
@@ -847,6 +851,13 @@ inline void ControlMappingHubState::setParameterRegistry(ParameterRegistry* regi
     lastValueSnapshot_.clear();
         lastStringSnapshot_.clear();
     lastActivityMs_.clear();
+}
+
+inline void ControlMappingHubState::setOptionProviderRegistry(
+    const OptionProviderRegistry* registry) {
+    optionProviderRegistry_ = registry;
+    lastOptionProviderRevision_ = registry ? registry->revision() : 0;
+    tableModel_.dirty = true;
 }
 
 inline void ControlMappingHubState::setMidiRouter(MidiRouter* router) {
@@ -2633,6 +2644,11 @@ inline void ControlMappingHubState::rebuildView() const {
 }
 
 inline void ControlMappingHubState::rebuildModel() const {
+    const std::size_t providerRevision =
+        optionProviderRegistry_ ? optionProviderRegistry_->revision() : 0;
+    if (providerRevision != lastOptionProviderRevision_) {
+        tableModel_.dirty = true;
+    }
     if (!tableModel_.dirty) {
         return;
     }
@@ -2645,6 +2661,7 @@ inline void ControlMappingHubState::rebuildModel() const {
     activeGridItems_.clear();
 
     if (!registry_) {
+        lastOptionProviderRevision_ = providerRevision;
         tableModel_.dirty = false;
         selectedRow_ = -1;
         return;
@@ -3011,6 +3028,7 @@ inline void ControlMappingHubState::rebuildModel() const {
         slotMidiAssignmentsDirty_ = false;
         rebuildSlotMidiAssignmentsFromCurrentModel();
     }
+    lastOptionProviderRevision_ = providerRevision;
     tableModel_.dirty = false;
 }
 
@@ -5233,6 +5251,12 @@ inline void ControlMappingHubState::appendLayerPackageInspectionRows() const {
         }
         return value.dump();
     };
+    auto jsonValuesMatch = [](const ofJson& lhs, const ofJson& rhs) {
+        if (lhs.is_number() && rhs.is_number()) {
+            return std::abs(lhs.get<double>() - rhs.get<double>()) <= 0.000001;
+        }
+        return lhs == rhs;
+    };
 
     for (const auto& entry : layerPackageInspection_["entries"]) {
         if (!entry.is_object()) {
@@ -5320,11 +5344,54 @@ inline void ControlMappingHubState::appendLayerPackageInspectionRows() const {
             if (optionsSource.is_object()) {
                 const std::string sourceId = optionsSource.value("id", std::string());
                 if (!sourceId.empty()) {
-                    row.inspectionValue += "  |  Options source: " + sourceId + " (unresolved";
-                    if (preservesUnavailableValues) {
-                        row.inspectionValue += "; unavailable values preserved";
+                    const std::string valueField =
+                        optionsSource.value("value", std::string("value"));
+                    const std::string labelField =
+                        optionsSource.value("label", std::string("label"));
+                    const ofJson* providedOptions =
+                        optionProviderRegistry_ ? optionProviderRegistry_->find(sourceId) : nullptr;
+                    if (!providedOptions) {
+                        row.inspectionValue += "  |  Options source: " + sourceId + " (unresolved";
+                        if (preservesUnavailableValues) {
+                            row.inspectionValue += "; unavailable values preserved";
+                        }
+                        row.inspectionValue += ")";
+                    } else {
+                        std::string choices;
+                        std::size_t choiceCount = 0;
+                        bool defaultAvailable = !parameter.contains("default");
+                        for (const auto& option : *providedOptions) {
+                            if (!option.contains(valueField)) {
+                                continue;
+                            }
+                            if (!choices.empty()) {
+                                choices += ", ";
+                            }
+                            const auto& value = option[valueField];
+                            const std::string label =
+                                option.contains(labelField) && option[labelField].is_string()
+                                    ? option[labelField].get<std::string>()
+                                    : jsonValue(value);
+                            choices += label + "=" + jsonValue(value);
+                            ++choiceCount;
+                            if (parameter.contains("default") &&
+                                jsonValuesMatch(parameter["default"], value)) {
+                                defaultAvailable = true;
+                            }
+                        }
+                        row.inspectionValue += "  |  Options source: " + sourceId +
+                            " (resolved; " + ofToString(choiceCount) + " available)";
+                        if (!choices.empty()) {
+                            row.inspectionValue += ": " + choices;
+                        }
+                        if (!defaultAvailable) {
+                            row.inspectionValue += "  |  Unavailable default: " +
+                                jsonValue(parameter["default"]);
+                            if (preservesUnavailableValues) {
+                                row.inspectionValue += " (preserved)";
+                            }
+                        }
                     }
-                    row.inspectionValue += ")";
                 }
             }
             tableModel_.rows.push_back(std::move(row));
