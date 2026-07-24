@@ -396,11 +396,12 @@ transport BPM provider as read-only metadata without rewriting defaults.
 Unavailable defaults stay visible and preserved. Active packages now expose
 labeled preset banks; the selected stable IDs persist operator-locally and
 apply to the next layer load without rewriting the active scene or mappings.
-Remaining work is editable named option values, explicit mapping-preset
-apply/edit controls, factory registration evolution, and projection/control-
-window tutorial polish.
+Matching live parameters now render and edit those static/runtime choices
+through one labeled picker while preserving unavailable provider values.
+Remaining work is explicit mapping-preset apply/edit controls, factory
+registration evolution, and projection/control-window tutorial polish.
 
 Do not expand the example with more media by default. The safe next SDK slice
-is editable labeled option selection (for example `Half Time`, `Normal`, and
-`Double Time`) with the same preservation and ownership rules; folder discovery
-and no-source-edit installation remain future mechanisms.
+is an explicit mapping-preset preview/apply/edit flow with conflict handling and
+rollback; folder discovery and no-source-edit installation remain future
+mechanisms.

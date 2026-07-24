@@ -40,25 +40,24 @@ State Summary
 - Phase: EXECUTION
 - Status: In Progress
 - Steps Complete: 8 / 10 (2 additional steps in progress)
-- Progress: The Browser resolves labeled static and app-owned runtime choices for inspection and now provides an explicit package preset-bank picker. Preset choice is persisted in the ignored show-machine activation override and applies only to the next layer load, preserving the locked defaults -> preset -> explicit override -> scene precedence without mutating the active scene or mappings.
-- Last Step Outcome: 2026-07-24 - Added labeled package preset-bank selection, operator-local persistence, next-load application, and native coverage for stable IDs, precedence, failed-write rollback, inspection immutability, and mapping isolation.
-- Next Step: Promote named static/runtime options such as `Half Time`, `Normal`, and `Double Time` from read-only inspection into an explicit editable dropdown while preserving unavailable values and scene ownership.
+- Progress: The Browser now provides reusable labeled dropdowns on matching live package parameters for both static `options[]` and registered `optionsSource` choices, alongside the operator-local package preset-bank picker. Selections update the existing live/base parameter value, while unavailable provider values are preserved until the operator explicitly replaces them.
+- Last Step Outcome: 2026-07-24 - Added reusable live labeled parameter selection, including `Half Time` / `Normal` / `Double Time` for BPM and `Compact` / `Default` / `Full` for Scale, with provider-revision cancellation, unavailable-value preservation, telemetry, and scene/mapping/inspection isolation coverage.
+- Next Step: Add an explicit package mapping-preset preview/apply/edit flow with slot expansion, conflict handling, rollback, and no automatic mapping installation.
 - Dependencies / Overlap: `docs/project_ops/synaptome_layer_design_standards.md`, `docs/architecture/synaptome_layer_system_roadmap.md`, `docs/architecture/synaptome_artist_sdk.md`, `docs/contracts/contract_gaps.md`, `docs/contracts/parameter_manifest.json`, `docs/schemas/layer_asset.schema.json`, `tools/layer_catalog_regression.py`, `tools/gen_parameter_manifest.py`.
 - Primary Scope: contracts
 - Secondary Scopes: artist-sdk, docs, tests, runtime
-- Blocking Issues / Unknowns: Generated registration/module loading remains a later architecture decision; editable named option values and mapping-preset editing still need explicit Browser ownership; beat-reactive mappings depend on the separate transport/reactivity contract.
+- Blocking Issues / Unknowns: Generated registration/module loading remains a later architecture decision; mapping-preset editing still needs explicit Browser ownership; beat-reactive mappings depend on the separate transport/reactivity contract.
 - Impact / Priority Notes: Establishes deterministic package and generated-content contracts before more tracked media, Browser activation, or runtime discovery increases compatibility risk.
 - Priority Score: N/A
 - Priority Lane: Fast-Track
 - Ready State: Ready
-- Ready Gate: Met for read-only inspection, vetted opt-in source registration, and operator-local next-load preset selection; automatic discovery and mapping activation remain out of scope.
-- Project Ops / Roadmap Updates (timestamped): 2026-06-25 - Promoted layer package scaffolding from backlog. 2026-07-18 - Reconciled the request with the current Project Ops readiness contract and pre-media gate. 2026-07-18 - Completed the bounded package-owned static option slice and paused before runtime promotion. 2026-07-24 - Converged the reviewed runtime adapter, added package-owned dynamic option metadata and unavailable-value policy, completed the live-window smoke, rendered read-only option/provider state in the Browser, resolved the app-owned transport provider with missing-value preservation, and added operator-local next-load preset-bank selection.
-- Resume From: Execution; add editable labeled option selection before mapping-preset apply/edit controls.
+- Ready Gate: Met for read-only inspection, vetted opt-in source registration, operator-local next-load preset selection, and explicit labeled live parameter selection; automatic discovery and mapping activation remain out of scope.
+- Project Ops / Roadmap Updates (timestamped): 2026-06-25 - Promoted layer package scaffolding from backlog. 2026-07-18 - Reconciled the request with the current Project Ops readiness contract and pre-media gate. 2026-07-18 - Completed the bounded package-owned static option slice and paused before runtime promotion. 2026-07-24 - Converged the reviewed runtime adapter, added package-owned dynamic option metadata and unavailable-value policy, completed the live-window smoke, rendered read-only option/provider state in the Browser, resolved the app-owned transport provider with missing-value preservation, added operator-local next-load preset-bank selection, and promoted static/runtime choices into explicit live labeled dropdowns.
+- Resume From: Execution; define the preview/apply/rollback boundary for package mapping presets.
 Request Doc: docs/project_ops/in_progress/layer_package_compatibility_bench_scaffolding.md
 
-Task breakdown: 8 done and 2 in progress. Editable option values, mapping
-controls, automatic package-root scanning, and loader work remain outside the
-safe baseline.
+Task breakdown: 8 done and 2 in progress. Mapping controls, automatic
+package-root scanning, and loader work remain outside the safe baseline.
 
 ## Pre-Media Safety Gate
 
@@ -143,9 +142,9 @@ with Browser activation or runtime folder scanning.
    stored values; unavailable defaults are preserved and marked.
 2. Preset-bank selection now persists stable IDs locally and applies on the
    next layer load without rewriting active scene or mapping state.
-3. Add editable labeled option selection for values such as `Half Time`,
-   `Normal`, and `Double Time`.
-4. Add an explicit mapping-preset apply/edit flow; suggestions remain disabled
+3. Live package parameters now use a reusable labeled dropdown for static and
+   runtime-provider choices, preserving unavailable values until explicit edit.
+4. Add an explicit mapping-preset preview/apply/edit flow; suggestions remain disabled
    until the operator acts.
 
 ### Later: Installation Evolution

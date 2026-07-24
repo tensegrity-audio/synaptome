@@ -21,6 +21,10 @@ activation is a separate, explicit allowlist in
 - Preset-bank selection is stored in the ignored show-machine local override
   and applies only when that package layer is next instantiated. It does not
   rewrite a running layer, scene, or mapping.
+- Static and registered runtime option choices decorate matching live package
+  parameters. Choosing a label updates the existing registry base/live value;
+  missing provider values remain unchanged and visible as unavailable until
+  the operator explicitly selects a valid replacement.
 
 ## Value And Mapping Precedence
 
@@ -56,9 +60,10 @@ synaptome\tests\LayerPackageBench\x64\Release\LayerPackageBench.exe
 
 The runtime-adapter command deterministically derives identity, defaults,
 presets, preset-bank labels, and suggestion-only mapping metadata from the
-reviewed package. The 19-scenario BrowserFlow native suite additionally proves
+reviewed package. The 20-scenario BrowserFlow native suite additionally proves
 disabled activation is a no-op, explicit activation merges values in the
 documented order, preset selection uses stable IDs and rolls back on
-persistence failure, mapping suggestions are not auto-applied, and
-inspection/catalog/mapping state remains unchanged. The layer bench compares
-all 18 runtime IDs, kinds, and float ranges against the package.
+persistence failure, labeled static/runtime choices update the existing live
+parameter while preserving unavailable values, mapping suggestions are not
+auto-applied, and inspection/catalog/mapping state remains unchanged. The layer
+bench compares all 18 runtime IDs, kinds, and float ranges against the package.

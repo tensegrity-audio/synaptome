@@ -2586,6 +2586,175 @@ bool RunLayerPackageReadOnlyInspectionScenario() {
     return true;
 }
 
+bool RunLabeledParameterSelectionScenario() {
+    auto require = [](bool condition, const std::string& message) {
+        if (!condition) {
+            throw std::runtime_error(message);
+        }
+    };
+
+    const auto appRoot = synaptome_test_paths::appRoot();
+    LayerLibrary library;
+    require(library.reload((appRoot / "bin" / "data" / "layers").string()),
+            "canonical catalog did not load for labeled-parameter scenario");
+    const auto activationPath =
+        std::filesystem::temp_directory_path() /
+        "synaptome-labeled-parameter-selection-test.json";
+    const ofJson activation = {
+        {"schemaVersion", 1},
+        {"enabled", true},
+        {"packages", ofJson::array({{
+            {"id", "examples.signal_bloom"},
+            {"enabled", true},
+            {"catalogPath", (appRoot / "bin" / "data" / "layers-optional" /
+                             "examples.signal_bloom.json").string()},
+            {"presetBank", "performance"},
+            {"preset", "default"},
+            {"mappingPreset", ""}
+        }})}
+    };
+    {
+        std::ofstream out(activationPath, std::ios::trunc);
+        out << std::setw(2) << activation << "\n";
+    }
+    require(library.loadOptInPackages(activationPath.string()),
+            "active package catalog did not load for labeled-parameter scenario");
+    const auto* entry = library.find("examples.signal_bloom");
+    require(entry != nullptr,
+            "Signal Bloom was not active for labeled-parameter scenario");
+
+    ParameterRegistry registry;
+    ParameterRegistry::Descriptor bpmMeta;
+    bpmMeta.label = "Time: BPM Multiplier";
+    bpmMeta.group = "Console";
+    bpmMeta.range = {0.25f, 8.0f, 0.25f};
+    float bpmMultiplier = 1.0f;
+    registry.addFloat(
+        "console.layer1.bpmMultiplier",
+        &bpmMultiplier,
+        bpmMultiplier,
+        bpmMeta);
+    ParameterRegistry::Descriptor scaleMeta;
+    scaleMeta.label = "Scale: Size";
+    scaleMeta.group = "Console";
+    scaleMeta.range = {0.1f, 2.0f, 0.01f};
+    float scale = 0.82f;
+    registry.addFloat("console.layer1.scale", &scale, scale, scaleMeta);
+
+    OptionProviderRegistry optionProviders;
+    require(optionProviders.setProvider(
+                "transport.bpmMultipliers",
+                ofJson::array({
+                    {{"multiplier", 0.5}, {"label", "Half Time"}},
+                    {{"multiplier", 1.0}, {"label", "Normal"}},
+                    {{"multiplier", 2.0}, {"label", "Double Time"}}
+                })),
+            "transport choices were not registered");
+
+    MidiRouter midi;
+    ControlMappingHubState hub;
+    hub.setParameterRegistry(&registry);
+    hub.setOptionProviderRegistry(&optionProviders);
+    hub.setMidiRouter(&midi);
+    hub.setLayerLibrary(&library);
+    hub.setConsoleAssetResolver(
+        [entry](const std::string& prefix) -> const LayerLibrary::Entry* {
+            return prefix == "console.layer1" ? entry : nullptr;
+        });
+    hub.setConsoleSlotInventoryCallback([entry]() {
+        ConsoleLayerInfo info;
+        info.index = 1;
+        info.assetId = entry->id;
+        info.label = entry->label;
+        info.active = true;
+        return std::vector<ConsoleLayerInfo>{info};
+    });
+    const auto payloadPath =
+        (synaptome_test_paths::dataRoot() / "config" /
+         "layer-package-inspection.json").string();
+    hub.setLayerPackageInspectionPath(payloadPath);
+    const std::string payloadBefore = hub.layerPackageInspection_.dump();
+    int selectionEvents = 0;
+    hub.setEventCallback([&](const std::string& payload) {
+        const auto event = ofJson::parse(payload, nullptr, false);
+        if (event.is_object() &&
+            event.value("type", std::string()) == "value.option.select") {
+            ++selectionEvents;
+        }
+    });
+    hub.rebuildModel();
+
+    const std::string bpmRowId = "console.layer1.bpmMultiplier";
+    const std::string scaleRowId = "console.layer1.scale";
+    const auto* bpmRow = hub.rowForId(bpmRowId);
+    const auto* scaleRow = hub.rowForId(scaleRowId);
+    require(bpmRow && bpmRow->hasLabeledValueOptions &&
+                bpmRow->labeledValueOptions.size() == 3,
+            "runtime-provider choices did not decorate the live BPM row");
+    require(scaleRow && scaleRow->hasLabeledValueOptions &&
+                scaleRow->labeledValueOptions.size() == 3,
+            "static package choices did not decorate the live scale row");
+    require(hub.formatValue(*bpmRow) == "Normal",
+            "live BPM value did not render its label");
+    require(hub.formatValue(*scaleRow) == "Default",
+            "live static value did not render its label");
+
+    require(hub.debugSelectLabeledValue(bpmRowId, 2.0),
+            "Double Time selection failed");
+    require(std::abs(bpmMultiplier - 2.0f) < 0.0001f &&
+                std::abs(registry.getFloatBase(bpmRowId) - 2.0f) < 0.0001f,
+            "labeled BPM selection did not update live and base values");
+    hub.rebuildModel();
+    bpmRow = hub.rowForId(bpmRowId);
+    require(bpmRow && hub.formatValue(*bpmRow) == "Double Time",
+            "committed BPM choice did not replay as a label");
+
+    require(hub.debugSelectLabeledValue(scaleRowId, 0.5),
+            "Compact static choice selection failed");
+    require(std::abs(scale - 0.5f) < 0.0001f &&
+                std::abs(registry.getFloatBase(scaleRowId) - 0.5f) < 0.0001f,
+            "static labeled choice did not update the live parameter");
+
+    hub.rebuildModel();
+    bpmRow = hub.rowForId(bpmRowId);
+    require(bpmRow && hub.beginLabeledValuePicker(*bpmRow) &&
+                hub.labeledValuePickerVisible(),
+            "labeled picker did not open before provider refresh");
+    require(optionProviders.setProvider(
+                "transport.bpmMultipliers",
+                ofJson::array({
+                    {{"multiplier", 0.5}, {"label", "Half Time"}},
+                    {{"multiplier", 1.0}, {"label", "Normal"}}
+                })),
+            "transport provider could not remove the current choice");
+    hub.rebuildModel();
+    require(!hub.labeledValuePickerVisible(),
+            "provider revision left a stale labeled picker open");
+    bpmRow = hub.rowForId(bpmRowId);
+    require(bpmRow && hub.formatValue(*bpmRow) == "2.000 (unavailable)" &&
+                std::abs(bpmMultiplier - 2.0f) < 0.0001f,
+            "provider refresh rewrote or hid the unavailable live value");
+    require(!hub.debugSelectLabeledValue(bpmRowId, 4.0) &&
+                std::abs(bpmMultiplier - 2.0f) < 0.0001f,
+            "unknown labeled choice changed the current value");
+    require(hub.debugSelectLabeledValue(bpmRowId, 0.5),
+            "explicit replacement of unavailable value failed");
+    require(std::abs(bpmMultiplier - 0.5f) < 0.0001f,
+            "explicit replacement did not update the live value");
+
+    require(selectionEvents == 3,
+            "labeled choices did not emit exactly one event per successful selection");
+    require(hub.layerPackageInspection_.dump() == payloadBefore,
+            "labeled selection mutated the inspection payload");
+    require(midi.getCcMaps().empty() && midi.getBtnMaps().empty() &&
+                midi.getOscMaps().empty(),
+            "labeled selection changed MIDI or OSC mappings");
+
+    std::error_code cleanupError;
+    std::filesystem::remove(activationPath, cleanupError);
+    return true;
+}
+
 bool RunLayerPackagePresetBankSelectionScenario() {
     auto require = [](bool condition, const std::string& message) {
         if (!condition) {

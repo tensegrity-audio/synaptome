@@ -2,6 +2,23 @@
 
 This changelog records Project Ops and administrative workflow changes. Product release versioning remains governed by `docs/release_policy.md`.
 
+## 2026-07-24 - artist-sdk - labeled_parameter_selection
+
+- Request ID: `layer_package_compatibility_bench_scaffolding`
+- Phase / Milestone: Browser live parameter ownership
+- Summary: Added one reusable labeled picker for live package parameters
+  declared through static `options[]` or registered `optionsSource` metadata.
+  Selection updates the existing registry value; provider revisions close stale
+  pickers and unavailable current values remain unchanged until explicit
+  replacement.
+- Request Doc: `docs/project_ops/in_progress/layer_package_compatibility_bench_scaffolding.md`
+- Roadmap Entry: `docs/project_ops/roadmap.md`
+- Validation: All 13 public-app contracts, package/inspection gates, all 20
+  BrowserFlow scenarios, Release x64 build, and 2.21-second identical
+  incremental build.
+- Follow-Up Actions: Add explicit package mapping-preset preview/apply/edit
+  controls with conflict handling and rollback.
+
 ## 2026-07-24 - artist-sdk - package_preset_bank_selection
 
 - Request ID: `layer_package_compatibility_bench_scaffolding`

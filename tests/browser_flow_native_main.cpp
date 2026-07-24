@@ -65,6 +65,7 @@ int main() {
         { "hud_routing_manifest", browser_flow::RunHudRoutingManifestScenario },
         { "dual_screen_phase2", browser_flow::RunDualScreenPhase2Scenario },
         { "layer_package_read_only_inspection", browser_flow::RunLayerPackageReadOnlyInspectionScenario },
+        { "labeled_parameter_selection", browser_flow::RunLabeledParameterSelectionScenario },
         { "layer_package_preset_bank_selection", browser_flow::RunLayerPackagePresetBankSelectionScenario },
         { "opt_in_layer_package_activation", browser_flow::RunOptInLayerPackageActivationScenario },
     };

@@ -250,7 +250,7 @@ indexes them, but this document owns their meaning and next actions.
 | CG-11 | Artist SDK compatibility slice | The first public path is honest source registration with a validated source/catalog/scene fixture. | Keep source-registration language honest while package tooling evolves toward generated registration or a loader. |
 | CG-12 | Layer package layout and schema | Draft schemas, a Signal Bloom fixture, shared package discovery roots, and static validation now exist. | Extend the explicit package roots toward template-backed content folders and runtime Browser loading. |
 | CG-13 | Manifest generation from package parameters | Package-derived parameter manifest snapshots expand package suffixes through `registryPrefix`; `gen_parameter_manifest.py --include-packages` now writes/checks a draft combined manifest without changing the canonical manifest. | Decide when package-derived entries become part of the canonical `parameter_manifest.json` rather than a draft combined gate. |
-| CG-14 | Dropdown option metadata and dynamic providers | A revisioned runtime provider registry resolves app-owned `transport.bpmMultipliers` choices in read-only Browser inspection. Missing defaults are marked and preserved, and native coverage proves package metadata is not mutated. | Add an explicit editable selection surface only after preset ownership and persistence behavior are locked. |
+| CG-14 | Dropdown option metadata and dynamic providers | Matching live package parameters use one labeled picker for static `options[]` and registered `optionsSource` choices. Selection updates the existing registry value, provider revisions close stale pickers, and unavailable current values remain preserved until explicit replacement. | Reuse the same metadata/picker path on the next packaged layer and keep raw numeric/string editing available only where no choices are declared. |
 | CG-15 | Layer preset package contract | Package-owned suffix-based presets and ordered banks are schema-validated. The Browser persists a stable bank/preset selection in the operator-local override and applies it on the next layer load with tested precedence and rollback. | Keep current scene values authoritative; consider live preset application only after value provenance and transactional rollback exist. |
 | CG-16 | Single-layer package validator and runtime bench | Signal Bloom now passes a focused static check and native lifecycle/offscreen bench; full package-vs-runtime descriptor comparison and pixel/non-blank output checks remain. | Compare every runtime descriptor against package declarations, then add optional rendered-output assertions. |
 | CG-17 | Folder-driven discovery and file-backed generated layers | Current catalog behavior relies on explicit layer JSON entries; STL-style dropped files do not yet have a standard generated asset/template path. | Define discovery roots, folder-to-Browser rules, stable generated IDs, sidecar overrides, and template schemas for file-backed generated layers. |
@@ -414,8 +414,11 @@ Deliverables:
 - Static and dynamic option metadata fixtures. Done for one generated STL
   template.
 - Package-discovered catalog sections.
-- Named dropdown rendering for `options[]`.
-- Dynamic option rendering for `optionsSource`.
+- Named dropdown rendering for `options[]`. Done on matching live package
+  parameters.
+- Dynamic option rendering for registered `optionsSource` providers. Done on
+  matching live package parameters with unavailable-value preservation and
+  stale-picker cancellation.
 - Preset-bank controls. Done for active packages as operator-local, next-load
   selection with stable IDs and rollback on persistence failure.
 - Mapping-preset activation controls.
@@ -423,11 +426,12 @@ Deliverables:
   side-effectful setup.
 
 Current status: the Browser consumes the runtime inspection payload as a
-separate read-only category, resolves registered option providers, and exposes
-an active-package preset picker through host callbacks. Native coverage proves
-inspection rows carry no live parameter pointers, selection uses stable IDs,
-and preset persistence does not mutate inspection, catalog, scene, or mapping
-state.
+separate read-only category, resolves registered option providers, decorates
+matching live parameter rows with labeled choices, and exposes an
+active-package preset picker through host callbacks. Native coverage proves
+inspection rows carry no live parameter pointers, labeled selection updates the
+existing registry value, unavailable values are preserved, and preset
+persistence does not mutate inspection, catalog, scene, or mapping state.
 
 Success means the Browser becomes an authoring and performance surface for the
 package contract, not a loose reflection of runtime state.
@@ -502,14 +506,13 @@ without pretending Synaptome has hot-loaded plugins before it does.
 ## Immediate Next Step
 
 The safe vertical slice now includes a generated optional runtime adapter,
-revisioned app-owned dynamic option resolution, unavailable-value
-preservation, and labeled operator-local preset selection for the next layer
-load. Release, incremental, native-flow, contract, and offscreen bench gates
-pass.
+revisioned app-owned dynamic option resolution, explicit labeled live parameter
+selection with unavailable-value preservation, and labeled operator-local
+preset selection for the next layer load. Release, incremental, native-flow,
+contract, and offscreen bench gates pass.
 
-1. Promote named static/runtime choices such as `Half Time`, `Normal`, and
-   `Double Time` from read-only inspection into an explicit editable dropdown.
-2. Add mapping-preset apply/edit controls;
+1. Add mapping-preset preview/apply/edit controls with slot expansion, conflict
+   handling, and rollback;
    never auto-apply package mappings.
-3. Keep scanning and generated/plugin registration disabled until duplicate,
+2. Keep scanning and generated/plugin registration disabled until duplicate,
    dependency, rollback, and ABI policy are tested.

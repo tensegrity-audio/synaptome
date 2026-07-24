@@ -183,7 +183,9 @@ public:
     bool debugSetGridSelection(int rowIndex, int columnIndex);
     bool debugSlotPickerVisible() const;
     bool debugSelectPackagePreset(const std::string& rowId, const std::string& presetId);
+    bool debugSelectLabeledValue(const std::string& rowId, const ofJson& value);
     bool packagePresetPickerVisible() const { return packagePresetPickerVisible_; }
+    bool labeledValuePickerVisible() const { return labeledValuePickerVisible_; }
     void debugFlushPreferences() const { flushPreferences(); }
 
     const std::string& id() const override { return stateId_; }
@@ -227,6 +229,11 @@ private:
         std::string label;
     };
 
+    struct LabeledValueOption {
+        ofJson value;
+        std::string label;
+    };
+
     struct ParameterRow {
         std::string id;
         std::string label;
@@ -252,9 +259,11 @@ private:
         bool isOscInputRow = false;
         bool isInspectionRow = false;
         bool isPackagePresetBankRow = false;
+        bool hasLabeledValueOptions = false;
         std::string inspectionValue;
         std::string packagePresetBankId;
         std::vector<PackagePresetOption> packagePresetOptions;
+        std::vector<LabeledValueOption> labeledValueOptions;
         std::string savedSceneId;
         std::string savedScenePath;
         std::string oscInputField;
@@ -517,6 +526,9 @@ private:
     mutable bool packagePresetPickerVisible_ = false;
     mutable std::string packagePresetPickerRowId_;
     mutable int packagePresetPickerSelection_ = -1;
+    mutable bool labeledValuePickerVisible_ = false;
+    mutable std::string labeledValuePickerRowId_;
+    mutable int labeledValuePickerSelection_ = -1;
     mutable bool hudLayoutDirty_ = false;
     mutable std::unordered_map<std::string, std::string> hudWidgetTargets_;
     mutable int hudLayoutFenceDepth_ = 0;
@@ -690,6 +702,11 @@ private:
                                       float panelWidth,
                                       float panelHeight,
                                       const ParameterRow* row) const;
+    void drawLabeledValuePickerPanel(float panelX,
+                                     float panelY,
+                                     float panelWidth,
+                                     float panelHeight,
+                                     const ParameterRow* row) const;
     std::string formatSlotSummary(const ParameterRow& row) const;
     std::string currentSlotControlId(const ParameterRow& row) const;
     const MidiRouter::BtnMap* firstBtnMapForRow(const ParameterRow& row) const;
@@ -707,6 +724,10 @@ private:
     bool beginPackagePresetPicker(const ParameterRow& row) const;
     bool applyPackagePresetSelection();
     void cancelPackagePresetPicker() const;
+    bool beginLabeledValuePicker(const ParameterRow& row) const;
+    bool applyLabeledValueSelection();
+    void cancelLabeledValuePicker() const;
+    int labeledValueOptionIndex(const ParameterRow& row) const;
     bool applyHudColumnSelection();
     void cancelHudColumnPicker() const;
     void updateHudVisibilityPreference(const std::string& id, bool visible) const;
@@ -877,6 +898,7 @@ inline void ControlMappingHubState::setParameterRegistry(ParameterRegistry* regi
     cancelHudColumnPicker();
     cancelSlotPicker();
     cancelPackagePresetPicker();
+    cancelLabeledValuePicker();
     pendingValueBuffers_.clear();
     lastValueSnapshot_.clear();
         lastStringSnapshot_.clear();
@@ -907,6 +929,7 @@ inline void ControlMappingHubState::setLayerLibrary(LayerLibrary* library) {
 
 inline void ControlMappingHubState::setLayerPackageInspectionPath(const std::string& path) {
     cancelPackagePresetPicker();
+    cancelLabeledValuePicker();
     layerPackageInspectionPath_ = path;
     layerPackageInspection_ = ofJson::object();
     if (!path.empty() && ofFile::doesFileExist(path)) {
@@ -1674,7 +1697,13 @@ inline void ControlMappingHubState::draw() const {
         }
     }
 
-    if (packagePresetPickerVisible_) {
+    if (labeledValuePickerVisible_) {
+        float panelWidth = std::min(420.0f, layout.gridWidth * 0.65f);
+        float panelHeight = 220.0f;
+        float panelX = layout.gridX + layout.gridWidth - panelWidth - skin_.metrics.padding;
+        float panelY = layout.gridY + layout.treeHeaderHeight + skin_.metrics.padding;
+        drawLabeledValuePickerPanel(panelX, panelY, panelWidth, panelHeight, selectedRow);
+    } else if (packagePresetPickerVisible_) {
         float panelWidth = std::min(420.0f, layout.gridWidth * 0.65f);
         float panelHeight = 220.0f;
         float panelX = layout.gridX + layout.gridWidth - panelWidth - skin_.metrics.padding;
@@ -1764,6 +1793,46 @@ inline bool ControlMappingHubState::handleInput(MenuController& controller, int 
             }
         }
         return true;
+    }
+
+    if (labeledValuePickerVisible_) {
+        const auto* pickerRow = rowForId(labeledValuePickerRowId_);
+        const int optionCount =
+            pickerRow ? static_cast<int>(pickerRow->labeledValueOptions.size()) : 0;
+        if (!pickerRow || optionCount <= 0) {
+            cancelLabeledValuePicker();
+            controller.requestViewModelRefresh();
+            return true;
+        }
+        auto adjustSelection = [&](int delta) {
+            if (labeledValuePickerSelection_ < 0) {
+                labeledValuePickerSelection_ = delta < 0 ? optionCount - 1 : 0;
+            } else {
+                labeledValuePickerSelection_ =
+                    (labeledValuePickerSelection_ + delta + optionCount) % optionCount;
+            }
+        };
+        switch (baseKey) {
+        case OF_KEY_ESC:
+            cancelLabeledValuePicker();
+            controller.requestViewModelRefresh();
+            return true;
+        case OF_KEY_UP:
+            adjustSelection(-1);
+            controller.requestViewModelRefresh();
+            return true;
+        case OF_KEY_DOWN:
+            adjustSelection(1);
+            controller.requestViewModelRefresh();
+            return true;
+        case OF_KEY_RETURN:
+        case ' ':
+            applyLabeledValueSelection();
+            controller.requestViewModelRefresh();
+            return true;
+        default:
+            return true;
+        }
     }
 
     if (packagePresetPickerVisible_) {
@@ -2393,6 +2462,11 @@ inline bool ControlMappingHubState::handleInput(MenuController& controller, int 
                 return true;
             }
             if (selectedColumn_ == Column::kValue) {
+                if (selectedRow->hasLabeledValueOptions) {
+                    beginLabeledValuePicker(*selectedRow);
+                    controller.requestViewModelRefresh();
+                    return true;
+                }
                 if (selectedRow->isPackagePresetBankRow) {
                     beginPackagePresetPicker(*selectedRow);
                     controller.requestViewModelRefresh();
@@ -2607,6 +2681,7 @@ inline void ControlMappingHubState::onExit(MenuController& controller) {
     cancelHudColumnPicker();
     cancelSlotPicker();
     cancelPackagePresetPicker();
+    cancelLabeledValuePicker();
     pickingOsc_ = false;
 }
 
@@ -2738,6 +2813,7 @@ inline void ControlMappingHubState::rebuildModel() const {
     const std::size_t providerRevision =
         optionProviderRegistry_ ? optionProviderRegistry_->revision() : 0;
     if (providerRevision != lastOptionProviderRevision_) {
+        cancelLabeledValuePicker();
         tableModel_.dirty = true;
     }
     if (!tableModel_.dirty) {
@@ -3220,6 +3296,33 @@ inline std::string ControlMappingHubState::formatValue(const ParameterRow& row) 
     std::string value;
     if (row.isOscInputRow) {
         return formatOscInputValue(row);
+    }
+    if (row.hasLabeledValueOptions) {
+        const int optionIndex = labeledValueOptionIndex(row);
+        if (optionIndex >= 0 &&
+            optionIndex < static_cast<int>(row.labeledValueOptions.size())) {
+            return row.labeledValueOptions[static_cast<std::size_t>(optionIndex)].label;
+        }
+        if (row.isFloat) {
+            float current = 0.0f;
+            if (readRowFloatValue(row, current)) {
+                return ofToString(current, 3) + " (unavailable)";
+            }
+        } else if (row.isString) {
+            if (registry_) {
+                if (const auto* param = registry_->findString(row.id)) {
+                    return param->baseValue + " (unavailable)";
+                }
+            }
+            if (row.stringParam) {
+                return row.stringParam->baseValue + " (unavailable)";
+            }
+        } else {
+            bool current = false;
+            if (readRowBoolValue(row, current)) {
+                return std::string(current ? "On" : "Off") + " (unavailable)";
+            }
+        }
     }
     if (row.isInspectionRow) {
         return row.inspectionValue;
@@ -4160,6 +4263,56 @@ inline void ControlMappingHubState::drawPackagePresetPickerPanel(
     ofPopStyle();
 }
 
+inline void ControlMappingHubState::drawLabeledValuePickerPanel(
+    float panelX,
+    float panelY,
+    float panelWidth,
+    float panelHeight,
+    const ParameterRow* row) const {
+    float textScale = std::max(0.01f, skin_.metrics.typographyScale);
+    auto drawTextStyled = [textScale](const std::string& text,
+                                      float x,
+                                      float y,
+                                      const ofColor& color,
+                                      bool bold) {
+        ofSetColor(color);
+        drawBitmapStringScaled(text, x, y, textScale, bold);
+    };
+    ofPushStyle();
+    ofSetColor(skin_.palette.surface);
+    ofDrawRectRounded(panelX, panelY, panelWidth, panelHeight, skin_.metrics.borderRadius);
+    const std::string title =
+        row ? ("Choose: " + row->label) : std::string("Choose value");
+    drawTextStyled(title, panelX + 12.0f, panelY + 20.0f, skin_.palette.headerText, true);
+    float rowY = panelY + 48.0f * textScale;
+    const float lineHeight = 20.0f * textScale;
+    if (row && labeledValuePickerSelection_ < 0) {
+        drawTextStyled("Current value is unavailable; choose to replace it",
+                       panelX + 12.0f,
+                       rowY,
+                       skin_.palette.mutedText,
+                       false);
+        rowY += lineHeight;
+    }
+    if (row) {
+        for (std::size_t i = 0; i < row->labeledValueOptions.size(); ++i) {
+            const bool selected = static_cast<int>(i) == labeledValuePickerSelection_;
+            drawTextStyled(row->labeledValueOptions[i].label,
+                           panelX + 12.0f,
+                           rowY,
+                           selected ? skin_.palette.gridSelection : skin_.palette.bodyText,
+                           selected);
+            rowY += lineHeight;
+        }
+    }
+    drawTextStyled("Enter: apply value    Esc: preserve current value",
+                   panelX + 12.0f,
+                   panelY + panelHeight - 12.0f,
+                   skin_.palette.mutedText,
+                   false);
+    ofPopStyle();
+}
+
 inline std::string ControlMappingHubState::formatSlotSummary(const ParameterRow& row) const {
     if (row.isOscInputRow) {
         return "-";
@@ -4242,6 +4395,7 @@ inline bool ControlMappingHubState::beginSlotPicker(const ParameterRow& row) {
     slotPickerSelection_ = 0;
     slotPickerScrollOffset_ = 0;
     cancelPackagePresetPicker();
+    cancelLabeledValuePicker();
     auto assignSelection = [&](int slotIndex) {
         if (slotIndex < 0) {
             return false;
@@ -4407,6 +4561,7 @@ inline bool ControlMappingHubState::beginPackagePresetPicker(
     }
     cancelHudColumnPicker();
     cancelSlotPicker();
+    cancelLabeledValuePicker();
     packagePresetPickerVisible_ = true;
     packagePresetPickerRowId_ = row.id;
     packagePresetPickerSelection_ = 0;
@@ -4462,6 +4617,110 @@ inline void ControlMappingHubState::cancelPackagePresetPicker() const {
     packagePresetPickerSelection_ = -1;
 }
 
+inline int ControlMappingHubState::labeledValueOptionIndex(
+    const ParameterRow& row) const {
+    ofJson current;
+    if (row.isFloat) {
+        float value = 0.0f;
+        if (!readRowFloatValue(row, value)) {
+            return -1;
+        }
+        current = value;
+    } else if (row.isString) {
+        if (registry_) {
+            if (const auto* param = registry_->findString(row.id)) {
+                current = param->baseValue;
+            }
+        }
+        if (current.is_null() && row.stringParam) {
+            current = row.stringParam->baseValue;
+        }
+        if (current.is_null()) {
+            return -1;
+        }
+    } else {
+        bool value = false;
+        if (!readRowBoolValue(row, value)) {
+            return -1;
+        }
+        current = value;
+    }
+    for (std::size_t i = 0; i < row.labeledValueOptions.size(); ++i) {
+        const auto& optionValue = row.labeledValueOptions[i].value;
+        const bool matches =
+            current.is_number() && optionValue.is_number()
+                ? std::abs(current.get<double>() - optionValue.get<double>()) <= 0.000001
+                : current == optionValue;
+        if (matches) {
+            return static_cast<int>(i);
+        }
+    }
+    return -1;
+}
+
+inline bool ControlMappingHubState::beginLabeledValuePicker(
+    const ParameterRow& row) const {
+    if (!row.hasLabeledValueOptions || row.labeledValueOptions.empty() ||
+        row.offline || !rowHasLiveParameter(row)) {
+        setBannerMessage("No labeled choices available for this value", 2400);
+        return false;
+    }
+    cancelValueEdit();
+    cancelHudColumnPicker();
+    cancelSlotPicker();
+    cancelPackagePresetPicker();
+    labeledValuePickerVisible_ = true;
+    labeledValuePickerRowId_ = row.id;
+    labeledValuePickerSelection_ = labeledValueOptionIndex(row);
+    pickingOsc_ = false;
+    routingPopoverVisible_ = false;
+    return true;
+}
+
+inline bool ControlMappingHubState::applyLabeledValueSelection() {
+    if (!labeledValuePickerVisible_) {
+        return false;
+    }
+    const auto* row = rowForId(labeledValuePickerRowId_);
+    if (!row || labeledValuePickerSelection_ < 0 ||
+        labeledValuePickerSelection_ >=
+            static_cast<int>(row->labeledValueOptions.size())) {
+        setBannerMessage("Choose a labeled value or press Esc to preserve the current value", 2800);
+        return false;
+    }
+    const auto option =
+        row->labeledValueOptions[static_cast<std::size_t>(labeledValuePickerSelection_)];
+    const bool unchanged =
+        labeledValueOptionIndex(*row) == labeledValuePickerSelection_;
+    bool applied = unchanged;
+    if (!unchanged && row->isFloat && option.value.is_number()) {
+        applied = setRowFloatValue(*row, option.value.get<float>());
+    } else if (!unchanged && row->isString && option.value.is_string()) {
+        applied = setRowStringValue(*row, option.value.get<std::string>());
+    } else if (!unchanged && row->boolParam && option.value.is_boolean()) {
+        applied = setRowBoolValue(*row, option.value.get<bool>());
+    }
+    if (!applied) {
+        setBannerMessage("Labeled value was not applied", 2400);
+        return false;
+    }
+    emitTelemetryEvent(
+        "value.option.select",
+        row,
+        "label=" + option.label + " value=" + option.value.dump());
+    setBannerMessage(option.label + " applied", 2200);
+    cancelLabeledValuePicker();
+    tableModel_.dirty = true;
+    invalidateRowCache();
+    return true;
+}
+
+inline void ControlMappingHubState::cancelLabeledValuePicker() const {
+    labeledValuePickerVisible_ = false;
+    labeledValuePickerRowId_.clear();
+    labeledValuePickerSelection_ = -1;
+}
+
 inline bool ControlMappingHubState::beginHudColumnPicker(const ParameterRow& row) const {
     if (!isHudWidgetRow(row)) {
         return false;
@@ -4469,6 +4728,7 @@ inline bool ControlMappingHubState::beginHudColumnPicker(const ParameterRow& row
     cancelHudColumnPicker();
     cancelSlotPicker();
     cancelPackagePresetPicker();
+    cancelLabeledValuePicker();
     hudColumnPickerVisible_ = true;
     hudColumnPickerRowId_ = row.id;
     hudColumnPickerSelection_ = 0;
@@ -5471,6 +5731,8 @@ inline void ControlMappingHubState::appendLayerPackageInspectionRows() const {
         const std::string assetLabel = entry.value("label", assetId);
         const std::string category = entry.value("category", std::string("Unsorted"));
         const std::string layerGroup = entry.value("layerGroup", std::string());
+        const std::string registryPrefix =
+            entry.value("registryPrefix", assetId);
         const auto controls = entry.value("controls", ofJson::object());
         const auto parameters = controls.value("parameters", ofJson::array());
         const auto presets = entry.value("presets", ofJson::array());
@@ -5582,6 +5844,84 @@ inline void ControlMappingHubState::appendLayerPackageInspectionRows() const {
             if (parameterId.empty()) {
                 continue;
             }
+            const std::string kind = parameter.value("kind", std::string());
+            std::vector<LabeledValueOption> resolvedLabeledOptions;
+            auto appendLabeledOption = [&](const ofJson& value,
+                                           const std::string& label) {
+                const bool compatible =
+                    (kind == "float" && value.is_number()) ||
+                    (kind == "string" && value.is_string()) ||
+                    (kind == "bool" && value.is_boolean());
+                if (!compatible) {
+                    return;
+                }
+                resolvedLabeledOptions.push_back({
+                    value,
+                    label.empty() ? jsonValue(value) : label
+                });
+            };
+            const auto options = parameter.value("options", ofJson::array());
+            if (options.is_array()) {
+                for (const auto& option : options) {
+                    if (!option.is_object() || !option.contains("value")) {
+                        continue;
+                    }
+                    appendLabeledOption(
+                        option["value"],
+                        option.value("label", jsonValue(option["value"])));
+                }
+            }
+            const auto optionsSource =
+                parameter.value("optionsSource", ofJson::object());
+            if (optionsSource.is_object()) {
+                const std::string sourceId =
+                    optionsSource.value("id", std::string());
+                const std::string valueField =
+                    optionsSource.value("value", std::string("value"));
+                const std::string labelField =
+                    optionsSource.value("label", std::string("label"));
+                const ofJson* providedOptions =
+                    !sourceId.empty() && optionProviderRegistry_
+                        ? optionProviderRegistry_->find(sourceId)
+                        : nullptr;
+                if (providedOptions) {
+                    for (const auto& option : *providedOptions) {
+                        if (!option.is_object() || !option.contains(valueField)) {
+                            continue;
+                        }
+                        const auto& value = option[valueField];
+                        appendLabeledOption(
+                            value,
+                            option.contains(labelField) && option[labelField].is_string()
+                                ? option[labelField].get<std::string>()
+                                : jsonValue(value));
+                    }
+                }
+            }
+            if (!resolvedLabeledOptions.empty()) {
+                const std::string suffix = "." + parameterId;
+                for (auto& candidate : tableModel_.rows) {
+                    if (candidate.isInspectionRow ||
+                        candidate.offline ||
+                        candidate.assetKey != registryPrefix ||
+                        candidate.id.size() <= suffix.size() ||
+                        candidate.id.compare(
+                            candidate.id.size() - suffix.size(),
+                            suffix.size(),
+                            suffix) != 0) {
+                        continue;
+                    }
+                    const bool rowKindMatches =
+                        (kind == "float" && candidate.isFloat && candidate.floatParam) ||
+                        (kind == "string" && candidate.isString && candidate.stringParam) ||
+                        (kind == "bool" && candidate.boolParam);
+                    if (!rowKindMatches) {
+                        continue;
+                    }
+                    candidate.hasLabeledValueOptions = true;
+                    candidate.labeledValueOptions = resolvedLabeledOptions;
+                }
+            }
             ParameterRow row;
             row.id = "inspection." + assetId + "." + parameterId;
             row.label = parameter.value("label", parameterId);
@@ -5595,11 +5935,9 @@ inline void ControlMappingHubState::appendLayerPackageInspectionRows() const {
             row.inspectionValue = parameter.contains("default")
                 ? "Default: " + jsonValue(parameter["default"])
                 : std::string("No default");
-            const std::string kind = parameter.value("kind", std::string());
             if (!kind.empty()) {
                 row.inspectionValue += "  |  " + kind;
             }
-            const auto options = parameter.value("options", ofJson::array());
             if (options.is_array() && !options.empty()) {
                 std::string choices = "  |  Choices: ";
                 bool appendedChoice = false;
@@ -5620,7 +5958,6 @@ inline void ControlMappingHubState::appendLayerPackageInspectionRows() const {
                     row.inspectionValue += choices;
                 }
             }
-            const auto optionsSource = parameter.value("optionsSource", ofJson::object());
             if (optionsSource.is_object()) {
                 const std::string sourceId = optionsSource.value("id", std::string());
                 if (!sourceId.empty()) {
@@ -7507,6 +7844,29 @@ inline bool ControlMappingHubState::debugSelectPackagePreset(
         }
     }
     cancelPackagePresetPicker();
+    return false;
+}
+
+inline bool ControlMappingHubState::debugSelectLabeledValue(
+    const std::string& rowId,
+    const ofJson& value) {
+    rebuildView();
+    const auto* row = rowForId(rowId);
+    if (!row || !beginLabeledValuePicker(*row)) {
+        return false;
+    }
+    for (std::size_t i = 0; i < row->labeledValueOptions.size(); ++i) {
+        const auto& optionValue = row->labeledValueOptions[i].value;
+        const bool matches =
+            value.is_number() && optionValue.is_number()
+                ? std::abs(value.get<double>() - optionValue.get<double>()) <= 0.000001
+                : value == optionValue;
+        if (matches) {
+            labeledValuePickerSelection_ = static_cast<int>(i);
+            return applyLabeledValueSelection();
+        }
+    }
+    cancelLabeledValuePicker();
     return false;
 }
 
