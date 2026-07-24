@@ -1787,7 +1787,17 @@ void ofApp::setup() {
 
     std::string layersRoot = ofToDataPath("layers", true);
     layerLibrary.reload(layersRoot);
-    layerLibrary.loadOptInPackages(ofToDataPath("config/layer-packages.json", true));
+    std::string packageActivationPath =
+        ofToDataPath("config/layer-packages.json", true);
+    const std::string localPackageActivationPath =
+        ofToDataPath("config/layer-packages.local.json", true);
+    if (ofFile::doesFileExist(localPackageActivationPath)) {
+        packageActivationPath = localPackageActivationPath;
+        ofLogNotice("LayerLibrary")
+            << "using operator-local package activation "
+            << localPackageActivationPath;
+    }
+    layerLibrary.loadOptInPackages(packageActivationPath);
 
     midiMapPath = ofToDataPath("config/midi-map.json", true);
     midi.load(midiMapPath);

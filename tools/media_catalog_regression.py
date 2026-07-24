@@ -25,6 +25,7 @@ RUNTIME_LAYERS_ROOT = BASE_PATH / "synaptome/bin/data/layers"
 SCHEMA_PATH = BASE_PATH / "docs/schemas/media_catalog.schema.json"
 PUBLIC_EXAMPLE = BASE_PATH / "docs/examples/media_catalog_example.json"
 INVALID_CASES = BASE_PATH / "tools/testdata/media_catalog/invalid_catalog_cases.json"
+RUNTIME_CATALOG_SOURCE = BASE_PATH / "synaptome/src/media/VideoCatalog.cpp"
 CLIP_ID_RE = re.compile(r"^[a-z0-9][a-z0-9_-]*$")
 
 
@@ -294,6 +295,19 @@ def runtime_layer_default_errors(catalog_path: Path) -> list[str]:
     return errors
 
 
+def runtime_path_resolution_errors() -> list[str]:
+    source = RUNTIME_CATALOG_SOURCE.read_text(encoding="utf-8")
+    required_fragments = (
+        "std::filesystem::path(jsonPath).parent_path()",
+        "(catalogDirectory / rawPath).lexically_normal().string()",
+    )
+    return [
+        "VideoCatalog runtime must resolve manifest paths relative to videos.json"
+        for fragment in required_fragments
+        if fragment not in source
+    ]
+
+
 def validate_negative_fixtures(schema: dict[str, Any]) -> list[str]:
     fixture = load_json(INVALID_CASES)
     errors: list[str] = []
@@ -329,7 +343,8 @@ def main() -> int:
         (
             "canonical catalog",
             validate_document(catalog_path, schema, require_files=True, committed_catalog=True)
-            + runtime_layer_default_errors(catalog_path),
+            + runtime_layer_default_errors(catalog_path)
+            + runtime_path_resolution_errors(),
         ),
         ("public empty example", validate_document(PUBLIC_EXAMPLE, schema, require_files=False, committed_catalog=True)),
         ("negative fixtures", validate_negative_fixtures(schema)),

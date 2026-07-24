@@ -3,6 +3,7 @@
 #include "ofJson.h"
 #include "ofLog.h"
 #include "ofUtils.h"
+#include <filesystem>
 #include <utility>
 
 VideoCatalog& VideoCatalog::instance() {
@@ -77,6 +78,8 @@ void VideoCatalog::ensureLoaded() const {
         return;
     }
 
+    const std::filesystem::path catalogDirectory =
+        std::filesystem::path(jsonPath).parent_path();
     const auto& clipArray = data["clips"];
     for (const auto& entry : clipArray) {
         if (!entry.is_object()) continue;
@@ -86,7 +89,11 @@ void VideoCatalog::ensureLoaded() const {
         Clip clip;
         clip.id = entry["id"].get<std::string>();
         clip.label = entry.value("label", clip.id);
-        clip.path = entry["path"].get<std::string>();
+        const std::filesystem::path rawPath =
+            std::filesystem::path(entry["path"].get<std::string>());
+        clip.path = rawPath.is_absolute()
+            ? rawPath.lexically_normal().string()
+            : (catalogDirectory / rawPath).lexically_normal().string();
         clip.loop = entry.value("loop", true);
         clip.prewarm = entry.value("prewarm", false);
 
