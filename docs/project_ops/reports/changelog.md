@@ -8,16 +8,19 @@ This changelog records Project Ops and administrative workflow changes. Product 
 - Phase / Milestone: Package declaration convergence and dynamic-option fixture
 - Summary: Added deterministic package-to-runtime-adapter generation, replaced
   the remaining Signal Bloom adapter duplication with a checkable output,
-  added package-owned dynamic option metadata, and encoded preservation of
-  unavailable stored values in the Browser inspection payload.
+  added package-owned dynamic option metadata, encoded preservation of
+  unavailable stored values, and rendered named choices plus unresolved
+  provider state in read-only Browser inspection rows.
 - Request Doc: `docs/project_ops/in_progress/layer_package_compatibility_bench_scaffolding.md`
 - Roadmap Entry: `docs/project_ops/roadmap.md`
 - Validation: All 13 public-app contracts, package-only and combined
   catalog/manifest gates, inspection schemas, all 18 BrowserFlow scenarios,
-  Signal Bloom offscreen bench, Release x64 build, 2.17-second incremental
-  rebuild, and live-window Signal Bloom/Aurora Veil loading.
-- Follow-Up Actions: Render static choices and unavailable dynamic-option state
-  in the Browser without resolving providers or rewriting stored values.
+  Signal Bloom offscreen bench, Release x64 builds, 2.14-second incremental
+  rebuild, payload immutability assertion, and live-window Signal Bloom/Aurora
+  Veil loading.
+- Follow-Up Actions: Add an explicit runtime option-provider registry and
+  resolve `transport.bpmMultipliers` while preserving unavailable stored
+  values.
 
 ## 2026-07-19 - artist-sdk - package_vertical_slice
 

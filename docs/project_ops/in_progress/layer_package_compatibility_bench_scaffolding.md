@@ -5,9 +5,9 @@ State Summary
 - Phase: EXECUTION
 - Status: In Progress
 - Steps Complete: 8 / 10 (2 additional steps in progress)
-- Progress: The static package contract now generates the reviewed optional runtime adapter, the Browser consumes package/generated metadata as non-editable rows without instantiation, Signal Bloom has disabled-by-default source-registered activation with deterministic preset/override merge behavior, and a dedicated headless/offscreen lifecycle bench passes. Package-owned static and dynamic option metadata now flow through checked snapshots with an explicit preserve-on-unavailable policy.
-- Last Step Outcome: 2026-07-24 - Generated the Signal Bloom runtime adapter from its package, added a package-owned `transport.bpmMultipliers` option source, passed all 18 BrowserFlow scenarios and the Signal Bloom bench, and completed live-window loading of Signal Bloom plus Aurora Veil.
-- Next Step: Render package named options and dynamic option-provider state in the Browser without rewriting stored values; provider resolution, preset application, and mapping activation must remain explicit.
+- Progress: The static package contract generates the reviewed optional runtime adapter, and the Browser renders package static choices plus unresolved dynamic-provider state as non-editable inspection rows without instantiation or value mutation. Signal Bloom has disabled-by-default source-registered activation with deterministic preset/override merge behavior, and a dedicated headless/offscreen lifecycle bench passes.
+- Last Step Outcome: 2026-07-24 - Browser inspection now displays Signal Bloom scale choices and `transport.bpmMultipliers` provider state, preserves unavailable stored values, passes all 18 BrowserFlow scenarios, and leaves the inspection payload byte-for-byte unchanged.
+- Next Step: Add an explicit runtime option-provider registry and resolve `transport.bpmMultipliers` without rewriting unavailable stored values; preset application and mapping activation must remain separate operator actions.
 - Dependencies / Overlap: `docs/project_ops/synaptome_layer_design_standards.md`, `docs/architecture/synaptome_layer_system_roadmap.md`, `docs/architecture/synaptome_artist_sdk.md`, `docs/contracts/contract_gaps.md`, `docs/contracts/parameter_manifest.json`, `docs/schemas/layer_asset.schema.json`, `tools/layer_catalog_regression.py`, `tools/gen_parameter_manifest.py`.
 - Primary Scope: contracts
 - Secondary Scopes: artist-sdk, docs, tests, runtime
@@ -17,8 +17,8 @@ State Summary
 - Priority Lane: Fast-Track
 - Ready State: Ready
 - Ready Gate: Met for read-only inspection and vetted opt-in source registration; automatic discovery and mapping activation remain out of scope.
-- Project Ops / Roadmap Updates (timestamped): 2026-06-25 - Promoted layer package scaffolding from backlog. 2026-07-18 - Reconciled the request with the current Project Ops readiness contract and pre-media gate. 2026-07-18 - Completed the bounded package-owned static option slice and paused before runtime promotion. 2026-07-24 - Converged the reviewed runtime adapter, added package-owned dynamic option metadata and unavailable-value policy, and completed the live-window smoke.
-- Resume From: Execution; implement Browser option rendering against the read-only inspection payload before preset-bank or mapping-preset controls.
+- Project Ops / Roadmap Updates (timestamped): 2026-06-25 - Promoted layer package scaffolding from backlog. 2026-07-18 - Reconciled the request with the current Project Ops readiness contract and pre-media gate. 2026-07-18 - Completed the bounded package-owned static option slice and paused before runtime promotion. 2026-07-24 - Converged the reviewed runtime adapter, added package-owned dynamic option metadata and unavailable-value policy, completed the live-window smoke, and rendered read-only option/provider state in the Browser.
+- Resume From: Execution; define and test runtime provider lookup for `transport.bpmMultipliers` before preset-bank or mapping-preset controls.
 
 ## Current State In Plain English
 
@@ -60,6 +60,8 @@ What is real:
   machine-readable preserve-and-mark-unavailable policy.
 - A generated Signal Bloom runtime adapter that removes hand-maintained
   package/default/preset/mapping duplication.
+- Read-only Browser rows that show package named choices and unresolved dynamic
+  provider state while preserving the inspection payload and stored defaults.
 
 What is not real yet:
 
@@ -131,8 +133,10 @@ Risk profile:
 14. Done: generate the reviewed optional runtime adapter from package metadata.
 15. Done: add one package-owned `optionsSource` fixture and preserve-on-
     unavailable payload policy.
-16. Next: render static choices and unavailable dynamic-option state in the
+16. Done: render static choices and unavailable dynamic-option state in the
     Browser without resolving providers or rewriting stored values.
+17. Next: add an explicit provider registry and resolve
+    `transport.bpmMultipliers` with unavailable-value coverage.
 
 ## Milestone Synthesis
 
@@ -277,6 +281,9 @@ Risk profile:
   data; added a package-owned `transport.bpmMultipliers` option source and
   machine-readable preserve-on-unavailable policy; completed the live-window
   Signal Bloom/Aurora Veil smoke.
+- 2026-07-24 - Rendered static choices and unresolved dynamic-provider state in
+  read-only Browser inspection rows; added a native assertion that rebuilding
+  the Browser model does not mutate the inspection payload or stored defaults.
 
 ## Validation
 
@@ -296,6 +303,8 @@ Risk profile:
 - Passed: `python tools\synaptome_layer.py runtime-adapter docs\examples\layer_packages\signal_bloom\layer.package.json --output synaptome\bin\data\layers-optional\examples.signal_bloom.json --check`
 - Passed: `LayerPackageBench.exe` (18 parameters, 240 updates, offscreen draw).
 - Passed: `BrowserFlowTest.exe` (18 scenarios, including read-only inspection and opt-in activation).
+- Passed: Release x64 app build after the shared Browser header change (46.85
+  seconds) followed by an identical 2.14-second incremental build.
 - Passed: Release x64 build (182.25-second one-time rebuild) followed by an
   identical 2.17-second incremental build.
 - Manual Evidence: Signal Bloom and Aurora Veil both load in a live window.

@@ -241,7 +241,7 @@ indexes them, but this document owns their meaning and next actions.
 | CG-11 | Artist SDK compatibility slice | The first public path is honest source registration with a validated source/catalog/scene fixture. | Keep source-registration language honest while package tooling evolves toward generated registration or a loader. |
 | CG-12 | Layer package layout and schema | Draft schemas, a Signal Bloom fixture, shared package discovery roots, and static validation now exist. | Extend the explicit package roots toward template-backed content folders and runtime Browser loading. |
 | CG-13 | Manifest generation from package parameters | Package-derived parameter manifest snapshots expand package suffixes through `registryPrefix`; `gen_parameter_manifest.py --include-packages` now writes/checks a draft combined manifest without changing the canonical manifest. | Decide when package-derived entries become part of the canonical `parameter_manifest.json` rather than a draft combined gate. |
-| CG-14 | Dropdown option metadata and dynamic providers | Package-owned static named choices and a `transport.bpmMultipliers` `optionsSource` now flow through Signal Bloom snapshots. The inspection payload encodes preserve-and-mark-unavailable behavior; runtime provider lookup is not implemented. | Render named and unavailable dynamic options in the Browser without rewriting stored values, then add explicit provider resolution. |
+| CG-14 | Dropdown option metadata and dynamic providers | Package-owned static choices and unresolved `transport.bpmMultipliers` state render in read-only Browser inspection rows. The inspection payload encodes preserve-and-mark-unavailable behavior and native coverage proves the Browser does not mutate it; runtime provider lookup is not implemented. | Add an explicit provider registry and resolve `transport.bpmMultipliers` while preserving missing saved values. |
 | CG-15 | Layer preset package contract | Scenes persist parameter values, but layer-local presets are not a package-owned, suffix-based, validated contract. | Add `layer_preset.schema.json`, bundled preset fixtures, package discovery rules, operator-local user preset policy, and scene/preset merge semantics. |
 | CG-16 | Single-layer package validator and runtime bench | Signal Bloom now passes a focused static check and native lifecycle/offscreen bench; full package-vs-runtime descriptor comparison and pixel/non-blank output checks remain. | Compare every runtime descriptor against package declarations, then add optional rendered-output assertions. |
 | CG-17 | Folder-driven discovery and file-backed generated layers | Current catalog behavior relies on explicit layer JSON entries; STL-style dropped files do not yet have a standard generated asset/template path. | Define discovery roots, folder-to-Browser rules, stable generated IDs, sidecar overrides, and template schemas for file-backed generated layers. |
@@ -491,8 +491,8 @@ from reviewed package data, Signal Bloom owns a dynamic `optionsSource`
 fixture, unavailable stored values have an explicit preservation policy, and
 the live-window smoke passes.
 
-1. Render package named options and unavailable dynamic option state in the
-   Browser without rewriting stored values.
+1. Add an explicit runtime provider registry and resolve
+   `transport.bpmMultipliers` without rewriting unavailable stored values.
 2. Add explicit preset-bank selection and mapping-preset apply/edit controls;
    never auto-apply package mappings.
 3. Keep scanning and generated/plugin registration disabled until duplicate,

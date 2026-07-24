@@ -2477,10 +2477,13 @@ bool RunLayerPackageReadOnlyInspectionScenario() {
     const auto payloadPath =
         (synaptome_test_paths::dataRoot() / "config" / "layer-package-inspection.json").string();
     hub.setLayerPackageInspectionPath(payloadPath);
+    const std::string inspectionPayloadBefore = hub.layerPackageInspection_.dump();
     hub.rebuildModel();
 
     int inspectionRows = 0;
     bool foundSignalBloom = false;
+    bool foundStaticChoices = false;
+    bool foundDynamicSource = false;
     for (const auto& row : hub.tableModel_.rows) {
         if (!row.isInspectionRow) {
             continue;
@@ -2492,9 +2495,32 @@ bool RunLayerPackageReadOnlyInspectionScenario() {
         if (row.assetKey == "examples.signal_bloom") {
             foundSignalBloom = true;
         }
+        if (row.id == "inspection.examples.signal_bloom.scale") {
+            foundStaticChoices =
+                row.inspectionValue.find("Choices: Compact=0.500") != std::string::npos &&
+                row.inspectionValue.find("Default=0.820") != std::string::npos &&
+                row.inspectionValue.find("Full=1.000") != std::string::npos;
+        }
+        if (row.id == "inspection.examples.signal_bloom.bpmMultiplier") {
+            foundDynamicSource =
+                row.inspectionValue.find("Default: 1.000") != std::string::npos &&
+                row.inspectionValue.find(
+                    "Options source: transport.bpmMultipliers (unresolved; unavailable values preserved)") !=
+                    std::string::npos;
+        }
     }
     if (!foundSignalBloom || inspectionRows < 2) {
         throw std::runtime_error("Read-only inspection payload did not populate Browser rows");
+    }
+    if (!foundStaticChoices) {
+        throw std::runtime_error("Read-only inspection did not render package named choices");
+    }
+    if (!foundDynamicSource) {
+        throw std::runtime_error(
+            "Read-only inspection did not render unresolved provider and value-preservation state");
+    }
+    if (hub.layerPackageInspection_.dump() != inspectionPayloadBefore) {
+        throw std::runtime_error("Read-only inspection rewrote package metadata or stored values");
     }
     if (!hub.offlineLayers_.empty() || !hub.offlineRegistry_.floats().empty() ||
         !hub.offlineRegistry_.bools().empty() || !hub.offlineRegistry_.strings().empty()) {

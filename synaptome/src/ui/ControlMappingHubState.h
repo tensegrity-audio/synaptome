@@ -5212,6 +5212,12 @@ inline void ControlMappingHubState::appendLayerPackageInspectionRows() const {
         return;
     }
 
+    const auto optionPolicy = layerPackageInspection_.value("optionPolicy", ofJson::object());
+    const bool preservesUnavailableValues =
+        optionPolicy.value("unavailableStoredValue", std::string()) ==
+            "preserve-and-mark-unavailable" &&
+        !optionPolicy.value("rewritesStoredValue", true);
+
     auto jsonValue = [](const ofJson& value) {
         if (value.is_string()) {
             return value.get<std::string>();
@@ -5288,6 +5294,38 @@ inline void ControlMappingHubState::appendLayerPackageInspectionRows() const {
             const std::string kind = parameter.value("kind", std::string());
             if (!kind.empty()) {
                 row.inspectionValue += "  |  " + kind;
+            }
+            const auto options = parameter.value("options", ofJson::array());
+            if (options.is_array() && !options.empty()) {
+                std::string choices = "  |  Choices: ";
+                bool appendedChoice = false;
+                for (const auto& option : options) {
+                    if (!option.is_object() || !option.contains("value")) {
+                        continue;
+                    }
+                    if (appendedChoice) {
+                        choices += ", ";
+                    }
+                    const std::string label = option.value(
+                        "label",
+                        jsonValue(option["value"]));
+                    choices += label + "=" + jsonValue(option["value"]);
+                    appendedChoice = true;
+                }
+                if (appendedChoice) {
+                    row.inspectionValue += choices;
+                }
+            }
+            const auto optionsSource = parameter.value("optionsSource", ofJson::object());
+            if (optionsSource.is_object()) {
+                const std::string sourceId = optionsSource.value("id", std::string());
+                if (!sourceId.empty()) {
+                    row.inspectionValue += "  |  Options source: " + sourceId + " (unresolved";
+                    if (preservesUnavailableValues) {
+                        row.inspectionValue += "; unavailable values preserved";
+                    }
+                    row.inspectionValue += ")";
+                }
             }
             tableModel_.rows.push_back(std::move(row));
         }

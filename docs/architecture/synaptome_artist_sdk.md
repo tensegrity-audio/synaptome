@@ -391,10 +391,11 @@ The first vertical slice now exists and is converged: `synaptome-layer check`,
 manifest-only Browser inspection, a package-generated runtime adapter,
 default-off Signal Bloom activation, a native lifecycle bench, a scene fixture,
 one package-owned dynamic option declaration, and one reviewed media loop.
-Remaining work is Browser option/preset/mapping ownership, factory registration
-evolution, and projection/control-window tutorial polish.
+The Browser now displays package named choices and unresolved provider state as
+read-only metadata without rewriting defaults. Remaining work is runtime option
+provider lookup, preset/mapping ownership, factory registration evolution, and
+projection/control-window tutorial polish.
 
 Do not expand the example with more media by default. The safe next SDK slice
-is Browser rendering for package options without silently rewriting stored
-values; folder discovery and no-source-edit installation remain future
-mechanisms.
+is explicit runtime provider lookup with missing-value preservation; folder
+discovery and no-source-edit installation remain future mechanisms.

@@ -40,9 +40,9 @@ State Summary
 - Phase: EXECUTION
 - Status: In Progress
 - Steps Complete: 8 / 10 (2 additional steps in progress)
-- Progress: The static package contract now generates the reviewed optional runtime adapter, the Browser consumes package/generated metadata as non-editable rows without instantiation, Signal Bloom has disabled-by-default source-registered activation with deterministic preset/override merge behavior, and a dedicated headless/offscreen lifecycle bench passes. Package-owned static and dynamic option metadata now flow through checked snapshots with an explicit preserve-on-unavailable policy.
-- Last Step Outcome: 2026-07-24 - Generated the Signal Bloom runtime adapter from its package, added a package-owned `transport.bpmMultipliers` option source, passed all 18 BrowserFlow scenarios and the Signal Bloom bench, and completed live-window loading of Signal Bloom plus Aurora Veil.
-- Next Step: Render package named options and dynamic option-provider state in the Browser without rewriting stored values; provider resolution, preset application, and mapping activation must remain explicit.
+- Progress: The static package contract generates the reviewed optional runtime adapter, and the Browser renders package static choices plus unresolved dynamic-provider state as non-editable inspection rows without instantiation or value mutation. Signal Bloom has disabled-by-default source-registered activation with deterministic preset/override merge behavior, and a dedicated headless/offscreen lifecycle bench passes.
+- Last Step Outcome: 2026-07-24 - Browser inspection now displays Signal Bloom scale choices and `transport.bpmMultipliers` provider state, preserves unavailable stored values, passes all 18 BrowserFlow scenarios, and leaves the inspection payload byte-for-byte unchanged.
+- Next Step: Add an explicit runtime option-provider registry and resolve `transport.bpmMultipliers` without rewriting unavailable stored values; preset application and mapping activation must remain separate operator actions.
 - Dependencies / Overlap: `docs/project_ops/synaptome_layer_design_standards.md`, `docs/architecture/synaptome_layer_system_roadmap.md`, `docs/architecture/synaptome_artist_sdk.md`, `docs/contracts/contract_gaps.md`, `docs/contracts/parameter_manifest.json`, `docs/schemas/layer_asset.schema.json`, `tools/layer_catalog_regression.py`, `tools/gen_parameter_manifest.py`.
 - Primary Scope: contracts
 - Secondary Scopes: artist-sdk, docs, tests, runtime
@@ -52,8 +52,8 @@ State Summary
 - Priority Lane: Fast-Track
 - Ready State: Ready
 - Ready Gate: Met for read-only inspection and vetted opt-in source registration; automatic discovery and mapping activation remain out of scope.
-- Project Ops / Roadmap Updates (timestamped): 2026-06-25 - Promoted layer package scaffolding from backlog. 2026-07-18 - Reconciled the request with the current Project Ops readiness contract and pre-media gate. 2026-07-18 - Completed the bounded package-owned static option slice and paused before runtime promotion. 2026-07-24 - Converged the reviewed runtime adapter, added package-owned dynamic option metadata and unavailable-value policy, and completed the live-window smoke.
-- Resume From: Execution; implement Browser option rendering against the read-only inspection payload before preset-bank or mapping-preset controls.
+- Project Ops / Roadmap Updates (timestamped): 2026-06-25 - Promoted layer package scaffolding from backlog. 2026-07-18 - Reconciled the request with the current Project Ops readiness contract and pre-media gate. 2026-07-18 - Completed the bounded package-owned static option slice and paused before runtime promotion. 2026-07-24 - Converged the reviewed runtime adapter, added package-owned dynamic option metadata and unavailable-value policy, completed the live-window smoke, and rendered read-only option/provider state in the Browser.
+- Resume From: Execution; define and test runtime provider lookup for `transport.bpmMultipliers` before preset-bank or mapping-preset controls.
 Request Doc: docs/project_ops/in_progress/layer_package_compatibility_bench_scaffolding.md
 
 Task breakdown: 8 done and 2 in progress. Automatic package-root scanning,
@@ -139,11 +139,12 @@ with Browser activation or runtime folder scanning.
 
 ### Next: Finish Browser Ownership
 
-1. Render named options and dynamic option providers without rewriting stored
-   values.
-2. Add preset-bank selection with the locked defaults -> preset -> explicit ->
+1. Named choices and unresolved dynamic-provider state now render read-only
+   without rewriting stored values.
+2. Add explicit runtime provider lookup with unavailable-value coverage.
+3. Add preset-bank selection with the locked defaults -> preset -> explicit ->
    scene precedence.
-3. Add an explicit mapping-preset apply/edit flow; suggestions remain disabled
+4. Add an explicit mapping-preset apply/edit flow; suggestions remain disabled
    until the operator acts.
 
 ### Later: Installation Evolution

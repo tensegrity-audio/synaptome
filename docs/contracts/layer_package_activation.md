@@ -16,6 +16,8 @@ activation is a separate, explicit allowlist in
   `LayerFactory`. This is still source registration, not plugin loading.
 - Browser inspection reads `layer-package-inspection.json` directly and does
   not instantiate, configure, or call `setup()` on inspected packages.
+- Browser inspection displays static choices and unresolved dynamic-provider
+  state without resolving providers or rewriting stored defaults.
 
 ## Value And Mapping Precedence
 
