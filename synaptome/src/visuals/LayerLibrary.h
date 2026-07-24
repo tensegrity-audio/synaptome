@@ -47,6 +47,13 @@ public:
     // Loads only explicitly enabled, source-registered package catalog entries.
     // A missing/disabled activation file is a successful no-op.
     bool loadOptInPackages(const std::string& activationPath);
+    // Resolves a package-global preset selection for a future layer
+    // instantiation. The catalog entry and any current layer remain unchanged.
+    bool configForPackagePreset(const std::string& assetId,
+                                const std::string& bankId,
+                                const std::string& presetId,
+                                ofJson& resolvedConfig,
+                                std::string* error = nullptr) const;
 
     const std::vector<Entry>& entries() const { return entries_; }
     const Entry* find(const std::string& id) const;

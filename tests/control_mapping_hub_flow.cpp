@@ -2495,6 +2495,7 @@ bool RunLayerPackageReadOnlyInspectionScenario() {
     bool foundSignalBloom = false;
     bool foundStaticChoices = false;
     bool foundDynamicSource = false;
+    bool foundInertPresetBank = false;
     for (const auto& row : hub.tableModel_.rows) {
         if (!row.isInspectionRow) {
             continue;
@@ -2522,6 +2523,14 @@ bool RunLayerPackageReadOnlyInspectionScenario() {
                 row.inspectionValue.find("Normal=1.000") != std::string::npos &&
                 row.inspectionValue.find("Double Time=2.000") != std::string::npos;
         }
+        if (row.id == "inspection.examples.signal_bloom.presetBank.performance") {
+            foundInertPresetBank =
+                !row.isPackagePresetBankRow &&
+                row.inspectionValue.find("Choices: Default, Bright, Calm") !=
+                    std::string::npos &&
+                row.inspectionValue.find("Activate package to choose") !=
+                    std::string::npos;
+        }
     }
     if (!foundSignalBloom || inspectionRows < 2) {
         throw std::runtime_error("Read-only inspection payload did not populate Browser rows");
@@ -2532,6 +2541,10 @@ bool RunLayerPackageReadOnlyInspectionScenario() {
     if (!foundDynamicSource) {
         throw std::runtime_error(
             "Read-only inspection did not resolve the registered option provider");
+    }
+    if (!foundInertPresetBank) {
+        throw std::runtime_error(
+            "Inspection-only package preset bank became editable or lost labels");
     }
     if (hub.layerPackageInspection_.dump() != inspectionPayloadBefore) {
         throw std::runtime_error("Read-only inspection rewrote package metadata or stored values");
@@ -2570,6 +2583,128 @@ bool RunLayerPackageReadOnlyInspectionScenario() {
         throw std::runtime_error(
             "Unavailable provider value handling rewrote package metadata or stored values");
     }
+    return true;
+}
+
+bool RunLayerPackagePresetBankSelectionScenario() {
+    auto require = [](bool condition, const std::string& message) {
+        if (!condition) {
+            throw std::runtime_error(message);
+        }
+    };
+
+    const auto appRoot = synaptome_test_paths::appRoot();
+    LayerLibrary library;
+    require(library.reload((appRoot / "bin" / "data" / "layers").string()),
+            "canonical catalog did not load for preset-bank scenario");
+    const auto activationPath =
+        std::filesystem::temp_directory_path() /
+        "synaptome-layer-package-preset-bank-test.json";
+    ofJson activation = {
+        {"schemaVersion", 1},
+        {"enabled", true},
+        {"packages", ofJson::array({{
+            {"id", "examples.signal_bloom"},
+            {"enabled", true},
+            {"catalogPath", (appRoot / "bin" / "data" / "layers-optional" /
+                             "examples.signal_bloom.json").string()},
+            {"preset", "default"},
+            {"mappingPreset", ""}
+        }})}
+    };
+    {
+        std::ofstream out(activationPath, std::ios::trunc);
+        out << std::setw(2) << activation << "\n";
+    }
+    require(library.loadOptInPackages(activationPath.string()),
+            "active package catalog did not load for preset-bank scenario");
+    const auto* activeEntry = library.find("examples.signal_bloom");
+    require(activeEntry != nullptr, "Signal Bloom was not active for preset-bank scenario");
+    const std::string catalogBefore = activeEntry->config.dump();
+
+    ParameterRegistry registry;
+    MidiRouter midi;
+    ControlMappingHubState hub;
+    hub.setParameterRegistry(&registry);
+    hub.setMidiRouter(&midi);
+    hub.setLayerLibrary(&library);
+    std::string selectedPreset = "default";
+    int applyCalls = 0;
+    std::string appliedAsset;
+    std::string appliedBank;
+    std::string appliedPreset;
+    hub.setPackagePresetSelectionProvider(
+        [&](const std::string& assetId, const std::string& bankId) {
+            return assetId == "examples.signal_bloom" && bankId == "performance"
+                ? selectedPreset
+                : std::string();
+        });
+    hub.setPackagePresetApplyCallback(
+        [&](const std::string& assetId,
+            const std::string& bankId,
+            const std::string& presetId) {
+            ++applyCalls;
+            appliedAsset = assetId;
+            appliedBank = bankId;
+            appliedPreset = presetId;
+            selectedPreset = presetId;
+            return true;
+        });
+    const auto payloadPath =
+        (synaptome_test_paths::dataRoot() / "config" /
+         "layer-package-inspection.json").string();
+    hub.setLayerPackageInspectionPath(payloadPath);
+    const std::string payloadBefore = hub.layerPackageInspection_.dump();
+    hub.rebuildModel();
+
+    const std::string rowId =
+        "inspection.examples.signal_bloom.presetBank.performance";
+    const auto* bankRow = hub.rowForId(rowId);
+    require(bankRow != nullptr && bankRow->isPackagePresetBankRow,
+            "active package did not expose an editable preset-bank row");
+    require(bankRow->inspectionValue.find("Selected: Default") != std::string::npos &&
+                bankRow->inspectionValue.find("Choices: Default, Bright, Calm") !=
+                    std::string::npos &&
+                bankRow->inspectionValue.find("next layer load") != std::string::npos,
+            "preset-bank row did not render ordered labels and next-load ownership");
+
+    require(hub.debugSelectPackagePreset(rowId, "calm"),
+            "explicit Calm preset selection failed");
+    require(applyCalls == 1 &&
+                appliedAsset == "examples.signal_bloom" &&
+                appliedBank == "performance" &&
+                appliedPreset == "calm",
+            "preset picker did not commit exact stable IDs once");
+    hub.rebuildModel();
+    bankRow = hub.rowForId(rowId);
+    require(bankRow &&
+                bankRow->inspectionValue.find("Selected: Calm") != std::string::npos,
+            "committed preset provider state did not replay in Browser");
+
+    hub.setPackagePresetApplyCallback(
+        [&](const std::string&, const std::string&, const std::string&) {
+            ++applyCalls;
+            return false;
+        });
+    require(!hub.debugSelectPackagePreset(rowId, "bright"),
+            "failed host preset commit was reported as successful");
+    require(selectedPreset == "calm" && applyCalls == 2,
+            "failed preset commit changed the committed selection");
+    hub.cancelPackagePresetPicker();
+
+    require(hub.layerPackageInspection_.dump() == payloadBefore,
+            "preset selection rewrote the inspection payload");
+    require(activeEntry->config.dump() == catalogBefore,
+            "Browser preset selection mutated the shared catalog entry");
+    require(registry.floats().empty() && registry.bools().empty() &&
+                registry.strings().empty(),
+            "preset selection mutated live parameter registries");
+    require(midi.getCcMaps().empty() && midi.getBtnMaps().empty() &&
+                midi.getOscMaps().empty(),
+            "preset selection implicitly changed mappings");
+
+    std::error_code cleanupError;
+    std::filesystem::remove(activationPath, cleanupError);
     return true;
 }
 
@@ -2619,6 +2754,44 @@ bool RunOptInLayerPackageActivationScenario() {
             "selected package preset was not merged");
     require(entry->config["packageActivation"].value("mappingApplied", true) == false,
             "mapping suggestion was applied implicitly");
+    require(entry->config["packageActivation"].value(
+                "presetBank",
+                std::string()) == "performance",
+            "legacy activation preset did not infer its package bank");
+
+    ofJson calmConfig;
+    std::string presetError;
+    require(library.configForPackagePreset(
+                "examples.signal_bloom",
+                "performance",
+                "calm",
+                calmConfig,
+                &presetError),
+            "valid package preset-bank selection did not resolve: " + presetError);
+    require(calmConfig["defaults"].value("speed", 0.0) == 2.25,
+            "explicit activation override did not remain above selected preset");
+    require(calmConfig["defaults"].value("bpmMultiplier", 0.0) == 0.5,
+            "selected Calm preset did not replace the package BPM default");
+    require(calmConfig["defaults"].value("alpha", 0.0) == 0.62,
+            "selected Calm preset did not replace the prior preset value");
+    require(calmConfig["packageActivation"].value("mappingApplied", true) == false,
+            "preset resolution implicitly applied a mapping preset");
+    ofJson rejectedConfig = {{"sentinel", true}};
+    require(!library.configForPackagePreset(
+                "examples.signal_bloom",
+                "missingBank",
+                "calm",
+                rejectedConfig,
+                &presetError) &&
+                rejectedConfig == ofJson({{"sentinel", true}}),
+            "unknown preset bank was not rejected atomically");
+    require(!library.configForPackagePreset(
+                "examples.signal_bloom",
+                "performance",
+                "missingPreset",
+                rejectedConfig,
+                &presetError),
+            "unknown package preset was not rejected");
 
     activation["packages"][0]["mappingPreset"] = "missingPreset";
     {

@@ -2,6 +2,22 @@
 
 This changelog records Project Ops and administrative workflow changes. Product release versioning remains governed by `docs/release_policy.md`.
 
+## 2026-07-24 - artist-sdk - package_preset_bank_selection
+
+- Request ID: `layer_package_compatibility_bench_scaffolding`
+- Phase / Milestone: Browser preset ownership
+- Summary: Added labeled package preset-bank selection backed by stable IDs,
+  persisted the choice in the ignored show-machine activation override, and
+  applied it only to the next layer instantiation so active scene and mapping
+  state remain authoritative.
+- Request Doc: `docs/project_ops/in_progress/layer_package_compatibility_bench_scaffolding.md`
+- Roadmap Entry: `docs/project_ops/roadmap.md`
+- Validation: All 13 public-app contracts, package-only and combined gates, all
+  19 BrowserFlow scenarios, Signal Bloom offscreen bench, Release x64 build,
+  and 2.55-second identical incremental build.
+- Follow-Up Actions: Promote named static/runtime option values into an
+  explicit labeled dropdown before adding mapping-preset apply/edit controls.
+
 ## 2026-07-24 - artist-sdk - runtime_option_provider_resolution
 
 - Request ID: `layer_package_compatibility_bench_scaffolding`

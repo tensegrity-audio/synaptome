@@ -25,7 +25,7 @@ Expected signals:
 - public app contracts pass
 - app independence reports no firmware implementation references
 - BrowserFlowTest builds with 0 errors
-- BrowserFlow reports all 16 scenarios passed
+- BrowserFlow reports all 19 scenarios passed
 - generated outputs remain ignored
 
 ## Harness Catalog

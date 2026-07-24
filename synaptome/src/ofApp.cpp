@@ -1787,17 +1787,34 @@ void ofApp::setup() {
 
     std::string layersRoot = ofToDataPath("layers", true);
     layerLibrary.reload(layersRoot);
-    std::string packageActivationPath =
+    packageActivationPath_ =
         ofToDataPath("config/layer-packages.json", true);
-    const std::string localPackageActivationPath =
+    localPackageActivationPath_ =
         ofToDataPath("config/layer-packages.local.json", true);
-    if (ofFile::doesFileExist(localPackageActivationPath)) {
-        packageActivationPath = localPackageActivationPath;
+    if (ofFile::doesFileExist(localPackageActivationPath_)) {
+        packageActivationPath_ = localPackageActivationPath_;
         ofLogNotice("LayerLibrary")
             << "using operator-local package activation "
-            << localPackageActivationPath;
+            << localPackageActivationPath_;
     }
-    layerLibrary.loadOptInPackages(packageActivationPath);
+    layerLibrary.loadOptInPackages(packageActivationPath_);
+    packagePresetSelections_.clear();
+    for (const auto& entry : layerLibrary.entries()) {
+        const auto activation =
+            entry.config.value("packageActivation", ofJson::object());
+        if (!activation.is_object()) {
+            continue;
+        }
+        const std::string presetId =
+            activation.value("preset", std::string());
+        if (presetId.empty()) {
+            continue;
+        }
+        packagePresetSelections_[entry.id] = {
+            activation.value("presetBank", std::string()),
+            presetId
+        };
+    }
 
     midiMapPath = ofToDataPath("config/midi-map.json", true);
     midi.load(midiMapPath);
@@ -2135,6 +2152,69 @@ void ofApp::setup() {
         controlMappingHub->setLayerLibrary(&layerLibrary);
         controlMappingHub->setLayerPackageInspectionPath(
             ofToDataPath("config/layer-package-inspection.json", true));
+        controlMappingHub->setPackagePresetSelectionProvider(
+            [this](const std::string& assetId, const std::string& bankId) {
+                const auto it = packagePresetSelections_.find(assetId);
+                if (it == packagePresetSelections_.end()) {
+                    return std::string();
+                }
+                if (!it->second.bankId.empty() && it->second.bankId != bankId) {
+                    return std::string();
+                }
+                return it->second.presetId;
+            });
+        controlMappingHub->setPackagePresetApplyCallback(
+            [this](const std::string& assetId,
+                   const std::string& bankId,
+                   const std::string& presetId) {
+                ofJson resolvedConfig;
+                std::string resolveError;
+                if (!layerLibrary.configForPackagePreset(
+                        assetId,
+                        bankId,
+                        presetId,
+                        resolvedConfig,
+                        &resolveError)) {
+                    ofLogWarning("LayerLibrary")
+                        << "package preset selection rejected: " << resolveError;
+                    return false;
+                }
+
+                ofJson activation = loadJsonSnapshotIfExists(packageActivationPath_);
+                if (!activation.is_object() ||
+                    !activation.value("enabled", false) ||
+                    !activation.contains("packages") ||
+                    !activation["packages"].is_array()) {
+                    ofLogWarning("LayerLibrary")
+                        << "cannot persist package preset without enabled activation config";
+                    return false;
+                }
+                bool found = false;
+                for (auto& package : activation["packages"]) {
+                    if (!package.is_object() ||
+                        package.value("id", std::string()) != assetId ||
+                        !package.value("enabled", false)) {
+                        continue;
+                    }
+                    package["preset"] = presetId;
+                    package["presetBank"] = bankId;
+                    found = true;
+                    break;
+                }
+                if (!found) {
+                    ofLogWarning("LayerLibrary")
+                        << "cannot persist preset for inactive package " << assetId;
+                    return false;
+                }
+                if (!writeJsonSnapshotAtomically(
+                        localPackageActivationPath_,
+                        activation)) {
+                    return false;
+                }
+                packageActivationPath_ = localPackageActivationPath_;
+                packagePresetSelections_[assetId] = {bankId, presetId};
+                return true;
+            });
         controlMappingHub->setDeviceMapsDirectory(deviceMapsDir);
         controlMappingHub->setSlotAssignmentsPath(slotAssignmentsPath);
         controlMappingHub->setOscInputModeChangeCallback([this](const std::string& mode) {
@@ -4388,6 +4468,22 @@ bool ofApp::addAssetToConsoleLayer(int layerIndex,
         ofLogWarning("ofApp") << "Console asset not found: " << assetId;
         return false;
     }
+    ofJson layerConfig = entry->config;
+    const auto presetSelection = packagePresetSelections_.find(assetId);
+    if (presetSelection != packagePresetSelections_.end()) {
+        std::string resolveError;
+        if (!layerLibrary.configForPackagePreset(
+                assetId,
+                presetSelection->second.bankId,
+                presetSelection->second.presetId,
+                layerConfig,
+                &resolveError)) {
+            ofLogWarning("ofApp")
+                << "Failed to resolve selected package preset for "
+                << assetId << ": " << resolveError;
+            return false;
+        }
+    }
     int idx = layerIndex - 1;
     if (idx >= static_cast<int>(consoleSlots.size())) {
         consoleSlots.resize(8);
@@ -4478,7 +4574,7 @@ bool ofApp::addAssetToConsoleLayer(int layerIndex,
         slot.active = false;
         return false;
     }
-    l->configure(entry->config);
+    l->configure(layerConfig);
     logSceneLoadInstallStep("configure");
     l->setRegistryPrefix(prefix);
     l->setInstanceId(entry->id);

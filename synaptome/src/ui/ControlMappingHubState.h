@@ -93,6 +93,10 @@ public:
     void setMidiRouter(MidiRouter* router);
     void setLayerLibrary(LayerLibrary* library);
     void setLayerPackageInspectionPath(const std::string& path);
+    void setPackagePresetSelectionProvider(
+        std::function<std::string(const std::string&, const std::string&)> provider);
+    void setPackagePresetApplyCallback(
+        std::function<bool(const std::string&, const std::string&, const std::string&)> cb);
     void setConsoleAssetResolver(std::function<const LayerLibrary::Entry*(const std::string& prefix)> resolver);
     void setDeviceMapsDirectory(const std::string& path);
     void setSlotAssignmentsPath(const std::string& path);
@@ -178,6 +182,8 @@ public:
     bool debugBeginMidiLearn(const std::string& id);
     bool debugSetGridSelection(int rowIndex, int columnIndex);
     bool debugSlotPickerVisible() const;
+    bool debugSelectPackagePreset(const std::string& rowId, const std::string& presetId);
+    bool packagePresetPickerVisible() const { return packagePresetPickerVisible_; }
     void debugFlushPreferences() const { flushPreferences(); }
 
     const std::string& id() const override { return stateId_; }
@@ -216,6 +222,11 @@ private:
     static constexpr int kHudColumnCount = 4;
     static constexpr uint64_t kHudLayoutDriftAssertDelayMs = 750;
 
+    struct PackagePresetOption {
+        std::string id;
+        std::string label;
+    };
+
     struct ParameterRow {
         std::string id;
         std::string label;
@@ -240,7 +251,10 @@ private:
         bool isSavedSceneOverwriteRow = false;
         bool isOscInputRow = false;
         bool isInspectionRow = false;
+        bool isPackagePresetBankRow = false;
         std::string inspectionValue;
+        std::string packagePresetBankId;
+        std::vector<PackagePresetOption> packagePresetOptions;
         std::string savedSceneId;
         std::string savedScenePath;
         std::string oscInputField;
@@ -500,6 +514,9 @@ private:
     mutable bool hudColumnPickerVisible_ = false;
     mutable std::string hudColumnPickerRowId_;
     mutable int hudColumnPickerSelection_ = 0;
+    mutable bool packagePresetPickerVisible_ = false;
+    mutable std::string packagePresetPickerRowId_;
+    mutable int packagePresetPickerSelection_ = -1;
     mutable bool hudLayoutDirty_ = false;
     mutable std::unordered_map<std::string, std::string> hudWidgetTargets_;
     mutable int hudLayoutFenceDepth_ = 0;
@@ -526,6 +543,10 @@ private:
     std::function<bool(MenuController&)> hudLayoutAction_;
     std::function<std::vector<HudPlacementSnapshot>()> hudPlacementProvider_;
     std::function<void(const std::string&, int)> hudPlacementCallback_;
+    std::function<std::string(const std::string&, const std::string&)>
+        packagePresetSelectionProvider_;
+    std::function<bool(const std::string&, const std::string&, const std::string&)>
+        packagePresetApplyCallback_;
     HudFeedRegistry* hudFeedRegistry_ = nullptr;
     bool hudFeedListenerAttached_ = false;
     bool active_ = false;
@@ -664,6 +685,11 @@ private:
                                   float panelWidth,
                                   float panelHeight,
                                   const ParameterRow* row) const;
+    void drawPackagePresetPickerPanel(float panelX,
+                                      float panelY,
+                                      float panelWidth,
+                                      float panelHeight,
+                                      const ParameterRow* row) const;
     std::string formatSlotSummary(const ParameterRow& row) const;
     std::string currentSlotControlId(const ParameterRow& row) const;
     const MidiRouter::BtnMap* firstBtnMapForRow(const ParameterRow& row) const;
@@ -678,6 +704,9 @@ private:
                                     const SlotOption& slot,
                                     const SlotOption::ColumnBinding& binding) const;
     bool beginHudColumnPicker(const ParameterRow& row) const;
+    bool beginPackagePresetPicker(const ParameterRow& row) const;
+    bool applyPackagePresetSelection();
+    void cancelPackagePresetPicker() const;
     bool applyHudColumnSelection();
     void cancelHudColumnPicker() const;
     void updateHudVisibilityPreference(const std::string& id, bool visible) const;
@@ -847,6 +876,7 @@ inline void ControlMappingHubState::setParameterRegistry(ParameterRegistry* regi
     cancelValueEdit();
     cancelHudColumnPicker();
     cancelSlotPicker();
+    cancelPackagePresetPicker();
     pendingValueBuffers_.clear();
     lastValueSnapshot_.clear();
         lastStringSnapshot_.clear();
@@ -876,6 +906,7 @@ inline void ControlMappingHubState::setLayerLibrary(LayerLibrary* library) {
 }
 
 inline void ControlMappingHubState::setLayerPackageInspectionPath(const std::string& path) {
+    cancelPackagePresetPicker();
     layerPackageInspectionPath_ = path;
     layerPackageInspection_ = ofJson::object();
     if (!path.empty() && ofFile::doesFileExist(path)) {
@@ -895,6 +926,18 @@ inline void ControlMappingHubState::setLayerPackageInspectionPath(const std::str
     }
     tableModel_.dirty = true;
     invalidateRowCache();
+}
+
+inline void ControlMappingHubState::setPackagePresetSelectionProvider(
+    std::function<std::string(const std::string&, const std::string&)> provider) {
+    packagePresetSelectionProvider_ = std::move(provider);
+    tableModel_.dirty = true;
+}
+
+inline void ControlMappingHubState::setPackagePresetApplyCallback(
+    std::function<bool(const std::string&, const std::string&, const std::string&)> cb) {
+    packagePresetApplyCallback_ = std::move(cb);
+    tableModel_.dirty = true;
 }
 
 inline void ControlMappingHubState::setDeviceMapsDirectory(const std::string& path) {
@@ -1631,7 +1674,13 @@ inline void ControlMappingHubState::draw() const {
         }
     }
 
-    if (hudColumnPickerVisible_) {
+    if (packagePresetPickerVisible_) {
+        float panelWidth = std::min(420.0f, layout.gridWidth * 0.65f);
+        float panelHeight = 220.0f;
+        float panelX = layout.gridX + layout.gridWidth - panelWidth - skin_.metrics.padding;
+        float panelY = layout.gridY + layout.treeHeaderHeight + skin_.metrics.padding;
+        drawPackagePresetPickerPanel(panelX, panelY, panelWidth, panelHeight, selectedRow);
+    } else if (hudColumnPickerVisible_) {
         float panelWidth = std::min(360.0f, layout.gridWidth * 0.5f);
         float panelHeight = 200.0f;
         float panelX = layout.gridX + layout.gridWidth - panelWidth - skin_.metrics.padding;
@@ -1715,6 +1764,42 @@ inline bool ControlMappingHubState::handleInput(MenuController& controller, int 
             }
         }
         return true;
+    }
+
+    if (packagePresetPickerVisible_) {
+        const auto* pickerRow = rowForId(packagePresetPickerRowId_);
+        const int optionCount =
+            pickerRow ? static_cast<int>(pickerRow->packagePresetOptions.size()) : 0;
+        if (!pickerRow || optionCount <= 0) {
+            cancelPackagePresetPicker();
+            controller.requestViewModelRefresh();
+            return true;
+        }
+        auto adjustSelection = [&](int delta) {
+            packagePresetPickerSelection_ =
+                (packagePresetPickerSelection_ + delta + optionCount) % optionCount;
+        };
+        switch (baseKey) {
+        case OF_KEY_ESC:
+            cancelPackagePresetPicker();
+            controller.requestViewModelRefresh();
+            return true;
+        case OF_KEY_UP:
+            adjustSelection(-1);
+            controller.requestViewModelRefresh();
+            return true;
+        case OF_KEY_DOWN:
+            adjustSelection(1);
+            controller.requestViewModelRefresh();
+            return true;
+        case OF_KEY_RETURN:
+        case ' ':
+            applyPackagePresetSelection();
+            controller.requestViewModelRefresh();
+            return true;
+        default:
+            return true;
+        }
     }
 
     if (hudColumnPickerVisible_) {
@@ -2308,6 +2393,11 @@ inline bool ControlMappingHubState::handleInput(MenuController& controller, int 
                 return true;
             }
             if (selectedColumn_ == Column::kValue) {
+                if (selectedRow->isPackagePresetBankRow) {
+                    beginPackagePresetPicker(*selectedRow);
+                    controller.requestViewModelRefresh();
+                    return true;
+                }
                 if (isSavedSceneBrowserRow(*selectedRow)) {
                     handleSavedSceneRowActivation(*selectedRow);
                     controller.requestViewModelRefresh();
@@ -2516,6 +2606,7 @@ inline void ControlMappingHubState::onExit(MenuController& controller) {
     cancelValueEdit();
     cancelHudColumnPicker();
     cancelSlotPicker();
+    cancelPackagePresetPicker();
     pickingOsc_ = false;
 }
 
@@ -4027,6 +4118,48 @@ inline void ControlMappingHubState::drawHudColumnPickerPanel(float panelX,
     ofPopStyle();
 }
 
+inline void ControlMappingHubState::drawPackagePresetPickerPanel(
+    float panelX,
+    float panelY,
+    float panelWidth,
+    float panelHeight,
+    const ParameterRow* row) const {
+    float textScale = std::max(0.01f, skin_.metrics.typographyScale);
+    auto drawTextStyled = [textScale](const std::string& text,
+                                      float x,
+                                      float y,
+                                      const ofColor& color,
+                                      bool bold) {
+        ofSetColor(color);
+        drawBitmapStringScaled(text, x, y, textScale, bold);
+    };
+    ofPushStyle();
+    ofSetColor(skin_.palette.surface);
+    ofDrawRectRounded(panelX, panelY, panelWidth, panelHeight, skin_.metrics.borderRadius);
+    const std::string title =
+        row ? ("Preset bank: " + row->label) : std::string("Package preset bank");
+    drawTextStyled(title, panelX + 12.0f, panelY + 20.0f, skin_.palette.headerText, true);
+    float rowY = panelY + 48.0f * textScale;
+    const float lineHeight = 20.0f * textScale;
+    if (row) {
+        for (std::size_t i = 0; i < row->packagePresetOptions.size(); ++i) {
+            const bool selected = static_cast<int>(i) == packagePresetPickerSelection_;
+            drawTextStyled(row->packagePresetOptions[i].label,
+                           panelX + 12.0f,
+                           rowY,
+                           selected ? skin_.palette.gridSelection : skin_.palette.bodyText,
+                           selected);
+            rowY += lineHeight;
+        }
+    }
+    drawTextStyled("Enter: save for next layer load    Esc: cancel",
+                   panelX + 12.0f,
+                   panelY + panelHeight - 12.0f,
+                   skin_.palette.mutedText,
+                   false);
+    ofPopStyle();
+}
+
 inline std::string ControlMappingHubState::formatSlotSummary(const ParameterRow& row) const {
     if (row.isOscInputRow) {
         return "-";
@@ -4108,6 +4241,7 @@ inline bool ControlMappingHubState::beginSlotPicker(const ParameterRow& row) {
     slotPickerRowId_ = row.id;
     slotPickerSelection_ = 0;
     slotPickerScrollOffset_ = 0;
+    cancelPackagePresetPicker();
     auto assignSelection = [&](int slotIndex) {
         if (slotIndex < 0) {
             return false;
@@ -4261,12 +4395,80 @@ inline void ControlMappingHubState::cancelSlotPicker() const {
     slotPickerScrollOffset_ = 0;
 }
 
+inline bool ControlMappingHubState::beginPackagePresetPicker(
+    const ParameterRow& row) const {
+    if (!row.isPackagePresetBankRow || row.packagePresetOptions.empty()) {
+        setBannerMessage("No package presets available", 2200);
+        return false;
+    }
+    if (!packagePresetApplyCallback_) {
+        setBannerMessage("Activate this package before selecting presets", 2600);
+        return false;
+    }
+    cancelHudColumnPicker();
+    cancelSlotPicker();
+    packagePresetPickerVisible_ = true;
+    packagePresetPickerRowId_ = row.id;
+    packagePresetPickerSelection_ = 0;
+    const std::string selectedPreset =
+        packagePresetSelectionProvider_
+            ? packagePresetSelectionProvider_(row.assetKey, row.packagePresetBankId)
+            : std::string();
+    for (std::size_t i = 0; i < row.packagePresetOptions.size(); ++i) {
+        if (row.packagePresetOptions[i].id == selectedPreset) {
+            packagePresetPickerSelection_ = static_cast<int>(i);
+            break;
+        }
+    }
+    pickingOsc_ = false;
+    routingPopoverVisible_ = false;
+    return true;
+}
+
+inline bool ControlMappingHubState::applyPackagePresetSelection() {
+    if (!packagePresetPickerVisible_) {
+        return false;
+    }
+    const auto* row = rowForId(packagePresetPickerRowId_);
+    if (!row || packagePresetPickerSelection_ < 0 ||
+        packagePresetPickerSelection_ >=
+            static_cast<int>(row->packagePresetOptions.size())) {
+        cancelPackagePresetPicker();
+        return false;
+    }
+    const std::string assetId = row->assetKey;
+    const std::string bankId = row->packagePresetBankId;
+    const auto option =
+        row->packagePresetOptions[static_cast<std::size_t>(packagePresetPickerSelection_)];
+    if (!packagePresetApplyCallback_ ||
+        !packagePresetApplyCallback_(assetId, bankId, option.id)) {
+        setBannerMessage("Preset selection was not saved", 2600);
+        return false;
+    }
+    emitTelemetryEvent(
+        "package.preset.select",
+        row,
+        "bank=" + bankId + " preset=" + option.id + " apply=next-load");
+    setBannerMessage(option.label + " saved for next layer load", 3000);
+    cancelPackagePresetPicker();
+    tableModel_.dirty = true;
+    invalidateRowCache();
+    return true;
+}
+
+inline void ControlMappingHubState::cancelPackagePresetPicker() const {
+    packagePresetPickerVisible_ = false;
+    packagePresetPickerRowId_.clear();
+    packagePresetPickerSelection_ = -1;
+}
+
 inline bool ControlMappingHubState::beginHudColumnPicker(const ParameterRow& row) const {
     if (!isHudWidgetRow(row)) {
         return false;
     }
     cancelHudColumnPicker();
     cancelSlotPicker();
+    cancelPackagePresetPicker();
     hudColumnPickerVisible_ = true;
     hudColumnPickerRowId_ = row.id;
     hudColumnPickerSelection_ = 0;
@@ -5290,6 +5492,84 @@ inline void ControlMappingHubState::appendLayerPackageInspectionRows() const {
         summary.inspectionValue += "  |  " + ofToString(presets.size()) + " presets";
         summary.inspectionValue += "  |  " + ofToString(mappingPresets.size()) + " mapping suggestions";
         tableModel_.rows.push_back(std::move(summary));
+
+        const auto presetBanks = entry.value("presetBanks", ofJson::array());
+        if (presetBanks.is_array()) {
+            std::unordered_map<std::string, std::string> presetLabels;
+            if (presets.is_array()) {
+                for (const auto& preset : presets) {
+                    if (!preset.is_object()) {
+                        continue;
+                    }
+                    const std::string presetId =
+                        preset.value("presetId", std::string());
+                    if (!presetId.empty()) {
+                        presetLabels[presetId] = preset.value("label", presetId);
+                    }
+                }
+            }
+            for (const auto& bank : presetBanks) {
+                if (!bank.is_object()) {
+                    continue;
+                }
+                const std::string bankId = bank.value("id", std::string());
+                const auto bankPresets = bank.value("presets", ofJson::array());
+                if (bankId.empty() || !bankPresets.is_array()) {
+                    continue;
+                }
+                ParameterRow bankRow;
+                bankRow.id = "inspection." + assetId + ".presetBank." + bankId;
+                bankRow.label = bank.value("label", bankId);
+                bankRow.section = "Package";
+                bankRow.isPackagePresetBankRow =
+                    activated && static_cast<bool>(packagePresetApplyCallback_);
+                bankRow.category = bankRow.isPackagePresetBankRow
+                    ? "SDK Package Controls"
+                    : "SDK Inspection (Read-only)";
+                bankRow.subcategory =
+                    category + (layerGroup.empty() ? std::string() : " / " + layerGroup);
+                bankRow.assetKey = assetId;
+                bankRow.assetLabel = assetLabel;
+                bankRow.isInspectionRow = true;
+                bankRow.packagePresetBankId = bankId;
+                bankRow.offline = true;
+                for (const auto& presetIdNode : bankPresets) {
+                    if (!presetIdNode.is_string()) {
+                        continue;
+                    }
+                    const std::string presetId = presetIdNode.get<std::string>();
+                    const auto labelIt = presetLabels.find(presetId);
+                    bankRow.packagePresetOptions.push_back({
+                        presetId,
+                        labelIt != presetLabels.end() ? labelIt->second : presetId
+                    });
+                }
+                const std::string selectedPreset =
+                    packagePresetSelectionProvider_
+                        ? packagePresetSelectionProvider_(assetId, bankId)
+                        : std::string();
+                std::string selectedLabel = selectedPreset.empty()
+                    ? std::string("Not set")
+                    : selectedPreset;
+                for (const auto& option : bankRow.packagePresetOptions) {
+                    if (option.id == selectedPreset) {
+                        selectedLabel = option.label;
+                        break;
+                    }
+                }
+                bankRow.inspectionValue = "Selected: " + selectedLabel + "  |  Choices: ";
+                for (std::size_t i = 0; i < bankRow.packagePresetOptions.size(); ++i) {
+                    if (i > 0) {
+                        bankRow.inspectionValue += ", ";
+                    }
+                    bankRow.inspectionValue += bankRow.packagePresetOptions[i].label;
+                }
+                bankRow.inspectionValue += bankRow.isPackagePresetBankRow
+                    ? "  |  Enter to choose for next layer load"
+                    : "  |  Activate package to choose";
+                tableModel_.rows.push_back(std::move(bankRow));
+            }
+        }
 
         if (!parameters.is_array()) {
             continue;
@@ -7210,6 +7490,24 @@ inline bool ControlMappingHubState::debugSetGridSelection(int rowIndex, int colu
 
 inline bool ControlMappingHubState::debugSlotPickerVisible() const {
     return slotPickerVisible_;
+}
+
+inline bool ControlMappingHubState::debugSelectPackagePreset(
+    const std::string& rowId,
+    const std::string& presetId) {
+    rebuildView();
+    const auto* row = rowForId(rowId);
+    if (!row || !beginPackagePresetPicker(*row)) {
+        return false;
+    }
+    for (std::size_t i = 0; i < row->packagePresetOptions.size(); ++i) {
+        if (row->packagePresetOptions[i].id == presetId) {
+            packagePresetPickerSelection_ = static_cast<int>(i);
+            return applyPackagePresetSelection();
+        }
+    }
+    cancelPackagePresetPicker();
+    return false;
 }
 
 inline const MidiRouter::CcMap* ControlMappingHubState::firstCcMapForRow(const ParameterRow& row) const {

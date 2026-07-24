@@ -59,7 +59,7 @@
         "value": "multiplier",
         "label": "label"
       },
-      "description": "Multiplier applied to global transport BPM when sync is enabled. The declared provider is inspection-only until Browser dynamic-option resolution is implemented."
+      "description": "Multiplier applied to global transport BPM when sync is enabled. Browser inspection resolves the app-owned provider to labeled multiplier choices."
     },
     {
       "id": "scale",

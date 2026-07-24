@@ -5,20 +5,20 @@ State Summary
 - Phase: EXECUTION
 - Status: In Progress
 - Steps Complete: 8 / 10 (2 additional steps in progress)
-- Progress: The static package contract generates the reviewed optional runtime adapter, and the Browser renders package static choices plus app-owned runtime-provider choices as non-editable inspection rows without instantiation or value mutation. Signal Bloom has disabled-by-default source-registered activation with deterministic preset/override merge behavior, and a dedicated headless/offscreen lifecycle bench passes.
-- Last Step Outcome: 2026-07-24 - Added a revisioned runtime option-provider registry, resolved Signal Bloom's `transport.bpmMultipliers` choices in Browser inspection, and proved unavailable defaults remain visible and preserved without mutating package metadata.
-- Next Step: Add explicit package preset-bank selection with the locked defaults -> preset -> explicit override -> scene precedence; mapping activation must remain a separate operator action.
+- Progress: The Browser resolves labeled static and app-owned runtime choices for inspection and now provides an explicit package preset-bank picker. Preset choice is persisted in the ignored show-machine activation override and applies only to the next layer load, preserving the locked defaults -> preset -> explicit override -> scene precedence without mutating the active scene or mappings.
+- Last Step Outcome: 2026-07-24 - Added labeled package preset-bank selection, operator-local persistence, next-load application, and native coverage for stable IDs, precedence, failed-write rollback, inspection immutability, and mapping isolation.
+- Next Step: Promote named static/runtime options such as `Half Time`, `Normal`, and `Double Time` from read-only inspection into an explicit editable dropdown while preserving unavailable values and scene ownership.
 - Dependencies / Overlap: `docs/project_ops/synaptome_layer_design_standards.md`, `docs/architecture/synaptome_layer_system_roadmap.md`, `docs/architecture/synaptome_artist_sdk.md`, `docs/contracts/contract_gaps.md`, `docs/contracts/parameter_manifest.json`, `docs/schemas/layer_asset.schema.json`, `tools/layer_catalog_regression.py`, `tools/gen_parameter_manifest.py`.
 - Primary Scope: contracts
 - Secondary Scopes: artist-sdk, docs, tests, runtime
-- Blocking Issues / Unknowns: Generated registration/module loading remains a later architecture decision; preset-bank application and mapping-preset editing still need explicit Browser ownership; beat-reactive mappings depend on the separate transport/reactivity contract.
+- Blocking Issues / Unknowns: Generated registration/module loading remains a later architecture decision; editable named option values and mapping-preset editing still need explicit Browser ownership; beat-reactive mappings depend on the separate transport/reactivity contract.
 - Impact / Priority Notes: Establishes deterministic package and generated-content contracts before more tracked media, Browser activation, or runtime discovery increases compatibility risk.
 - Priority Score: N/A
 - Priority Lane: Fast-Track
 - Ready State: Ready
-- Ready Gate: Met for read-only inspection and vetted opt-in source registration; automatic discovery and mapping activation remain out of scope.
-- Project Ops / Roadmap Updates (timestamped): 2026-06-25 - Promoted layer package scaffolding from backlog. 2026-07-18 - Reconciled the request with the current Project Ops readiness contract and pre-media gate. 2026-07-18 - Completed the bounded package-owned static option slice and paused before runtime promotion. 2026-07-24 - Converged the reviewed runtime adapter, added package-owned dynamic option metadata and unavailable-value policy, completed the live-window smoke, rendered read-only option/provider state in the Browser, and resolved the app-owned transport provider with missing-value preservation.
-- Resume From: Execution; define and test package preset-bank selection before mapping-preset apply/edit controls.
+- Ready Gate: Met for read-only inspection, vetted opt-in source registration, and operator-local next-load preset selection; automatic discovery and mapping activation remain out of scope.
+- Project Ops / Roadmap Updates (timestamped): 2026-06-25 - Promoted layer package scaffolding from backlog. 2026-07-18 - Reconciled the request with the current Project Ops readiness contract and pre-media gate. 2026-07-18 - Completed the bounded package-owned static option slice and paused before runtime promotion. 2026-07-24 - Converged the reviewed runtime adapter, added package-owned dynamic option metadata and unavailable-value policy, completed the live-window smoke, rendered read-only option/provider state in the Browser, resolved the app-owned transport provider with missing-value preservation, and added operator-local next-load preset-bank selection.
+- Resume From: Execution; add editable labeled option selection before mapping-preset apply/edit controls.
 
 ## Current State In Plain English
 
@@ -64,13 +64,20 @@ What is real:
   `transport.bpmMultipliers` choices resolve in read-only Browser rows.
 - Missing provider values remain marked and preserved while the inspection
   payload and stored defaults remain unchanged.
+- Active packages expose ordered, labeled preset banks in the Browser.
+- Preset selection writes stable bank/preset IDs to the ignored show-machine
+  activation override and is applied when that layer is next instantiated.
+- Native coverage proves preset selection does not mutate the inspection
+  payload, current catalog entry, active scene, MIDI map, or OSC map.
 
 What is not real yet:
 
 - Runtime scanning of `synaptome/bin/data/layer_packages`.
 - Automatic Browser/runtime package discovery.
 - Runtime or Browser scanning of STL/model/media folders.
-- Package preset-bank controls in the Browser.
+- Live preset application to an already-running layer; the current safe
+  behavior applies a selected preset on the next layer load.
+- Editable named option values such as BPM multiplier.
 - Package mapping preset activation in the mapping surface.
 - Generated registration or binary/plugin loading.
 
@@ -138,8 +145,13 @@ Risk profile:
     Browser without resolving providers or rewriting stored values.
 17. Done: add an explicit provider registry and resolve
     `transport.bpmMultipliers` with unavailable-value coverage.
-18. Next: add explicit package preset-bank selection while preserving the
-    locked defaults -> preset -> explicit override -> scene precedence.
+18. Done: add explicit labeled package preset-bank selection with operator-local
+    persistence and next-load application while preserving the locked defaults
+    -> preset -> explicit override -> scene precedence.
+19. Next: make named static/runtime choices editable through a labeled dropdown
+    while preserving unavailable values and active scene ownership.
+20. Then: add an explicit mapping-preset apply/edit flow; package mappings must
+    remain suggestions until the operator acts.
 
 ## Milestone Synthesis
 
@@ -290,6 +302,10 @@ Risk profile:
 - 2026-07-24 - Added a revisioned runtime option-provider registry, registered
   the app-owned transport BPM choices, resolved them in read-only Browser
   inspection, and proved a removed default remains marked and preserved.
+- 2026-07-24 - Added an active-package preset-bank picker using labels backed by
+  stable IDs. Selection persists in the ignored show-machine override and
+  applies to the next layer instantiation; failed writes roll back and no
+  current scene, inspection payload, or MIDI/OSC mapping is mutated.
 
 ## Validation
 
@@ -308,7 +324,10 @@ Risk profile:
 - Passed: `python tools\synaptome_layer.py check docs\examples\layer_packages\signal_bloom\layer.package.json`
 - Passed: `python tools\synaptome_layer.py runtime-adapter docs\examples\layer_packages\signal_bloom\layer.package.json --output synaptome\bin\data\layers-optional\examples.signal_bloom.json --check`
 - Passed: `LayerPackageBench.exe` (18 parameters, 240 updates, offscreen draw).
-- Passed: `BrowserFlowTest.exe` (18 scenarios, including read-only inspection and opt-in activation).
+- Passed: `BrowserFlowTest.exe` (19 scenarios, including read-only inspection,
+  opt-in activation, and preset-bank selection/rollback/immutability).
+- Passed: Release x64 app build after the preset/Browser shared-header change
+  (about 59 seconds) followed by an identical 2.55-second incremental build.
 - Passed: Release x64 app build after the provider/Browser header change (44.82
   seconds) followed by an identical 1.92-second incremental build.
 - Passed: Release x64 build (182.25-second one-time rebuild) followed by an

@@ -79,6 +79,31 @@
       "speedInput": 0.0
     }
   },
+  "presetMetadata": [
+    {
+      "id": "default",
+      "label": "Default"
+    },
+    {
+      "id": "bright",
+      "label": "Bright"
+    },
+    {
+      "id": "calm",
+      "label": "Calm"
+    }
+  ],
+  "presetBanks": [
+    {
+      "id": "performance",
+      "label": "Performance",
+      "presets": [
+        "default",
+        "bright",
+        "calm"
+      ]
+    }
+  ],
   "mappingPresets": [
     {
       "id": "hostMicMotion",

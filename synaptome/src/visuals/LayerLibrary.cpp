@@ -24,6 +24,77 @@ namespace {
         }
         return expected.type() == actual.type();
     }
+
+    bool presetInBank(const ofJson& cfg,
+                      const std::string& requestedBankId,
+                      const std::string& presetId,
+                      std::string& resolvedBankId) {
+        const auto banks = cfg.value("presetBanks", ofJson::array());
+        if (!banks.is_array()) {
+            return requestedBankId.empty();
+        }
+        for (const auto& bank : banks) {
+            if (!bank.is_object()) {
+                continue;
+            }
+            const std::string bankId = bank.value("id", std::string());
+            if (!requestedBankId.empty() && bankId != requestedBankId) {
+                continue;
+            }
+            const auto presetIds = bank.value("presets", ofJson::array());
+            if (!presetIds.is_array()) {
+                continue;
+            }
+            for (const auto& item : presetIds) {
+                if (item.is_string() && item.get<std::string>() == presetId) {
+                    resolvedBankId = bankId;
+                    return true;
+                }
+            }
+            if (!requestedBankId.empty() && bankId == requestedBankId) {
+                return false;
+            }
+        }
+        return requestedBankId.empty() && banks.empty();
+    }
+
+    bool mergePackageDefaults(const ofJson& baseDefaults,
+                              const ofJson& presets,
+                              const std::string& presetId,
+                              const ofJson& explicitOverrides,
+                              ofJson& mergedDefaults,
+                              std::string* error) {
+        auto fail = [&](const std::string& message) {
+            if (error) {
+                *error = message;
+            }
+            return false;
+        };
+        if (!baseDefaults.is_object() || !presets.is_object() || !explicitOverrides.is_object()) {
+            return fail("package preset sources must be JSON objects");
+        }
+        mergedDefaults = baseDefaults;
+        if (!presetId.empty()) {
+            if (!presets.contains(presetId) || !presets[presetId].is_object()) {
+                return fail("unknown package preset '" + presetId + "'");
+            }
+            for (auto it = presets[presetId].begin(); it != presets[presetId].end(); ++it) {
+                if (!baseDefaults.contains(it.key()) ||
+                    !compatibleJsonValue(baseDefaults[it.key()], it.value())) {
+                    return fail("invalid preset parameter '" + it.key() + "'");
+                }
+                mergedDefaults[it.key()] = it.value();
+            }
+        }
+        for (auto it = explicitOverrides.begin(); it != explicitOverrides.end(); ++it) {
+            if (!baseDefaults.contains(it.key()) ||
+                !compatibleJsonValue(baseDefaults[it.key()], it.value())) {
+                return fail("invalid activation parameter '" + it.key() + "'");
+            }
+            mergedDefaults[it.key()] = it.value();
+        }
+        return true;
+    }
 }
 
 bool LayerLibrary::reload(const std::string& rootDir) {
@@ -199,37 +270,34 @@ bool LayerLibrary::loadOptInPackages(const std::string& activationPath) {
         // Package defaults are the base. A named preset may replace individual
         // defaults, and explicit activation overrides win last. Scene values
         // still win later through the existing scene-load path.
-        ofJson mergedDefaults = cfg.value("defaults", ofJson::object());
+        const ofJson packageDefaults = cfg.value("defaults", ofJson::object());
+        const ofJson presets = cfg.value("presets", ofJson::object());
+        const ofJson explicitOverrides =
+            package.contains("parameters") && package["parameters"].is_object()
+                ? package["parameters"]
+                : ofJson::object();
         const std::string presetId = package.value("preset", std::string());
-        if (!presetId.empty()) {
-            const auto presets = cfg.value("presets", ofJson::object());
-            if (!presets.contains(presetId) || !presets[presetId].is_object()) {
-                ofLogWarning("LayerLibrary") << "unknown package preset '" << presetId << "' for " << packageId;
-                valid = false;
-                continue;
-            }
-            for (auto it = presets[presetId].begin(); it != presets[presetId].end(); ++it) {
-                mergedDefaults[it.key()] = it.value();
-            }
+        std::string presetBankId = package.value("presetBank", std::string());
+        if (!presetId.empty() &&
+            !presetInBank(cfg, presetBankId, presetId, presetBankId)) {
+            ofLogWarning("LayerLibrary") << "preset '" << presetId
+                                           << "' is not in package bank '"
+                                           << package.value("presetBank", std::string())
+                                           << "' for " << packageId;
+            valid = false;
+            continue;
         }
-        if (package.contains("parameters") && package["parameters"].is_object()) {
-            for (auto it = package["parameters"].begin(); it != package["parameters"].end(); ++it) {
-                if (!mergedDefaults.contains(it.key())) {
-                    ofLogWarning("LayerLibrary") << "unknown activation parameter '" << it.key()
-                                                   << "' for " << packageId;
-                    valid = false;
-                    packageValid = false;
-                    continue;
-                }
-                if (!compatibleJsonValue(mergedDefaults[it.key()], it.value())) {
-                    ofLogWarning("LayerLibrary") << "activation parameter type mismatch for '"
-                                                   << it.key() << "' in " << packageId;
-                    valid = false;
-                    packageValid = false;
-                    continue;
-                }
-                mergedDefaults[it.key()] = it.value();
-            }
+        ofJson mergedDefaults;
+        std::string mergeError;
+        if (!mergePackageDefaults(packageDefaults,
+                                  presets,
+                                  presetId,
+                                  explicitOverrides,
+                                  mergedDefaults,
+                                  &mergeError)) {
+            ofLogWarning("LayerLibrary") << mergeError << " for " << packageId;
+            valid = false;
+            packageValid = false;
         }
         if (!packageValid) {
             continue;
@@ -256,8 +324,11 @@ bool LayerLibrary::loadOptInPackages(const std::string& activationPath) {
         cfg["packageId"] = packageId;
         cfg["packageActivation"] = {
             { "preset", presetId },
+            { "presetBank", presetBankId },
             { "mappingPreset", mappingPresetId },
-            { "mappingApplied", false }
+            { "mappingApplied", false },
+            { "baseDefaults", packageDefaults },
+            { "parameters", explicitOverrides }
         };
         if (!mappingPresetId.empty()) {
             ofLogNotice("LayerLibrary") << "mapping preset '" << mappingPresetId
@@ -277,4 +348,45 @@ const LayerLibrary::Entry* LayerLibrary::find(const std::string& id) const {
         return entry.id == id;
     });
     return it != entries_.end() ? &(*it) : nullptr;
+}
+
+bool LayerLibrary::configForPackagePreset(const std::string& assetId,
+                                          const std::string& bankId,
+                                          const std::string& presetId,
+                                          ofJson& resolvedConfig,
+                                          std::string* error) const {
+    auto fail = [&](const std::string& message) {
+        if (error) {
+            *error = message;
+        }
+        return false;
+    };
+    const Entry* entry = find(assetId);
+    if (!entry) {
+        return fail("unknown package asset '" + assetId + "'");
+    }
+    const auto activation = entry->config.value("packageActivation", ofJson::object());
+    if (!activation.is_object() || !activation.contains("baseDefaults")) {
+        return fail("asset is not an activated package");
+    }
+    std::string resolvedBankId = bankId;
+    if (presetId.empty() ||
+        !presetInBank(entry->config, bankId, presetId, resolvedBankId)) {
+        return fail("preset '" + presetId + "' is not in bank '" + bankId + "'");
+    }
+    ofJson mergedDefaults;
+    if (!mergePackageDefaults(
+            activation.value("baseDefaults", ofJson::object()),
+            entry->config.value("presets", ofJson::object()),
+            presetId,
+            activation.value("parameters", ofJson::object()),
+            mergedDefaults,
+            error)) {
+        return false;
+    }
+    resolvedConfig = entry->config;
+    resolvedConfig["defaults"] = std::move(mergedDefaults);
+    resolvedConfig["packageActivation"]["preset"] = presetId;
+    resolvedConfig["packageActivation"]["presetBank"] = resolvedBankId;
+    return true;
 }

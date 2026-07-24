@@ -142,6 +142,13 @@ public:
     std::string overlayLayoutPath;
     std::string controlHubPrefsPath;
     std::string oscInputConfigPath;
+    std::string packageActivationPath_;
+    std::string localPackageActivationPath_;
+    struct PackagePresetSelection {
+        std::string bankId;
+        std::string presetId;
+    };
+    std::unordered_map<std::string, PackagePresetSelection> packagePresetSelections_;
     std::string activeMidiBank = "home";
 
     // Event bridge (connects control hub events -> HUD)

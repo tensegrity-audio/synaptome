@@ -16,8 +16,11 @@ activation is a separate, explicit allowlist in
   `LayerFactory`. This is still source registration, not plugin loading.
 - Browser inspection reads `layer-package-inspection.json` directly and does
   not instantiate, configure, or call `setup()` on inspected packages.
-- Browser inspection displays static choices and unresolved dynamic-provider
-  state without resolving providers or rewriting stored defaults.
+- Browser inspection displays static choices and resolves registered
+  dynamic-provider choices without rewriting stored defaults.
+- Preset-bank selection is stored in the ignored show-machine local override
+  and applies only when that package layer is next instantiated. It does not
+  rewrite a running layer, scene, or mapping.
 
 ## Value And Mapping Precedence
 
@@ -34,9 +37,11 @@ scene and operator mappings retain ownership.
 ## Signal Bloom Example
 
 The committed config is deliberately disabled. To run the vetted example
-locally, set both `enabled` fields to `true`. The selected preset and optional
-`parameters` object are merged before the existing scene-load path applies
-saved values.
+locally, set both `enabled` fields to `true`. An active package exposes its
+ordered preset bank in the Browser. Choosing a labeled preset writes its stable
+`presetBank` and `preset` IDs to `layer-packages.local.json`; the selected
+preset and optional `parameters` object are merged on the next layer load
+before the existing scene-load path applies saved values.
 
 ## Validation
 
@@ -50,9 +55,10 @@ synaptome\tests\LayerPackageBench\x64\Release\LayerPackageBench.exe
 ```
 
 The runtime-adapter command deterministically derives identity, defaults,
-presets, and suggestion-only mapping metadata from the reviewed package. The
-BrowserFlow native suite additionally proves disabled activation is a
-no-op, explicit activation merges values in the documented order, mapping
-suggestions are not auto-applied, and inspection leaves offline layer storage
-empty. The layer bench compares all 18 runtime IDs, kinds, and float ranges
-against the package.
+presets, preset-bank labels, and suggestion-only mapping metadata from the
+reviewed package. The 19-scenario BrowserFlow native suite additionally proves
+disabled activation is a no-op, explicit activation merges values in the
+documented order, preset selection uses stable IDs and rolls back on
+persistence failure, mapping suggestions are not auto-applied, and
+inspection/catalog/mapping state remains unchanged. The layer bench compares
+all 18 runtime IDs, kinds, and float ranges against the package.

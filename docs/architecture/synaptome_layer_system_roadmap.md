@@ -155,6 +155,10 @@ What is real today:
   metadata or stored values.
 - Signal Bloom has explicit default-off source registration and a focused
   native lifecycle/offscreen bench.
+- Active packages expose ordered preset banks as labeled Browser choices.
+  Selection persists stable IDs in the ignored show-machine override and
+  affects the next layer instantiation without mutating current scene or
+  mapping state.
 
 What is only draft tooling:
 
@@ -247,10 +251,10 @@ indexes them, but this document owns their meaning and next actions.
 | CG-12 | Layer package layout and schema | Draft schemas, a Signal Bloom fixture, shared package discovery roots, and static validation now exist. | Extend the explicit package roots toward template-backed content folders and runtime Browser loading. |
 | CG-13 | Manifest generation from package parameters | Package-derived parameter manifest snapshots expand package suffixes through `registryPrefix`; `gen_parameter_manifest.py --include-packages` now writes/checks a draft combined manifest without changing the canonical manifest. | Decide when package-derived entries become part of the canonical `parameter_manifest.json` rather than a draft combined gate. |
 | CG-14 | Dropdown option metadata and dynamic providers | A revisioned runtime provider registry resolves app-owned `transport.bpmMultipliers` choices in read-only Browser inspection. Missing defaults are marked and preserved, and native coverage proves package metadata is not mutated. | Add an explicit editable selection surface only after preset ownership and persistence behavior are locked. |
-| CG-15 | Layer preset package contract | Scenes persist parameter values, but layer-local presets are not a package-owned, suffix-based, validated contract. | Add `layer_preset.schema.json`, bundled preset fixtures, package discovery rules, operator-local user preset policy, and scene/preset merge semantics. |
+| CG-15 | Layer preset package contract | Package-owned suffix-based presets and ordered banks are schema-validated. The Browser persists a stable bank/preset selection in the operator-local override and applies it on the next layer load with tested precedence and rollback. | Keep current scene values authoritative; consider live preset application only after value provenance and transactional rollback exist. |
 | CG-16 | Single-layer package validator and runtime bench | Signal Bloom now passes a focused static check and native lifecycle/offscreen bench; full package-vs-runtime descriptor comparison and pixel/non-blank output checks remain. | Compare every runtime descriptor against package declarations, then add optional rendered-output assertions. |
 | CG-17 | Folder-driven discovery and file-backed generated layers | Current catalog behavior relies on explicit layer JSON entries; STL-style dropped files do not yet have a standard generated asset/template path. | Define discovery roots, folder-to-Browser rules, stable generated IDs, sidecar overrides, and template schemas for file-backed generated layers. |
-| CG-18 | Package OSC mapping presets | Layers cannot yet ship suggested OSC/audio/beat mappings that appear as editable Browser mapping rows. | Add package mapping-preset metadata using parameter suffix targets, slot expansion, conflict rules, validation, and scene/operator merge behavior. |
+| CG-18 | Package OSC mapping presets | Packages can ship validated suffix-based OSC/audio/control mapping suggestions, and activation records but never applies the chosen mapping preset. Editable Browser mapping rows do not exist yet. | Add explicit apply/edit controls with slot expansion, conflict preview, and rollback while retaining scene/operator ownership. |
 
 ## Roadmap
 
@@ -369,13 +373,15 @@ Deliverables:
 - Operator-local user preset policy.
 - Scene merge behavior for selected preset vs explicit edited values.
 
-Success means a performer can quickly switch a layer between named parameter
-states without changing scenes, replacing the layer, or hiding an algorithm
-swap.
+Success ultimately means a performer can quickly switch a layer between named
+parameter states without changing scenes or hiding an algorithm swap.
 
-Current runtime seam: opt-in activation merges package defaults, a selected
-preset, and explicit activation parameters in that order; existing scene load
-then wins. Browser preset-bank selection is still pending.
+Current runtime seam: the Browser exposes labeled preset banks for active
+packages and persists stable IDs in the operator-local activation override.
+The choice applies to the next layer instantiation. Opt-in activation merges
+package defaults, the selected preset, and explicit activation parameters in
+that order; existing scene load then wins. Live mutation of a running layer is
+intentionally deferred until parameter provenance and rollback are explicit.
 
 ### Phase 6: Visible Mapping Presets
 
@@ -410,14 +416,18 @@ Deliverables:
 - Package-discovered catalog sections.
 - Named dropdown rendering for `options[]`.
 - Dynamic option rendering for `optionsSource`.
-- Preset-bank controls.
+- Preset-bank controls. Done for active packages as operator-local, next-load
+  selection with stable IDs and rollback on persistence failure.
 - Mapping-preset activation controls.
 - Manifest-first inspection so browsing a layer does not require expensive or
   side-effectful setup.
 
 Current status: the Browser consumes the runtime inspection payload as a
-separate read-only category. Native coverage proves those rows carry no live
-parameter pointers and do not hydrate or instantiate layers.
+separate read-only category, resolves registered option providers, and exposes
+an active-package preset picker through host callbacks. Native coverage proves
+inspection rows carry no live parameter pointers, selection uses stable IDs,
+and preset persistence does not mutate inspection, catalog, scene, or mapping
+state.
 
 Success means the Browser becomes an authoring and performance surface for the
 package contract, not a loose reflection of runtime state.
@@ -491,17 +501,15 @@ without pretending Synaptome has hot-loaded plugins before it does.
 
 ## Immediate Next Step
 
-The safe vertical slice is converged: the optional runtime adapter is generated
-from reviewed package data, Signal Bloom's dynamic `optionsSource` resolves
-through an app-owned revisioned registry, unavailable stored values are
-preserved and marked, and the live-window smoke passes.
+The safe vertical slice now includes a generated optional runtime adapter,
+revisioned app-owned dynamic option resolution, unavailable-value
+preservation, and labeled operator-local preset selection for the next layer
+load. Release, incremental, native-flow, contract, and offscreen bench gates
+pass.
 
-1. Add explicit preset-bank selection with the locked defaults -> preset ->
-   explicit override -> scene precedence.
+1. Promote named static/runtime choices such as `Half Time`, `Normal`, and
+   `Double Time` from read-only inspection into an explicit editable dropdown.
 2. Add mapping-preset apply/edit controls;
    never auto-apply package mappings.
 3. Keep scanning and generated/plugin registration disabled until duplicate,
    dependency, rollback, and ABI policy are tested.
-
-That gives the layer system a real contract before the Browser, manifest
-generator, preset system, or runtime bench depend on it.
