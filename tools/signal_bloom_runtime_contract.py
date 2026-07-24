@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import layer_package_runtime_adapter
 import validate_layer_packages
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -30,20 +31,23 @@ def main() -> int:
     package = load(PACKAGE_PATH)
     catalog = load(CATALOG_PATH)
     activation = load(ACTIVATION_PATH)
-    asset = package.get("asset", {})
-
-    for key in ("id", "label", "category", "layerGroup", "model", "stateModel", "type", "registryPrefix"):
-        if catalog.get(key) != asset.get(key):
-            errors.append(f"optional catalog {key} does not match package asset.{key}")
+    expected_catalog, adapter_errors = layer_package_runtime_adapter.build_adapter(PACKAGE_PATH)
+    errors.extend(adapter_errors)
+    if expected_catalog is None:
+        errors.append("optional catalog adapter could not be generated")
+    elif catalog != expected_catalog:
+        errors.append(
+            "optional catalog adapter is stale; run "
+            "python tools\\synaptome_layer.py runtime-adapter "
+            "docs\\examples\\layer_packages\\signal_bloom\\layer.package.json "
+            "--output synaptome\\bin\\data\\layers-optional\\examples.signal_bloom.json --write"
+        )
 
     package_defaults = {
         str(parameter.get("id")): parameter.get("default")
         for parameter in package.get("parameters", [])
         if isinstance(parameter, dict) and "default" in parameter
     }
-    if catalog.get("defaults") != package_defaults:
-        errors.append("optional catalog defaults do not exactly match package parameter defaults")
-
     expected_presets: dict[str, Any] = {}
     for reference in package.get("presets", []):
         if not isinstance(reference, dict):
@@ -51,9 +55,6 @@ def main() -> int:
         preset_path = PACKAGE_PATH.parent / str(reference.get("path", ""))
         preset = load(preset_path)
         expected_presets[str(reference.get("presetId", ""))] = preset.get("parameters", {})
-    if catalog.get("presets") != expected_presets:
-        errors.append("optional catalog presets do not exactly match package preset files")
-
     package_mapping_ids = {
         str(item.get("id"))
         for item in package.get("mappingPresets", [])
@@ -66,7 +67,7 @@ def main() -> int:
         if isinstance(item, dict)
     }
     if catalog_mapping_ids != package_mapping_ids:
-        errors.append("optional catalog mapping preset IDs do not match the package")
+        errors.append("generated optional catalog mapping preset IDs do not match the package")
     for item in catalog_mappings:
         if item.get("appliedByDefault") is not False or item.get("ownership") != "suggestion-only":
             errors.append(f"mapping preset {item.get('id')} must remain disabled suggestion-only metadata")

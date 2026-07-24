@@ -4,10 +4,10 @@ State Summary
 - Request ID: layer_package_compatibility_bench_scaffolding
 - Phase: EXECUTION
 - Status: In Progress
-- Steps Complete: 7 / 10 (3 additional steps in progress)
-- Progress: The static package contract now has an artist-facing check command, the Browser consumes a runtime copy of package/generated metadata as non-editable rows without instantiation, Signal Bloom has disabled-by-default source-registered activation with deterministic preset/override merge behavior, and a dedicated headless/offscreen lifecycle bench passes.
-- Last Step Outcome: 2026-07-19 - Passed 18 BrowserFlow scenarios and the Signal Bloom bench (18 registered parameters, 240 updates, offscreen draw), including disabled activation, explicit activation, and mapping-suggestion ownership checks.
-- Next Step: Reduce declaration drift between package metadata, the reviewed optional catalog entry, and runtime registration before adding package-root scanning or automatic mapping activation.
+- Steps Complete: 8 / 10 (2 additional steps in progress)
+- Progress: The static package contract now generates the reviewed optional runtime adapter, the Browser consumes package/generated metadata as non-editable rows without instantiation, Signal Bloom has disabled-by-default source-registered activation with deterministic preset/override merge behavior, and a dedicated headless/offscreen lifecycle bench passes. Package-owned static and dynamic option metadata now flow through checked snapshots with an explicit preserve-on-unavailable policy.
+- Last Step Outcome: 2026-07-24 - Generated the Signal Bloom runtime adapter from its package, added a package-owned `transport.bpmMultipliers` option source, passed all 18 BrowserFlow scenarios and the Signal Bloom bench, and completed live-window loading of Signal Bloom plus Aurora Veil.
+- Next Step: Render package named options and dynamic option-provider state in the Browser without rewriting stored values; provider resolution, preset application, and mapping activation must remain explicit.
 - Dependencies / Overlap: `docs/project_ops/synaptome_layer_design_standards.md`, `docs/architecture/synaptome_layer_system_roadmap.md`, `docs/architecture/synaptome_artist_sdk.md`, `docs/contracts/contract_gaps.md`, `docs/contracts/parameter_manifest.json`, `docs/schemas/layer_asset.schema.json`, `tools/layer_catalog_regression.py`, `tools/gen_parameter_manifest.py`.
 - Primary Scope: contracts
 - Secondary Scopes: artist-sdk, docs, tests, runtime
@@ -17,8 +17,8 @@ State Summary
 - Priority Lane: Fast-Track
 - Ready State: Ready
 - Ready Gate: Met for read-only inspection and vetted opt-in source registration; automatic discovery and mapping activation remain out of scope.
-- Project Ops / Roadmap Updates (timestamped): 2026-06-25 - Promoted layer package scaffolding from backlog. 2026-07-18 - Reconciled the request with the current Project Ops readiness contract and pre-media gate. 2026-07-18 - Completed the bounded package-owned static option slice and paused before runtime promotion.
-- Resume From: Execution; converge duplicated declarations and add a package-owned dynamic option fixture before considering any additional runtime promotion.
+- Project Ops / Roadmap Updates (timestamped): 2026-06-25 - Promoted layer package scaffolding from backlog. 2026-07-18 - Reconciled the request with the current Project Ops readiness contract and pre-media gate. 2026-07-18 - Completed the bounded package-owned static option slice and paused before runtime promotion. 2026-07-24 - Converged the reviewed runtime adapter, added package-owned dynamic option metadata and unavailable-value policy, and completed the live-window smoke.
+- Resume From: Execution; implement Browser option rendering against the read-only inspection payload before preset-bank or mapping-preset controls.
 
 ## Current State In Plain English
 
@@ -56,6 +56,10 @@ What is real:
   the generated catalog and inspection payload.
 - One generated-layer dynamic option-source fixture (`materialPreset`) that
   names a future runtime provider without resolving it.
+- One package-owned dynamic option-source fixture (`bpmMultiplier`) plus a
+  machine-readable preserve-and-mark-unavailable policy.
+- A generated Signal Bloom runtime adapter that removes hand-maintained
+  package/default/preset/mapping duplication.
 
 What is not real yet:
 
@@ -124,9 +128,11 @@ Risk profile:
 12. Done: add a focused package check command and single-layer lifecycle bench.
 13. Done: add disabled-by-default source-registered activation and lock value
     plus mapping ownership semantics.
-14. Next: eliminate declaration drift, then add one package-owned
-    `optionsSource` fixture. Keep scanning, generated registration, and
-    automatic mapping activation separate.
+14. Done: generate the reviewed optional runtime adapter from package metadata.
+15. Done: add one package-owned `optionsSource` fixture and preserve-on-
+    unavailable payload policy.
+16. Next: render static choices and unavailable dynamic-option state in the
+    Browser without resolving providers or rewriting stored values.
 
 ## Milestone Synthesis
 
@@ -235,7 +241,7 @@ Risk profile:
 | LPB-2 | Add folder discovery rules for explicit packages and template-backed content folders. | In Progress |
 | LPB-3 | Add static package validator. | Done |
 | LPB-4 | Add file-backed generated-layer fixture, starting with an STL/model drop template. | Done |
-| LPB-5 | Add package parameter declarations, static options, and dynamic option source metadata. | In Progress |
+| LPB-5 | Add package parameter declarations, static options, and dynamic option source metadata. | Done |
 | LPB-6 | Generate manifest/catalog entries from package metadata. | Done |
 | LPB-7 | Add package OSC mapping preset metadata and validation. | Done |
 | LPB-8 | Add layer preset schema, preset banks, fixtures, and validation. | Done |
@@ -266,6 +272,11 @@ Risk profile:
   an honest source-registration example behind a disabled allowlist, locked
   value/mapping merge behavior, and added native Browser plus layer-bench
   coverage.
+- 2026-07-24 - Added `synaptome-layer runtime-adapter` so the reviewed optional
+  runtime catalog is generated from Signal Bloom package/default/preset/mapping
+  data; added a package-owned `transport.bpmMultipliers` option source and
+  machine-readable preserve-on-unavailable policy; completed the live-window
+  Signal Bloom/Aurora Veil smoke.
 
 ## Validation
 
@@ -282,8 +293,12 @@ Risk profile:
 - Passed: `python tools\validate_configs.py tools\testdata\layer_browser_inspection\expected_layer_browser_inspection_payload.json`
 - Passed: `python tools\validate_configs.py docs\examples\generated_layers\stl_models\generated_layer.template.json docs\examples\generated_layers\stl_models\tetrahedron.generated_layer.json docs\examples\layer_packages\signal_bloom\layer.package.json docs\examples\layer_packages\signal_bloom\presets\default.json docs\examples\layer_packages\signal_bloom\presets\bright.json docs\examples\layer_packages\signal_bloom\presets\calm.json tools\testdata\layer_browser_inspection\expected_layer_browser_inspection_payload.json`
 - Passed: `python tools\synaptome_layer.py check docs\examples\layer_packages\signal_bloom\layer.package.json`
+- Passed: `python tools\synaptome_layer.py runtime-adapter docs\examples\layer_packages\signal_bloom\layer.package.json --output synaptome\bin\data\layers-optional\examples.signal_bloom.json --check`
 - Passed: `LayerPackageBench.exe` (18 parameters, 240 updates, offscreen draw).
 - Passed: `BrowserFlowTest.exe` (18 scenarios, including read-only inspection and opt-in activation).
+- Passed: Release x64 build (182.25-second one-time rebuild) followed by an
+  identical 2.17-second incremental build.
+- Manual Evidence: Signal Bloom and Aurora Veil both load in a live window.
 - Manual Evidence: Inspection rows carry no runtime parameter pointers and leave offline layer storage empty. Activation is a no-op under the committed disabled config; an explicit test activation merges the bright preset and an overriding speed value while leaving the mapping preset unapplied.
 
 ## Doc Sync

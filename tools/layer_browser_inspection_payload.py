@@ -237,6 +237,10 @@ def build_payload() -> tuple[dict[str, Any], list[str]]:
             "The Browser consumes the runtime copy as read-only metadata and never instantiates these entries for inspection.",
             "Entries must not require layer instantiation, scene mutation, runtime scanning, or canonical manifest changes.",
         ],
+        "optionPolicy": {
+            "unavailableStoredValue": "preserve-and-mark-unavailable",
+            "rewritesStoredValue": False,
+        },
         "sources": [
             "tools/layer_package_catalog_regression.py",
             "tools/generated_layer_catalog_regression.py",

@@ -17,7 +17,7 @@
   ],
   "counts": {
     "parameters": 1365,
-    "layerTemplates": 731,
+    "layerTemplates": 749,
     "consoleTemplates": 517,
     "catalogAssetsWithoutLayerParameters": 12,
     "unresolvedAssets": 0,
@@ -1012,23 +1012,11 @@
         "max": 8.0,
         "step": 0.25
       },
-      "options": [
-        {
-          "value": 0.5,
-          "label": "Half Time",
-          "description": "Run at half the transport rate."
-        },
-        {
-          "value": 1.0,
-          "label": "Normal",
-          "description": "Run at the transport rate."
-        },
-        {
-          "value": 2.0,
-          "label": "Double Time",
-          "description": "Run at twice the transport rate."
-        }
-      ]
+      "optionsSource": {
+        "id": "transport.bpmMultipliers",
+        "value": "multiplier",
+        "label": "label"
+      }
     },
     {
       "id": "examples.signal_bloom.bpmSync",
@@ -1207,7 +1195,24 @@
         "min": 0.1,
         "max": 2.0,
         "step": 0.01
-      }
+      },
+      "options": [
+        {
+          "value": 0.5,
+          "label": "Compact",
+          "description": "Reduce the layer footprint."
+        },
+        {
+          "value": 0.82,
+          "label": "Default",
+          "description": "Use the reviewed package scale."
+        },
+        {
+          "value": 1.0,
+          "label": "Full",
+          "description": "Use the full normalized layer scale."
+        }
+      ]
     },
     {
       "id": "examples.signal_bloom.speed",
@@ -20423,7 +20428,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1842
+        "line": 1852
       }
     },
     {
@@ -20434,7 +20439,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1840
+        "line": 1850
       }
     },
     {
@@ -20445,7 +20450,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1844
+        "line": 1854
       }
     },
     {
@@ -20456,7 +20461,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1843
+        "line": 1853
       }
     },
     {
@@ -20467,7 +20472,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1841
+        "line": 1851
       }
     },
     {
@@ -23205,6 +23210,204 @@
         "line": 278
       },
       "sourceClass": "CosmosFormationLayer"
+    },
+    {
+      "layerType": "example.signalBloom",
+      "idPattern": "{registryPrefix}.alpha",
+      "kind": "float",
+      "suffix": "alpha",
+      "source": {
+        "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
+        "line": 103
+      },
+      "sourceClass": "SignalBloomLayer"
+    },
+    {
+      "layerType": "example.signalBloom",
+      "idPattern": "{registryPrefix}.bgColorB",
+      "kind": "float",
+      "suffix": "bgColorB",
+      "source": {
+        "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
+        "line": 138
+      },
+      "sourceClass": "SignalBloomLayer"
+    },
+    {
+      "layerType": "example.signalBloom",
+      "idPattern": "{registryPrefix}.bgColorG",
+      "kind": "float",
+      "suffix": "bgColorG",
+      "source": {
+        "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
+        "line": 136
+      },
+      "sourceClass": "SignalBloomLayer"
+    },
+    {
+      "layerType": "example.signalBloom",
+      "idPattern": "{registryPrefix}.bgColorR",
+      "kind": "float",
+      "suffix": "bgColorR",
+      "source": {
+        "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
+        "line": 134
+      },
+      "sourceClass": "SignalBloomLayer"
+    },
+    {
+      "layerType": "example.signalBloom",
+      "idPattern": "{registryPrefix}.bpmMultiplier",
+      "kind": "float",
+      "suffix": "bpmMultiplier",
+      "source": {
+        "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
+        "line": 78
+      },
+      "sourceClass": "SignalBloomLayer"
+    },
+    {
+      "layerType": "example.signalBloom",
+      "idPattern": "{registryPrefix}.bpmSync",
+      "kind": "bool",
+      "suffix": "bpmSync",
+      "source": {
+        "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
+        "line": 70
+      },
+      "sourceClass": "SignalBloomLayer"
+    },
+    {
+      "layerType": "example.signalBloom",
+      "idPattern": "{registryPrefix}.colorB",
+      "kind": "float",
+      "suffix": "colorB",
+      "source": {
+        "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
+        "line": 131
+      },
+      "sourceClass": "SignalBloomLayer"
+    },
+    {
+      "layerType": "example.signalBloom",
+      "idPattern": "{registryPrefix}.colorG",
+      "kind": "float",
+      "suffix": "colorG",
+      "source": {
+        "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
+        "line": 129
+      },
+      "sourceClass": "SignalBloomLayer"
+    },
+    {
+      "layerType": "example.signalBloom",
+      "idPattern": "{registryPrefix}.colorR",
+      "kind": "float",
+      "suffix": "colorR",
+      "source": {
+        "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
+        "line": 127
+      },
+      "sourceClass": "SignalBloomLayer"
+    },
+    {
+      "layerType": "example.signalBloom",
+      "idPattern": "{registryPrefix}.gain",
+      "kind": "float",
+      "suffix": "gain",
+      "source": {
+        "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
+        "line": 111
+      },
+      "sourceClass": "SignalBloomLayer"
+    },
+    {
+      "layerType": "example.signalBloom",
+      "idPattern": "{registryPrefix}.lineOpacity",
+      "kind": "float",
+      "suffix": "lineOpacity",
+      "source": {
+        "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
+        "line": 119
+      },
+      "sourceClass": "SignalBloomLayer"
+    },
+    {
+      "layerType": "example.signalBloom",
+      "idPattern": "{registryPrefix}.rotationDeg",
+      "kind": "float",
+      "suffix": "rotationDeg",
+      "source": {
+        "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
+        "line": 95
+      },
+      "sourceClass": "SignalBloomLayer"
+    },
+    {
+      "layerType": "example.signalBloom",
+      "idPattern": "{registryPrefix}.scale",
+      "kind": "float",
+      "suffix": "scale",
+      "source": {
+        "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
+        "line": 86
+      },
+      "sourceClass": "SignalBloomLayer"
+    },
+    {
+      "layerType": "example.signalBloom",
+      "idPattern": "{registryPrefix}.speed",
+      "kind": "float",
+      "suffix": "speed",
+      "source": {
+        "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
+        "line": 65
+      },
+      "sourceClass": "SignalBloomLayer"
+    },
+    {
+      "layerType": "example.signalBloom",
+      "idPattern": "{registryPrefix}.speedInput",
+      "kind": "float",
+      "suffix": "speedInput",
+      "source": {
+        "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
+        "line": 150
+      },
+      "sourceClass": "SignalBloomLayer"
+    },
+    {
+      "layerType": "example.signalBloom",
+      "idPattern": "{registryPrefix}.visible",
+      "kind": "bool",
+      "suffix": "visible",
+      "source": {
+        "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
+        "line": 57
+      },
+      "sourceClass": "SignalBloomLayer"
+    },
+    {
+      "layerType": "example.signalBloom",
+      "idPattern": "{registryPrefix}.xInput",
+      "kind": "float",
+      "suffix": "xInput",
+      "source": {
+        "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
+        "line": 146
+      },
+      "sourceClass": "SignalBloomLayer"
+    },
+    {
+      "layerType": "example.signalBloom",
+      "idPattern": "{registryPrefix}.yInput",
+      "kind": "float",
+      "suffix": "yInput",
+      "source": {
+        "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
+        "line": 148
+      },
+      "sourceClass": "SignalBloomLayer"
     },
     {
       "layerType": "excitableMedia",

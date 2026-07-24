@@ -91,6 +91,9 @@ Layer package activation artifacts:
   validates the runtime activation file.
 - `python tools\synaptome_layer.py check <layer.package.json>` is the focused
   author command.
+- `python tools\synaptome_layer.py runtime-adapter <layer.package.json>
+  --output <optional-layer.json> --check` rejects hand-maintained runtime
+  adapter drift.
 - `python tools\signal_bloom_runtime_contract.py` rejects drift between the
   package, its preset files, the reviewed optional catalog adapter, mapping
   ownership, and committed default-off activation.

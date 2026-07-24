@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import layer_package_runtime_adapter
 import validate_layer_packages
 
 
@@ -63,11 +64,45 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     check = subcommands.add_parser("check", help="validate one layer.package.json")
     check.add_argument("path", type=Path)
     check.add_argument("--json", action="store_true", help="emit a machine-readable report")
+    adapter = subcommands.add_parser(
+        "runtime-adapter",
+        help="generate or check a vetted runtime catalog adapter",
+    )
+    adapter.add_argument("path", type=Path, help="layer.package.json")
+    adapter.add_argument("--output", type=Path, required=True)
+    action = adapter.add_mutually_exclusive_group()
+    action.add_argument("--check", action="store_true", help="check the generated adapter (default)")
+    action.add_argument("--write", action="store_true", help="write the generated adapter")
     return parser.parse_args(argv)
 
 
 def main(argv: list[str]) -> int:
     args = parse_args(argv)
+    if args.command == "runtime-adapter":
+        package_path = args.path.resolve()
+        output_path = args.output.resolve()
+        if args.write:
+            errors = layer_package_runtime_adapter.write_adapter(package_path, output_path)
+            if errors:
+                for error in errors:
+                    print(f"runtime adapter error: {error}", file=sys.stderr)
+                return 1
+            print(
+                "Wrote runtime adapter "
+                f"{layer_package_runtime_adapter.rel(output_path)} "
+                f"from {layer_package_runtime_adapter.rel(package_path)}"
+            )
+            return 0
+        valid, errors = layer_package_runtime_adapter.check_adapter(package_path, output_path)
+        if not valid:
+            for error in errors:
+                print(f"runtime adapter error: {error}", file=sys.stderr)
+            return 1
+        print(
+            "Runtime adapter is current "
+            f"({layer_package_runtime_adapter.rel(output_path)})"
+        )
+        return 0
     if args.command != "check":
         return 2
     report, errors = check_package(args.path)

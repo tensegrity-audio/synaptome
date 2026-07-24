@@ -1,6 +1,6 @@
 # Synaptome Project Ops Roadmap
 
-Status: Active project index, reviewed 2026-07-19.
+Status: Active project index, reviewed 2026-07-24.
 
 This file is the single source of truth for current priority, execution state,
 and the next safe promotion point. Architecture roadmaps describe sequencing
@@ -39,10 +39,10 @@ State Summary
 - Request ID: layer_package_compatibility_bench_scaffolding
 - Phase: EXECUTION
 - Status: In Progress
-- Steps Complete: 7 / 10 (3 additional steps in progress)
-- Progress: The static package contract now has an artist-facing check command, the Browser consumes a runtime copy of package/generated metadata as non-editable rows without instantiation, Signal Bloom has disabled-by-default source-registered activation with deterministic preset/override merge behavior, and a dedicated headless/offscreen lifecycle bench passes.
-- Last Step Outcome: 2026-07-19 - Passed 18 BrowserFlow scenarios and the Signal Bloom bench (18 registered parameters, 240 updates, offscreen draw), including disabled activation, explicit activation, and mapping-suggestion ownership checks.
-- Next Step: Reduce declaration drift between package metadata, the reviewed optional catalog entry, and runtime registration before adding package-root scanning or automatic mapping activation.
+- Steps Complete: 8 / 10 (2 additional steps in progress)
+- Progress: The static package contract now generates the reviewed optional runtime adapter, the Browser consumes package/generated metadata as non-editable rows without instantiation, Signal Bloom has disabled-by-default source-registered activation with deterministic preset/override merge behavior, and a dedicated headless/offscreen lifecycle bench passes. Package-owned static and dynamic option metadata now flow through checked snapshots with an explicit preserve-on-unavailable policy.
+- Last Step Outcome: 2026-07-24 - Generated the Signal Bloom runtime adapter from its package, added a package-owned `transport.bpmMultipliers` option source, passed all 18 BrowserFlow scenarios and the Signal Bloom bench, and completed live-window loading of Signal Bloom plus Aurora Veil.
+- Next Step: Render package named options and dynamic option-provider state in the Browser without rewriting stored values; provider resolution, preset application, and mapping activation must remain explicit.
 - Dependencies / Overlap: `docs/project_ops/synaptome_layer_design_standards.md`, `docs/architecture/synaptome_layer_system_roadmap.md`, `docs/architecture/synaptome_artist_sdk.md`, `docs/contracts/contract_gaps.md`, `docs/contracts/parameter_manifest.json`, `docs/schemas/layer_asset.schema.json`, `tools/layer_catalog_regression.py`, `tools/gen_parameter_manifest.py`.
 - Primary Scope: contracts
 - Secondary Scopes: artist-sdk, docs, tests, runtime
@@ -52,13 +52,13 @@ State Summary
 - Priority Lane: Fast-Track
 - Ready State: Ready
 - Ready Gate: Met for read-only inspection and vetted opt-in source registration; automatic discovery and mapping activation remain out of scope.
-- Project Ops / Roadmap Updates (timestamped): 2026-06-25 - Promoted layer package scaffolding from backlog. 2026-07-18 - Reconciled the request with the current Project Ops readiness contract and pre-media gate. 2026-07-18 - Completed the bounded package-owned static option slice and paused before runtime promotion.
-- Resume From: Execution; converge duplicated declarations and add a package-owned dynamic option fixture before considering any additional runtime promotion.
+- Project Ops / Roadmap Updates (timestamped): 2026-06-25 - Promoted layer package scaffolding from backlog. 2026-07-18 - Reconciled the request with the current Project Ops readiness contract and pre-media gate. 2026-07-18 - Completed the bounded package-owned static option slice and paused before runtime promotion. 2026-07-24 - Converged the reviewed runtime adapter, added package-owned dynamic option metadata and unavailable-value policy, and completed the live-window smoke.
+- Resume From: Execution; implement Browser option rendering against the read-only inspection payload before preset-bank or mapping-preset controls.
 Request Doc: docs/project_ops/in_progress/layer_package_compatibility_bench_scaffolding.md
 
-Task breakdown: 7 done and 3 in progress. Automatic package-root scanning,
-dynamic option providers, preset-bank/mapping controls, and loader work remain
-outside the safe baseline.
+Task breakdown: 8 done and 2 in progress. Automatic package-root scanning,
+runtime option-provider resolution, preset-bank/mapping controls, and loader
+work remain outside the safe baseline.
 
 ## Pre-Media Safety Gate
 
@@ -128,17 +128,16 @@ with Browser activation or runtime folder scanning.
 
 ## Horizon
 
-### Next: Converge The Vertical Slice
+### Complete: Converge The Vertical Slice
 
-1. Generate the reviewed optional catalog adapter from the package; current
-   regression already rejects default, preset, mapping, ID, type, and range
-   drift across package, adapter, and runtime registration.
-2. Add one package-owned `optionsSource` fixture and define unavailable-value
-   behavior before resolving providers in the Browser.
-3. Run a live-window smoke for Signal Bloom and Aurora Veil; native and static
-   contract gates are already green.
+1. The reviewed optional catalog adapter is generated from the package and
+   checked for byte-level drift.
+2. Signal Bloom owns a dynamic `optionsSource` fixture, and the inspection
+   payload requires stored unavailable values to be preserved and marked.
+3. Signal Bloom and Aurora Veil both load in a live window; native, static, and
+   public-app gates are green.
 
-### Then: Finish Browser Ownership
+### Next: Finish Browser Ownership
 
 1. Render named options and dynamic option providers without rewriting stored
    values.

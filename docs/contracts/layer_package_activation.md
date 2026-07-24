@@ -40,13 +40,16 @@ saved values.
 
 ```powershell
 python tools\synaptome_layer.py check docs\examples\layer_packages\signal_bloom\layer.package.json
+python tools\synaptome_layer.py runtime-adapter docs\examples\layer_packages\signal_bloom\layer.package.json --output synaptome\bin\data\layers-optional\examples.signal_bloom.json --check
 python tools\signal_bloom_runtime_contract.py
 python tools\validate_configs.py synaptome\bin\data\config\layer-packages.json synaptome\bin\data\layers-optional\examples.signal_bloom.json
 msbuild synaptome\tests\LayerPackageBench\LayerPackageBench.vcxproj /p:Configuration=Release /p:Platform=x64
 synaptome\tests\LayerPackageBench\x64\Release\LayerPackageBench.exe
 ```
 
-The BrowserFlow native suite additionally proves disabled activation is a
+The runtime-adapter command deterministically derives identity, defaults,
+presets, and suggestion-only mapping metadata from the reviewed package. The
+BrowserFlow native suite additionally proves disabled activation is a
 no-op, explicit activation merges values in the documented order, mapping
 suggestions are not auto-applied, and inspection leaves offline layer storage
 empty. The layer bench compares all 18 runtime IDs, kinds, and float ranges

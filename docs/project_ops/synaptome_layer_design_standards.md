@@ -1151,6 +1151,7 @@ Recommended option sources:
 | `media.videoClips` | Video clip catalog entries. | Clip ID. |
 | `midi.inputs` | MIDI input devices. | Device ID/name. |
 | `osc.sources` | Known OSC source profiles. | Source pattern or source ID. |
+| `transport.bpmMultipliers` | Transport-supported rhythmic multipliers. | Numeric multiplier. |
 | `layer.modes` | Modes declared by the current layer package. | Mode ID. |
 | `layer.presets` | Bundled and user layer presets for the current asset. | Preset ID. |
 

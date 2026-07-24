@@ -387,13 +387,14 @@ The smallest useful public SDK slice should include:
 
 That slice would explain why Synaptome deserves to exist without depending on any specific show scene.
 
-The first vertical slice now exists: `synaptome-layer check`, manifest-only
-Browser inspection, default-off Signal Bloom activation, a native lifecycle
-bench, a scene fixture, and one reviewed media loop. Remaining work is
-convergence and tutorial polish, especially removing declaration duplication,
-finishing option/preset/mapping controls, evolving factory registration, and
-documenting projection/control-window setup.
+The first vertical slice now exists and is converged: `synaptome-layer check`,
+manifest-only Browser inspection, a package-generated runtime adapter,
+default-off Signal Bloom activation, a native lifecycle bench, a scene fixture,
+one package-owned dynamic option declaration, and one reviewed media loop.
+Remaining work is Browser option/preset/mapping ownership, factory registration
+evolution, and projection/control-window tutorial polish.
 
 Do not expand the example with more media by default. The safe next SDK slice
-is package/catalog/runtime descriptor convergence; folder discovery and
-no-source-edit installation remain future mechanisms.
+is Browser rendering for package options without silently rewriting stored
+values; folder discovery and no-source-edit installation remain future
+mechanisms.

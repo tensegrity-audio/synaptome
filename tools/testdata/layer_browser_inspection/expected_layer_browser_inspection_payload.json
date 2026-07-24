@@ -6,6 +6,10 @@
     "The Browser consumes the runtime copy as read-only metadata and never instantiates these entries for inspection.",
     "Entries must not require layer instantiation, scene mutation, runtime scanning, or canonical manifest changes."
   ],
+  "optionPolicy": {
+    "unavailableStoredValue": "preserve-and-mark-unavailable",
+    "rewritesStoredValue": false
+  },
   "sources": [
     "tools/layer_package_catalog_regression.py",
     "tools/generated_layer_catalog_regression.py",
@@ -226,7 +230,24 @@
               "max": 2.0,
               "step": 0.01
             },
-            "units": "multiplier"
+            "units": "multiplier",
+            "options": [
+              {
+                "value": 0.5,
+                "label": "Compact",
+                "description": "Reduce the layer footprint."
+              },
+              {
+                "value": 0.82,
+                "label": "Default",
+                "description": "Use the reviewed package scale."
+              },
+              {
+                "value": 1.0,
+                "label": "Full",
+                "description": "Use the full normalized layer scale."
+              }
+            ]
           },
           {
             "id": "bpmMultiplier",
@@ -240,23 +261,11 @@
               "step": 0.25
             },
             "units": "multiplier",
-            "options": [
-              {
-                "value": 0.5,
-                "label": "Half Time",
-                "description": "Run at half the transport rate."
-              },
-              {
-                "value": 1.0,
-                "label": "Normal",
-                "description": "Run at the transport rate."
-              },
-              {
-                "value": 2.0,
-                "label": "Double Time",
-                "description": "Run at twice the transport rate."
-              }
-            ]
+            "optionsSource": {
+              "id": "transport.bpmMultipliers",
+              "value": "multiplier",
+              "label": "label"
+            }
           },
           {
             "id": "bpmSync",

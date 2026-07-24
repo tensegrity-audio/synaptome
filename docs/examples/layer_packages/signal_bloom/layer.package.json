@@ -54,12 +54,12 @@
       "default": 1.0,
       "range": { "min": 0.25, "max": 8.0, "step": 0.25 },
       "units": "multiplier",
-      "options": [
-        { "value": 0.5, "label": "Half Time", "description": "Run at half the transport rate." },
-        { "value": 1.0, "label": "Normal", "description": "Run at the transport rate." },
-        { "value": 2.0, "label": "Double Time", "description": "Run at twice the transport rate." }
-      ],
-      "description": "Multiplier applied to global transport BPM when sync is enabled."
+      "optionsSource": {
+        "id": "transport.bpmMultipliers",
+        "value": "multiplier",
+        "label": "label"
+      },
+      "description": "Multiplier applied to global transport BPM when sync is enabled. The declared provider is inspection-only until Browser dynamic-option resolution is implemented."
     },
     {
       "id": "scale",
@@ -68,6 +68,11 @@
       "default": 0.82,
       "range": { "min": 0.1, "max": 2.0, "step": 0.01 },
       "units": "multiplier",
+      "options": [
+        { "value": 0.5, "label": "Compact", "description": "Reduce the layer footprint." },
+        { "value": 0.82, "label": "Default", "description": "Use the reviewed package scale." },
+        { "value": 1.0, "label": "Full", "description": "Use the full normalized layer scale." }
+      ],
       "description": "Layer-local visual scale."
     },
     {

@@ -7,6 +7,7 @@
     "schemaVersion",
     "status",
     "sourceStrategy",
+    "optionPolicy",
     "sources",
     "counts",
     "categories",
@@ -22,6 +23,21 @@
       "type": "array",
       "minItems": 1,
       "items": { "type": "string", "minLength": 1 }
+    },
+    "optionPolicy": {
+      "type": "object",
+      "required": ["unavailableStoredValue", "rewritesStoredValue"],
+      "additionalProperties": false,
+      "properties": {
+        "unavailableStoredValue": {
+          "type": "string",
+          "enum": ["preserve-and-mark-unavailable"]
+        },
+        "rewritesStoredValue": {
+          "type": "boolean",
+          "enum": [false]
+        }
+      }
     },
     "sources": {
       "type": "array",
@@ -227,7 +243,8 @@
             { "type": "boolean" }
           ]
         },
-        "label": { "type": "string", "minLength": 1 }
+        "label": { "type": "string", "minLength": 1 },
+        "description": { "type": "string" }
       }
     },
     "optionsSource": {

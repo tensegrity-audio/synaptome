@@ -1057,6 +1057,9 @@ def _contract_schema_for_resolved_path(resolved: Path):
     if rel_path.match("tools/testdata/layer_browser_inspection/expected_layer_browser_inspection_payload.json"):
         return BasePath / "docs" / "schemas" / "layer_browser_inspection_payload.schema.json"
 
+    if rel_path == Path("synaptome/bin/data/config/layer-package-inspection.json"):
+        return BasePath / "docs" / "schemas" / "layer_browser_inspection_payload.schema.json"
+
     if (
         "layer_packages" in rel_path.parts
         and resolved.parent.name == "presets"
