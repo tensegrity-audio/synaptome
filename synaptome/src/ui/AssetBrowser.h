@@ -2,6 +2,7 @@
 
 #include "ofMain.h"
 #include "MenuController.h"
+#include "MenuSkin.h"
 #include "../visuals/LayerLibrary.h"
 #include <functional>
 #include <set>
@@ -15,6 +16,7 @@ public:
     void setActiveQuery(std::function<bool(const std::string& id)> query);
     void setCommandHandler(std::function<void(const LayerLibrary::Entry& entry, int key)> handler);
     void setAllowEntryPredicate(std::function<bool(const LayerLibrary::Entry&)> predicate);
+    void setMenuSkin(const MenuSkin& skin) { skin_ = skin; }
 
     bool isActive() const { return active_; }
 
@@ -55,6 +57,7 @@ private:
     bool active_ = false;
     int selected_ = 0;
     std::set<std::string> collapsedKeys_;
+    MenuSkin skin_ = MenuSkin::ConsoleHub();
 
     const std::string stateId = "ui.assets";
     const std::string stateLabel = "Asset Browser";

@@ -27,11 +27,12 @@ void KeyMappingUI::draw() const {
 
     rebuildView();
 
+    const float textScale = std::max(0.01f, skin_.metrics.typographyScale);
     float y = 40.0f;
     std::string header = learning_ ? "Key Mapping � learning (press a key or Esc to cancel)"
                                    : "Key Mapping � Enter: learn   S: save   R: reset   Esc: close";
-    ofDrawBitmapStringHighlight(header, 20.0f, y);
-    y += 22.0f;
+    drawBitmapStringHighlightScaled(header, 20.0f, y, textScale);
+    y += 22.0f * textScale;
 
     for (std::size_t i = 0; i < rows_.size(); ++i) {
         const auto& row = rows_[i];
@@ -61,8 +62,8 @@ void KeyMappingUI::draw() const {
                 }
             }
         }
-        ofDrawBitmapStringHighlight(line, 20.0f, y);
-        y += 18.0f;
+        drawBitmapStringHighlightScaled(line, 20.0f, y, textScale);
+        y += 18.0f * textScale;
     }
 
     // Draw transient toast if active
@@ -70,7 +71,7 @@ void KeyMappingUI::draw() const {
     if (!toastMessage_.empty() && toastExpiryMs_ > now) {
         float tx = ofGetWidth() - 20.0f;
         float ty = ofGetHeight() - 30.0f;
-        ofDrawBitmapStringHighlight(toastMessage_, tx - 300.0f, ty);
+        drawBitmapStringHighlightScaled(toastMessage_, tx - 300.0f * textScale, ty, textScale);
     }
 }
 

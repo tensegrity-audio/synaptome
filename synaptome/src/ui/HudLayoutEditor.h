@@ -1,6 +1,7 @@
 #pragma once
 
 #include "MenuController.h"
+#include "MenuSkin.h"
 #include "HudRegistry.h"
 #include "overlays/OverlayManager.h"
 
@@ -11,6 +12,7 @@
 class HudLayoutEditor : public MenuController::State {
 public:
     HudLayoutEditor(HudRegistry* registry, OverlayManager* overlayManager);
+    void setMenuSkin(const MenuSkin& skin) { skin_ = skin; }
 
     const std::string& id() const override { return stateId_; }
     const std::string& label() const override { return label_; }
@@ -51,6 +53,7 @@ private:
     bool active_ = false;
 
     std::array<Preset, 3> presets_{};
+    MenuSkin skin_ = MenuSkin::ConsoleHub();
 
     const std::string stateId_ = "ui.hud.layout";
     const std::string label_ = "HUD Layout Editor";

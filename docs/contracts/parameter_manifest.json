@@ -116,7 +116,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2090
+        "line": 2105
       }
     },
     {
@@ -127,7 +127,7 @@
       "units": "px",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2122
+        "line": 2137
       }
     },
     {
@@ -138,7 +138,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2079
+        "line": 2094
       }
     },
     {
@@ -149,7 +149,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2112
+        "line": 2127
       }
     },
     {
@@ -160,7 +160,7 @@
       "units": "normalized",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2065
+        "line": 2080
       }
     },
     {
@@ -171,7 +171,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2068
+        "line": 2083
       }
     },
     {
@@ -182,7 +182,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2133
+        "line": 2148
       }
     },
     {
@@ -193,7 +193,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2144
+        "line": 2159
       }
     },
     {
@@ -204,7 +204,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2101
+        "line": 2116
       }
     },
     {
@@ -215,7 +215,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2062
+        "line": 2077
       }
     },
     {
@@ -226,7 +226,7 @@
       "units": "px",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2182
+        "line": 2197
       }
     },
     {
@@ -237,7 +237,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2161
+        "line": 2176
       }
     },
     {
@@ -248,7 +248,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2177
+        "line": 2192
       }
     },
     {
@@ -259,7 +259,7 @@
       "units": "normalized",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2151
+        "line": 2166
       }
     },
     {
@@ -270,7 +270,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2154
+        "line": 2169
       }
     },
     {
@@ -281,7 +281,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2201
+        "line": 2216
       }
     },
     {
@@ -292,7 +292,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2172
+        "line": 2187
       }
     },
     {
@@ -303,7 +303,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2187
+        "line": 2202
       }
     },
     {
@@ -314,7 +314,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2192
+        "line": 2207
       }
     },
     {
@@ -325,7 +325,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2148
+        "line": 2163
       }
     },
     {
@@ -336,7 +336,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2231
+        "line": 2246
       }
     },
     {
@@ -347,7 +347,7 @@
       "units": "normalized",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2208
+        "line": 2223
       }
     },
     {
@@ -358,7 +358,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2211
+        "line": 2226
       }
     },
     {
@@ -369,7 +369,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2242
+        "line": 2257
       }
     },
     {
@@ -380,7 +380,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2298
+        "line": 2313
       }
     },
     {
@@ -391,7 +391,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2293
+        "line": 2308
       }
     },
     {
@@ -402,7 +402,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2247
+        "line": 2262
       }
     },
     {
@@ -413,7 +413,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2278
+        "line": 2293
       }
     },
     {
@@ -424,7 +424,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2205
+        "line": 2220
       }
     },
     {
@@ -435,7 +435,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2222
+        "line": 2237
       }
     },
     {
@@ -446,7 +446,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2252
+        "line": 2267
       }
     },
     {
@@ -457,7 +457,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2237
+        "line": 2252
       }
     },
     {
@@ -468,7 +468,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2266
+        "line": 2281
       }
     },
     {
@@ -479,7 +479,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2259
+        "line": 2274
       }
     },
     {
@@ -490,7 +490,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2273
+        "line": 2288
       }
     },
     {
@@ -501,7 +501,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2283
+        "line": 2298
       }
     },
     {
@@ -512,7 +512,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2288
+        "line": 2303
       }
     },
     {
@@ -523,7 +523,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2226
+        "line": 2241
       }
     },
     {
@@ -534,7 +534,7 @@
       "units": "px",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2047
+        "line": 2062
       }
     },
     {
@@ -545,7 +545,7 @@
       "units": "normalized",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2034
+        "line": 2049
       }
     },
     {
@@ -556,7 +556,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2037
+        "line": 2052
       }
     },
     {
@@ -567,7 +567,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2058
+        "line": 2073
       }
     },
     {
@@ -578,7 +578,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2031
+        "line": 2046
       }
     },
     {
@@ -589,7 +589,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 1990
+        "line": 2005
       }
     },
     {
@@ -600,7 +600,7 @@
       "units": "normalized",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 1957
+        "line": 1972
       }
     },
     {
@@ -611,7 +611,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 1960
+        "line": 1975
       }
     },
     {
@@ -622,7 +622,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2027
+        "line": 2042
       }
     },
     {
@@ -633,7 +633,7 @@
       "units": "normalized",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2021
+        "line": 2036
       }
     },
     {
@@ -644,7 +644,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 1971
+        "line": 1986
       }
     },
     {
@@ -655,7 +655,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 1999
+        "line": 2014
       }
     },
     {
@@ -666,7 +666,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2003
+        "line": 2018
       }
     },
     {
@@ -677,7 +677,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 1954
+        "line": 1969
       }
     },
     {
@@ -688,7 +688,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 1980
+        "line": 1995
       }
     },
     {
@@ -699,7 +699,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2012
+        "line": 2027
       }
     },
     {
@@ -710,7 +710,7 @@
       "units": "normalized",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2361
+        "line": 2376
       }
     },
     {
@@ -721,7 +721,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2353
+        "line": 2368
       }
     },
     {
@@ -732,7 +732,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2324
+        "line": 2339
       }
     },
     {
@@ -743,7 +743,7 @@
       "units": "normalized",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2305
+        "line": 2320
       }
     },
     {
@@ -754,7 +754,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2308
+        "line": 2323
       }
     },
     {
@@ -765,7 +765,7 @@
       "units": "beats",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2346
+        "line": 2361
       }
     },
     {
@@ -776,7 +776,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2376
+        "line": 2391
       }
     },
     {
@@ -787,7 +787,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2373
+        "line": 2388
       }
     },
     {
@@ -798,7 +798,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2370
+        "line": 2385
       }
     },
     {
@@ -809,7 +809,7 @@
       "units": "normalized",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2329
+        "line": 2344
       }
     },
     {
@@ -820,7 +820,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2302
+        "line": 2317
       }
     },
     {
@@ -831,7 +831,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2336
+        "line": 2351
       }
     },
     {
@@ -842,7 +842,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2388
+        "line": 2403
       }
     },
     {
@@ -853,7 +853,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2385
+        "line": 2400
       }
     },
     {
@@ -864,7 +864,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2382
+        "line": 2397
       }
     },
     {
@@ -875,7 +875,7 @@
       "units": "normalized",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2398
+        "line": 2413
       }
     },
     {
@@ -886,7 +886,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2318
+        "line": 2333
       }
     },
     {

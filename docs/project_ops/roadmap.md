@@ -42,12 +42,15 @@ State Summary
 - Status: In Progress
 - Progress: Removed unused per-frame render passes and eager effect buffers;
   scene serialization now captures live unmodulated float, bool, and string
-  values while preserving modifier-owned base values.
-- Last Step Outcome: 2026-07-24 - Added native scene-parameter persistence
-  coverage so direct/live edits cannot silently serialize an older cached base.
-- Next Step: Add one consistent active-scene/dirty/load-save status model for
-  Browser and HUD consumption, then audit keyboard navigation and recovery
-  paths against that model.
+  values while preserving modifier-owned base values; operator text scaling
+  now reaches every app surface; Mirror modes 0/1 are lossless full-frame
+  flips.
+- Last Step Outcome: 2026-07-24 - Unified operator typography and removed
+  Mirror's half-frame content loss, with a dedicated render contract, all 21
+  BrowserFlow scenarios, all 13 public-app contracts, and a 2.42-second
+  unchanged incremental Release build passing.
+- Next Step: Finish unsaved-change/save-result feedback, then audit keyboard
+  navigation and rehearse visual/recovery behavior on the show machine.
 - Priority Lane: Show Blocker
 - Ready State: Ready
 - Resume From: Scene status and dirty-state ownership.
@@ -58,6 +61,8 @@ Show-safe checklist:
 - [x] Remove output-preserving full-frame render waste.
 - [x] Persist the visible live value for unmodulated scene parameters.
 - [x] Preserve the underlying base and modifier stack for modulated parameters.
+- [x] Scale operator text and row spacing consistently across all app surfaces.
+- [x] Preserve the complete source frame in Mirror's horizontal/vertical modes.
 - [ ] Prove save → mutate → reload on the show machine with the heaviest scene.
 - [ ] Show active scene, unsaved changes, and last load/save result consistently.
 - [ ] Audit Browser, Console, and HUD navigation for dead ends and conflicting labels.

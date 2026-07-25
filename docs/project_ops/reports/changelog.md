@@ -2,6 +2,24 @@
 
 This changelog records Project Ops and administrative workflow changes. Product release versioning remains governed by `docs/release_policy.md`.
 
+## 2026-07-24 - runtime - global_text_scale_and_lossless_mirror
+
+- Request ID: `show_readiness_operator_stability`
+- Phase / Milestone: Pre-show operator stability
+- Summary: Promoted the existing menu text-size parameter into a global
+  operator-interface scale across every app surface, including matching row
+  spacing. Mirror's horizontal and vertical modes now flip the complete input
+  frame while preserving sampled RGBA; quadrant and radial modes retain their
+  kaleidoscopic behavior.
+- Request Doc: `docs/project_ops/in_progress/show_readiness_operator_stability.md`
+- Roadmap Entry: `docs/project_ops/roadmap.md`
+- Validation: Release x64 build; 2.42-second unchanged incremental build; all
+  21 BrowserFlow scenarios; all 13 public-app contracts; operator-render
+  contract; current parameter manifest.
+- Follow-Up Actions: Visually verify the type-scale extremes and Mirror modes
+  0/1 with the heaviest show scene, then finish dirty/save-result feedback and
+  the recovery rehearsal.
+
 ## 2026-07-24 - runtime - scene_parameter_persistence_and_status
 
 - Request ID: `show_readiness_operator_stability`

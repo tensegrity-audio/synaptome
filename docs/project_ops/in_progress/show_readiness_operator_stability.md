@@ -41,10 +41,21 @@ new visual algorithms remain paused until this checkpoint is complete.
   parameter is unmodulated and retains the base value when modifiers exist.
 - 2026-07-24: Added native float/bool/string persistence coverage; BrowserFlow
   now runs 21 scenarios.
+- 2026-07-24: Promoted `ui.menu_text_size` to the app-wide operator text
+  scale and propagated it through HUD, Console, Browser, auxiliary menus,
+  scene-load status, and the controller window with scaled row spacing.
+- 2026-07-24: Replaced Mirror's destructive half-frame duplication in its two
+  basic modes with full-frame horizontal/vertical RGBA flips. Quadrant and
+  radial modes remain explicitly artistic.
+- 2026-07-24: Added a show-critical operator-render contract, completed a
+  Release build, passed all 21 BrowserFlow scenarios and 13 public-app
+  contracts, and measured a 2.42-second unchanged incremental Release build.
 
 ## Next
 
-1. Add authoritative active-scene and dirty/load/save status.
-2. Surface the same status in Browser and HUD feeds.
-3. Audit show-critical navigation and recovery.
+1. Add authoritative unsaved-change and save-result state to the existing
+   active-scene/load-result status.
+2. Audit show-critical navigation and recovery.
+3. Visually verify app text scaling at the operator's show resolution and
+   Mirror modes 0/1 with the heaviest layered scene.
 4. Run the show-machine save/reload and performance rehearsal.

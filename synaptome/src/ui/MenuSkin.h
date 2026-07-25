@@ -51,6 +51,18 @@ inline void drawBitmapStringScaled(const std::string& text,
     ofPopMatrix();
 }
 
+inline void drawBitmapStringHighlightScaled(const std::string& text,
+                                            float x,
+                                            float y,
+                                            float scale) {
+    const float safeScale = std::max(0.01f, scale);
+    ofPushMatrix();
+    ofTranslate(x, y);
+    ofScale(safeScale, safeScale);
+    ofDrawBitmapStringHighlight(text, 0.0f, 0.0f);
+    ofPopMatrix();
+}
+
 struct MenuSkin {
     struct ColumnDescriptor {
         std::string id;

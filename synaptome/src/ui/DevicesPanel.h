@@ -1,6 +1,7 @@
 #pragma once
 
 #include "MenuController.h"
+#include "MenuSkin.h"
 #include "ColumnControls.h"
 #include "ofJson.h"
 #include "../io/MidiRouter.h"
@@ -18,6 +19,7 @@ public:
 
     void setMidiRouter(MidiRouter* router);
     void setDeviceMapsDirectory(const std::string& path);
+    void setMenuSkin(const MenuSkin& skin) { skin_ = skin; }
     void markRosterDirty() const;
     bool isBindingCaptureActive() const { return pendingLearn_.active; }
 
@@ -168,6 +170,7 @@ private:
         int roleIndex = -1;
     };
     mutable PendingLearn pendingLearn_;
+    MenuSkin skin_ = MenuSkin::ConsoleHub();
 
     mutable std::vector<TreeNode> treeNodes_;
 

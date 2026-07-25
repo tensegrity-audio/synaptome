@@ -1,6 +1,7 @@
 #pragma once
 
 #include "MenuController.h"
+#include "MenuSkin.h"
 
 #include <string>
 #include <vector>
@@ -10,6 +11,7 @@ class HotkeyManager;
 class KeyMappingUI : public MenuController::State {
 public:
     explicit KeyMappingUI(HotkeyManager* manager);
+    void setMenuSkin(const MenuSkin& skin) { skin_ = skin; }
 
     void draw() const;
 
@@ -41,6 +43,7 @@ private:
     // transient UI toast for success/errors
     mutable std::string toastMessage_;
     mutable uint64_t toastExpiryMs_ = 0;
+    MenuSkin skin_ = MenuSkin::ConsoleHub();
 
     void showToast(const std::string& msg, uint64_t durationMs = 2000) const;
 

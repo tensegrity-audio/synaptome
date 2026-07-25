@@ -1494,12 +1494,13 @@ void DevicesPanel::draw() const {
     ensureTreeSelectionValid();
     ensureGridSelectionValid();
 
+    const float textScale = std::max(0.01f, skin_.metrics.typographyScale);
     const float margin = 24.0f;
-    const float headerHeight = 30.0f;
-    const float treeMinWidth = 160.0f;
-    const float treeMaxWidth = 360.0f;
-    const float treePadding = 14.0f;
-    const float rowHeight = 20.0f;
+    const float headerHeight = 30.0f * textScale;
+    const float treeMinWidth = 160.0f * textScale;
+    const float treeMaxWidth = 360.0f * textScale;
+    const float treePadding = 14.0f * textScale;
+    const float rowHeight = 20.0f * textScale;
 
     const float screenW = static_cast<float>(ofGetWidth());
     const float screenH = static_cast<float>(ofGetHeight());
@@ -1527,18 +1528,13 @@ void DevicesPanel::draw() const {
     ofSetColor(20, 20, 26, 235);
     ofDrawRectangle(gridX, gridY, gridW, gridH);
 
-    auto drawTextStyled = [](const std::string& text, float x, float y, const ofColor& color, bool bold) {
+    auto drawTextStyled = [textScale](const std::string& text, float x, float y, const ofColor& color, bool bold) {
         ofSetColor(color);
-        if (bold) {
-            ofDrawBitmapString(text, x, y);
-            ofDrawBitmapString(text, x + 1.0f, y);
-        } else {
-            ofDrawBitmapString(text, x, y);
-        }
+        drawBitmapStringScaled(text, x, y, textScale, bold);
     };
 
     float treeCursor = treeY + rowHeight + treePadding * 0.5f;
-    const float indentStep = 16.0f;
+    const float indentStep = 16.0f * textScale;
     for (std::size_t i = 0; i < treeNodes_.size(); ++i) {
         const auto& node = treeNodes_[i];
         std::string label;
@@ -1596,7 +1592,7 @@ void DevicesPanel::draw() const {
         }
     }
     header << "   Tab: focus  |  Enter: edit  |  S: save  |  Del: clear binding";
-    ofDrawBitmapStringHighlight(header.str(), margin, margin + 16.0f);
+    drawBitmapStringHighlightScaled(header.str(), margin, margin + 16.0f * textScale, textScale);
 
     std::array<std::string, kGridColumnCount> gridHeaders{{ "Slot", "Type", "Sensitivity", "Label", "Binding" }};
     std::array<float, kGridColumnCount> columnWeights{{ 0.24f, 0.18f, 0.18f, 0.20f, 0.20f }};
@@ -1624,10 +1620,9 @@ void DevicesPanel::draw() const {
         }
         ofSetColor(color);
         if (bold) {
-            ofDrawBitmapString(text, columnPositions[colIndex] + 6.0f, rowY);
-            ofDrawBitmapString(text, columnPositions[colIndex] + 7.0f, rowY);
+            drawBitmapStringScaled(text, columnPositions[colIndex] + 6.0f * textScale, rowY, textScale, true);
         } else {
-            ofDrawBitmapString(text, columnPositions[colIndex] + 6.0f, rowY);
+            drawBitmapStringScaled(text, columnPositions[colIndex] + 6.0f * textScale, rowY, textScale);
         }
     };
 
@@ -1639,9 +1634,9 @@ void DevicesPanel::draw() const {
         if (options.empty()) {
             return;
         }
-        const float padding = 6.0f;
-        const float itemHeight = rowHeight - 2.0f;
-        float boxWidth = std::max(cellWidth, 140.0f);
+        const float padding = 6.0f * textScale;
+        const float itemHeight = rowHeight - 2.0f * textScale;
+        float boxWidth = std::max(cellWidth, 140.0f * textScale);
         float boxX = cellX;
         float boxY = cellY - rowHeight + 2.0f;
         if (boxY < gridY) {
@@ -1674,7 +1669,7 @@ void DevicesPanel::draw() const {
                                 itemHeight);
                 ofSetColor(12, 16, 24);
             }
-            ofDrawBitmapString(options[i].label, boxX + padding + 2.0f, textY);
+            drawBitmapStringScaled(options[i].label, boxX + padding + 2.0f * textScale, textY, textScale);
         }
         ofPopStyle();
     };
@@ -1688,12 +1683,12 @@ void DevicesPanel::draw() const {
     float gridCursor = headerY + rowHeight;
     if (mode_ != Mode::GroupDetail || selectedDeviceIndex_ < 0 || selectedDeviceIndex_ >= static_cast<int>(devices_.size())) {
         ofSetColor(210);
-        ofDrawBitmapString("Select a device to edit its mapping", gridX + treePadding, gridCursor);
+        drawBitmapStringScaled("Select a device to edit its mapping", gridX + treePadding, gridCursor, textScale);
     } else {
         const auto& device = devices_[selectedDeviceIndex_];
         if (device.groups.empty() || selectedGroupIndex_ < 0 || selectedGroupIndex_ >= static_cast<int>(device.groups.size())) {
             ofSetColor(210);
-            ofDrawBitmapString("No columns defined. Use the tree to add a default mapping.", gridX + treePadding, gridCursor);
+            drawBitmapStringScaled("No columns defined. Use the tree to add a default mapping.", gridX + treePadding, gridCursor, textScale);
         } else {
             const auto& group = device.groups[selectedGroupIndex_];
             for (std::size_t r = 0; r < group.roles.size(); ++r) {

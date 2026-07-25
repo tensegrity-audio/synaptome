@@ -44,10 +44,11 @@ void HudLayoutEditor::draw() const {
     rebuildView();
 
     ofPushStyle();
+    const float textScale = std::max(0.01f, skin_.metrics.typographyScale);
     float y = 40.0f;
     std::string header = "HUD Layout Editor - Space: visibility   C: collapse   [ / ]: move column   1-3: presets (Shift stores)   S: save   R: reload   Ctrl+H: toggle HUD";
-    ofDrawBitmapStringHighlight(header, 20.0f, y);
-    y += 22.0f;
+    drawBitmapStringHighlightScaled(header, 20.0f, y, textScale);
+    y += 22.0f * textScale;
 
     for (std::size_t i = 0; i < cachedView_.entries.size(); ++i) {
         const auto& entry = cachedView_.entries[i];
@@ -68,12 +69,12 @@ void HudLayoutEditor::draw() const {
         } else {
             ofSetColor(255);
         }
-        ofDrawBitmapStringHighlight(line, 20.0f, y);
-        y += 18.0f;
+        drawBitmapStringHighlightScaled(line, 20.0f, y, textScale);
+        y += 18.0f * textScale;
     }
 
     if (!cachedView_.hotkeys.empty()) {
-        y += 10.0f;
+        y += 10.0f * textScale;
         std::ostringstream hint;
         hint << "Keys: ";
         for (std::size_t i = 0; i < cachedView_.hotkeys.size(); ++i) {
@@ -84,7 +85,7 @@ void HudLayoutEditor::draw() const {
             hint << "[" << hotkey.label << "] " << hotkey.description;
         }
         ofSetColor(180, 255, 180);
-        ofDrawBitmapStringHighlight(hint.str(), 20.0f, y);
+        drawBitmapStringHighlightScaled(hint.str(), 20.0f, y, textScale);
     }
     ofPopStyle();
 }

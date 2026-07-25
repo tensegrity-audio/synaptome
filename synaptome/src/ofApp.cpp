@@ -1598,13 +1598,13 @@ void ofApp::setup() {
     addFloat("ui.menu_text_size",
              &param_menuTextSize,
              param_menuTextSize,
-             "Menu Text Size",
+             "App Text Size",
              "UI",
              makeRange(0.75f, 2.5f, 0.05f),
              false,
              0,
              "x",
-             "Scale text across HUD, Console, and Browser menus");
+             "Scale operator-interface text across the entire app");
     addBool("console.controller.focus_console",
             &param_controllerFocusConsole,
             param_controllerFocusConsole,
@@ -2405,6 +2405,8 @@ void ofApp::setup() {
 
     keyMappingUi = std::make_shared<KeyMappingUI>(&hotkeyManager);
     hudLayoutEditor = std::make_shared<HudLayoutEditor>(&hudRegistry, &overlayManager);
+    keyMappingUi->setMenuSkin(menuSkin);
+    hudLayoutEditor->setMenuSkin(menuSkin);
 
     ensureActiveBankValid();
 
@@ -2449,6 +2451,7 @@ void ofApp::setup() {
 
     devicesPanel = std::make_shared<DevicesPanel>();
     if (devicesPanel) {
+        devicesPanel->setMenuSkin(menuSkin);
         devicesPanel->setMidiRouter(&midi);
         devicesPanel->setDeviceMapsDirectory(deviceMapsDir);
     }
@@ -2638,6 +2641,18 @@ void ofApp::applyMenuTextSkin() {
     }
     if (controlMappingHub) {
         controlMappingHub->setMenuSkin(menuSkin);
+    }
+    if (assetBrowser) {
+        assetBrowser->setMenuSkin(menuSkin);
+    }
+    if (keyMappingUi) {
+        keyMappingUi->setMenuSkin(menuSkin);
+    }
+    if (devicesPanel) {
+        devicesPanel->setMenuSkin(menuSkin);
+    }
+    if (hudLayoutEditor) {
+        hudLayoutEditor->setMenuSkin(menuSkin);
     }
 }
 
@@ -4618,6 +4633,7 @@ void ofApp::openAssetBrowserForConsole(int layerIndex) {
     // asset into the console (via addAssetToConsoleLayer) and close the
     // picker.
     assetBrowser = std::make_shared<AssetBrowser>();
+    assetBrowser->setMenuSkin(menuSkin);
     assetBrowser->setLibrary(&layerLibrary);
     assetBrowser->setAllowEntryPredicate([](const LayerLibrary::Entry& entry) {
         return !entry.isHudWidget();
@@ -7456,42 +7472,50 @@ void ofApp::drawSceneLoadSnapshot(float width, float height) const {
     ofPushStyle();
     ofBackground(secondaryDisplayBackgroundColor());
 
+    const float textScale = std::max(0.01f, menuSkin.metrics.typographyScale);
     const float pad = 18.0f;
-    float y = 30.0f;
+    const float lineStep = 18.0f * textScale;
+    float y = 30.0f * textScale;
     const std::string sceneName = sceneLoadUiSnapshot_.displayName.empty()
         ? sceneLoadUiSnapshot_.scenePath
         : sceneLoadUiSnapshot_.displayName;
 
     ofSetColor(255);
-    ofDrawBitmapString("Loading Scene", pad, y);
-    y += 22.0f;
+    drawBitmapStringScaled("Loading Scene", pad, y, textScale, true);
+    y += 22.0f * textScale;
     if (!sceneName.empty()) {
         ofSetColor(220);
-        ofDrawBitmapString(sceneName, pad, y);
-        y += 18.0f;
+        drawBitmapStringScaled(sceneName, pad, y, textScale);
+        y += lineStep;
     }
 
     ofSetColor(180);
-    ofDrawBitmapString(std::string("Phase: ") + sceneLoadPhaseLabel(sceneLoadUiSnapshot_.phase), pad, y);
-    y += 18.0f;
+    drawBitmapStringScaled(std::string("Phase: ") + sceneLoadPhaseLabel(sceneLoadUiSnapshot_.phase),
+                           pad,
+                           y,
+                           textScale);
+    y += lineStep;
     if (!sceneLoadUiSnapshot_.status.empty()) {
-        ofDrawBitmapString(sceneLoadUiSnapshot_.status, pad, y);
-        y += 18.0f;
+        drawBitmapStringScaled(sceneLoadUiSnapshot_.status, pad, y, textScale);
+        y += lineStep;
     }
 
     const std::string monitorStatus = sceneLoadUiSnapshot_.secondaryDisplayPreserved
         ? "Control Window held open"
         : (sceneLoadUiSnapshot_.secondaryDisplayWasActive ? "Control Window active state preserved" : "Control Window inactive");
     ofSetColor(150);
-    ofDrawBitmapString(monitorStatus, pad, y);
-    y += 18.0f;
+    drawBitmapStringScaled(monitorStatus, pad, y, textScale);
+    y += lineStep;
 
     if (width > 0.0f && height > 0.0f) {
         const float elapsed = sceneLoadUiSnapshot_.startedMs == 0
             ? 0.0f
             : static_cast<float>(ofGetElapsedTimeMillis() - sceneLoadUiSnapshot_.startedMs) / 1000.0f;
         ofSetColor(110);
-        ofDrawBitmapString("Elapsed: " + ofToString(elapsed, 1) + "s", pad, std::max(y, height - 24.0f));
+        drawBitmapStringScaled("Elapsed: " + ofToString(elapsed, 1) + "s",
+                               pad,
+                               std::max(y, height - 24.0f * textScale),
+                               textScale);
     }
 
     ofPopStyle();
@@ -7499,9 +7523,11 @@ void ofApp::drawSceneLoadSnapshot(float width, float height) const {
 
 void ofApp::drawSecondaryDisplayWindow(float width, float height) {
     ofPushStyle();
+    const float textScale = std::max(0.01f, menuSkin.metrics.typographyScale);
+    const float lineStep = 16.0f * textScale;
     ofBackground(secondaryDisplayBackgroundColor());
     ofSetColor(255);
-    ofDrawBitmapString(secondaryDisplayLabel(), 18, 30);
+    drawBitmapStringScaled(secondaryDisplayLabel(), 18.0f, 30.0f * textScale, textScale);
     bool routeFreeform = !secondaryDisplay_.followPrimary;
     bool shouldDrawHud = routeFreeform ? param_showHud : overlayVisibility_.hud;
     ThreeBandLayout controllerLayout = threeBandLayout.layoutForSize(width, height);
@@ -7513,16 +7539,16 @@ void ofApp::drawSecondaryDisplayWindow(float width, float height) {
         controllerParams.useThreeBandLayout = true;
         overlayManager.draw(controllerParams);
     } else if (!routeFreeform) {
-        float y = 52.0f;
-        ofDrawBitmapString("Freeform layout mode", 18, y);
-        y += 18.0f;
-        ofDrawBitmapString("Ctrl+Shift+,  Mirror projector overlays", 18, y);
-        y += 16.0f;
-        ofDrawBitmapString("Ctrl+Shift+.  Route overlays here", 18, y);
-        y += 16.0f;
-        ofDrawBitmapString("Ctrl+Shift+F  Toggle follow mode", 18, y);
-        y += 16.0f;
-        ofDrawBitmapString("Ctrl+Shift+Tab  Focus console window", 18, y);
+        float y = 52.0f * textScale;
+        drawBitmapStringScaled("Freeform layout mode", 18.0f, y, textScale, true);
+        y += 18.0f * textScale;
+        drawBitmapStringScaled("Ctrl+Shift+,  Mirror projector overlays", 18.0f, y, textScale);
+        y += lineStep;
+        drawBitmapStringScaled("Ctrl+Shift+.  Route overlays here", 18.0f, y, textScale);
+        y += lineStep;
+        drawBitmapStringScaled("Ctrl+Shift+F  Toggle follow mode", 18.0f, y, textScale);
+        y += lineStep;
+        drawBitmapStringScaled("Ctrl+Shift+Tab  Focus console window", 18.0f, y, textScale);
     }
     if (routeFreeform) {
         drawMenuPanels(controllerLayout, param_showConsole, param_showControlHub, param_showMenus);

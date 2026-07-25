@@ -78,16 +78,19 @@ void AssetBrowser::draw() const {
     if (!active_) return;
     if (!library_) return;
     auto rows = visibleRows();
+    const float textScale = std::max(0.01f, skin_.metrics.typographyScale);
+    const float headerStep = 20.0f * textScale;
+    const float rowStep = 18.0f * textScale;
     int clampedSelected = rows.empty() ? 0 : ofClamp(selected_, 0, static_cast<int>(rows.size()) - 1);
     if (rows.empty()) {
-        ofDrawBitmapStringHighlight("Asset library empty", 20, 40);
+        drawBitmapStringHighlightScaled("Asset library empty", 20.0f, 40.0f, textScale);
         return;
     }
 
     float y = 40.0f;
     std::string header = "Asset Browser  [Up/Down] select   [Left/Right] collapse/expand   [Enter] load/toggle";
-    ofDrawBitmapStringHighlight(header, 20, y);
-    y += 20.0f;
+    drawBitmapStringHighlightScaled(header, 20.0f, y, textScale);
+    y += headerStep;
 
     for (std::size_t i = 0; i < rows.size(); ++i) {
         const auto& row = rows[i];
@@ -109,15 +112,15 @@ void AssetBrowser::draw() const {
             }
         }
 
-        ofDrawBitmapStringHighlight(line, 20, y);
-        y += 18.0f;
+        drawBitmapStringHighlightScaled(line, 20.0f, y, textScale);
+        y += rowStep;
     }
 
     const auto* selectedEntry = (clampedSelected >= 0 && clampedSelected < static_cast<int>(rows.size()))
         ? rows[static_cast<std::size_t>(clampedSelected)].entry
         : nullptr;
     if (selectedEntry) {
-        y += 18.0f;
+        y += rowStep;
         bool present = presenceQuery_ ? presenceQuery_(selectedEntry->id) : false;
         bool active = activeQuery_ ? activeQuery_(selectedEntry->id) : false;
         std::string status = "Status: ";
@@ -126,17 +129,17 @@ void AssetBrowser::draw() const {
         } else {
             status += "Unassigned";
         }
-        ofDrawBitmapStringHighlight(status, 20, y);
-        y += 18.0f;
+        drawBitmapStringHighlightScaled(status, 20.0f, y, textScale);
+        y += rowStep;
         if (selectedEntry->type == "media.webcam") {
-            ofDrawBitmapStringHighlight("Webcam controls: [,] cycle device   -/= gain   M mirror", 20, y);
-            y += 18.0f;
+            drawBitmapStringHighlightScaled("Webcam controls: [,] cycle device   -/= gain   M mirror", 20.0f, y, textScale);
+            y += rowStep;
         } else if (selectedEntry->type == "media.clip") {
-            ofDrawBitmapStringHighlight("Clip controls: [,] cycle clip   -/= gain   M mirror   L loop", 20, y);
-            y += 18.0f;
+            drawBitmapStringHighlightScaled("Clip controls: [,] cycle clip   -/= gain   M mirror   L loop", 20.0f, y, textScale);
+            y += rowStep;
         }
-        ofDrawBitmapStringHighlight("Console loader: press Enter to install into the focused slot.", 20, y);
-        y += 18.0f;
+        drawBitmapStringHighlightScaled("Console loader: press Enter to install into the focused slot.", 20.0f, y, textScale);
+        y += rowStep;
     }
 }
 
