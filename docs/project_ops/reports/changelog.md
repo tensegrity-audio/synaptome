@@ -2,6 +2,24 @@
 
 This changelog records Project Ops and administrative workflow changes. Product release versioning remains governed by `docs/release_policy.md`.
 
+## 2026-07-24 - runtime - target_size_unifont_operator_text
+
+- Request ID: `show_readiness_operator_stability`
+- Phase / Milestone: Pre-show operator stability
+- Summary: Bundled GNU Unifont 17.0.05 under the SIL OFL 1.1 and replaced
+  fractional enlargement of the built-in operator bitmap font with
+  anti-aliased target-size rasterization. The shared renderer caches the
+  current pixel size, uses its own metrics for clipping and ellipsis, and
+  retains the built-in bitmap font as a failure fallback.
+- Request Doc: `docs/project_ops/in_progress/show_readiness_operator_stability.md`
+- Roadmap Entry: `docs/project_ops/roadmap.md`
+- Validation: Release x64 and BrowserFlow builds; all 21 BrowserFlow
+  scenarios; all 13 public-app contracts; eight-second runtime launch smoke;
+  2.22-second unchanged incremental Release build; operator-render contract
+  including font checksum, target-size cache, shared metrics, and fallback.
+- Follow-Up Actions: Visually verify scale extremes and the show-resolution
+  layout, then continue dirty/save-result feedback and recovery rehearsal.
+
 ## 2026-07-24 - runtime - global_text_scale_and_lossless_mirror
 
 - Request ID: `show_readiness_operator_stability`

@@ -440,17 +440,14 @@ inline std::string ConsoleState::ellipsize(const std::string& text, float maxWid
         return text;
     }
     float textScale = std::max(0.01f, skin_.metrics.typographyScale);
-    static ofBitmapFont bitmapFont;
-    auto bbox = bitmapFont.getBoundingBox(text, 0.0f, 0.0f);
-    if (bbox.getWidth() * textScale <= maxWidth) {
+    if (measureUiStringWidth(text, textScale) <= maxWidth) {
         return text;
     }
     std::string trimmed = text;
     while (!trimmed.empty()) {
         trimmed.pop_back();
         std::string candidate = trimmed + "...";
-        bbox = bitmapFont.getBoundingBox(candidate, 0.0f, 0.0f);
-        if (bbox.getWidth() * textScale <= maxWidth) {
+        if (measureUiStringWidth(candidate, textScale) <= maxWidth) {
             return candidate;
         }
     }

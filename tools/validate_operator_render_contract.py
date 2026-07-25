@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import sys
 from pathlib import Path
 
@@ -21,6 +22,11 @@ def main() -> int:
     mirror = (ROOT / "synaptome/src/visuals/effects/PostEffectChain.cpp").read_text(
         encoding="utf-8"
     )
+    menu_skin = (ROOT / "synaptome/src/ui/MenuSkin.h").read_text(encoding="utf-8")
+    console = (ROOT / "synaptome/src/ui/ConsoleState.h").read_text(encoding="utf-8")
+    control_hub = (ROOT / "synaptome/src/ui/ControlMappingHubState.h").read_text(
+        encoding="utf-8"
+    )
 
     require(app, '"App Text Size"', "global App Text Size label", errors)
     for target in (
@@ -33,6 +39,40 @@ def main() -> int:
         "hudLayoutEditor->setMenuSkin(menuSkin)",
     ):
         require(app, target, f"text-scale propagation: {target}", errors)
+
+    for fragment, label in (
+        ("class UiFontRenderer", "shared operator font renderer"),
+        ('kFontDataPath = "fonts/unifont-17.0.05.otf"', "GNU Unifont data path"),
+        ("ofTrueTypeFontSettings settings", "target-size TrueType rasterization"),
+        ("kBasePixelSize * safeScale", "text-scale to pixel-size conversion"),
+        ("loadedPixelSize_ == pixelSize", "font-size cache"),
+        ("drawBitmapFallback", "built-in bitmap fallback"),
+        ("measureUiStringWidth", "shared rendered-width measurement"),
+    ):
+        require(menu_skin, fragment, label, errors)
+
+    for source, label in (
+        (console, "Console"),
+        (control_hub, "Control Hub"),
+    ):
+        require(
+            source,
+            "measureUiStringWidth(candidate, textScale)",
+            f"{label} ellipsis uses rendered font metrics",
+            errors,
+        )
+
+    font_path = ROOT / "synaptome/bin/data/fonts/unifont-17.0.05.otf"
+    expected_font_sha256 = (
+        "85701ab9b1e251ee16f4df00b13f22eac311d72b7dab427a7d975fe7f5064702"
+    )
+    if not font_path.is_file():
+        errors.append("missing bundled GNU Unifont 17.0.05")
+    elif hashlib.sha256(font_path.read_bytes()).hexdigest() != expected_font_sha256:
+        errors.append("bundled GNU Unifont 17.0.05 checksum does not match")
+
+    if not (ROOT / "synaptome/bin/data/fonts/OFL-1.1.txt").is_file():
+        errors.append("missing bundled GNU Unifont OFL license")
 
     require(
         mirror,
@@ -70,8 +110,8 @@ def main() -> int:
         return 1
 
     print(
-        "Operator render contract OK: global UI text scaling is propagated and "
-        "basic mirror modes preserve full-frame RGBA."
+        "Operator render contract OK: GNU Unifont is rasterized at the global "
+        "UI size with fallback, and basic mirror modes preserve full-frame RGBA."
     )
     return 0
 

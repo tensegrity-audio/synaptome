@@ -2,11 +2,16 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
+#include <memory>
 #include <string>
 
 #include "ofBitmapFont.h"
+#include "ofFileUtils.h"
 #include "ofGraphics.h"
+#include "ofLog.h"
 #include "ofMesh.h"
+#include "ofTrueTypeFont.h"
 
 struct HudSkin {
     ofColor overlayBackground = ofColor(8, 8, 8, 230);
@@ -26,29 +31,127 @@ struct HudSkin {
     float badgeHeight = 22.0f;
 };
 
+class UiFontRenderer {
+public:
+    void draw(const std::string& text, float x, float y, float scale, bool bold) {
+        if (ofTrueTypeFont* font = fontForScale(scale)) {
+            font->drawString(text, x, y);
+            if (bold) {
+                font->drawString(text, x + 1.0f, y);
+            }
+            return;
+        }
+        drawBitmapFallback(text, x, y, scale, bold);
+    }
+
+    ofRectangle bounds(const std::string& text, float x, float y, float scale) {
+        if (ofTrueTypeFont* font = fontForScale(scale)) {
+            return font->getStringBoundingBox(text, x, y);
+        }
+
+        const float safeScale = std::max(0.01f, scale);
+        const ofRectangle raw = bitmapFont_.getBoundingBox(text, 0, 0);
+        return ofRectangle(x + raw.getX() * safeScale,
+                           y + raw.getY() * safeScale,
+                           raw.getWidth() * safeScale,
+                           raw.getHeight() * safeScale);
+    }
+
+private:
+    static constexpr float kBasePixelSize = 14.0f;
+    static constexpr int kMinPixelSize = 8;
+    static constexpr int kMaxPixelSize = 64;
+    static constexpr const char* kFontDataPath = "fonts/unifont-17.0.05.otf";
+
+    ofTrueTypeFont* fontForScale(float scale) {
+        const float safeScale = std::max(0.01f, scale);
+        const int pixelSize = std::clamp(
+            static_cast<int>(std::lround(kBasePixelSize * safeScale)),
+            kMinPixelSize,
+            kMaxPixelSize);
+        if (font_ && loadedPixelSize_ == pixelSize) {
+            return font_.get();
+        }
+        if (failedPixelSize_ == pixelSize) {
+            return nullptr;
+        }
+
+        auto candidate = std::make_unique<ofTrueTypeFont>();
+        ofTrueTypeFontSettings settings(ofToDataPath(kFontDataPath, true), pixelSize);
+        settings.antialiased = true;
+        settings.contours = false;
+        settings.addRange(ofUnicode::Latin);
+        settings.addRange(ofUnicode::Latin1Supplement);
+        settings.addRange(ofUnicode::GeneralPunctuation);
+        settings.addRange(ofUnicode::CurrencySymbols);
+        settings.addRange(ofUnicode::Arrows);
+        settings.addRange(ofUnicode::MathOperators);
+        settings.addRange(ofUnicode::BoxDrawing);
+        settings.addRange(ofUnicode::BlockElement);
+        settings.addRange(ofUnicode::GeometricShapes);
+        settings.addRange(ofUnicode::MiscSymbols);
+
+        if (!candidate->load(settings)) {
+            failedPixelSize_ = pixelSize;
+            if (!fontFailureLogged_) {
+                ofLogWarning("UiFontRenderer")
+                    << "Failed to load " << kFontDataPath
+                    << "; falling back to the built-in bitmap font.";
+                fontFailureLogged_ = true;
+            }
+            return nullptr;
+        }
+
+        font_ = std::move(candidate);
+        loadedPixelSize_ = pixelSize;
+        failedPixelSize_ = -1;
+        return font_.get();
+    }
+
+    void drawBitmapFallback(const std::string& text,
+                            float x,
+                            float y,
+                            float scale,
+                            bool bold) {
+        const float safeScale = std::max(0.01f, scale);
+        ofPushMatrix();
+        ofTranslate(x, y);
+        ofScale(safeScale, safeScale);
+        const ofTexture& texture = bitmapFont_.getTexture();
+        texture.bind();
+        bitmapFont_.getMesh(text, 0, 0).draw();
+        if (bold) {
+            ofPushMatrix();
+            ofTranslate(1.0f / safeScale, 0.0f);
+            bitmapFont_.getMesh(text, 0, 0).draw();
+            ofPopMatrix();
+        }
+        texture.unbind();
+        ofPopMatrix();
+    }
+
+    std::unique_ptr<ofTrueTypeFont> font_;
+    ofBitmapFont bitmapFont_;
+    int loadedPixelSize_ = -1;
+    int failedPixelSize_ = -1;
+    bool fontFailureLogged_ = false;
+};
+
+inline UiFontRenderer& uiFontRenderer() {
+    static UiFontRenderer renderer;
+    return renderer;
+}
+
 inline void drawBitmapStringScaled(const std::string& text,
                                    float x,
                                    float y,
                                    float scale,
                                    bool bold = false) {
-    float safeScale = std::max(0.01f, scale);
-    static ofBitmapFont bitmapFont;
-    ofPushMatrix();
-    ofTranslate(x, y);
-    ofScale(safeScale, safeScale);
-    const ofTexture& texture = bitmapFont.getTexture();
-    texture.bind();
-    if (bold) {
-        bitmapFont.getMesh(text, 0, 0).draw();
-        ofPushMatrix();
-        ofTranslate(1.0f / safeScale, 0.0f);
-        bitmapFont.getMesh(text, 0, 0).draw();
-        ofPopMatrix();
-    } else {
-        bitmapFont.getMesh(text, 0, 0).draw();
-    }
-    texture.unbind();
-    ofPopMatrix();
+    uiFontRenderer().draw(text, x, y, scale, bold);
+}
+
+inline float measureUiStringWidth(const std::string& text, float scale) {
+    return uiFontRenderer().bounds(text, 0.0f, 0.0f, scale).getWidth();
 }
 
 inline void drawBitmapStringHighlightScaled(const std::string& text,
@@ -56,11 +159,18 @@ inline void drawBitmapStringHighlightScaled(const std::string& text,
                                             float y,
                                             float scale) {
     const float safeScale = std::max(0.01f, scale);
-    ofPushMatrix();
-    ofTranslate(x, y);
-    ofScale(safeScale, safeScale);
-    ofDrawBitmapStringHighlight(text, 0.0f, 0.0f);
-    ofPopMatrix();
+    const float padding = 4.0f * safeScale;
+    const ofRectangle textBounds = uiFontRenderer().bounds(text, x, y, safeScale);
+    ofPushStyle();
+    ofFill();
+    ofSetColor(ofColor::black);
+    ofDrawRectangle(textBounds.getX() - padding,
+                    textBounds.getY() - padding,
+                    textBounds.getWidth() + padding * 2.0f,
+                    textBounds.getHeight() + padding * 2.0f);
+    ofSetColor(ofColor::white);
+    uiFontRenderer().draw(text, x, y, safeScale, false);
+    ofPopStyle();
 }
 
 struct MenuSkin {

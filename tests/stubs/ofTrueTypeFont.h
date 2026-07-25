@@ -9,6 +9,22 @@
 #include <string>
 #include <utility>
 
+class ofUnicode {
+public:
+    struct range {};
+
+    static inline const range Latin{};
+    static inline const range Latin1Supplement{};
+    static inline const range GeneralPunctuation{};
+    static inline const range CurrencySymbols{};
+    static inline const range Arrows{};
+    static inline const range MathOperators{};
+    static inline const range BoxDrawing{};
+    static inline const range BlockElement{};
+    static inline const range GeometricShapes{};
+    static inline const range MiscSymbols{};
+};
+
 class ofTrueTypeFontSettings {
 public:
     ofTrueTypeFontSettings(std::string fontPath, int fontSize)
@@ -17,7 +33,10 @@ public:
     std::string fontPath;
     int fontSize = 12;
     bool antialiased = true;
+    bool contours = false;
     int dpi = 96;
+
+    void addRange(const ofUnicode::range&) {}
 };
 
 class ofTrueTypeFont {

@@ -43,12 +43,14 @@ State Summary
 - Progress: Removed unused per-frame render passes and eager effect buffers;
   scene serialization now captures live unmodulated float, bool, and string
   values while preserving modifier-owned base values; operator text scaling
-  now reaches every app surface; Mirror modes 0/1 are lossless full-frame
-  flips.
-- Last Step Outcome: 2026-07-24 - Unified operator typography and removed
-  Mirror's half-frame content loss, with a dedicated render contract, all 21
-  BrowserFlow scenarios, all 13 public-app contracts, and a 2.42-second
-  unchanged incremental Release build passing.
+  now reaches every app surface and uses target-size GNU Unifont rendering;
+  Mirror modes 0/1 are lossless full-frame flips.
+- Last Step Outcome: 2026-07-24 - Bundled GNU Unifont 17.0.05 and moved the
+  shared operator renderer from fractional bitmap enlargement to cached
+  target-size rasterization, with rendered-width measurement and a built-in
+  bitmap fallback. Release and BrowserFlow builds, all 21 BrowserFlow
+  scenarios, all 13 public-app contracts, an eight-second runtime smoke, and
+  a 2.22-second unchanged incremental build pass.
 - Next Step: Finish unsaved-change/save-result feedback, then audit keyboard
   navigation and rehearse visual/recovery behavior on the show machine.
 - Priority Lane: Show Blocker
@@ -62,6 +64,7 @@ Show-safe checklist:
 - [x] Persist the visible live value for unmodulated scene parameters.
 - [x] Preserve the underlying base and modifier stack for modulated parameters.
 - [x] Scale operator text and row spacing consistently across all app surfaces.
+- [x] Rasterize operator text at its requested size instead of scaling a bitmap.
 - [x] Preserve the complete source frame in Mirror's horizontal/vertical modes.
 - [ ] Prove save → mutate → reload on the show machine with the heaviest scene.
 - [ ] Show active scene, unsaved changes, and last load/save result consistently.
