@@ -1738,10 +1738,6 @@ void main() {
             shader_.linkProgram();
         }
 
-        void resize(int width, int height) override {
-            ensureHistory(width, height);
-        }
-
         void apply(const ofFbo& src, ofFbo& dst) override {
             ensureHistory(src.getWidth(), src.getHeight());
             if (!historyReady_) {
@@ -1863,12 +1859,6 @@ void main() {
     public:
         explicit MotionEffectWrapper(MotionExtractProcessor* processor)
             : processor_(processor) {}
-
-        void resize(int width, int height) override {
-            if (processor_) {
-                processor_->resize(width, height);
-            }
-        }
 
         void apply(const ofFbo& src, ofFbo& dst) override {
             if (processor_) {
@@ -2471,16 +2461,6 @@ void PostEffectChain::setup(ParameterRegistry& registry) {
     motionEffect_ = std::make_unique<MotionEffectWrapper>(motionProcessor_.get());
 }
 
-void PostEffectChain::resize(int width, int height) {
-    ensureBuffers(width, height);
-    if (mirrorEffect_) mirrorEffect_->resize(width, height);
-    if (ditherEffect_) ditherEffect_->resize(width, height);
-    if (asciiEffect_) asciiEffect_->resize(width, height);
-    if (asciiSupersampleEffect_) asciiSupersampleEffect_->resize(width, height);
-    if (crtEffect_) crtEffect_->resize(width, height);
-    if (motionEffect_) motionEffect_->resize(width, height);
-}
-
 void PostEffectChain::applyConsole(ofFbo& fbo) {
     std::vector<Effect*> active;
     if (routeFromValue(mirrorRoute_) == Route::Console && mirrorEffect_) active.push_back(mirrorEffect_.get());
@@ -2582,52 +2562,6 @@ void PostEffectChain::ensureBuffers(int width, int height) {
 
     pingFbo_.allocate(settings);
     pongFbo_.allocate(settings);
-}
-
-void PostEffectChain::prepareLayerBuffers(int layerCount, int width, int height) {
-    if (layerCount <= 0 || width <= 0 || height <= 0) {
-        layerBuffers_.clear();
-        layerBufferWidth_ = 0;
-        layerBufferHeight_ = 0;
-        return;
-    }
-
-    const int targetWidth = std::max(1, width);
-    const int targetHeight = std::max(1, height);
-    const bool dimensionsChanged = layerBufferWidth_ != targetWidth || layerBufferHeight_ != targetHeight;
-
-    layerBufferWidth_ = targetWidth;
-    layerBufferHeight_ = targetHeight;
-
-    if (static_cast<int>(layerBuffers_.size()) != layerCount) {
-        layerBuffers_.resize(layerCount);
-    }
-
-    ofFbo::Settings settings;
-    settings.width = targetWidth;
-    settings.height = targetHeight;
-    settings.useDepth = false;
-    settings.useStencil = false;
-    settings.internalformat = GL_RGBA;
-    settings.textureTarget = GL_TEXTURE_2D;
-    settings.minFilter = GL_LINEAR;
-    settings.maxFilter = GL_LINEAR;
-    settings.wrapModeHorizontal = GL_CLAMP_TO_EDGE;
-    settings.wrapModeVertical = GL_CLAMP_TO_EDGE;
-
-    for (auto& buffer : layerBuffers_) {
-        if (!buffer.isAllocated() || dimensionsChanged || buffer.getWidth() != targetWidth ||
-            buffer.getHeight() != targetHeight) {
-            buffer.allocate(settings);
-        }
-    }
-}
-
-ofFbo* PostEffectChain::layerBufferPtr(int index) {
-    if (index < 0 || index >= static_cast<int>(layerBuffers_.size())) {
-        return nullptr;
-    }
-    return &layerBuffers_[index];
 }
 
 PostEffectChain::CoverageWindow PostEffectChain::resolveCoverageWindow(int effectColumnIndex,

@@ -2,6 +2,23 @@
 
 This changelog records Project Ops and administrative workflow changes. Product release versioning remains governed by `docs/release_policy.md`.
 
+## 2026-07-24 - runtime - show_day_render_path_cleanup
+
+- Request ID: `show_day_render_path_cleanup`
+- Phase / Milestone: Pre-show runtime performance
+- Summary: Removed eight unused full-resolution layer-history render targets
+  and their per-frame clears/copies, stopped clearing invisible slot buffers,
+  and made post-effect scratch, mirror-history, and motion-history buffers
+  allocate only when their effects are first used. Scene output and effect
+  algorithms are unchanged.
+- Request Doc: `docs/dev_playbook.md`
+- Roadmap Entry: Operator-directed pre-show stabilization
+- Validation: Clean Release x64 rebuild; all 20 BrowserFlow scenarios; Signal
+  Bloom offscreen package bench; all 13 public-app contracts; strict extraction
+  and app-independence gates; 2.46-second identical incremental build.
+- Follow-Up Actions: Run the documented 60-second heaviest-show-scene visual
+  and frame-time check on the show GPU before adding more visual load.
+
 ## 2026-07-24 - artist-sdk - labeled_parameter_selection
 
 - Request ID: `layer_package_compatibility_bench_scaffolding`

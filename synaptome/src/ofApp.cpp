@@ -3844,9 +3844,7 @@ void ofApp::ensureSlotFbo(ofFbo& fbo, glm::ivec2 viewport) {
 
 void ofApp::drawConsole(glm::ivec2 viewport, float beatPhase) {
     ensureConsoleLayerViewports(viewport);
-    postEffects.resize(viewport.x, viewport.y);
     const int layerCount = static_cast<int>(consoleSlots.size());
-    postEffects.prepareLayerBuffers(layerCount, viewport.x, viewport.y);
 
     auto clearFbo = [](ofFbo& fbo) {
         if (!fbo.isAllocated()) return;
@@ -3854,20 +3852,6 @@ void ofApp::drawConsole(glm::ivec2 viewport, float beatPhase) {
         ofClear(0, 0, 0, 0);
         glClear(GL_DEPTH_BUFFER_BIT);
         fbo.end();
-    };
-
-    auto copySlotToLayerBuffer = [&](int slotIndex) {
-        ofFbo* buffer = postEffects.layerBufferPtr(slotIndex);
-        if (!buffer) return;
-        buffer->begin();
-        ofClear(0, 0, 0, 0);
-        if (slotIndex >= 0 && slotIndex < static_cast<int>(consoleSlots.size())) {
-            const auto& srcSlot = consoleSlots[slotIndex];
-            if (srcSlot.layerFbo.isAllocated()) {
-                srcSlot.layerFbo.draw(0, 0, viewport.x, viewport.y);
-            }
-        }
-        buffer->end();
     };
 
     auto routeStateForSlot = [&](const ConsoleSlot& slot) -> int {
@@ -3882,16 +3866,12 @@ void ofApp::drawConsole(glm::ivec2 viewport, float beatPhase) {
     for (std::size_t i = 0; i < consoleSlots.size(); ++i) {
         auto& slot = consoleSlots[i];
         if (!slot.active) {
-            clearFbo(slot.layerFbo);
-            copySlotToLayerBuffer(static_cast<int>(i));
             continue;
         }
 
         if (isFxType(slot.type)) {
             int routeState = routeStateForSlot(slot);
             if (routeState != 1) {
-                clearFbo(slot.layerFbo);
-                copySlotToLayerBuffer(static_cast<int>(i));
                 continue;
             }
 
@@ -3994,8 +3974,6 @@ void ofApp::drawConsole(glm::ivec2 viewport, float beatPhase) {
         } else {
             clearFbo(slot.layerFbo);
         }
-
-        copySlotToLayerBuffer(static_cast<int>(i));
     }
     ofPopStyle();
 

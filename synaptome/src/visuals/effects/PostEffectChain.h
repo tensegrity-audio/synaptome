@@ -38,10 +38,8 @@ private:
 class PostEffectChain {
 public:
     void setup(ParameterRegistry& registry);
-    void resize(int width, int height);
     void applyConsole(ofFbo& fbo);
     void applyGlobal(ofFbo& fbo);
-    void prepareLayerBuffers(int layerCount, int width, int height);
     void applyDither(const ofFbo& src, ofFbo& dst);
     void applyAscii(const ofFbo& src, ofFbo& dst);
     void applyAsciiSupersample(const ofFbo& src, ofFbo& dst);
@@ -52,7 +50,6 @@ public:
 public:
     struct Effect {
         virtual ~Effect() = default;
-        virtual void resize(int width, int height) {}
         virtual void apply(const ofFbo& src, ofFbo& dst) = 0;
     };
 
@@ -156,9 +153,6 @@ private:
     int bufferHeight_ = 0;
 
     ParameterRegistry* registry_ = nullptr;
-    std::vector<ofFbo> layerBuffers_;
-    int layerBufferWidth_ = 0;
-    int layerBufferHeight_ = 0;
 
 public:
     struct CoverageWindow {
@@ -309,6 +303,4 @@ public:
     const MotionExtractProcessor* motionProcessor() const { return motionProcessor_.get(); }
 
     CoverageWindow resolveCoverageWindow(int effectColumnIndex, float coverageParamValue) const;
-    const std::vector<ofFbo>& layerBuffers() const { return layerBuffers_; }
-    ofFbo* layerBufferPtr(int index);
 };

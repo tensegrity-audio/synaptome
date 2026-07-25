@@ -54,6 +54,24 @@ Use these when touching runtime behavior not fully covered by BrowserFlow:
 - Confirm a webcam-heavy scene publishes before camera open work blocks the UI.
 - Save and reload a scene only when intentionally testing persistence.
 
+### Show-Day Performance Check
+
+Use the same scene, output resolution, display routing, and effect routes for
+every comparison. Let the scene run for 30 seconds before reading the
+Telemetry HUD or Debug Terminal, then observe FPS and frame time for at least
+60 seconds. Test the heaviest planned scene, not an empty console.
+
+For the 2026-07-24 render-path cleanup, confirm:
+
+- inactive and disabled effect slots remain visually absent;
+- enabling each planned Console or Global effect still renders correctly;
+- disabling and re-enabling an effect does not reveal a stale frame;
+- the control and projection windows remain responsive while the heaviest
+  planned scene is running.
+
+Treat 16.7 ms as the 60 FPS frame budget. Prefer a stable frame time with
+headroom over adding another effect on show day.
+
 ## Adding A Public Contract
 
 When adding a new public surface:
