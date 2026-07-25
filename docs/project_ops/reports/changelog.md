@@ -2,6 +2,22 @@
 
 This changelog records Project Ops and administrative workflow changes. Product release versioning remains governed by `docs/release_policy.md`.
 
+## 2026-07-24 - runtime - scene_parameter_persistence_and_status
+
+- Request ID: `show_readiness_operator_stability`
+- Phase / Milestone: Pre-show operator stability
+- Summary: Scene serialization now captures the bound live value for
+  unmodulated float, bool, and string parameters while retaining the base value
+  for modifier-owned parameters. The System Status HUD and Debug Terminal now
+  report the same active scene and last scene-load outcome.
+- Request Doc: `docs/project_ops/in_progress/show_readiness_operator_stability.md`
+- Roadmap Entry: `docs/project_ops/roadmap.md`
+- Validation: Release x64 build; all 21 BrowserFlow scenarios; all 13
+  public-app contracts; scene persistence and scene/display transaction gates;
+  app-independence audit.
+- Follow-Up Actions: Add authoritative unsaved-change and save-result state,
+  then complete show-machine save/mutate/reload and recovery rehearsal.
+
 ## 2026-07-24 - runtime - show_day_render_path_cleanup
 
 - Request ID: `show_day_render_path_cleanup`

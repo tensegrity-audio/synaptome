@@ -832,7 +832,7 @@ namespace {
 
     ofJson encodeFloatParam(const ParameterRegistry::FloatParam& param) {
         if (param.modifiers.empty()) {
-            return param.baseValue;
+            return param.valueForPersistence();
         }
         ofJson node;
         node["base"] = param.baseValue;
@@ -842,7 +842,7 @@ namespace {
 
     ofJson encodeBoolParam(const ParameterRegistry::BoolParam& param) {
         if (param.modifiers.empty()) {
-            return param.baseValue;
+            return param.valueForPersistence();
         }
         ofJson node;
         node["base"] = param.baseValue;
@@ -3318,6 +3318,24 @@ std::string ofApp::composeHudStatus() const {
     slotJson["capacity"] = static_cast<int>(consoleSlots.size());
     feed["slots"] = std::move(slotJson);
 
+    const std::string scenePath = activeNamedScenePath_.empty()
+        ? activeScenePath_
+        : activeNamedScenePath_;
+    const std::string sceneName = sceneDisplayNameForPath(scenePath);
+    ofJson sceneJson;
+    sceneJson["path"] = scenePath;
+    sceneJson["name"] = sceneName;
+    sceneJson["loadState"] = sceneLoadPhaseLabel(sceneLoadUiSnapshot_.phase);
+    sceneJson["loadStatus"] = sceneLoadUiSnapshot_.status;
+    sceneJson["loadElapsedMs"] = sceneLoadUiSnapshot_.totalElapsedMs;
+    feed["scene"] = std::move(sceneJson);
+    hud << "\nScene: " << (sceneName.empty() ? std::string("unsaved") : sceneName);
+    if (sceneLoadUiSnapshot_.phase == SceneLoadPhase::Failed) {
+        hud << "  [LOAD FAILED]";
+    } else if (sceneLoadUiSnapshot_.phase == SceneLoadPhase::Succeeded) {
+        hud << "  [loaded " << sceneLoadUiSnapshot_.totalElapsedMs << "ms]";
+    }
+
     ofJson controllerJson;
     controllerJson["enabled"] = secondaryDisplay_.enabled;
     controllerJson["active"] = secondaryDisplay_.active;
@@ -3651,6 +3669,12 @@ std::string ofApp::composeHudDebugTerminal() const {
         << "  dt " << ofToString(ofGetLastFrameTime() * 1000.0f, 1) << "ms";
     out << "\n> slots " << activeSlots << " active / " << std::max<std::size_t>(consoleSlots.size(), 1)
         << "  assigned " << assignedSlots;
+    const std::string scenePath = activeNamedScenePath_.empty()
+        ? activeScenePath_
+        : activeNamedScenePath_;
+    const std::string sceneName = sceneDisplayNameForPath(scenePath);
+    out << "\n> scene " << (sceneName.empty() ? std::string("unsaved") : sceneName)
+        << "  load " << sceneLoadPhaseLabel(sceneLoadUiSnapshot_.phase);
     out << "\n> bank " << (activeMidiBank.empty() ? std::string("global") : activeMidiBank);
     out << "\n> midi " << (midi.isConnected() ? "connected" : "offline");
     if (!midi.connectedPortName().empty()) {
@@ -3700,6 +3724,9 @@ std::string ofApp::composeHudDebugTerminal() const {
     feed["frameMs"] = ofGetLastFrameTime() * 1000.0f;
     feed["activeSlots"] = activeSlots;
     feed["assignedSlots"] = assignedSlots;
+    feed["activeScene"] = sceneName;
+    feed["sceneLoadState"] = sceneLoadPhaseLabel(sceneLoadUiSnapshot_.phase);
+    feed["sceneLoadStatus"] = sceneLoadUiSnapshot_.status;
     feed["activeBank"] = activeMidiBank.empty() ? "global" : activeMidiBank;
     feed["midiConnected"] = midi.isConnected();
     feed["collectorConnected"] = collector.isConnected();
@@ -4905,7 +4932,7 @@ void ofApp::writeConsoleParametersToScene(ofJson& slotNode, const ConsoleSlot& s
         if (!startsWith(id, prefix)) {
             continue;
         }
-        parameters[id] = param.baseValue;
+        parameters[id] = param.valueForPersistence();
     }
 
     if (!parameters.empty()) {
@@ -5701,7 +5728,7 @@ ofJson ofApp::encodeSceneJson(const std::string& path) const {
         }
         auto* stringParam = paramRegistry.findString(id);
         if (stringParam && stringParam->value) {
-            target[id] = stringParam->baseValue;
+            target[id] = stringParam->valueForPersistence();
         }
     };
 

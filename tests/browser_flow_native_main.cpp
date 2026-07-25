@@ -56,6 +56,7 @@ int main() {
          } },
         { "console_slot_hotkeys", browser_flow::RunConsoleSlotHotkeyScenario },
         { "coverage_window_logic", browser_flow::RunCoverageWindowLogicScenario },
+        { "scene_parameter_persistence", browser_flow::RunSceneParameterPersistenceScenario },
         { "console_store_persistence", browser_flow::RunConsoleStorePersistenceScenario },
         { "viewport_persistence", browser_flow::RunViewportPersistenceScenario },
         { "layer_opacity_parameter_row", browser_flow::RunLayerOpacityParameterScenario },

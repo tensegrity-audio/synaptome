@@ -58,6 +58,10 @@ public:
                 *value = baseValue;
             }
         }
+
+        float valueForPersistence() const {
+            return modifiers.empty() && value ? *value : baseValue;
+        }
     };
 
     struct BoolParam {
@@ -72,6 +76,10 @@ public:
                 *value = baseValue;
             }
         }
+
+        bool valueForPersistence() const {
+            return modifiers.empty() && value ? *value : baseValue;
+        }
     };
 
     struct StringParam {
@@ -84,6 +92,10 @@ public:
             if (value) {
                 *value = baseValue;
             }
+        }
+
+        std::string valueForPersistence() const {
+            return value ? *value : baseValue;
         }
     };
 

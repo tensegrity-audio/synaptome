@@ -1540,6 +1540,43 @@ bool RunCoverageWindowLogicScenario() {
     return true;
 }
 
+bool RunSceneParameterPersistenceScenario() {
+    ParameterRegistry registry;
+    ParameterRegistry::Descriptor meta;
+
+    float liveFloat = 0.25f;
+    auto& floatParam = registry.addFloat("test.scene.float", &liveFloat, liveFloat, meta);
+    liveFloat = 0.75f;
+    if (std::abs(floatParam.valueForPersistence() - 0.75f) > 0.0001f) {
+        throw std::runtime_error("Unmodulated float persistence did not capture the live value");
+    }
+
+    modifier::Modifier floatModifier;
+    floatModifier.type = modifier::Type::kAutomation;
+    registry.addFloatModifier("test.scene.float", floatModifier);
+    liveFloat = 0.9f;
+    if (std::abs(floatParam.valueForPersistence() - 0.25f) > 0.0001f) {
+        throw std::runtime_error("Modulated float persistence did not preserve the base value");
+    }
+
+    bool liveBool = false;
+    auto& boolParam = registry.addBool("test.scene.bool", &liveBool, liveBool, meta);
+    liveBool = true;
+    if (!boolParam.valueForPersistence()) {
+        throw std::runtime_error("Unmodulated bool persistence did not capture the live value");
+    }
+
+    std::string liveString = "before";
+    auto& stringParam =
+        registry.addString("test.scene.string", &liveString, liveString, meta);
+    liveString = "after";
+    if (stringParam.valueForPersistence() != "after") {
+        throw std::runtime_error("String persistence did not capture the live value");
+    }
+
+    return true;
+}
+
 bool RunViewportPersistenceScenario() {
     ControlMappingHubState hub;
     ParameterRegistry registry;

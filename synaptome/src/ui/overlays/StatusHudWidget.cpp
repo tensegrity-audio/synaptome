@@ -12,6 +12,17 @@
 namespace {
 std::string composeStatusFromFeed(const ofJson& payload) {
     std::ostringstream out;
+    if (payload.contains("scene") && payload["scene"].is_object()) {
+        const auto& scene = payload["scene"];
+        const std::string name = scene.value("name", std::string());
+        const std::string loadState = scene.value("loadState", std::string("idle"));
+        out << "\nScene: " << (name.empty() ? std::string("unsaved") : name);
+        if (loadState == "failure") {
+            out << "  [LOAD FAILED]";
+        } else if (loadState == "success") {
+            out << "  [loaded " << scene.value("loadElapsedMs", 0) << "ms]";
+        }
+    }
     if (payload.contains("slots") && payload["slots"].is_object()) {
         const auto& slots = payload["slots"];
         int active = slots.value("active", 0);
@@ -85,7 +96,7 @@ StatusHudWidget::StatusHudWidget() {
     metadata_.id = "hud.status";
     metadata_.label = "System Status";
     metadata_.category = "HUD";
-    metadata_.description = "MIDI devices, collector link, bank, and takeover state.";
+    metadata_.description = "Active scene, load result, devices, bank, effects, and takeover state.";
     metadata_.defaultColumn = 0;
     metadata_.defaultHeight = 260.0f;
     metadata_.minHeight = 160.0f;

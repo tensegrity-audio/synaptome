@@ -13,43 +13,75 @@ This roadmap does not replace the public runtime documentation or
 
 ## Current Objective
 
-Status: Achieved 2026-07-19.
+Status: Active 2026-07-24.
 
-Synaptome has reached a safe post-gate baseline: the package path has a real
-read-only Browser surface, focused author check, isolated lifecycle bench, and
-disabled-by-default activation seam; the media catalog has exactly one
-reviewed, provenance-complete public asset.
+Bring the existing app to a show-safe operating point before expanding package
+mapping, media, or visual scope. The immediate objective is predictable scene
+round-tripping, clear operator feedback, consistent controls across Browser,
+Console, and HUD surfaces, navigable recovery paths, and stable performance on
+the show machine.
 
-The baseline is intentionally narrower than runtime package loading. It means:
+The current safe sequence is:
 
 ```text
-roadmap ownership is unambiguous
-  -> package inspection is read-only and side-effect-free
-  -> runtime activation is explicit, source-registered, and off by default
-  -> preset and mapping ownership are deterministic
-  -> one package can be checked and lifecycle-tested in isolation
-  -> one reviewed public clip is manifest-addressed and reproducible
+remove output-preserving runtime waste
+  -> prove visible parameter values are what scenes persist
+  -> expose active/dirty/load/save state consistently
+  -> remove navigation dead ends and ambiguous ownership
+  -> rehearse the heaviest show scene and recovery path
+  -> resume package mapping and new media only after the show-safe checkpoint
 ```
 
 ## Active Work
+
+### Show Readiness And Operator Stability
+
+State Summary
+- Request ID: show_readiness_operator_stability
+- Phase: EXECUTION
+- Status: In Progress
+- Progress: Removed unused per-frame render passes and eager effect buffers;
+  scene serialization now captures live unmodulated float, bool, and string
+  values while preserving modifier-owned base values.
+- Last Step Outcome: 2026-07-24 - Added native scene-parameter persistence
+  coverage so direct/live edits cannot silently serialize an older cached base.
+- Next Step: Add one consistent active-scene/dirty/load-save status model for
+  Browser and HUD consumption, then audit keyboard navigation and recovery
+  paths against that model.
+- Priority Lane: Show Blocker
+- Ready State: Ready
+- Resume From: Scene status and dirty-state ownership.
+- Request Doc: `docs/project_ops/in_progress/show_readiness_operator_stability.md`
+
+Show-safe checklist:
+
+- [x] Remove output-preserving full-frame render waste.
+- [x] Persist the visible live value for unmodulated scene parameters.
+- [x] Preserve the underlying base and modifier stack for modulated parameters.
+- [ ] Prove save → mutate → reload on the show machine with the heaviest scene.
+- [ ] Show active scene, unsaved changes, and last load/save result consistently.
+- [ ] Audit Browser, Console, and HUD navigation for dead ends and conflicting labels.
+- [ ] Rehearse restart, missing-device, and failed-scene recovery.
 
 ### Layer Package And Compatibility Bench Scaffolding
 
 State Summary
 - Request ID: layer_package_compatibility_bench_scaffolding
 - Phase: EXECUTION
-- Status: In Progress
+- Status: Paused for show stabilization
 - Steps Complete: 8 / 10 (2 additional steps in progress)
 - Progress: The Browser now provides reusable labeled dropdowns on matching live package parameters for both static `options[]` and registered `optionsSource` choices, alongside the operator-local package preset-bank picker. Selections update the existing live/base parameter value, while unavailable provider values are preserved until the operator explicitly replaces them.
 - Last Step Outcome: 2026-07-24 - Added reusable live labeled parameter selection, including `Half Time` / `Normal` / `Double Time` for BPM and `Compact` / `Default` / `Full` for Scale, with provider-revision cancellation, unavailable-value preservation, telemetry, and scene/mapping/inspection isolation coverage.
-- Next Step: Add an explicit package mapping-preset preview/apply/edit flow with slot expansion, conflict handling, rollback, and no automatic mapping installation.
+- Next Step: After the show-safe checkpoint, add an explicit package
+  mapping-preset preview/apply/edit flow with slot expansion, conflict handling,
+  rollback, and no automatic mapping installation.
 - Dependencies / Overlap: `docs/project_ops/synaptome_layer_design_standards.md`, `docs/architecture/synaptome_layer_system_roadmap.md`, `docs/architecture/synaptome_artist_sdk.md`, `docs/contracts/contract_gaps.md`, `docs/contracts/parameter_manifest.json`, `docs/schemas/layer_asset.schema.json`, `tools/layer_catalog_regression.py`, `tools/gen_parameter_manifest.py`.
 - Primary Scope: contracts
 - Secondary Scopes: artist-sdk, docs, tests, runtime
 - Blocking Issues / Unknowns: Generated registration/module loading remains a later architecture decision; mapping-preset editing still needs explicit Browser ownership; beat-reactive mappings depend on the separate transport/reactivity contract.
 - Impact / Priority Notes: Establishes deterministic package and generated-content contracts before more tracked media, Browser activation, or runtime discovery increases compatibility risk.
 - Priority Score: N/A
-- Priority Lane: Fast-Track
+- Priority Lane: Deferred behind Show Blocker
 - Ready State: Ready
 - Ready Gate: Met for read-only inspection, vetted opt-in source registration, operator-local next-load preset selection, and explicit labeled live parameter selection; automatic discovery and mapping activation remain out of scope.
 - Project Ops / Roadmap Updates (timestamped): 2026-06-25 - Promoted layer package scaffolding from backlog. 2026-07-18 - Reconciled the request with the current Project Ops readiness contract and pre-media gate. 2026-07-18 - Completed the bounded package-owned static option slice and paused before runtime promotion. 2026-07-24 - Converged the reviewed runtime adapter, added package-owned dynamic option metadata and unavailable-value policy, completed the live-window smoke, rendered read-only option/provider state in the Browser, resolved the app-owned transport provider with missing-value preservation, added operator-local next-load preset-bank selection, and promoted static/runtime choices into explicit live labeled dropdowns.
