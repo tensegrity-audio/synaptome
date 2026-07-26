@@ -1,4 +1,5 @@
 #include "FlockingLayer.h"
+#include "LayerParameterBuilder.h"
 #include "ofGraphics.h"
 #include "ofUtils.h"
 #include <algorithm>
@@ -40,6 +41,7 @@ void FlockingLayer::configure(const ofJson& config) {
 
     if (config.contains("defaults")) {
         const auto& def = config["defaults"];
+        paramEnabled_ = def.value("visible", paramEnabled_);
         const bool legacyAlgorithmMode = model.empty() && def.contains("mode");
         if (model.empty()) {
             const int legacyMode = static_cast<int>(std::round(def.value("mode", paramMode_)));
@@ -52,6 +54,8 @@ void FlockingLayer::configure(const ofJson& config) {
         paramBpmSync_ = def.value("bpmSync", paramBpmSync_);
         paramBpmMultiplier_ = def.value("bpmMultiplier", paramBpmMultiplier_);
         paramAlpha_ = def.value("alpha", paramAlpha_);
+        paramSeed_ = def.value("seed", paramSeed_);
+        paramReseedRequested_ = def.value("reseed", paramReseedRequested_);
         paramMode_ = def.value("mode", paramMode_);
         if (legacyAlgorithmMode) {
             paramMode_ = 0.0f;
@@ -104,18 +108,15 @@ void FlockingLayer::configure(const ofJson& config) {
 void FlockingLayer::setup(ParameterRegistry& registry) {
     const std::string prefix = registryPrefix().empty() ? "layer.flocking" : registryPrefix();
 
+    LayerParameterBuilder common(registry, prefix, "Generative");
+    registry.addBool(prefix + ".visible", &paramEnabled_, paramEnabled_,
+                     common.boolDescriptor({ "Action: Visible", {}, {} }));
+    registry.addFloat(prefix + ".speed", &paramSpeed_, paramSpeed_,
+                      common.floatDescriptor(
+                          { "Time: Flock Speed", {}, { 0.0f, 40.0f, 0.1f },
+                            {}, {}, true, 10 }));
+
     ParameterRegistry::Descriptor meta;
-    meta.group = "Generative";
-    meta.label = "Action: Visible";
-    registry.addBool(prefix + ".visible", &paramEnabled_, paramEnabled_, meta);
-
-    meta.label = "Time: Flock Speed";
-    meta.range.min = 0.0f;
-    meta.range.max = 40.0f;
-    meta.range.step = 0.1f;
-    registry.addFloat(prefix + ".speed", &paramSpeed_, paramSpeed_, meta);
-
-    meta = {};
     meta.group = "Generative";
     meta.label = "Action: BPM Sync";
     registry.addBool(prefix + ".bpmSync", &paramBpmSync_, paramBpmSync_, meta);
@@ -126,18 +127,22 @@ void FlockingLayer::setup(ParameterRegistry& registry) {
     meta.range.step = 0.25f;
     registry.addFloat(prefix + ".bpmMultiplier", &paramBpmMultiplier_, paramBpmMultiplier_, meta);
 
-    meta = {};
-    meta.group = "Generative";
-    meta.label = "Visibility: Flock Opacity";
-    meta.range.min = 0.0f;
-    meta.range.max = 1.0f;
-    meta.range.step = 0.01f;
-    registry.addFloat(prefix + ".alpha", &paramAlpha_, paramAlpha_, meta);
+    registry.addFloat(prefix + ".alpha", &paramAlpha_, paramAlpha_,
+                      common.floatDescriptor(
+                          { "Visibility: Flock Opacity", {},
+                            { 0.0f, 1.0f, 0.01f } }));
 
-    meta = {};
-    meta.group = "Generative";
-    meta.label = "Action: Reseed";
-    registry.addBool(prefix + ".reseed", &paramReseedRequested_, paramReseedRequested_, meta);
+    registry.addFloat(
+        prefix + ".seed", &paramSeed_, paramSeed_,
+        common.floatDescriptor(
+            { "Seed: Deterministic Seed", "Flock Lifecycle",
+              { 1.0f, 999999.0f, 1.0f }, {},
+              "The same model, seed, and parameters reproduce the same initial flock" }));
+
+    registry.addBool(prefix + ".reseed", &paramReseedRequested_,
+                     paramReseedRequested_,
+                     common.boolDescriptor(
+                         { "Action: Reseed", "Flock Lifecycle", {} }));
 
     meta = {};
     meta.group = "Generative";
@@ -146,7 +151,11 @@ void FlockingLayer::setup(ParameterRegistry& registry) {
     meta.range.max = static_cast<float>(kModeCount - 1);
     meta.range.step = 1.0f;
     meta.description = modeDescriptions(model_ == Schooling);
+    meta.quickAccess = true;
+    meta.quickAccessOrder = 20;
     registry.addFloat(prefix + ".mode", &paramMode_, paramMode_, meta);
+    meta.quickAccess = false;
+    meta.quickAccessOrder = 0;
 
     meta.label = "Count: Prey";
     meta.range.min = 8.0f;
@@ -343,6 +352,7 @@ void FlockingLayer::update(const LayerUpdateParams& params) {
     paramNeighborCount_ = std::round(ofClamp(paramNeighborCount_, 1.0f, 12.0f));
     paramBpmMultiplier_ = ofClamp(paramBpmMultiplier_, 0.25f, 8.0f);
     paramAlpha_ = ofClamp(paramAlpha_, 0.0f, 1.0f);
+    paramSeed_ = std::round(ofClamp(paramSeed_, 1.0f, 999999.0f));
     paramPointSize_ = ofClamp(paramPointSize_, 1.0f, 6.0f);
     paramBackgroundAlpha_ = ofClamp(paramBackgroundAlpha_, 0.0f, 1.0f);
     paramTrailAlpha_ = ofClamp(paramTrailAlpha_, 0.0f, 1.0f);
@@ -363,6 +373,7 @@ void FlockingLayer::update(const LayerUpdateParams& params) {
     paramPredB_ = ofClamp(paramPredB_, 0.0f, 1.0f);
 
     if (paramReseedRequested_ ||
+        requestedSeed() != appliedSeed_ ||
         static_cast<int>(boids_.size()) != static_cast<int>(paramBoidCount_) ||
         static_cast<int>(predators_.size()) != static_cast<int>(paramPredatorCount_)) {
         resetSimulation();
@@ -438,19 +449,27 @@ void FlockingLayer::resetSimulation() {
     fearScratch_.clear();
     boids_.assign(static_cast<std::size_t>(std::round(paramBoidCount_)), {});
     predators_.assign(static_cast<std::size_t>(std::round(paramPredatorCount_)), {});
+    appliedSeed_ = requestedSeed();
+    rng_.seed(appliedSeed_);
 
     for (auto& boid : boids_) {
-        boid.pos = { ofRandom(textureSize_.x), ofRandom(textureSize_.y) };
-        glm::vec2 dir(ofRandom(-1.0f, 1.0f), ofRandom(-1.0f, 1.0f));
+        boid.pos = {
+            randomRange(0.0f, static_cast<float>(textureSize_.x)),
+            randomRange(0.0f, static_cast<float>(textureSize_.y))
+        };
+        glm::vec2 dir(randomRange(-1.0f, 1.0f), randomRange(-1.0f, 1.0f));
         if (glm::dot(dir, dir) < 0.0001f) dir = { 1.0f, 0.0f };
-        boid.vel = glm::normalize(dir) * ofRandom(0.2f, 0.6f);
+        boid.vel = glm::normalize(dir) * randomRange(0.2f, 0.6f);
         depositTrail(boid.pos, paramTrailDeposit_);
     }
     for (auto& predator : predators_) {
-        predator.pos = { ofRandom(textureSize_.x), ofRandom(textureSize_.y) };
-        glm::vec2 dir(ofRandom(-1.0f, 1.0f), ofRandom(-1.0f, 1.0f));
+        predator.pos = {
+            randomRange(0.0f, static_cast<float>(textureSize_.x)),
+            randomRange(0.0f, static_cast<float>(textureSize_.y))
+        };
+        glm::vec2 dir(randomRange(-1.0f, 1.0f), randomRange(-1.0f, 1.0f));
         if (glm::dot(dir, dir) < 0.0001f) dir = { -1.0f, 0.0f };
-        predator.vel = glm::normalize(dir) * ofRandom(0.15f, 0.45f);
+        predator.vel = glm::normalize(dir) * randomRange(0.15f, 0.45f);
     }
 
     dirty_ = true;
@@ -532,8 +551,8 @@ void FlockingLayer::stepSchooling(float dtScale, float time) {
             boid.vel += steering * paramEvade_ * paramPredatorPressure_ * paramFearForce_ * (0.65f + boid.fear * 1.75f);
         }
 
-        boid.vel.x += ofRandom(-1.0f, 1.0f) * paramNoise_ * stressScale;
-        boid.vel.y += ofRandom(-1.0f, 1.0f) * paramNoise_ * stressScale;
+        boid.vel.x += randomRange(-1.0f, 1.0f) * paramNoise_ * stressScale;
+        boid.vel.y += randomRange(-1.0f, 1.0f) * paramNoise_ * stressScale;
         clampSpeed(boid.vel, 0.42f, 0.8f, 1.25f + (stressScale - 1.0f) * 0.2f);
         boid.pos = wrapPosition(boid.pos + boid.vel * (1.0f + dtScale));
         depositTrail(boid.pos, paramTrailDeposit_);
@@ -860,6 +879,19 @@ int FlockingLayer::behaviorMode() const {
 
 bool FlockingLayer::predatorsActive() const {
     return paramPredatorEnabled_ && paramPredatorPressure_ > 0.0f && !predators_.empty();
+}
+
+float FlockingLayer::randomUnit() {
+    return std::generate_canonical<float, 24>(rng_);
+}
+
+float FlockingLayer::randomRange(float minimum, float maximum) {
+    return ofLerp(minimum, maximum, randomUnit());
+}
+
+std::uint32_t FlockingLayer::requestedSeed() const {
+    return static_cast<std::uint32_t>(
+        std::round(ofClamp(paramSeed_, 1.0f, 999999.0f)));
 }
 
 void FlockingLayer::stampMarker(ofFloatPixels& pixels, const glm::vec2& pos, const ofFloatColor& color, int radius) const {

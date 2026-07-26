@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Layer.h"
+#include <cstdint>
+#include <random>
 #include <vector>
 
 class AgentFieldLayer : public Layer {
@@ -50,6 +52,9 @@ private:
     float fieldCoverage(float threshold) const;
     int behaviorMode() const;
     void triggerReset();
+    float randomUnit();
+    float randomRange(float minimum, float maximum);
+    std::uint32_t requestedSeed() const;
 
     TrailModel model_ = Physarum;
     bool paramEnabled_ = true;
@@ -57,6 +62,7 @@ private:
     bool paramBpmSync_ = false;
     float paramBpmMultiplier_ = 2.0f;
     float paramAlpha_ = 1.0f;
+    float paramSeed_ = 4242.0f;
     bool paramReseedRequested_ = false;
     bool paramAutoReseed_ = false;
     float paramAutoReseedEveryBeats_ = 16.0f;
@@ -88,6 +94,8 @@ private:
     std::vector<Agent> agents_;
     ofFloatPixels pixels_;
     ofTexture texture_;
+    std::mt19937 rng_;
+    std::uint32_t appliedSeed_ = 0;
     float stepAccumulator_ = 0.0f;
     float nextAutoReseedBeat_ = -1.0f;
 };

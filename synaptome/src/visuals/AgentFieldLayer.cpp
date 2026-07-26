@@ -1,4 +1,5 @@
 #include "AgentFieldLayer.h"
+#include "LayerParameterBuilder.h"
 #include "ofGraphics.h"
 #include "ofUtils.h"
 #include <algorithm>
@@ -40,6 +41,7 @@ void AgentFieldLayer::configure(const ofJson& config) {
 
     if (config.contains("defaults")) {
         const auto& def = config["defaults"];
+        paramEnabled_ = def.value("visible", paramEnabled_);
         const bool legacyAlgorithmMode = model.empty() && def.contains("mode");
         if (model.empty()) {
             const int legacyMode = static_cast<int>(std::round(def.value("mode", paramMode_)));
@@ -55,6 +57,8 @@ void AgentFieldLayer::configure(const ofJson& config) {
         paramBpmSync_ = def.value("bpmSync", paramBpmSync_);
         paramBpmMultiplier_ = def.value("bpmMultiplier", paramBpmMultiplier_);
         paramAlpha_ = def.value("alpha", paramAlpha_);
+        paramSeed_ = def.value("seed", paramSeed_);
+        paramReseedRequested_ = def.value("reseed", paramReseedRequested_);
         paramAutoReseed_ = def.value("autoReseed", paramAutoReseed_);
         paramAutoReseedEveryBeats_ = def.value("autoReseedEveryBeats", paramAutoReseedEveryBeats_);
         paramMode_ = def.value("mode", paramMode_);
@@ -83,6 +87,12 @@ void AgentFieldLayer::configure(const ofJson& config) {
             paramTrailG_ = def["trailColor"][1].get<float>();
             paramTrailB_ = def["trailColor"][2].get<float>();
         }
+        paramBgR_ = def.value("bgR", paramBgR_);
+        paramBgG_ = def.value("bgG", paramBgG_);
+        paramBgB_ = def.value("bgB", paramBgB_);
+        paramTrailR_ = def.value("trailR", paramTrailR_);
+        paramTrailG_ = def.value("trailG", paramTrailG_);
+        paramTrailB_ = def.value("trailB", paramTrailB_);
     }
 
     if (config.contains("textureSize") && config["textureSize"].is_array() && config["textureSize"].size() >= 2) {
@@ -94,18 +104,15 @@ void AgentFieldLayer::configure(const ofJson& config) {
 void AgentFieldLayer::setup(ParameterRegistry& registry) {
     const std::string prefix = registryPrefix().empty() ? "layer.agentField" : registryPrefix();
 
+    LayerParameterBuilder common(registry, prefix, "Generative");
+    registry.addBool(prefix + ".visible", &paramEnabled_, paramEnabled_,
+                     common.boolDescriptor({ "Action: Visible", {}, {} }));
+    registry.addFloat(prefix + ".speed", &paramSpeed_, paramSpeed_,
+                      common.floatDescriptor(
+                          { "Time: Field Speed", {}, { 0.0f, 40.0f, 0.1f },
+                            {}, {}, true, 10 }));
+
     ParameterRegistry::Descriptor meta;
-    meta.group = "Generative";
-    meta.label = "Action: Visible";
-    registry.addBool(prefix + ".visible", &paramEnabled_, paramEnabled_, meta);
-
-    meta.label = "Time: Field Speed";
-    meta.range.min = 0.0f;
-    meta.range.max = 40.0f;
-    meta.range.step = 0.1f;
-    registry.addFloat(prefix + ".speed", &paramSpeed_, paramSpeed_, meta);
-
-    meta = {};
     meta.group = "Generative";
     meta.label = "Action: BPM Sync";
     registry.addBool(prefix + ".bpmSync", &paramBpmSync_, paramBpmSync_, meta);
@@ -116,16 +123,20 @@ void AgentFieldLayer::setup(ParameterRegistry& registry) {
     meta.range.step = 0.25f;
     registry.addFloat(prefix + ".bpmMultiplier", &paramBpmMultiplier_, paramBpmMultiplier_, meta);
 
-    meta = {};
-    meta.group = "Generative";
-    meta.label = "Visibility: Field Opacity";
-    meta.range.min = 0.0f;
-    meta.range.max = 1.0f;
-    meta.range.step = 0.01f;
-    registry.addFloat(prefix + ".alpha", &paramAlpha_, paramAlpha_, meta);
+    registry.addFloat(prefix + ".alpha", &paramAlpha_, paramAlpha_,
+                      common.floatDescriptor(
+                          { "Visibility: Field Opacity", {},
+                            { 0.0f, 1.0f, 0.01f } }));
+
+    registry.addFloat(
+        prefix + ".seed", &paramSeed_, paramSeed_,
+        common.floatDescriptor(
+            { "Seed: Deterministic Seed", "Trail Lifecycle",
+              { 1.0f, 999999.0f, 1.0f }, {},
+              "The same model, seed, and parameters reproduce the same initial field" }));
 
     meta = {};
-    meta.group = "Generative";
+    meta.group = "Trail Lifecycle";
     meta.label = "Action: Auto Reseed";
     registry.addBool(prefix + ".autoReseed", &paramAutoReseed_, paramAutoReseed_, meta);
 
@@ -135,19 +146,23 @@ void AgentFieldLayer::setup(ParameterRegistry& registry) {
     meta.range.step = 1.0f;
     registry.addFloat(prefix + ".autoReseedEveryBeats", &paramAutoReseedEveryBeats_, paramAutoReseedEveryBeats_, meta);
 
-    meta = {};
-    meta.group = "Generative";
-    meta.label = "Action: Reseed";
-    registry.addBool(prefix + ".reseed", &paramReseedRequested_, paramReseedRequested_, meta);
+    registry.addBool(prefix + ".reseed", &paramReseedRequested_,
+                     paramReseedRequested_,
+                     common.boolDescriptor(
+                         { "Action: Reseed", "Trail Lifecycle", {} }));
 
     meta = {};
-    meta.group = "Generative";
+    meta.group = "Trail Behavior";
     meta.label = "Action: Behavior Mode";
     meta.range.min = 0.0f;
     meta.range.max = static_cast<float>(kModeCount - 1);
     meta.range.step = 1.0f;
     meta.description = modeDescriptions();
+    meta.quickAccess = true;
+    meta.quickAccessOrder = 20;
     registry.addFloat(prefix + ".mode", &paramMode_, paramMode_, meta);
+    meta.quickAccess = false;
+    meta.quickAccessOrder = 0;
 
     meta.label = "Count: Agents";
     meta.range.min = 4.0f;
@@ -223,7 +238,7 @@ void AgentFieldLayer::setup(ParameterRegistry& registry) {
     registry.addFloat(prefix + ".trailAlpha", &paramTrailAlpha_, paramTrailAlpha_, meta);
 
     meta = {};
-    meta.group = "Generative";
+    meta.group = "Trail Color";
     meta.range.min = 0.0f;
     meta.range.max = 1.0f;
     meta.range.step = 0.01f;
@@ -253,6 +268,7 @@ void AgentFieldLayer::update(const LayerUpdateParams& params) {
     paramAgentCount_ = std::round(ofClamp(paramAgentCount_, 4.0f, 256.0f));
     paramBpmMultiplier_ = ofClamp(paramBpmMultiplier_, 0.25f, 8.0f);
     paramAlpha_ = ofClamp(paramAlpha_, 0.0f, 1.0f);
+    paramSeed_ = std::round(ofClamp(paramSeed_, 1.0f, 999999.0f));
     paramStepSize_ = ofClamp(paramStepSize_, 0.1f, 4.0f);
     paramTurnRate_ = ofClamp(paramTurnRate_, 0.01f, 2.0f);
     paramSensorAngle_ = ofClamp(paramSensorAngle_, 0.05f, 1.5f);
@@ -268,7 +284,9 @@ void AgentFieldLayer::update(const LayerUpdateParams& params) {
 
     const float beatPosition = currentBeatPosition(params.time, params.bpm);
 
-    if (static_cast<int>(agents_.size()) != static_cast<int>(paramAgentCount_) || paramReseedRequested_) {
+    if (static_cast<int>(agents_.size()) != static_cast<int>(paramAgentCount_) ||
+        requestedSeed() != appliedSeed_ ||
+        paramReseedRequested_) {
         triggerReset();
         paramReseedRequested_ = false;
     }
@@ -360,17 +378,19 @@ void AgentFieldLayer::resetAgents() {
     std::fill(field_.begin(), field_.end(), 0.0f);
     std::fill(scratch_.begin(), scratch_.end(), 0.0f);
     agents_.assign(static_cast<std::size_t>(std::round(paramAgentCount_)), {});
+    appliedSeed_ = requestedSeed();
+    rng_.seed(appliedSeed_);
 
     for (auto& agent : agents_) {
         if (model_ == Physarum) {
-            agent.x = ofRandom(textureSize_.x * 0.25f, textureSize_.x * 0.75f);
-            agent.y = ofRandom(textureSize_.y * 0.25f, textureSize_.y * 0.75f);
+            agent.x = randomRange(textureSize_.x * 0.25f, textureSize_.x * 0.75f);
+            agent.y = randomRange(textureSize_.y * 0.25f, textureSize_.y * 0.75f);
         } else {
-            agent.x = ofRandom(4.0f, std::max(5.0f, static_cast<float>(textureSize_.x - 4)));
-            agent.y = ofRandom(4.0f, std::max(5.0f, static_cast<float>(textureSize_.y - 4)));
+            agent.x = randomRange(4.0f, std::max(5.0f, static_cast<float>(textureSize_.x - 4)));
+            agent.y = randomRange(4.0f, std::max(5.0f, static_cast<float>(textureSize_.y - 4)));
         }
-        agent.angle = ofRandom(TWO_PI);
-        agent.energy = ofRandom(0.4f, 1.0f);
+        agent.angle = randomRange(0.0f, TWO_PI);
+        agent.energy = randomRange(0.4f, 1.0f);
         deposit(static_cast<int>(agent.x), static_cast<int>(agent.y), 0.6f);
     }
 
@@ -433,19 +453,19 @@ void AgentFieldLayer::stepAnt(Agent& agent, float jitterScale) {
             agent.angle += paramTurnRate_ * exploit;
         }
     }
-    agent.angle += ofRandom(-1.0f, 1.0f) * paramTurnRate_ * (0.35f + jitterScale * explore);
+    agent.angle += randomRange(-1.0f, 1.0f) * paramTurnRate_ * (0.35f + jitterScale * explore);
     agent.x += std::cos(agent.angle) * paramStepSize_;
     agent.y += std::sin(agent.angle) * paramStepSize_;
 
     if (agent.x < 1.0f || agent.x >= textureSize_.x - 1.0f || agent.y < 1.0f || agent.y >= textureSize_.y - 1.0f) {
-        agent.angle += PI + ofRandom(-0.4f, 0.4f);
+        agent.angle += PI + randomRange(-0.4f, 0.4f);
         agent.x = ofClamp(agent.x, 1.0f, static_cast<float>(textureSize_.x - 2));
         agent.y = ofClamp(agent.y, 1.0f, static_cast<float>(textureSize_.y - 2));
     }
 
     deposit(static_cast<int>(agent.x), static_cast<int>(agent.y), paramDeposit_ * (1.2f + exploit));
-    if (ofRandomuf() < 0.18f + explore * 0.18f) {
-        const float side = agent.angle + (ofRandomuf() < 0.5f ? HALF_PI : -HALF_PI);
+    if (randomUnit() < 0.18f + explore * 0.18f) {
+        const float side = agent.angle + (randomUnit() < 0.5f ? HALF_PI : -HALF_PI);
         deposit(static_cast<int>(agent.x + std::cos(side)),
                 static_cast<int>(agent.y + std::sin(side)),
                 paramDeposit_ * 0.9f);
@@ -464,21 +484,21 @@ void AgentFieldLayer::stepSlime(Agent& agent, float jitterScale) {
     if (exploit > 0.1f && std::abs(left - right) > 0.001f) {
         agent.angle += (right > left ? 1.0f : -1.0f) * paramTurnRate_ * exploit;
     }
-    if (ofRandomuf() < 0.18f + explore * 0.2f + jitterScale * 0.08f) {
-        agent.angle += ofRandom(-1.0f, 1.0f) * paramTurnRate_;
+    if (randomUnit() < 0.18f + explore * 0.2f + jitterScale * 0.08f) {
+        agent.angle += randomRange(-1.0f, 1.0f) * paramTurnRate_;
     }
     agent.x = wrapCoord(agent.x + std::cos(agent.angle) * paramStepSize_, static_cast<float>(textureSize_.x));
     agent.y = wrapCoord(agent.y + std::sin(agent.angle) * paramStepSize_, static_cast<float>(textureSize_.y));
 
     agent.energy = std::max(0.1f, agent.energy - 0.015f);
-    if (agent.energy < 0.2f || ofRandomuf() < 0.02f) {
-        agent.energy = ofRandom(0.5f, 1.0f);
-        agent.angle += ofRandom(-PI, PI);
+    if (agent.energy < 0.2f || randomUnit() < 0.02f) {
+        agent.energy = randomRange(0.5f, 1.0f);
+        agent.angle += randomRange(-PI, PI);
     }
 
     deposit(static_cast<int>(agent.x), static_cast<int>(agent.y), paramDeposit_ * (1.0f + agent.energy + exploit * 0.35f));
-    if (ofRandomuf() < 0.22f + explore * 0.25f) {
-        const float branch = agent.angle + (ofRandomuf() < 0.5f ? paramSensorAngle_ : -paramSensorAngle_);
+    if (randomUnit() < 0.22f + explore * 0.25f) {
+        const float branch = agent.angle + (randomUnit() < 0.5f ? paramSensorAngle_ : -paramSensorAngle_);
         deposit(static_cast<int>(agent.x + std::cos(branch)),
                 static_cast<int>(agent.y + std::sin(branch)),
                 paramDeposit_ * 0.7f);
@@ -503,7 +523,7 @@ void AgentFieldLayer::stepPhysarum(Agent& agent, float jitterScale) {
     } else if (right > forward && right > left) {
         agent.angle += paramTurnRate_ * exploit;
     } else {
-        agent.angle += ofRandom(-1.0f, 1.0f) * paramTurnRate_ * (0.25f + explore * 0.35f) * jitterScale;
+        agent.angle += randomRange(-1.0f, 1.0f) * paramTurnRate_ * (0.25f + explore * 0.35f) * jitterScale;
     }
 
     agent.x = wrapCoord(agent.x + std::cos(agent.angle) * paramStepSize_, static_cast<float>(textureSize_.x));
@@ -580,4 +600,17 @@ int AgentFieldLayer::behaviorMode() const {
 
 void AgentFieldLayer::triggerReset() {
     resetAgents();
+}
+
+float AgentFieldLayer::randomUnit() {
+    return std::generate_canonical<float, 24>(rng_);
+}
+
+float AgentFieldLayer::randomRange(float minimum, float maximum) {
+    return ofLerp(minimum, maximum, randomUnit());
+}
+
+std::uint32_t AgentFieldLayer::requestedSeed() const {
+    return static_cast<std::uint32_t>(
+        std::round(ofClamp(paramSeed_, 1.0f, 999999.0f)));
 }

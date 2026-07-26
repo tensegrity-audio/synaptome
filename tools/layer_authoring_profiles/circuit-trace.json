@@ -1,0 +1,47 @@
+{
+  "name": "Circuit Trace family",
+  "stages": {
+    "fast": [
+      {
+        "label": "source, parameter, catalog, and factory contract",
+        "command": [
+          "{python}",
+          "tools/validate_circuit_trace_layers.py"
+        ]
+      }
+    ],
+    "native": [
+      {
+        "label": "incremental isolated layer-authoring test build",
+        "command": [
+          "{msbuild}",
+          "synaptome/tests/LayerAuthoringTest/LayerAuthoringTest.vcxproj",
+          "/p:Configuration=Release",
+          "/p:Platform=x64",
+          "/m",
+          "/v:minimal"
+        ]
+      },
+      {
+        "label": "eight-direction native contract",
+        "command": [
+          "synaptome/tests/LayerAuthoringTest/x64/Release/LayerAuthoringTest.exe"
+        ]
+      }
+    ],
+    "incrementalApp": [
+      {
+        "label": "incremental Synaptome app build",
+        "command": [
+          "{msbuild}",
+          "synaptome/Synaptome.vcxproj",
+          "/p:Configuration=Release",
+          "/p:Platform=x64",
+          "/p:BuildProjectReferences=false",
+          "/m",
+          "/v:minimal"
+        ]
+      }
+    ]
+  }
+}

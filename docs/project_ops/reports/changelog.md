@@ -2,6 +2,255 @@
 
 This changelog records Project Ops and administrative workflow changes. Product release versioning remains governed by `docs/release_policy.md`.
 
+## 2026-07-26 - roadmap - defer_dual_screen_start_seac
+
+- Request IDs: `show_readiness_operator_stability`,
+  `spine_element_architecture_convergence`
+- Phase / Milestone: Priority-lane handoff
+- Summary: The operator explicitly postponed dual-screen and full
+  show-machine recovery rehearsal. The residual checks remain open under the
+  deferred show-readiness request, while SEAC moved from planning into
+  execution with the host/Element SDK dependency and registration inventory as
+  its first active slice.
+- Roadmap Entry: `docs/project_ops/roadmap.md`
+- Validation: Project Ops request parity and repository audit.
+- Follow-Up Actions: Publish the preserved baseline, then execute SEAC-2
+  without enabling package discovery or changing public IDs.
+
+## 2026-07-26 - architecture - spine_element_layer_model
+
+- Request ID: spine_element_architecture_convergence
+- Phase / Milestone: Architecture convergence before package expansion
+- Summary: Defined Synaptome as a stable spine hosting creative elements in
+  eight ordered composition layers. Added canonical definitions for element
+  types, definitions, instances, packages, parameters, mappings, presets,
+  scenes, machine profiles, and content assets; documented the honest
+  openFrameworks compatibility ladder and the future SDK/runtime-core/host
+  build split. Existing `Layer` code/schema names and public IDs remain
+  compatibility surfaces.
+- Roadmap Entry: `docs/project_ops/roadmap.md`
+- Validation: Changed Markdown links, Project Ops repository audit,
+  `show_readiness_operator_stability` request audit, and `git diff --check`.
+- Follow-Up Actions: Reproduce the reported dual-screen hiccup and complete the
+  show-safe rehearsal, then promote a focused contract/build-boundary request
+  before resuming mapping-preset or discovery work.
+
+## 2026-07-25 - mappings - circuit_lenia_editable_osc_defaults
+
+- Phase / Milestone: Circuit Lenia live tuning
+- Summary: Added seven semantic Circuit Lenia OSC defaults to the ordinary
+  global mapping file for threshold, contour count, trace width, growth center,
+  growth width, injection rate, and field scale. Each route uses the router's
+  absolute mode and remains visible/editable in Control & Mapping. The Lenia
+  renderer contains no OSC addresses or router dependency.
+- Roadmap Entry: `docs/project_ops/roadmap.md`
+- Validation: Mapping/config target checks, Circuit Lenia authoring contract,
+  native mapping edit/export/import coverage, and all 29 BrowserFlow scenarios.
+- Follow-Up Actions: Tune the unattractive initial surface through the visible
+  parameter controls on the show display, then save one known-good scene and
+  mapping snapshot.
+
+## 2026-07-25 - visuals - circuit_lenia_view
+
+- Phase / Milestone: Modular circuit cellular view
+- Summary: Added `generative.circuitLenia` as an independent Browser asset and
+  scene/MIDI/OSC namespace on the established deterministic Lenia simulation.
+  A fixed catalog-selected circuit presentation converts the continuous field
+  into hard, nested isocontour traces at `160x90` with nearest-neighbor scaling.
+  Circuit threshold, contour count, and trace width are labeled controls;
+  threshold and width are quick-access parameters. Organic Lenia retains its
+  existing presentation and does not expose the circuit-only controls.
+- Roadmap Entry: `docs/project_ops/roadmap.md`
+- Validation: `0.13s` Circuit Lenia authoring contract, deterministic native
+  lifecycle and organic-view isolation coverage, all 28 BrowserFlow scenarios,
+  regenerated 65-entry catalog/parameter/scene/Console fixtures, all 17
+  public-app contracts, and the incremental Release app build pass.
+- Follow-Up Actions: Visually tune threshold, contour count, trace width, and
+  palette against a representative mature Lenia organism on the show display.
+
+## 2026-07-25 - visuals - circuit_algorithm_expansion
+
+- Phase / Milestone: Modular circuit-family expansion
+- Summary: Added Circuit Ant Tunnels and Circuit Flow Field as separate catalog
+  assets on the shared `circuitTrace` runtime. Ant Tunnels uses a distinct
+  pheromone corridor-routing rule; Flow Field computes a deterministic analytic
+  vector and quantizes it through the shared eight-direction motion seam. Both
+  retain the family's coarse `256x144` nearest-neighbor presentation, complete
+  30-parameter defaults, owned deterministic seeds, and independent
+  scene/MIDI/OSC namespaces without duplicating a layer class.
+- Roadmap Entry: `docs/project_ops/roadmap.md`
+- Validation: Five-model Circuit Trace contract, 10-asset modular-family
+  contract, regenerated 64-entry catalog and parameter fixtures, deterministic
+  variant lifecycle coverage, all 27 BrowserFlow scenarios, all 16 public-app
+  contracts, and the incremental Release app build pass.
+- Follow-Up Actions: Visually accept both defaults, then design circuit cellular
+  variants as distinct runtimes rather than folding different state models into
+  `circuitTrace`.
+
+## 2026-07-25 - visuals - circuit_trace_pixel_language
+
+- Phase / Milestone: Live visual acceptance correction
+- Summary: Restored the Circuit Trace family to a deliberately coarse `256x144`
+  canvas with nearest-neighbor scaling so pixels remain large and hard-edged.
+  Retained the circular trace kernel and clean junction fixes, avoiding the
+  earlier square-grid and plus-sign artifacts. Distributed Circuit Mycelium
+  startup across a four-by-three colony layout so it develops across the full
+  frame rather than remaining centered.
+- Roadmap Entry: `docs/project_ops/roadmap.md`
+- Validation: Circuit authoring contract, isolated native eight-direction test,
+  modular-family contract, 62-entry catalog regression, and incremental Release
+  app build all pass.
+- Follow-Up Actions: Reload each circuit asset on the show machine to allocate
+  its new field and visually approve pixel scale and full-frame composition.
+
+## 2026-07-25 - visuals - circuit_trace_presentation_cleanup
+
+- Phase / Milestone: Live visual acceptance correction
+- Summary: Replaced the Circuit Trace family's `256x144` nearest-neighbor
+  presentation with a `512x288` linearly sampled field and circular soft trace
+  coverage. Removed forced start/branch via stamps, removed the drilled
+  plus-in-square renderer, and defaulted optional via accents off. River's
+  default width was reduced so merged channels remain traces rather than
+  blocks. Eight-direction movement and all public parameter IDs remain intact.
+- Roadmap Entry: `docs/project_ops/roadmap.md`
+- Validation: Circuit authoring contract, modular-family contract, Release app
+  build, all 26 BrowserFlow scenarios in `0.852s`, catalog/manifest checks, and
+  diff check.
+- Follow-Up Actions: Visually reload all three assets on the show display and
+  tune only width, glow, density, and color if further projection-specific
+  adjustment is needed.
+
+## 2026-07-25 - visuals - cellular_fields_migration_slice
+
+- Phase / Milestone: Legacy-to-modular workflow alignment
+- Summary: Migrated Game of Life and Excitable Media as separate Cellular
+  Fields runtimes. Game of Life now owns a persisted deterministic seed and
+  reproducible reseed path; Excitable Media rebuilds correctly when a restored
+  scene changes its seed. Both expose complete canonical scalar defaults,
+  retain legacy configuration aliases, use shared descriptor infrastructure,
+  and declare only a small speed-plus-primary-behavior quick-access set.
+- Roadmap Entry: `docs/project_ops/roadmap.md`
+- Validation: `0.18-0.20s` Cellular Fields fast profile, validator unit tests,
+  Release app build, all 26 BrowserFlow scenarios, Hotkey test, all 16
+  public-app contracts, catalog/manifest checks, and diff check.
+- Follow-Up Actions: Live-review scene reload/restart behavior, then migrate
+  Lenia and Reaction Diffusion without merging their distinct algorithms.
+
+## 2026-07-25 - workflow - layer_authoring_and_live_selection
+
+- Phase / Milestone: Layer iteration acceleration
+- Summary: Added a staged, profile-driven layer authoring runner with
+  sub-quarter-second static validation for Circuit Trace, Adaptive Trail, and
+  Collective Motion; an isolated stub-based native target avoids rebuilding
+  openFrameworks during algorithm checks. Added a shared parameter builder and
+  migrated the established common registration blocks in Circuit Trace,
+  AgentField, Flocking, and Signal Bloom without changing public parameter
+  contracts. The Console Asset Browser now supports multi-token type-to-search,
+  and `Ctrl+E` opens Control & Mapping on the focused Console layer's first
+  quick-access parameter.
+- Roadmap Entry: `docs/project_ops/roadmap.md`
+- Validation: Four fast family profiles, eight validator/runner unit tests,
+  isolated native authoring target, Release app build, all 26 BrowserFlow
+  scenarios, and all 16 public-app contracts.
+- Follow-Up Actions: Add honest render-independent native snapshots where the
+  migrated algorithms expose a stable seam, then extend the profile pattern to
+  Lenia and Reaction Diffusion.
+
+## 2026-07-25 - visuals - modular_layer_family_migration
+
+- Phase / Milestone: Legacy-to-modular workflow alignment
+- Summary: Migrated Ant Tunnels, Slime Mold, and Physarum onto an aligned
+  Adaptive Trail lifecycle and migrated Schooling and Murmuration onto an
+  aligned Collective Motion lifecycle. The five existing assets retain their
+  stable IDs, runtime types, registry prefixes, and established mapping
+  suffixes while gaining owned deterministic seed/reseed behavior, complete
+  catalog defaults, and consistent lifecycle metadata. Added a reusable
+  migration guide and a validator covering eight assets across the Circuit
+  Trace, Adaptive Trail, and Collective Motion runtimes.
+- Roadmap Entry: `docs/project_ops/roadmap.md`
+- Validation: Release app project build, all 23 BrowserFlow scenarios,
+  dedicated Circuit Trace and modular-family validators, and the expanded
+  15-contract public-app gate.
+- Follow-Up Actions: Live-review the migrated assets through scene
+  save/reload/restart, then audit Cellular Fields one algorithm at a time.
+
+## 2026-07-25 - visuals - circuit_trace_family
+
+- Phase / Milestone: Modular generative layer family
+- Summary: Added one shared `CircuitTraceLayer` with Circuit Slime, Circuit
+  Mycelium, and Circuit River catalog profiles. The shared motion primitive
+  limits every growth step to horizontal, vertical, or 45-degree diagonal
+  movement, producing organic networks with PCB-like traces and vias. Each
+  profile owns a stable registry prefix and the same 30 scene/MIDI/OSC-ready
+  parameters, including deterministic seed and reseed behavior.
+- Roadmap Entry: `docs/project_ops/roadmap.md`
+- Validation: Release app project build, all 23 BrowserFlow scenarios, Hotkey
+  test, all 16 public-app contracts, dedicated eight-direction/catalog
+  validation, and `git diff --check`.
+- Follow-Up Actions: Visually review and tune the three defaults on the show
+  machine, then save one known-good performance scene.
+
+## 2026-07-25 - runtime - scene_mapping_recovery_hardening
+
+- Request ID: `show_readiness_operator_stability`
+- Phase / Milestone: Pre-show operator stability
+- Summary: MIDI/OSC mapping files and scene snapshots now validate into
+  temporary state before replacing live routes. Explicit scene mapping
+  snapshots override the global configuration, including an intentionally
+  empty snapshot, while legacy scenes that omit mappings preserve the working
+  global/live routes and slot assignments. Scene and assignment writes verify
+  temporary JSON, retain a last-known-good backup, and restore it when
+  promotion fails; mapping files use the same recovery policy. Scene snapshots
+  retain the active mapping bank, and a low-frequency recovery autosave updates
+  `scene-last.json` without falsely marking the named scene saved. Shared
+  operator status now reports scene dirty/save/load state, mapping source and
+  counts, unresolved targets, MIDI retry state, and OSC receiving/stale state.
+- Request Doc: `docs/project_ops/in_progress/show_readiness_operator_stability.md`
+- Roadmap Entry: `docs/project_ops/roadmap.md`
+- Validation: Release solution build, Hotkey test, all 22 BrowserFlow
+  scenarios, scene/display recovery source contract, and scene-persistence
+  fixture pass. The BrowserFlow gate now includes mapping
+  save/mutate/restore/restart coverage for MIDI CC, buttons, OSC profiles,
+  malformed snapshots, and unavailable MIDI hardware.
+- Follow-Up Actions: Run the same sequence with the heaviest show scene and
+  physical MIDI/OSC devices, then archive the known-good scene and mapping
+  backups.
+
+## 2026-07-25 - runtime - mirror_symmetry_and_quit_modal
+
+- Request ID: `show_readiness_operator_stability`
+- Phase / Milestone: Pre-show operator stability
+- Summary: Mirror's basic horizontal and vertical modes now preserve one
+  source half and reflect it pixel-for-pixel into the opposite half. The first
+  Ctrl+Q opens a modal on the focused window with `QUIT: CTRL+Q` and
+  `ESC: CANCEL`; a released-and-repressed Ctrl+Q confirms, Escape cancels, and
+  unrelated input is consumed while the modal is active.
+- Request Doc: `docs/project_ops/in_progress/show_readiness_operator_stability.md`
+- Roadmap Entry: `docs/project_ops/roadmap.md`
+- Validation: Release solution build, Hotkey test, all 21 BrowserFlow
+  scenarios, all 13 public-app contracts, and the operator-render contract.
+- Follow-Up Actions: Verify the mirror source-half orientation and quit modal
+  placement on the laptop/projector pair.
+
+## 2026-07-25 - runtime - show_safe_window_and_quit_controls
+
+- Request ID: `show_readiness_operator_stability`
+- Phase / Milestone: Pre-show operator stability
+- Summary: Controller windows now clamp restored position and size to the
+  selected monitor's usable desktop. Ctrl+F targets the focused window rather
+  than a process-global window, so fullscreen stays on the assigned screen.
+  Ctrl+Q requires a release and second press within three seconds, with armed
+  status visible in the System Status HUD. The Visual Studio solution now
+  points at the configured openFrameworks installation path.
+- Request Doc: `docs/project_ops/in_progress/show_readiness_operator_stability.md`
+- Roadmap Entry: `docs/project_ops/roadmap.md`
+- Validation: Release solution build, Hotkey test, all 21 BrowserFlow
+  scenarios, and all 13 public-app contracts. Dual-monitor
+  placement/fullscreen behavior still requires show-machine visual rehearsal.
+- Follow-Up Actions: Exercise controller window restore and repeated
+  fullscreen transitions on the laptop/projector pair, then continue
+  unsaved-change/save-result feedback.
+
 ## 2026-07-24 - runtime - target_size_unifont_operator_text
 
 - Request ID: `show_readiness_operator_stability`

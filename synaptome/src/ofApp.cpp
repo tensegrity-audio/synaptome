@@ -13,7 +13,9 @@
 #include "ui/overlays/DebugTerminalWidget.h"
 #include "ui/ControlMappingHubState.h"
 #include "ui/MenuSkin.h"
+#include "ui/WindowMonitorPlacement.h"
 #include "ui/ControlHubEventBridge_clean.h"
+#include "visuals/CircuitTraceLayer.h"
 #include "visuals/SignalBloomLayer.h"
 #ifdef _WIN32
 #ifndef NOMINMAX
@@ -40,6 +42,7 @@ namespace {
     constexpr const char* kSceneMappingsKey = "mappings";
     constexpr const char* kSceneRouterMappingsKey = "router";
     constexpr const char* kSceneSlotAssignmentsKey = "slotAssignments";
+    constexpr const char* kSceneActiveBankKey = "activeBank";
     constexpr const char* kRunLogPath = "log.txt";
     constexpr const char* kRunLogArchiveDir = "logs/runs";
     constexpr std::size_t kRetainedRunLogs = 3;
@@ -199,7 +202,9 @@ namespace {
         return ofJson();
     }
 
-    bool writeJsonSnapshotAtomically(const std::string& path, const ofJson& snapshot) {
+    bool writeJsonRecoverably(const std::string& path,
+                              const ofJson& snapshot,
+                              const std::string& logChannel) {
         if (path.empty()) {
             return false;
         }
@@ -208,22 +213,74 @@ namespace {
             ofDirectory::createDirectory(directory, true, true);
         }
         const std::string tmpPath = path + ".tmp";
+        const std::string backupPath = path + ".bak";
+        ofFile::removeFile(tmpPath, false);
         try {
             if (!ofSavePrettyJson(tmpPath, snapshot)) {
-                ofLogWarning("Scene") << "failed to write snapshot temp file " << tmpPath;
+                ofLogWarning(logChannel) << "failed to write temp file " << tmpPath;
                 return false;
             }
-            if (!ofFile::moveFromTo(tmpPath, path, true, true)) {
-                ofLogWarning("Scene") << "failed to commit snapshot file " << path;
+
+            const ofJson verified = ofLoadJson(tmpPath);
+            if (verified != snapshot) {
+                ofLogWarning(logChannel) << "temp JSON verification failed for " << path;
                 ofFile::removeFile(tmpPath, false);
+                return false;
+            }
+
+            const bool hadPrevious = ofFile::doesFileExist(path, false);
+            if (hadPrevious) {
+                bool previousValid = false;
+                try {
+                    previousValid = ofLoadJson(path).is_object();
+                } catch (...) {
+                    previousValid = false;
+                }
+                if (previousValid) {
+                    ofFile::removeFile(backupPath, false);
+                    if (!ofFile::moveFromTo(path, backupPath, false, true)) {
+                        ofLogWarning(logChannel) << "failed to preserve last-known-good file " << path;
+                        ofFile::removeFile(tmpPath, false);
+                        return false;
+                    }
+                } else {
+                    ofLogWarning(logChannel) << "replacing invalid primary while retaining recovery backup "
+                                             << backupPath;
+                    if (!ofFile::removeFile(path, false)) {
+                        ofLogWarning(logChannel) << "failed to remove invalid primary " << path;
+                        ofFile::removeFile(tmpPath, false);
+                        return false;
+                    }
+                }
+            }
+
+            if (!ofFile::moveFromTo(tmpPath, path, false, true)) {
+                ofLogWarning(logChannel) << "failed to commit file " << path;
+                ofFile::removeFile(tmpPath, false);
+                if (ofFile::doesFileExist(backupPath, false)) {
+                    if (!ofFile::moveFromTo(backupPath, path, false, true)) {
+                        ofLogError(logChannel) << "failed to restore last-known-good file " << path
+                                               << "; recovery copy remains at " << backupPath;
+                    }
+                }
                 return false;
             }
             return true;
         } catch (const std::exception& ex) {
-            ofLogWarning("Scene") << "failed to save snapshot " << path << " : " << ex.what();
+            ofLogWarning(logChannel) << "failed to save " << path << " : " << ex.what();
+            if (!ofFile::doesFileExist(path, false) &&
+                ofFile::doesFileExist(backupPath, false) &&
+                !ofFile::moveFromTo(backupPath, path, false, true)) {
+                ofLogError(logChannel) << "failed to restore recovery backup after exception; copy remains at "
+                                       << backupPath;
+            }
         }
         ofFile::removeFile(tmpPath, false);
         return false;
+    }
+
+    bool writeJsonSnapshotAtomically(const std::string& path, const ofJson& snapshot) {
+        return writeJsonRecoverably(path, snapshot, "Scene");
     }
 
     ofJson emptySlotAssignmentsSnapshot() {
@@ -332,6 +389,10 @@ namespace {
         int y = 0;
         int width = 0;
         int height = 0;
+        int workX = 0;
+        int workY = 0;
+        int workWidth = 0;
+        int workHeight = 0;
         bool matchedHint = false;
     };
 
@@ -357,6 +418,17 @@ namespace {
             if (mode) {
                 selection.width = mode->width;
                 selection.height = mode->height;
+            }
+            glfwGetMonitorWorkarea(monitor,
+                                   &selection.workX,
+                                   &selection.workY,
+                                   &selection.workWidth,
+                                   &selection.workHeight);
+            if (selection.workWidth <= 0 || selection.workHeight <= 0) {
+                selection.workX = selection.x;
+                selection.workY = selection.y;
+                selection.workWidth = selection.width;
+                selection.workHeight = selection.height;
             }
         };
         GLFWmonitor* primary = glfwGetPrimaryMonitor();
@@ -415,6 +487,137 @@ namespace {
         }
         assign(primary ? primary : monitors[0]);
         return selection;
+    }
+
+    MonitorSelection selectMonitorForWindow(GLFWwindow* window) {
+        MonitorSelection selection;
+        if (!window) {
+            return selection;
+        }
+        int monitorCount = 0;
+        GLFWmonitor** monitors = glfwGetMonitors(&monitorCount);
+        if (!monitors || monitorCount <= 0) {
+            return selection;
+        }
+
+        int windowX = 0;
+        int windowY = 0;
+        int windowWidth = 0;
+        int windowHeight = 0;
+        glfwGetWindowPos(window, &windowX, &windowY);
+        glfwGetWindowSize(window, &windowWidth, &windowHeight);
+        const window_monitor_placement::Rect windowRect{
+            windowX,
+            windowY,
+            std::max(1, windowWidth),
+            std::max(1, windowHeight),
+        };
+
+        std::vector<window_monitor_placement::Rect> monitorRects;
+        monitorRects.reserve(static_cast<std::size_t>(monitorCount));
+        for (int i = 0; i < monitorCount; ++i) {
+            int x = 0;
+            int y = 0;
+            glfwGetMonitorPos(monitors[i], &x, &y);
+            const GLFWvidmode* mode = glfwGetVideoMode(monitors[i]);
+            monitorRects.push_back({
+                x,
+                y,
+                mode ? std::max(1, mode->width) : 1,
+                mode ? std::max(1, mode->height) : 1,
+            });
+        }
+
+        const int selectedIndex =
+            window_monitor_placement::selectMonitorForWindow(
+                windowRect, monitorRects);
+        if (selectedIndex < 0 || selectedIndex >= monitorCount) {
+            return selection;
+        }
+
+        selection.handle = monitors[selectedIndex];
+        selection.matchedHint = true;
+        const char* name = glfwGetMonitorName(selection.handle);
+        selection.label = name ? name : "Monitor";
+        glfwGetMonitorPos(selection.handle, &selection.x, &selection.y);
+        const GLFWvidmode* mode = glfwGetVideoMode(selection.handle);
+        if (mode) {
+            selection.width = mode->width;
+            selection.height = mode->height;
+        }
+        glfwGetMonitorWorkarea(
+            selection.handle,
+            &selection.workX,
+            &selection.workY,
+            &selection.workWidth,
+            &selection.workHeight);
+        if (selection.workWidth <= 0 || selection.workHeight <= 0) {
+            selection.workX = selection.x;
+            selection.workY = selection.y;
+            selection.workWidth = selection.width;
+            selection.workHeight = selection.height;
+        }
+        return selection;
+    }
+
+    struct WindowPlacement {
+        int x = 0;
+        int y = 0;
+        int width = 0;
+        int height = 0;
+    };
+
+    WindowPlacement clampWindowToWorkArea(int x,
+                                          int y,
+                                          int width,
+                                          int height,
+                                          const MonitorSelection& monitor) {
+        WindowPlacement placement;
+        const int workWidth = std::max(1, monitor.workWidth > 0 ? monitor.workWidth : monitor.width);
+        const int workHeight = std::max(1, monitor.workHeight > 0 ? monitor.workHeight : monitor.height);
+        const int workX = monitor.workWidth > 0 ? monitor.workX : monitor.x;
+        const int workY = monitor.workHeight > 0 ? monitor.workY : monitor.y;
+        placement.width = ofClamp(width, std::min(640, workWidth), workWidth);
+        placement.height = ofClamp(height, std::min(360, workHeight), workHeight);
+        placement.x = ofClamp(x, workX, workX + workWidth - placement.width);
+        placement.y = ofClamp(y, workY, workY + workHeight - placement.height);
+        return placement;
+    }
+
+    WindowPlacement clampGlfwWindowToWorkArea(GLFWwindow* window,
+                                              const MonitorSelection& monitor) {
+        if (!window) {
+            return {};
+        }
+        int x = 0;
+        int y = 0;
+        int width = 0;
+        int height = 0;
+        int frameLeft = 0;
+        int frameTop = 0;
+        int frameRight = 0;
+        int frameBottom = 0;
+        glfwGetWindowPos(window, &x, &y);
+        glfwGetWindowSize(window, &width, &height);
+        glfwGetWindowFrameSize(window, &frameLeft, &frameTop, &frameRight, &frameBottom);
+
+        const int workWidth = std::max(1, monitor.workWidth > 0 ? monitor.workWidth : monitor.width);
+        const int workHeight = std::max(1, monitor.workHeight > 0 ? monitor.workHeight : monitor.height);
+        const int workX = monitor.workWidth > 0 ? monitor.workX : monitor.x;
+        const int workY = monitor.workHeight > 0 ? monitor.workY : monitor.y;
+        const int contentWidth = std::max(1, workWidth - frameLeft - frameRight);
+        const int contentHeight = std::max(1, workHeight - frameTop - frameBottom);
+
+        WindowPlacement placement;
+        placement.width = ofClamp(width, std::min(640, contentWidth), contentWidth);
+        placement.height = ofClamp(height, std::min(360, contentHeight), contentHeight);
+        placement.x = ofClamp(x,
+                              workX + frameLeft,
+                              workX + workWidth - frameRight - placement.width);
+        placement.y = ofClamp(y,
+                              workY + frameTop,
+                              workY + workHeight - frameBottom - placement.height);
+        return placement;
     }
 
     ofJson defaultAudioConfig() {
@@ -861,13 +1064,43 @@ public:
             ofBackground(ofColor::black);
             return;
         }
-        if (host_->secondaryDisplayRenderPaused_ || host_->sceneLoadInProgress()) {
+        if (host_->secondaryDisplayRenderPaused_) {
             host_->drawSceneLoadSnapshot(static_cast<float>(ofGetWidth()),
                                          static_cast<float>(ofGetHeight()));
             return;
         }
         host_->drawSecondaryDisplayWindow(static_cast<float>(ofGetWidth()),
                                           static_cast<float>(ofGetHeight()));
+    }
+
+    void keyPressed(int key) override {
+        if (host_) {
+            host_->handleSecondaryDisplayKeyPressed(key);
+        }
+    }
+
+    void keyReleased(int key) override {
+        if (host_) {
+            host_->handleAppShortcutReleased(key);
+        }
+    }
+
+    void mousePressed(int x, int y, int button) override {
+        if (host_ && !host_->secondaryWindowIsControlSurface()) {
+            host_->handleSceneMousePressed(x, y, button);
+        }
+    }
+
+    void mouseDragged(int x, int y, int button) override {
+        if (host_ && !host_->secondaryWindowIsControlSurface()) {
+            host_->handleSceneMouseDragged(x, y, button);
+        }
+    }
+
+    void mouseReleased(int x, int y, int button) override {
+        if (host_ && !host_->secondaryWindowIsControlSurface()) {
+            host_->handleSceneMouseReleased(x, y, button);
+        }
     }
 
 private:
@@ -1514,6 +1747,7 @@ void ofApp::emitOscModifierTelemetry(const std::string& paramId, float rawValue)
 }
 
 void ofApp::setup() {
+    primaryWindow_ = ofGetCurrentWindow();
     ofSetFrameRate(60);
     ofBackground(0);
     ofSetWindowTitle("Synaptome");
@@ -1632,9 +1866,9 @@ void ofApp::setup() {
     addBool("console.secondary_display.follow_primary",
             &param_secondaryDisplayFollowPrimary,
             param_secondaryDisplayFollowPrimary,
-            "Controller Layout Follows Main",
+            "Legacy Shared Layout Preference",
             "UI",
-            "When enabled, the controller monitor mirrors the projector overlays.");
+            "Compatibility preference for saved layouts; dedicated dual-window mode always keeps controls off the scene window.");
     addBool("console.secondary_display.layout_watchdog",
             &param_layoutWatchdogEnabled,
             param_layoutWatchdogEnabled,
@@ -1770,6 +2004,7 @@ void ofApp::setup() {
     factory.registerType("lenia", []() { return std::make_unique<LeniaLayer>(); });
     factory.registerType("excitableMedia", []() { return std::make_unique<ExcitableMediaLayer>(); });
     factory.registerType("agentField", []() { return std::make_unique<AgentFieldLayer>(); });
+    factory.registerType("circuitTrace", []() { return std::make_unique<CircuitTraceLayer>(); });
     factory.registerType("flocking", []() { return std::make_unique<FlockingLayer>(); });
     factory.registerType("flowField", []() { return std::make_unique<FlowFieldLayer>(); });
     factory.registerType("riverFormation", []() { return std::make_unique<RiverFormationLayer>(); });
@@ -1982,6 +2217,31 @@ void ofApp::setup() {
     consoleState->setParameterRegistry(&paramRegistry);
     consoleState->setRequestAssetBrowserCallback([this](int layerIndex) {
         openAssetBrowserForConsole(layerIndex);
+    });
+    consoleState->setRequestEditLayerCallback([this](int layerIndex) {
+        const ConsoleSlot* slot = consoleSlotForIndex(layerIndex);
+        if (!slot || slot->assetId.empty()) {
+            ofLogWarning("Console") << "Cannot edit empty console layer " << layerIndex;
+            return;
+        }
+        if (!controlMappingHub || !controlMappingHub->focusAssetById(slot->assetId)) {
+            ofLogWarning("Console") << "Cannot focus Browser parameters for " << slot->assetId;
+            return;
+        }
+        if (menuController.contains(controlMappingHub->id())) {
+            menuController.removeState(controlMappingHub->id());
+        }
+        menuController.pushState(controlMappingHub);
+        if (paramRegistry.findBool("ui.hub.visible")) {
+            paramRegistry.setBoolBase("ui.hub.visible", true, true);
+        } else {
+            param_showControlHub = true;
+        }
+        const bool routeUiToController = secondaryDisplay_.active;
+        overlayVisibility_.controlHub = routeUiToController ? false : true;
+        publishOverlayVisibilityTelemetry(
+            "overlay.hub.visible",
+            overlayVisibility_.controlHub);
     });
 
     threeBandLayout.setGutters(24.0f, 8.0f);
@@ -2547,11 +2807,15 @@ void ofApp::setup() {
                        return true;
                    });
     registerHotkey("display.follow",
-                   "Controller Layout Follow",
-                   "Toggle follow vs. freeform controller layout",
+                   "Swap Scene / Control Windows",
+                   "Swap the complete scene and control roles between windows",
                    MenuController::HOTKEY_MOD_CTRL | MenuController::HOTKEY_MOD_SHIFT | 'f',
                    [this](MenuController&) {
-                       toggleSecondaryDisplayFollow();
+                       if (fullscreenShortcutHeld_) {
+                           return true;
+                       }
+                       fullscreenShortcutHeld_ = true;
+                       swapDualDisplayRoles();
                        return true;
                    });
     registerHotkey("display.migratePrimary",
@@ -2588,19 +2852,17 @@ void ofApp::setup() {
                    });
     registerHotkey("app.fullscreen",
                    "Fullscreen",
-                   "Toggle fullscreen",
+                   "Toggle fullscreen on the focused monitor",
                    MenuController::HOTKEY_MOD_CTRL | 'f',
-                   [](MenuController&) {
-                       ofSetFullscreen(!ofGetWindowMode());
-                       return true;
+                   [this](MenuController&) {
+                       return toggleFocusedWindowFullscreen();
                    });
     registerHotkey("app.quit",
                    "Quit",
-                   "Exit the application",
+                   "Press twice to exit; Escape cancels",
                    MenuController::HOTKEY_MOD_CTRL | 'q',
-                   [](MenuController&) {
-                       ofExit();
-                       return true;
+                   [this](MenuController&) {
+                       return requestQuitConfirmation();
                    });
 
     hotkeyManager.setController(&menuController);
@@ -2738,7 +3000,7 @@ void ofApp::update() {
         publishOverlayVisibilityTelemetry(feedId, desired);
         return true;
     };
-    const bool routeUiToController = secondaryDisplay_.active && !secondaryDisplay_.followPrimary;
+    const bool routeUiToController = secondaryDisplay_.active;
     bool desiredHudVisible = routeUiToController ? false : param_showHud;
     bool desiredConsoleVisible = routeUiToController ? false : param_showConsole;
     bool desiredControlHubVisible = routeUiToController ? false : param_showControlHub;
@@ -2821,28 +3083,30 @@ void ofApp::update() {
     if (controlHubEventBridge) {
         controlHubEventBridge->update(static_cast<uint64_t>(ofGetElapsedTimeMillis()));
     }
+    updateSceneDirtyState();
 }
 
 
 void ofApp::draw() {
-    ofBackground(0);
+    const float width = static_cast<float>(ofGetWidth());
+    const float height = static_cast<float>(ofGetHeight());
+    if (primaryWindowIsControlSurface()) {
+        drawControlWindow(width, height, false);
+        return;
+    }
 
-    glm::vec3 eye {
-        camDist * cosf(camPhi) * sinf(camTheta),
-        camDist * sinf(camPhi),
-        camDist * cosf(camPhi) * cosf(camTheta)
-    };
-    cam.setPosition(eye);
-    cam.lookAt(glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+    drawSceneWindow(width, height);
+    if (secondaryDisplay_.active) {
+        if (quitConfirmationActive() && !quitConfirmationControllerWindow_) {
+            drawQuitConfirmationOverlay(width, height);
+        }
+        return;
+    }
 
-    float beatPhase = (param_bpm / 60.0f) * t;
-    glm::ivec2 viewport{ ofGetWidth(), ofGetHeight() };
-    ThreeBandLayout layout = threeBandLayout.layoutForSize(static_cast<float>(viewport.x),
-                                                           static_cast<float>(viewport.y));
-    drawConsole(viewport, beatPhase);
-
+    ThreeBandLayout layout =
+        threeBandLayout.layoutForSize(width, height);
     OverlayManager::DrawParams drawParams;
-    drawParams.bounds = ofRectangle(0.0f, 0.0f, static_cast<float>(viewport.x), static_cast<float>(viewport.y));
+    drawParams.bounds = ofRectangle(0.0f, 0.0f, width, height);
     drawParams.app = this;
     drawParams.layout = layout;
     drawParams.useThreeBandLayout = true;
@@ -2853,6 +3117,64 @@ void ofApp::draw() {
                    overlayVisibility_.console,
                    overlayVisibility_.controlHub,
                    overlayVisibility_.menus);
+    if (quitConfirmationActive() && !quitConfirmationControllerWindow_) {
+        drawQuitConfirmationOverlay(width, height);
+    }
+}
+
+void ofApp::drawSceneWindow(float width, float height) {
+    if (sceneLoadInProgress()) {
+        drawSceneLoadSnapshot(width, height);
+        return;
+    }
+    ofBackground(0);
+    glm::vec3 eye {
+        camDist * cosf(camPhi) * sinf(camTheta),
+        camDist * sinf(camPhi),
+        camDist * cosf(camPhi) * cosf(camTheta)
+    };
+    cam.setPosition(eye);
+    cam.lookAt(glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+
+    float beatPhase = (param_bpm / 60.0f) * t;
+    glm::ivec2 viewport{
+        std::max(1, static_cast<int>(width)),
+        std::max(1, static_cast<int>(height)),
+    };
+    drawConsole(viewport, beatPhase);
+}
+
+void ofApp::drawControlWindow(float width,
+                              float height,
+                              bool secondaryPhysicalWindow) {
+    ofBackground(secondaryDisplayBackgroundColor());
+    const float textScale =
+        std::max(0.01f, menuSkin.metrics.typographyScale);
+    ofSetColor(255);
+    drawBitmapStringScaled(
+        "Control Window",
+        18.0f,
+        30.0f * textScale,
+        textScale);
+
+    ThreeBandLayout layout =
+        threeBandLayout.layoutForSize(width, height);
+    if (param_showHud) {
+        OverlayManager::DrawParams drawParams;
+        drawParams.bounds = ofRectangle(0.0f, 0.0f, width, height);
+        drawParams.app = this;
+        drawParams.layout = layout;
+        drawParams.useThreeBandLayout = true;
+        overlayManager.draw(drawParams);
+    }
+    drawMenuPanels(layout,
+                   param_showConsole,
+                   param_showControlHub,
+                   param_showMenus);
+    if (quitConfirmationActive() &&
+        quitConfirmationControllerWindow_ == secondaryPhysicalWindow) {
+        drawQuitConfirmationOverlay(width, height);
+    }
 }
 
 void ofApp::drawMenuPanels(const ThreeBandLayout& layout,
@@ -2935,7 +3257,7 @@ std::string ofApp::composeHudControls() const {
     controllerLine.prefix = controllerFocusStatusBadge();
     controllerLine.actions = {
         { "Ctrl+Shift+D", "toggle monitor" },
-        { "Ctrl+Shift+F", "follow/freeform" },
+        { "Ctrl+Shift+F", "swap scene/control" },
         { "Ctrl+Shift+Tab", "focus toggle" }
     };
 
@@ -3340,15 +3662,35 @@ std::string ofApp::composeHudStatus() const {
     ofJson sceneJson;
     sceneJson["path"] = scenePath;
     sceneJson["name"] = sceneName;
+    sceneJson["persistenceState"] = scenePersistenceStatusLabel();
+    sceneJson["dirty"] = sceneDirty_;
     sceneJson["loadState"] = sceneLoadPhaseLabel(sceneLoadUiSnapshot_.phase);
     sceneJson["loadStatus"] = sceneLoadUiSnapshot_.status;
     sceneJson["loadElapsedMs"] = sceneLoadUiSnapshot_.totalElapsedMs;
+    sceneJson["saveSuccess"] = sceneSaveUiSnapshot_.hasResult && sceneSaveUiSnapshot_.success;
+    sceneJson["saveStatus"] = sceneSaveUiSnapshot_.status;
+    sceneJson["mappingSource"] = sceneMappingSource_;
+    sceneJson["midiCcMappings"] = static_cast<int>(midi.getCcMaps().size());
+    sceneJson["midiButtonMappings"] = static_cast<int>(midi.getBtnMaps().size());
+    sceneJson["oscMappings"] = static_cast<int>(midi.getOscMaps().size());
+    sceneJson["unresolvedMappingTargets"] = static_cast<int>(unresolvedMappingTargetCount());
     feed["scene"] = std::move(sceneJson);
-    hud << "\nScene: " << (sceneName.empty() ? std::string("unsaved") : sceneName);
+    hud << "\nScene: " << (sceneName.empty() ? std::string("unsaved") : sceneName)
+        << "  [" << scenePersistenceStatusLabel() << "]";
     if (sceneLoadUiSnapshot_.phase == SceneLoadPhase::Failed) {
         hud << "  [LOAD FAILED]";
     } else if (sceneLoadUiSnapshot_.phase == SceneLoadPhase::Succeeded) {
         hud << "  [loaded " << sceneLoadUiSnapshot_.totalElapsedMs << "ms]";
+    }
+    if (sceneSaveUiSnapshot_.hasResult && !sceneSaveUiSnapshot_.success) {
+        hud << "  [SAVE FAILED]";
+    }
+    hud << "\nMappings: " << sceneMappingSource_
+        << "  MIDI " << (midi.getCcMaps().size() + midi.getBtnMaps().size())
+        << "  OSC " << midi.getOscMaps().size();
+    const std::size_t unresolvedMappings = unresolvedMappingTargetCount();
+    if (unresolvedMappings > 0) {
+        hud << "  [UNRESOLVED " << unresolvedMappings << "]";
     }
 
     ofJson controllerJson;
@@ -3363,6 +3705,17 @@ std::string ofApp::composeHudStatus() const {
     hud << "  Focus: " << (controllerFocus_.preferConsole ? "Console" : "Controller");
     if (controllerFocus_.needsAttention) {
         hud << "  [ATTN]";
+    }
+
+    ofJson quitJson;
+    const bool quitArmed = quitConfirmationActive();
+    quitJson["armed"] = quitArmed;
+    quitJson["instruction"] = quitArmed
+        ? "Press Ctrl+Q again to quit"
+        : "Press Ctrl+Q twice to quit";
+    feed["quit"] = std::move(quitJson);
+    if (quitArmed) {
+        hud << "\n[QUIT ARMED] Press Ctrl+Q again within 3 seconds";
     }
 
     auto routeName = [](float routeValue) -> std::string {
@@ -3428,10 +3781,11 @@ std::string ofApp::composeHudStatus() const {
             hud << "connected (" << midiLabel << ")";
         }
     } else {
-        hud << "not connected";
+        hud << "retrying";
     }
     ofJson midiConn;
     midiConn["connected"] = midiConnected;
+    midiConn["state"] = midiConnected ? "connected" : "retrying";
     midiConn["label"] = midiLabel;
     midiConn["overridden"] = static_cast<bool>(midiSample);
     if (midiSample) {
@@ -3493,6 +3847,14 @@ std::string ofApp::composeHudStatus() const {
 
     const auto& oscSources = midi.getOscSources();
     hud << "\nOSC sources learned: " << ofToString(static_cast<int>(oscSources.size()));
+    const uint64_t oscNowMs = ofGetElapsedTimeMillis();
+    const uint64_t oscAgeMs = lastOscMessageValid_ && oscNowMs >= lastOscMessageMs_
+        ? oscNowMs - lastOscMessageMs_
+        : 0;
+    const std::string oscReceiveState = !lastOscMessageValid_
+        ? "waiting"
+        : (oscAgeMs <= kHudStaleMs ? "receiving" : "stale");
+    hud << "  [" << oscReceiveState << "]";
     ofJson oscJson = ofJson::array();
     for (const auto& source : oscSources) {
         ofJson entry;
@@ -3503,6 +3865,8 @@ std::string ofApp::composeHudStatus() const {
         oscJson.push_back(std::move(entry));
     }
     feed["oscSources"] = oscJson;
+    feed["oscReceiveState"] = oscReceiveState;
+    feed["oscLastMessageAgeMs"] = lastOscMessageValid_ ? oscAgeMs : 0;
 
     auto layoutSample = hudTelemetryOverrideSample("hud.status", "layout_drift", 0);
     bool layoutDriftActive = layoutSample && layoutSample->value >= 0.5f;
@@ -3639,7 +4003,11 @@ std::string ofApp::composeHudSensors() const {
     appendDevice("Secondary Display",
                  secondaryDisplay_.active ? secondaryDisplayLabel() : std::string("Controller display"),
                  secondaryDisplay_.active,
-                 secondaryDisplay_.enabled ? (secondaryDisplay_.followPrimary ? "following primary" : "independent") : "disabled");
+                 secondaryDisplay_.enabled
+                     ? (dualDisplayRolesSwapped_
+                            ? "primary=control, secondary=scene"
+                            : "primary=scene, secondary=control")
+                     : "disabled");
 
     ofJson osc = ofJson::array();
     for (const auto& entry : oscHistory) {
@@ -3689,9 +4057,17 @@ std::string ofApp::composeHudDebugTerminal() const {
         : activeNamedScenePath_;
     const std::string sceneName = sceneDisplayNameForPath(scenePath);
     out << "\n> scene " << (sceneName.empty() ? std::string("unsaved") : sceneName)
+        << "  " << scenePersistenceStatusLabel()
         << "  load " << sceneLoadPhaseLabel(sceneLoadUiSnapshot_.phase);
+    if (sceneSaveUiSnapshot_.hasResult) {
+        out << "  save " << (sceneSaveUiSnapshot_.success ? "ok" : "FAILED");
+    }
+    out << "\n> mappings " << sceneMappingSource_
+        << "  midi " << (midi.getCcMaps().size() + midi.getBtnMaps().size())
+        << "  osc " << midi.getOscMaps().size()
+        << "  unresolved " << unresolvedMappingTargetCount();
     out << "\n> bank " << (activeMidiBank.empty() ? std::string("global") : activeMidiBank);
-    out << "\n> midi " << (midi.isConnected() ? "connected" : "offline");
+    out << "\n> midi " << (midi.isConnected() ? "connected" : "retrying");
     if (!midi.connectedPortName().empty()) {
         out << "  " << midi.connectedPortName();
     }
@@ -3740,8 +4116,16 @@ std::string ofApp::composeHudDebugTerminal() const {
     feed["activeSlots"] = activeSlots;
     feed["assignedSlots"] = assignedSlots;
     feed["activeScene"] = sceneName;
+    feed["scenePersistenceState"] = scenePersistenceStatusLabel();
+    feed["sceneDirty"] = sceneDirty_;
     feed["sceneLoadState"] = sceneLoadPhaseLabel(sceneLoadUiSnapshot_.phase);
     feed["sceneLoadStatus"] = sceneLoadUiSnapshot_.status;
+    feed["sceneSaveSuccess"] = sceneSaveUiSnapshot_.hasResult && sceneSaveUiSnapshot_.success;
+    feed["sceneSaveStatus"] = sceneSaveUiSnapshot_.status;
+    feed["mappingSource"] = sceneMappingSource_;
+    feed["midiMappingCount"] = static_cast<int>(midi.getCcMaps().size() + midi.getBtnMaps().size());
+    feed["oscMappingCount"] = static_cast<int>(midi.getOscMaps().size());
+    feed["unresolvedMappingTargets"] = static_cast<int>(unresolvedMappingTargetCount());
     feed["activeBank"] = activeMidiBank.empty() ? "global" : activeMidiBank;
     feed["midiConnected"] = midi.isConnected();
     feed["collectorConnected"] = collector.isConnected();
@@ -4134,6 +4518,20 @@ void ofApp::keyPressed(int key) {
     ofLogNotice("ofApp") << "keyPressed: key=" << key << " combinedKey=" << combinedKey
                           << " label='" << HotkeyManager::keyLabel(combinedKey) << "'";
 
+    if (quitConfirmationActive()) {
+        const int promptBase = combinedKey & 0xFFFF;
+        if (promptBase == OF_KEY_ESC) {
+            cancelQuitConfirmation();
+            return;
+        }
+        if ((combinedKey & MenuController::HOTKEY_MOD_CTRL) &&
+            (promptBase == 'q' || promptBase == 'Q')) {
+            requestQuitConfirmation();
+            return;
+        }
+        return;
+    }
+
     if (menuController.handleInput(combinedKey)) {
         return;
     }
@@ -4152,7 +4550,7 @@ void ofApp::keyPressed(int key) {
         if ((combinedKey & MenuController::HOTKEY_MOD_CTRL) == 0) {
             break;
         }
-        ofSetFullscreen(!ofGetWindowMode());
+        toggleFocusedWindowFullscreen();
         break;
     case ' ': {
         paused = !paused;
@@ -4222,13 +4620,251 @@ void ofApp::keyPressed(int key) {
     }
 }
 
+void ofApp::keyReleased(int key) {
+    handleAppShortcutReleased(key);
+}
+
+void ofApp::handleSecondaryDisplayKeyPressed(int key) {
+    auto glfwWindow = std::dynamic_pointer_cast<ofAppGLFWWindow>(secondaryWindow_);
+    GLFWwindow* handle = glfwWindow ? glfwWindow->getGLFWWindow() : nullptr;
+    if (key >= 1 && key <= 26) {
+        key = 'a' + (key - 1);
+    }
+    if (quitConfirmationActive() && key == OF_KEY_ESC) {
+        cancelQuitConfirmation();
+        return;
+    }
+    const bool ctrlDown = ofGetKeyPressed(OF_KEY_CONTROL) ||
+        (handle && (glfwGetKey(handle, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS ||
+                    glfwGetKey(handle, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS));
+    const bool shiftDown = ofGetKeyPressed(OF_KEY_SHIFT) ||
+        (handle && (glfwGetKey(handle, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ||
+                    glfwGetKey(handle, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS));
+    if (!ctrlDown) {
+        if (secondaryWindowIsControlSurface()) {
+            keyPressed(key);
+        }
+        return;
+    }
+    const int normalized = std::tolower(static_cast<unsigned char>(key & 0xFF));
+    if (normalized == 'f' && shiftDown) {
+        if (fullscreenShortcutHeld_) {
+            return;
+        }
+        fullscreenShortcutHeld_ = true;
+        swapDualDisplayRoles();
+    } else if (normalized == 'f') {
+        if (fullscreenShortcutHeld_) {
+            return;
+        }
+        fullscreenShortcutHeld_ = true;
+        toggleWindowFullscreen(secondaryWindow_, true);
+    } else if (normalized == 'q') {
+        requestQuitConfirmation();
+    } else if (secondaryWindowIsControlSurface()) {
+        keyPressed(key);
+    }
+}
+
+void ofApp::handleAppShortcutReleased(int key) {
+    if (key >= 1 && key <= 26) {
+        key = 'a' + (key - 1);
+    }
+    const int normalized = std::tolower(static_cast<unsigned char>(key & 0xFF));
+    if (normalized == 'f') {
+        fullscreenShortcutHeld_ = false;
+    } else if (normalized == 'q') {
+        quitShortcutHeld_ = false;
+    }
+}
+
+bool ofApp::toggleFocusedWindowFullscreen() {
+    if (fullscreenShortcutHeld_) {
+        return true;
+    }
+    fullscreenShortcutHeld_ = true;
+
+    auto controllerWindow = std::dynamic_pointer_cast<ofAppGLFWWindow>(secondaryWindow_);
+    if (controllerWindow) {
+        GLFWwindow* handle = controllerWindow->getGLFWWindow();
+        if (handle && glfwGetWindowAttrib(handle, GLFW_FOCUSED) == GLFW_TRUE) {
+            return toggleWindowFullscreen(secondaryWindow_, true);
+        }
+    }
+    return toggleWindowFullscreen(primaryWindow_, false);
+}
+
+bool ofApp::toggleWindowFullscreen(const std::shared_ptr<ofAppBaseWindow>& window,
+                                   bool controllerWindow) {
+    auto glfwWindow = std::dynamic_pointer_cast<ofAppGLFWWindow>(window);
+    GLFWwindow* handle = glfwWindow ? glfwWindow->getGLFWWindow() : nullptr;
+    if (!glfwWindow || !handle) {
+        ofLogWarning("ofApp") << "Cannot toggle fullscreen: focused window is unavailable";
+        return true;
+    }
+
+    const bool enteringFullscreen = glfwWindow->getWindowMode() == OF_WINDOW;
+    WindowedGeometry& windowedGeometry = controllerWindow
+        ? secondaryWindowedGeometry_
+        : primaryWindowedGeometry_;
+    MonitorSelection target;
+    if (enteringFullscreen) {
+        glfwGetWindowPos(
+            handle, &windowedGeometry.x, &windowedGeometry.y);
+        glfwGetWindowSize(
+            handle, &windowedGeometry.width, &windowedGeometry.height);
+        windowedGeometry.valid =
+            windowedGeometry.width > 0 && windowedGeometry.height > 0;
+
+        // openFrameworks chooses a Windows fullscreen monitor from the
+        // window's top-left pixel and falls back to monitor zero. Select by
+        // largest overlap, then move the window wholly onto that monitor
+        // before handing off so a dragged window never jumps displays.
+        target = selectMonitorForWindow(handle);
+        if (target.handle) {
+            const WindowPlacement safe =
+                clampGlfwWindowToWorkArea(handle, target);
+            glfwSetWindowSize(handle, safe.width, safe.height);
+            glfwSetWindowPos(handle, safe.x, safe.y);
+        }
+    }
+
+    glfwWindow->setFullscreen(enteringFullscreen);
+
+    if (!enteringFullscreen && windowedGeometry.valid) {
+        glfwSetWindowSize(
+            handle,
+            windowedGeometry.width,
+            windowedGeometry.height);
+        glfwSetWindowPos(
+            handle,
+            windowedGeometry.x,
+            windowedGeometry.y);
+        windowedGeometry.valid = false;
+    }
+
+    const bool controlSurface = controllerWindow
+        ? secondaryWindowIsControlSurface()
+        : primaryWindowIsControlSurface();
+    const std::string owner = secondaryDisplay_.active
+        ? (controlSurface ? "control" : "scene")
+        : "single";
+    const std::string mode = enteringFullscreen ? "fullscreen" : "windowed";
+    const std::string monitorDetail =
+        enteringFullscreen && !target.label.empty()
+            ? " monitor='" + target.label + "'"
+            : std::string();
+    ofLogNotice("ofApp")
+        << "Window mode -> " << owner << ":" << mode << monitorDetail;
+    publishHudTelemetrySample("hud.controls",
+                              "window.fullscreen",
+                              enteringFullscreen ? 1.0f : 0.0f,
+                              owner + ":" + mode);
+    return true;
+}
+
+bool ofApp::requestQuitConfirmation() {
+    if (quitShortcutHeld_) {
+        return true;
+    }
+    quitShortcutHeld_ = true;
+
+    const uint64_t now = ofGetElapsedTimeMillis();
+    if (quitConfirmationArmedAtMs_.has_value()) {
+        quitConfirmationArmedAtMs_.reset();
+        ofLogNotice("ofApp") << "Quit confirmed by second Ctrl+Q";
+        publishHudTelemetrySample("hud.controls", "app.quit", 1.0f, "confirmed");
+        ofExit();
+        return true;
+    }
+
+    quitConfirmationArmedAtMs_ = now;
+    quitConfirmationControllerWindow_ =
+        currentControllerFocusOwner() == ControllerFocusOwner::Controller;
+    ofLogWarning("ofApp") << "Quit armed: press Ctrl+Q again to exit or Escape to cancel";
+    publishHudTelemetrySample("hud.controls", "app.quit", 0.0f, "armed:ctrl_q_or_escape");
+    return true;
+}
+
+bool ofApp::quitConfirmationActive() const {
+    return quitConfirmationArmedAtMs_.has_value();
+}
+
+void ofApp::cancelQuitConfirmation() {
+    if (!quitConfirmationArmedAtMs_.has_value()) {
+        return;
+    }
+    quitConfirmationArmedAtMs_.reset();
+    ofLogNotice("ofApp") << "Quit cancelled";
+    publishHudTelemetrySample("hud.controls", "app.quit", 0.0f, "cancelled");
+}
+
+void ofApp::drawQuitConfirmationOverlay(float width, float height) const {
+    const float textScale = std::max(0.01f, menuSkin.metrics.typographyScale);
+    const std::string quitLine = "QUIT: CTRL+Q";
+    const std::string cancelLine = "ESC: CANCEL";
+    const float contentWidth = std::max(measureUiStringWidth(quitLine, textScale),
+                                        measureUiStringWidth(cancelLine, textScale));
+    const float panelWidth = std::min(std::max(320.0f * textScale,
+                                               contentWidth + 64.0f * textScale),
+                                      std::max(1.0f, width - 32.0f));
+    const float panelHeight = std::min(116.0f * textScale,
+                                       std::max(1.0f, height - 32.0f));
+    const float panelX = (width - panelWidth) * 0.5f;
+    const float panelY = (height - panelHeight) * 0.5f;
+    const float quitX = panelX +
+        (panelWidth - measureUiStringWidth(quitLine, textScale)) * 0.5f;
+    const float cancelX = panelX +
+        (panelWidth - measureUiStringWidth(cancelLine, textScale)) * 0.5f;
+
+    ofPushStyle();
+    ofFill();
+    ofSetColor(0, 0, 0, 190);
+    ofDrawRectangle(0.0f, 0.0f, width, height);
+    ofSetColor(menuSkin.palette.surface);
+    ofDrawRectangle(panelX, panelY, panelWidth, panelHeight);
+    ofNoFill();
+    ofSetLineWidth(2.0f);
+    ofSetColor(menuSkin.palette.warning);
+    ofDrawRectangle(panelX, panelY, panelWidth, panelHeight);
+    ofFill();
+    ofSetColor(menuSkin.palette.warning);
+    drawBitmapStringScaled(quitLine,
+                           quitX,
+                           panelY + 45.0f * textScale,
+                           textScale,
+                           true);
+    ofSetColor(menuSkin.palette.bodyText);
+    drawBitmapStringScaled(cancelLine,
+                           cancelX,
+                           panelY + 78.0f * textScale,
+                           textScale);
+    ofPopStyle();
+}
+
 
 void ofApp::mousePressed(int x, int y, int button) {
+    if (primaryWindowIsControlSurface()) {
+        return;
+    }
+    handleSceneMousePressed(x, y, button);
+}
+
+void ofApp::handleSceneMousePressed(int x, int y, int button) {
+    (void)button;
     dragging = true;
     lastMouse = { (float)x, (float)y };
 }
 
 void ofApp::mouseDragged(int x, int y, int button) {
+    if (primaryWindowIsControlSurface()) {
+        return;
+    }
+    handleSceneMouseDragged(x, y, button);
+}
+
+void ofApp::handleSceneMouseDragged(int x, int y, int button) {
+    (void)button;
     if (!dragging) return;
     glm::vec2 cur(x, y);
     glm::vec2 d = cur - lastMouse;
@@ -4241,6 +4877,16 @@ void ofApp::mouseDragged(int x, int y, int button) {
 }
 
 void ofApp::mouseReleased(int x, int y, int button) {
+    if (primaryWindowIsControlSurface()) {
+        return;
+    }
+    handleSceneMouseReleased(x, y, button);
+}
+
+void ofApp::handleSceneMouseReleased(int x, int y, int button) {
+    (void)x;
+    (void)y;
+    (void)button;
     dragging = false;
 }
 
@@ -5187,7 +5833,7 @@ bool ofApp::toggleConsoleAndControlHub(MenuController& controller) {
             parameter = visible;
         }
 
-        const bool routeUiToController = secondaryDisplay_.active && !secondaryDisplay_.followPrimary;
+        const bool routeUiToController = secondaryDisplay_.active;
         const bool primaryVisible = routeUiToController ? false : visible;
         if (cachedVisibility != primaryVisible) {
             cachedVisibility = primaryVisible;
@@ -5421,6 +6067,91 @@ std::string ofApp::sceneDisplayNameForPath(const std::string& path) const {
     return ofFilePath::getBaseName(canonical);
 }
 
+std::string ofApp::sceneComparableSnapshot(const std::string& path) const {
+    ofJson snapshot = encodeSceneJson(path);
+    if (snapshot.contains("scene") && snapshot["scene"].is_object()) {
+        snapshot["scene"].erase("savedAt");
+    }
+    return snapshot.dump();
+}
+
+void ofApp::captureSceneBaseline() {
+    const std::string scenePath = activeNamedScenePath_.empty()
+        ? activeScenePath_
+        : activeNamedScenePath_;
+    sceneBaselineSnapshot_ = sceneComparableSnapshot(
+        scenePath.empty() ? canonicalScenePath(kSceneAutosavePath) : scenePath);
+    sceneDirty_ = false;
+    nextSceneDirtyCheckMs_ = ofGetElapsedTimeMillis() + 1000;
+}
+
+void ofApp::updateSceneDirtyState() {
+    const uint64_t nowMs = ofGetElapsedTimeMillis();
+    if (sceneLoadInProgress() || nowMs < nextSceneDirtyCheckMs_) {
+        return;
+    }
+    nextSceneDirtyCheckMs_ = nowMs + 1000;
+    if (sceneBaselineSnapshot_.empty()) {
+        captureSceneBaseline();
+        return;
+    }
+
+    const std::string scenePath = activeNamedScenePath_.empty()
+        ? activeScenePath_
+        : activeNamedScenePath_;
+    try {
+        sceneDirty_ = sceneRecoveryPendingSave_ ||
+            sceneComparableSnapshot(
+            scenePath.empty() ? canonicalScenePath(kSceneAutosavePath) : scenePath) !=
+            sceneBaselineSnapshot_;
+    } catch (const std::exception& ex) {
+        sceneDirty_ = true;
+        ofLogWarning("Scene") << "failed to evaluate scene dirty state: " << ex.what();
+    }
+
+    if (nextSceneRecoveryAutosaveMs_ == 0) {
+        nextSceneRecoveryAutosaveMs_ = nowMs + 30000;
+    }
+    if (sceneDirty_ && nowMs >= nextSceneRecoveryAutosaveMs_) {
+        saveScene(kSceneAutosavePath);
+        nextSceneRecoveryAutosaveMs_ = nowMs + 30000;
+    } else if (!sceneDirty_) {
+        nextSceneRecoveryAutosaveMs_ = nowMs + 30000;
+    }
+}
+
+std::string ofApp::scenePersistenceStatusLabel() const {
+    if (sceneSaveUiSnapshot_.hasResult && !sceneSaveUiSnapshot_.success) {
+        return "SAVE FAILED";
+    }
+    if (sceneRecoveryPendingSave_) {
+        return "RECOVERED - SAVE REQUIRED";
+    }
+    return sceneDirty_ ? "MODIFIED" : "SAVED";
+}
+
+std::size_t ofApp::unresolvedMappingTargetCount() const {
+    std::unordered_set<std::string> unresolved;
+    auto inspectTarget = [&](const std::string& target) {
+        if (!target.empty() &&
+            !paramRegistry.findFloat(target) &&
+            !paramRegistry.findBool(target) &&
+            !paramRegistry.findString(target)) {
+            unresolved.insert(target);
+        }
+    };
+    for (const auto& map : midi.getCcMaps()) {
+        inspectTarget(map.target);
+    }
+    for (const auto& map : midi.getBtnMaps()) {
+        inspectTarget(map.target);
+    }
+    for (const auto& map : midi.getOscMaps()) {
+        inspectTarget(map.target);
+    }
+    return unresolved.size();
+}
+
 const char* ofApp::sceneLoadPhaseLabel(SceneLoadPhase phase) const {
     switch (phase) {
         case SceneLoadPhase::Idle: return "idle";
@@ -5531,19 +6262,34 @@ bool ofApp::parseSceneLoadPlan(const std::string& canonicalPath,
     plan.canonicalPath = canonicalPath;
     plan.fullPath = sceneFilesystemPath(canonicalPath);
 
-    ofFile file(plan.fullPath);
-    if (!file.exists()) {
-        error = "scene file not found: " + plan.fullPath;
-        return false;
+    const std::string backupPath = plan.fullPath + ".bak";
+    std::string primaryFailure;
+    if (ofFile::doesFileExist(plan.fullPath, false)) {
+        try {
+            plan.scene = ofLoadJson(plan.fullPath);
+            return true;
+        } catch (const std::exception& e) {
+            primaryFailure = std::string("failed to parse scene: ") + e.what();
+        }
+    } else {
+        primaryFailure = "scene file not found: " + plan.fullPath;
     }
 
-    try {
-        plan.scene = ofLoadJson(plan.fullPath);
-    } catch (const std::exception& e) {
-        error = std::string("failed to parse scene: ") + e.what();
-        return false;
+    if (ofFile::doesFileExist(backupPath, false)) {
+        try {
+            plan.scene = ofLoadJson(backupPath);
+            plan.recoveredFromBackup = true;
+            ofLogWarning("Scene") << primaryFailure
+                                  << "; recovered last-known-good scene from "
+                                  << backupPath;
+            return true;
+        } catch (const std::exception& e) {
+            error = primaryFailure + "; backup parse failed: " + e.what();
+            return false;
+        }
     }
-    return true;
+    error = primaryFailure + "; no recovery backup available";
+    return false;
 }
 
 bool ofApp::validateSceneConsoleLayout(const ofJson& consoleNode,
@@ -5670,6 +6416,7 @@ bool ofApp::buildSceneApplyPlan(const std::string& canonicalPath,
                 return false;
             }
             plan.routerSnapshot = mappingsNode[kSceneRouterMappingsKey];
+            plan.routerMappingsDefined = true;
         }
         if (mappingsNode.contains(kSceneSlotAssignmentsKey)) {
             if (!mappingsNode[kSceneSlotAssignmentsKey].is_object()) {
@@ -5677,6 +6424,15 @@ bool ofApp::buildSceneApplyPlan(const std::string& canonicalPath,
                 return false;
             }
             plan.slotAssignmentsSnapshot = mappingsNode[kSceneSlotAssignmentsKey];
+            plan.slotAssignmentsDefined = true;
+        }
+        if (mappingsNode.contains(kSceneActiveBankKey)) {
+            if (!mappingsNode[kSceneActiveBankKey].is_string()) {
+                error = "scene active mapping bank must be a string";
+                return false;
+            }
+            plan.activeBank = mappingsNode[kSceneActiveBankKey].get<std::string>();
+            plan.activeBankDefined = true;
         }
     }
 
@@ -5687,6 +6443,7 @@ ofApp::SceneLoadRollbackSnapshot ofApp::captureSceneRollbackSnapshot(const std::
     SceneLoadRollbackSnapshot snapshot;
     snapshot.activeScenePath = activeScenePath_;
     snapshot.activeNamedScenePath = activeNamedScenePath_;
+    snapshot.mappingSource = sceneMappingSource_;
     const std::string snapshotPath = activeScenePath_.empty()
         ? (targetCanonicalPath.empty() ? canonicalScenePath(kSceneAutosavePath) : targetCanonicalPath)
         : activeScenePath_;
@@ -5871,6 +6628,7 @@ ofJson ofApp::encodeSceneJson(const std::string& path) const {
     mappingsJson[kSceneSlotAssignmentsKey] = slotAssignmentsSnapshot.is_object()
         ? slotAssignmentsSnapshot
         : emptySlotAssignmentsSnapshot();
+    mappingsJson[kSceneActiveBankKey] = activeMidiBank;
     scene[kSceneMappingsKey] = std::move(mappingsJson);
 
     return scene;
@@ -5884,24 +6642,7 @@ bool ofApp::writeSceneJson(const std::string& path, const ofJson& scene) const {
         ofLogWarning("Scene") << "failed to create scene directory for " << fullPath;
         return false;
     }
-
-    const std::string tmpPath = fullPath + ".tmp";
-    {
-        ofFile out(tmpPath, ofFile::WriteOnly, true);
-        if (!out.is_open()) {
-            ofLogWarning("Scene") << "failed to open temp scene file " << tmpPath;
-            return false;
-        }
-        out << scene.dump(2);
-    }
-
-    std::remove(fullPath.c_str());
-    if (std::rename(tmpPath.c_str(), fullPath.c_str()) != 0) {
-        ofLogWarning("Scene") << "failed to rename " << tmpPath << " -> " << fullPath;
-        ofFile::removeFile(tmpPath, false);
-        return false;
-    }
-    return true;
+    return writeJsonRecoverably(fullPath, scene, "Scene");
 }
 
 bool ofApp::applyScenePlan(SceneApplyPlan& plan) {
@@ -6160,6 +6901,9 @@ bool ofApp::applyScenePlan(SceneApplyPlan& plan) {
     }
 
     paramRegistry.evaluateAllModifiers();
+    if (plan.activeBankDefined) {
+        activeMidiBank = plan.activeBank;
+    }
     ensureActiveBankValid();
     plan.consoleApplied = consoleApplied;
     return true;
@@ -6168,7 +6912,8 @@ bool ofApp::applyScenePlan(SceneApplyPlan& plan) {
 bool ofApp::publishScenePlan(const SceneApplyPlan& plan,
                              const SceneLoadRollbackSnapshot&,
                              std::string& error) {
-    if (!midi.importMappingSnapshot(plan.routerSnapshot, true)) {
+    if (plan.routerMappingsDefined &&
+        !midi.importMappingSnapshot(plan.routerSnapshot, true)) {
         error = "failed to import router mapping snapshot";
         return false;
     }
@@ -6190,16 +6935,19 @@ bool ofApp::publishScenePlan(const SceneApplyPlan& plan,
         secondaryDisplayRenderPaused_ = false;
     }
 
-    const std::string slotAssignmentsPath = controlHubSlotAssignmentsPath();
-    if (!writeJsonSnapshotAtomically(slotAssignmentsPath, plan.slotAssignmentsSnapshot)) {
-        error = "failed to apply slot assignment snapshot from scene";
-        return false;
-    }
-    if (controlMappingHub) {
-        controlMappingHub->setSlotAssignmentsPath(slotAssignmentsPath);
+    if (plan.slotAssignmentsDefined) {
+        const std::string slotAssignmentsPath = controlHubSlotAssignmentsPath();
+        if (!writeJsonSnapshotAtomically(slotAssignmentsPath, plan.slotAssignmentsSnapshot)) {
+            error = "failed to apply slot assignment snapshot from scene";
+            return false;
+        }
+        if (controlMappingHub) {
+            controlMappingHub->setSlotAssignmentsPath(slotAssignmentsPath);
+        }
     }
     activeScenePath_ = plan.canonicalPath;
     activeNamedScenePath_ = plan.activeNamedScenePath;
+    sceneMappingSource_ = plan.routerMappingsDefined ? "scene" : "global (preserved)";
     consolePersistenceSuspended_ = plan.restorePersistenceSuspended;
     if (plan.consoleApplied) {
         persistConsoleAssignments();
@@ -6235,6 +6983,7 @@ bool ofApp::rollbackSceneLoad(const SceneLoadRollbackSnapshot& snapshot,
 
     activeScenePath_ = snapshot.activeScenePath;
     activeNamedScenePath_ = snapshot.activeNamedScenePath;
+    sceneMappingSource_ = snapshot.mappingSource;
     secondaryDisplay_.enabled = snapshot.secondaryDisplayEnabled;
     param_secondaryDisplayEnabled = snapshot.paramSecondaryDisplayEnabled;
     param_controllerFocusConsole = snapshot.paramControllerFocusConsole;
@@ -6282,8 +7031,37 @@ bool ofApp::loadScene(const std::string& path) {
     beginSceneLoadPhase(SceneLoadPhase::Validating, canonicalPath, "checking scene document");
     beginSceneLoadPhase(SceneLoadPhase::Building, canonicalPath, "building scene apply plan");
     if (!buildSceneApplyPlan(canonicalPath, plan.scene, plan, error)) {
-        finishSceneLoad(false, canonicalPath, error);
-        return false;
+        const std::string primaryError = error;
+        const std::string backupPath = sceneFilesystemPath(canonicalPath) + ".bak";
+        bool recovered = false;
+        if (!plan.recoveredFromBackup && ofFile::doesFileExist(backupPath, false)) {
+            try {
+                SceneApplyPlan backupPlan;
+                backupPlan.canonicalPath = canonicalPath;
+                backupPlan.fullPath = sceneFilesystemPath(canonicalPath);
+                backupPlan.scene = ofLoadJson(backupPath);
+                backupPlan.recoveredFromBackup = true;
+                error.clear();
+                if (buildSceneApplyPlan(canonicalPath, backupPlan.scene, backupPlan, error)) {
+                    plan = std::move(backupPlan);
+                    recovered = true;
+                    ofLogWarning("Scene") << "scene validation failed (" << primaryError
+                                          << "); recovered last-known-good backup "
+                                          << backupPath;
+                }
+            } catch (const std::exception& ex) {
+                error = std::string("backup recovery failed: ") + ex.what();
+            }
+        }
+        if (!recovered) {
+            if (error.empty()) {
+                error = primaryError;
+            } else if (error != primaryError) {
+                error = primaryError + "; " + error;
+            }
+            finishSceneLoad(false, canonicalPath, error);
+            return false;
+        }
     }
 
     const SceneLoadRollbackSnapshot rollback = captureSceneRollbackSnapshot(canonicalPath);
@@ -6334,20 +7112,42 @@ bool ofApp::loadScene(const std::string& path) {
 
     finishSceneLoad(true,
                     canonicalPath,
-                    plan.restoreSecondaryDisplay
+                    plan.recoveredFromBackup
+                        ? "recovered last-known-good backup; scene published"
+                        : plan.restoreSecondaryDisplay
                         ? "scene published; Control Window preserved"
                         : "scene published");
+    captureSceneBaseline();
+    sceneRecoveryPendingSave_ = plan.recoveredFromBackup;
+    sceneDirty_ = sceneRecoveryPendingSave_;
     return true;
 }
 
-void ofApp::saveScene(const std::string& path) {
+bool ofApp::saveScene(const std::string& path) {
     const std::string canonicalPath = canonicalScenePath(path);
-    if (writeSceneJson(canonicalPath, encodeSceneJson(canonicalPath))) {
-        activeScenePath_ = canonicalPath;
-        if (!isAutosaveScenePath(canonicalPath)) {
+    const bool autosave = isAutosaveScenePath(canonicalPath);
+    const bool saved = writeSceneJson(canonicalPath, encodeSceneJson(canonicalPath));
+    sceneSaveUiSnapshot_.hasResult = true;
+    sceneSaveUiSnapshot_.success = saved;
+    sceneSaveUiSnapshot_.scenePath = canonicalPath;
+    sceneSaveUiSnapshot_.displayName = sceneDisplayNameForPath(canonicalPath);
+    sceneSaveUiSnapshot_.status = saved
+        ? (autosave ? "recovery autosave updated" : "scene saved safely")
+        : "scene save failed; previous file preserved";
+    sceneSaveUiSnapshot_.updatedMs = ofGetElapsedTimeMillis();
+    if (saved) {
+        if (!autosave) {
+            sceneRecoveryPendingSave_ = false;
+            activeScenePath_ = canonicalPath;
             activeNamedScenePath_ = canonicalPath;
+            captureSceneBaseline();
         }
+        ofLogNotice("Scene") << sceneSaveUiSnapshot_.status << ": " << canonicalPath;
+    } else {
+        sceneDirty_ = true;
+        ofLogWarning("Scene") << sceneSaveUiSnapshot_.status << ": " << canonicalPath;
     }
+    return saved;
 }
 
 std::vector<ControlMappingHubState::SavedSceneInfo> ofApp::listSavedScenes() const {
@@ -6370,6 +7170,13 @@ std::vector<ControlMappingHubState::SavedSceneInfo> ofApp::listSavedScenes() con
         info.id = info.path;
         info.label = sceneDisplayNameForPath(info.path);
         info.active = (!activeNamedScenePath_.empty() && info.id == canonicalScenePath(activeNamedScenePath_));
+        if (info.active) {
+            info.dirty = sceneDirty_;
+            info.persistenceStatus = scenePersistenceStatusLabel();
+            info.mappingSource = sceneMappingSource_;
+            info.loadStatus = sceneLoadUiSnapshot_.status;
+            info.saveStatus = sceneSaveUiSnapshot_.status;
+        }
         if (info.id.empty() || info.label.empty() || isAutosaveScenePath(info.id)) {
             continue;
         }
@@ -6428,8 +7235,7 @@ bool ofApp::saveNamedScene(const std::string& sceneName, bool overwrite) {
     if (!overwrite && ofFile::doesFileExist(fullPath)) {
         return false;
     }
-    saveScene(canonicalPath);
-    return ofFile::doesFileExist(fullPath);
+    return saveScene(canonicalPath) && ofFile::doesFileExist(fullPath);
 }
 
 bool ofApp::overwriteSavedSceneById(const std::string& sceneId) {
@@ -6441,8 +7247,7 @@ bool ofApp::overwriteSavedSceneById(const std::string& sceneId) {
     if (!ofFile::doesFileExist(fullPath)) {
         return false;
     }
-    saveScene(canonicalPath);
-    return ofFile::doesFileExist(fullPath);
+    return saveScene(canonicalPath) && ofFile::doesFileExist(fullPath);
 }
 
 void ofApp::configureDefaultBanks() {
@@ -6668,7 +7473,7 @@ bool ofApp::spawnSecondaryDisplayShell(const std::string& reason) {
         publishSecondaryDisplayTelemetry();
         return true;
     }
-    auto baseWindow = ofGetCurrentWindow();
+    auto baseWindow = primaryWindow_ ? primaryWindow_ : ofGetCurrentWindow();
     if (!baseWindow) {
         ofLogWarning("ofApp") << "Cannot spawn controller monitor: no active base window";
         return false;
@@ -6683,6 +7488,10 @@ bool ofApp::spawnSecondaryDisplayShell(const std::string& reason) {
         selection.y = ofGetWindowPositionY();
         selection.width = ofGetWindowWidth();
         selection.height = ofGetWindowHeight();
+        selection.workX = selection.x;
+        selection.workY = selection.y;
+        selection.workWidth = selection.width;
+        selection.workHeight = selection.height;
     }
     if (selection.width <= 0) {
         selection.width = std::max(selection.width, 640);
@@ -6703,11 +7512,21 @@ bool ofApp::spawnSecondaryDisplayShell(const std::string& reason) {
     if (!monitorHintProvided || !monitorHintResolved) {
         posX = selection.x;
         posY = selection.y;
-        secondaryDisplay_.x = posX;
-        secondaryDisplay_.y = posY;
-        param_secondaryDisplayX = posX;
-        param_secondaryDisplayY = posY;
     }
+    const WindowPlacement safePlacement =
+        clampWindowToWorkArea(posX, posY, width, height, selection);
+    posX = safePlacement.x;
+    posY = safePlacement.y;
+    width = safePlacement.width;
+    height = safePlacement.height;
+    secondaryDisplay_.x = posX;
+    secondaryDisplay_.y = posY;
+    secondaryDisplay_.width = width;
+    secondaryDisplay_.height = height;
+    param_secondaryDisplayX = posX;
+    param_secondaryDisplayY = posY;
+    param_secondaryDisplayWidth = width;
+    param_secondaryDisplayHeight = height;
     ofGLFWWindowSettings settings;
     settings.shareContextWith = baseWindow;
     settings.setGLVersion(3, 2);
@@ -6725,6 +7544,28 @@ bool ofApp::spawnSecondaryDisplayShell(const std::string& reason) {
     if (!secondaryWindow_) {
         ofLogWarning("ofApp") << "Failed to create controller monitor window";
         return false;
+    }
+    if (selection.handle) {
+        auto controllerWindow = std::dynamic_pointer_cast<ofAppGLFWWindow>(secondaryWindow_);
+        GLFWwindow* handle = controllerWindow ? controllerWindow->getGLFWWindow() : nullptr;
+        if (handle) {
+            const WindowPlacement framedPlacement =
+                clampGlfwWindowToWorkArea(handle, selection);
+            glfwSetWindowSize(handle, framedPlacement.width, framedPlacement.height);
+            glfwSetWindowPos(handle, framedPlacement.x, framedPlacement.y);
+            posX = framedPlacement.x;
+            posY = framedPlacement.y;
+            width = framedPlacement.width;
+            height = framedPlacement.height;
+            secondaryDisplay_.x = posX;
+            secondaryDisplay_.y = posY;
+            secondaryDisplay_.width = width;
+            secondaryDisplay_.height = height;
+            param_secondaryDisplayX = posX;
+            param_secondaryDisplayY = posY;
+            param_secondaryDisplayWidth = width;
+            param_secondaryDisplayHeight = height;
+        }
     }
     secondaryWindowApp_ = std::make_shared<SecondaryDisplayView>(this);
     ofRunApp(secondaryWindow_, secondaryWindowApp_);
@@ -6746,7 +7587,10 @@ void ofApp::destroySecondaryDisplayShell(const std::string& reason) {
         secondaryWindow_->setWindowShouldClose();
         secondaryWindowApp_.reset();
         secondaryWindow_.reset();
+        fullscreenShortcutHeld_ = false;
     }
+    dualDisplayRolesSwapped_ = false;
+    secondaryWindowedGeometry_.valid = false;
     if (!secondaryDisplay_.active) {
         return;
     }
@@ -6808,7 +7652,7 @@ void ofApp::requestControllerFocusToggle() {
 }
 
 bool ofApp::focusPrimaryWindow(const std::string& reason) {
-    auto mainWindow = ofGetCurrentWindow();
+    auto mainWindow = primaryWindow_ ? primaryWindow_ : ofGetCurrentWindow();
     auto glfwWindow = std::dynamic_pointer_cast<ofAppGLFWWindow>(mainWindow);
     GLFWwindow* handle = glfwWindow ? glfwWindow->getGLFWWindow() : nullptr;
     if (!handle) {
@@ -6865,7 +7709,7 @@ ofApp::ControllerFocusOwner ofApp::currentControllerFocusOwner() const {
             return ControllerFocusOwner::Controller;
         }
     }
-    auto consoleWindow = std::dynamic_pointer_cast<ofAppGLFWWindow>(ofGetCurrentWindow());
+    auto consoleWindow = std::dynamic_pointer_cast<ofAppGLFWWindow>(primaryWindow_);
     if (consoleWindow) {
         GLFWwindow* handle = consoleWindow->getGLFWWindow();
         if (handle && glfwGetWindowAttrib(handle, GLFW_FOCUSED) == GLFW_TRUE) {
@@ -6880,7 +7724,7 @@ void ofApp::publishControllerFocusTelemetry(const std::string& detail, bool succ
 }
 
 void ofApp::monitorWindowContentScale() {
-    auto baseWindow = std::dynamic_pointer_cast<ofAppGLFWWindow>(ofGetCurrentWindow());
+    auto baseWindow = std::dynamic_pointer_cast<ofAppGLFWWindow>(primaryWindow_);
     if (baseWindow) {
         if (GLFWwindow* handle = baseWindow->getGLFWWindow()) {
             int iconified = glfwGetWindowAttrib(handle, GLFW_ICONIFIED);
@@ -7071,7 +7915,10 @@ std::string ofApp::controllerFocusStatusBadge() const {
         return badge.str();
     }
     badge << (param_controllerFocusConsole ? "Console focus" : "Controller focus");
-    badge << " | Mode " << (secondaryDisplay_.followPrimary ? "Follow" : "Freeform");
+    badge << " | "
+          << (dualDisplayRolesSwapped_
+                  ? "Primary=Control / Secondary=Scene"
+                  : "Primary=Scene / Secondary=Control");
     if (controllerFocus_.needsAttention) {
         badge << "  [ATTENTION]";
     }
@@ -7204,6 +8051,9 @@ bool ofApp::isSecondaryMonitorPresent(const std::string& label) const {
 void ofApp::toggleDualDisplayMode() {
     const std::string current = normalizeDualDisplayMode(param_dualDisplayMode);
     const bool toDual = current != "dual";
+    if (!toDual) {
+        dualDisplayRolesSwapped_ = false;
+    }
     param_dualDisplayMode = toDual ? "dual" : "single";
     persistedDualDisplayMode_ = param_dualDisplayMode;
     publishDualDisplayTelemetry(persistedDualDisplayMode_);
@@ -7212,6 +8062,41 @@ void ofApp::toggleDualDisplayMode() {
     persistConsoleAssignments();
     ofLogNotice("ofApp") << "Dual display mode toggled -> " << persistedDualDisplayMode_
                          << " (controller monitor " << (toDual ? "enabled" : "disabled") << ")";
+}
+
+bool ofApp::primaryWindowIsControlSurface() const {
+    return secondaryDisplay_.active && dualDisplayRolesSwapped_;
+}
+
+bool ofApp::secondaryWindowIsControlSurface() const {
+    return secondaryDisplay_.active && !dualDisplayRolesSwapped_;
+}
+
+void ofApp::swapDualDisplayRoles() {
+    if (!secondaryDisplay_.active || !secondaryWindow_) {
+        ofLogNotice("ofApp")
+            << "Scene/control role swap ignored: dual-window mode is inactive";
+        return;
+    }
+    dualDisplayRolesSwapped_ = !dualDisplayRolesSwapped_;
+    const std::string sceneWindow =
+        dualDisplayRolesSwapped_ ? "secondary" : "primary";
+    const std::string controlWindow =
+        dualDisplayRolesSwapped_ ? "primary" : "secondary";
+    ofLogNotice("ofApp")
+        << "Dual-window roles swapped -> scene=" << sceneWindow
+        << " control=" << controlWindow;
+    publishHudTelemetrySample(
+        "hud.controls",
+        "secondary_display.roles_swapped",
+        dualDisplayRolesSwapped_ ? 1.0f : 0.0f,
+        "scene:" + sceneWindow + ",control:" + controlWindow);
+    requestHudLayoutResync("display-role-swap");
+    if (dualDisplayRolesSwapped_) {
+        focusPrimaryWindow("display-role-swap");
+    } else {
+        focusSecondaryWindow("display-role-swap");
+    }
 }
 
 void ofApp::toggleSecondaryDisplayFollow() {
@@ -7230,9 +8115,9 @@ void ofApp::syncHudLayoutTarget() {
     if (!controlMappingHub) {
         return;
     }
-    ControlMappingHubState::HudLayoutTarget target = secondaryDisplay_.followPrimary
-        ? ControlMappingHubState::HudLayoutTarget::Projector
-        : ControlMappingHubState::HudLayoutTarget::Controller;
+    ControlMappingHubState::HudLayoutTarget target = secondaryDisplay_.active
+        ? ControlMappingHubState::HudLayoutTarget::Controller
+        : ControlMappingHubState::HudLayoutTarget::Projector;
     controlMappingHub->setHudLayoutTarget(target);
 }
 
@@ -7259,14 +8144,16 @@ void ofApp::emitOverlayRouteTelemetry(const std::string& source, bool forceEvent
     if (!controlMappingHub) {
         return;
     }
-    const std::string target = secondaryDisplay_.followPrimary
-        ? ControlMappingHubState::hudLayoutTargetName(ControlMappingHubState::HudLayoutTarget::Projector)
-        : ControlMappingHubState::hudLayoutTargetName(ControlMappingHubState::HudLayoutTarget::Controller);
+    const bool controllerTarget = secondaryDisplay_.active;
+    const std::string target = controllerTarget
+        ? ControlMappingHubState::hudLayoutTargetName(ControlMappingHubState::HudLayoutTarget::Controller)
+        : ControlMappingHubState::hudLayoutTargetName(ControlMappingHubState::HudLayoutTarget::Projector);
     if (!forceEvent && target == lastOverlayRouteTarget_) {
         return;
     }
     lastOverlayRouteTarget_ = target;
-    controlMappingHub->emitOverlayRouteEvent(target, source, secondaryDisplay_.followPrimary);
+    controlMappingHub->emitOverlayRouteEvent(
+        target, source, !controllerTarget);
     LayoutSyncGuardScope guard(this, source);
     if (!guard.owns()) {
         requestHudLayoutResync(source);
@@ -7457,15 +8344,15 @@ ofColor ofApp::secondaryDisplayBackgroundColor() const {
 
 std::string ofApp::secondaryDisplayLabel() const {
     if (!secondaryDisplay_.active) {
-        return std::string("Controller Monitor (") +
-               (secondaryDisplay_.followPrimary ? "Follow Projector" : "Freeform Layout") + ", inactive)";
+        return "Second Window (inactive)";
     }
     std::string label = secondaryDisplayActiveMonitor_;
     if (label.empty()) {
         label = secondaryDisplay_.monitorId.empty() ? "Auto Monitor" : secondaryDisplay_.monitorId;
     }
-    std::string mode = secondaryDisplay_.followPrimary ? "Follow Projector" : "Freeform Layout";
-    return "Controller Monitor - " + label + " [" + mode + "]";
+    const std::string role =
+        secondaryWindowIsControlSurface() ? "Control" : "Scene";
+    return role + " Window - " + label;
 }
 
 void ofApp::drawSceneLoadSnapshot(float width, float height) const {
@@ -7523,35 +8410,13 @@ void ofApp::drawSceneLoadSnapshot(float width, float height) const {
 
 void ofApp::drawSecondaryDisplayWindow(float width, float height) {
     ofPushStyle();
-    const float textScale = std::max(0.01f, menuSkin.metrics.typographyScale);
-    const float lineStep = 16.0f * textScale;
-    ofBackground(secondaryDisplayBackgroundColor());
-    ofSetColor(255);
-    drawBitmapStringScaled(secondaryDisplayLabel(), 18.0f, 30.0f * textScale, textScale);
-    bool routeFreeform = !secondaryDisplay_.followPrimary;
-    bool shouldDrawHud = routeFreeform ? param_showHud : overlayVisibility_.hud;
-    ThreeBandLayout controllerLayout = threeBandLayout.layoutForSize(width, height);
-    if (shouldDrawHud) {
-        OverlayManager::DrawParams controllerParams;
-        controllerParams.bounds = ofRectangle(0.0f, 0.0f, width, height);
-        controllerParams.app = this;
-        controllerParams.layout = controllerLayout;
-        controllerParams.useThreeBandLayout = true;
-        overlayManager.draw(controllerParams);
-    } else if (!routeFreeform) {
-        float y = 52.0f * textScale;
-        drawBitmapStringScaled("Freeform layout mode", 18.0f, y, textScale, true);
-        y += 18.0f * textScale;
-        drawBitmapStringScaled("Ctrl+Shift+,  Mirror projector overlays", 18.0f, y, textScale);
-        y += lineStep;
-        drawBitmapStringScaled("Ctrl+Shift+.  Route overlays here", 18.0f, y, textScale);
-        y += lineStep;
-        drawBitmapStringScaled("Ctrl+Shift+F  Toggle follow mode", 18.0f, y, textScale);
-        y += lineStep;
-        drawBitmapStringScaled("Ctrl+Shift+Tab  Focus console window", 18.0f, y, textScale);
-    }
-    if (routeFreeform) {
-        drawMenuPanels(controllerLayout, param_showConsole, param_showControlHub, param_showMenus);
+    if (secondaryWindowIsControlSurface()) {
+        drawControlWindow(width, height, true);
+    } else {
+        drawSceneWindow(width, height);
+        if (quitConfirmationActive() && quitConfirmationControllerWindow_) {
+            drawQuitConfirmationOverlay(width, height);
+        }
     }
     ofPopStyle();
 }

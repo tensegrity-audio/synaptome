@@ -1,10 +1,10 @@
 #include "GameOfLifeLayer.h"
+#include "LayerParameterBuilder.h"
 #include "ofGraphics.h"
 #include "ofUtils.h"
 #include <algorithm>
 #include <cmath>
 #include <limits>
-#include <random>
 
 namespace {
     constexpr int kPresetCount = 4;
@@ -28,6 +28,7 @@ namespace {
 void GameOfLifeLayer::configure(const ofJson& config) {
     if (config.contains("defaults")) {
         const auto& def = config["defaults"];
+        paramEnabled_ = def.value("visible", paramEnabled_);
         paramSpeed_ = def.value("speed", paramSpeed_);
         paramWrap_ = def.value("wrap", paramWrap_);
         paramAlpha_ = def.value("alpha", paramAlpha_);
@@ -44,7 +45,10 @@ void GameOfLifeLayer::configure(const ofJson& config) {
             paramDeadB_ = def["deadColor"][2].get<float>();
         }
         paramPaused_ = def.value("paused", paramPaused_);
+        paramReseedRequested_ = def.value("reseed", paramReseedRequested_);
+        paramSeed_ = def.value("seed", paramSeed_);
         paramSeedDensity_ = def.value("seedDensity", paramSeedDensity_);
+        paramSeedDensity_ = def.value("density", paramSeedDensity_);
         paramPresetIndex_ = def.value("preset", paramPresetIndex_);
         paramFadeFrames_ = def.value("fadeFrames", paramFadeFrames_);
         paramBpmSync_ = def.value("bpmSync", paramBpmSync_);
@@ -52,6 +56,12 @@ void GameOfLifeLayer::configure(const ofJson& config) {
         paramAutoReseed_ = def.value("autoReseed", paramAutoReseed_);
         paramReseedQuantizeBeats_ = def.value("reseedQuantizeBeats", paramReseedQuantizeBeats_);
         paramAutoReseedEveryBeats_ = def.value("autoReseedEveryBeats", paramAutoReseedEveryBeats_);
+        paramAliveR_ = def.value("aliveR", paramAliveR_);
+        paramAliveG_ = def.value("aliveG", paramAliveG_);
+        paramAliveB_ = def.value("aliveB", paramAliveB_);
+        paramDeadR_ = def.value("deadR", paramDeadR_);
+        paramDeadG_ = def.value("deadG", paramDeadG_);
+        paramDeadB_ = def.value("deadB", paramDeadB_);
     }
 
     if (config.contains("gridSize") && config["gridSize"].is_array() && config["gridSize"].size() >= 2) {
@@ -62,19 +72,15 @@ void GameOfLifeLayer::configure(const ofJson& config) {
 
 void GameOfLifeLayer::setup(ParameterRegistry& registry) {
     const std::string prefix = registryPrefix().empty() ? "layer.gameOfLife" : registryPrefix();
+    LayerParameterBuilder common(registry, prefix, "Generative");
 
-    ParameterRegistry::Descriptor visMeta;
-    visMeta.label = "Game of Life Visible";
-    visMeta.group = "Generative";
-    registry.addBool(prefix + ".visible", &paramEnabled_, paramEnabled_, visMeta);
-
-    ParameterRegistry::Descriptor speedMeta;
-    speedMeta.label = "Life Speed";
-    speedMeta.group = "Generative";
-    speedMeta.range.min = 0.0f;
-    speedMeta.range.max = 20.0f;
-    speedMeta.range.step = 0.1f;
-    registry.addFloat(prefix + ".speed", &paramSpeed_, paramSpeed_, speedMeta);
+    registry.addBool(prefix + ".visible", &paramEnabled_, paramEnabled_,
+                     common.boolDescriptor(
+                         { "Game of Life Visible", {}, {} }));
+    registry.addFloat(
+        prefix + ".speed", &paramSpeed_, paramSpeed_,
+        common.floatDescriptor(
+            { "Life Speed", {}, { 0.0f, 20.0f, 0.1f }, {}, {}, true, 10 }));
 
     ParameterRegistry::Descriptor bpmSyncMeta;
     bpmSyncMeta.label = "Life BPM Sync";
@@ -96,11 +102,18 @@ void GameOfLifeLayer::setup(ParameterRegistry& registry) {
     pauseMeta.group = "Generative";
     registry.addBool(prefix + ".paused", &paramPaused_, paramPaused_, pauseMeta);
 
-    ParameterRegistry::Descriptor reseedMeta;
-    reseedMeta.label = "Life Reseed";
-    reseedMeta.group = "Generative";
-    reseedMeta.description = "Trigger a fresh random board using current density";
-    registry.addBool(prefix + ".reseed", &paramReseedRequested_, paramReseedRequested_, reseedMeta);
+    registry.addBool(
+        prefix + ".reseed", &paramReseedRequested_, paramReseedRequested_,
+        common.boolDescriptor(
+            { "Life Reseed", {},
+              "Trigger a fresh random board using current density" }));
+
+    registry.addFloat(
+        prefix + ".seed", &paramSeed_, paramSeed_,
+        common.floatDescriptor(
+            { "Seed: Pattern Seed", "Life Lifecycle",
+              { 1.0f, 999999.0f, 1.0f }, {},
+              "The same seed, density, and preset reproduce the same board" }));
 
     ParameterRegistry::Descriptor densityMeta;
     densityMeta.label = "Life Seed Density";
@@ -131,6 +144,8 @@ void GameOfLifeLayer::setup(ParameterRegistry& registry) {
     presetMeta.range.max = static_cast<float>(std::max(0, kPresetCount - 1));
     presetMeta.range.step = 1.0f;
     presetMeta.description = presetDescriptions();
+    presetMeta.quickAccess = true;
+    presetMeta.quickAccessOrder = 20;
     registry.addFloat(prefix + ".preset", &paramPresetIndex_, paramPresetIndex_, presetMeta);
 
     ParameterRegistry::Descriptor colorMeta;
@@ -152,12 +167,8 @@ void GameOfLifeLayer::setup(ParameterRegistry& registry) {
     colorMeta.label = "Life Dead B";
     registry.addFloat(prefix + ".deadB", &paramDeadB_, paramDeadB_, colorMeta);
 
-    ParameterRegistry::Descriptor alphaMeta;
-    alphaMeta.label = "Life Alpha";
-    alphaMeta.group = "Generative";
-    alphaMeta.range.min = 0.0f;
-    alphaMeta.range.max = 1.0f;
-    alphaMeta.range.step = 0.01f;
+    ParameterRegistry::Descriptor alphaMeta = common.floatDescriptor(
+        { "Life Alpha", {}, { 0.0f, 1.0f, 0.01f } });
     registry.addFloat(prefix + ".alpha", &paramAlpha_, paramAlpha_, alphaMeta);
 
     ParameterRegistry::Descriptor aliveAlphaMeta = alphaMeta;
@@ -201,12 +212,15 @@ void GameOfLifeLayer::setup(ParameterRegistry& registry) {
     texture_.setTextureMinMagFilter(GL_NEAREST, GL_NEAREST);
 
     paramSeedDensity_ = ofClamp(paramSeedDensity_, 0.0f, 1.0f);
+    paramSeed_ = std::round(ofClamp(paramSeed_, 1.0f, 999999.0f));
     paramPresetIndex_ = ofClamp(paramPresetIndex_, 0.0f, static_cast<float>(std::max(0, kPresetCount - 1)));
     paramFadeFrames_ = std::round(ofClamp(paramFadeFrames_, 1.0f, 32.0f));
     paramBpmMultiplier_ = ofClamp(paramBpmMultiplier_, 0.25f, 8.0f);
     paramReseedQuantizeBeats_ = std::round(ofClamp(paramReseedQuantizeBeats_, 0.0f, 16.0f));
     paramAutoReseedEveryBeats_ = std::round(ofClamp(paramAutoReseedEveryBeats_, 1.0f, 64.0f));
     activePreset_ = ofClamp(static_cast<int>(std::round(paramPresetIndex_)), 0, std::max(0, kPresetCount - 1));
+    appliedSeed_ = requestedSeed();
+    rng_.seed(appliedSeed_);
     applyPresetInternal(activePreset_);
     syncTexture();
 }
@@ -216,11 +230,18 @@ void GameOfLifeLayer::update(const LayerUpdateParams& params) {
     if (!enabled_) return;
 
     paramFadeFrames_ = std::round(ofClamp(paramFadeFrames_, 1.0f, 32.0f));
+    paramSeed_ = std::round(ofClamp(paramSeed_, 1.0f, 999999.0f));
     paramBpmMultiplier_ = ofClamp(paramBpmMultiplier_, 0.25f, 8.0f);
     paramReseedQuantizeBeats_ = std::round(ofClamp(paramReseedQuantizeBeats_, 0.0f, 16.0f));
     paramAutoReseedEveryBeats_ = std::round(ofClamp(paramAutoReseedEveryBeats_, 1.0f, 64.0f));
 
     const float beatPosition = currentBeatPosition(params.time, params.bpm);
+
+    if (requestedSeed() != appliedSeed_) {
+        appliedSeed_ = requestedSeed();
+        rng_.seed(appliedSeed_);
+        applyPresetInternal(activePreset_);
+    }
 
     if (paramReseedRequested_) {
         if (paramReseedQuantizeBeats_ > 0.0f && params.bpm > 0.0f) {
@@ -308,12 +329,11 @@ void GameOfLifeLayer::randomize(float density) {
     if (density < 0.0f) density = paramSeedDensity_;
     density = ofClamp(density, 0.0f, 1.0f);
 
-    std::random_device rd;
-    std::mt19937 rng(rd());
-    std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+    appliedSeed_ = requestedSeed();
+    rng_.seed(appliedSeed_);
 
     for (auto& cell : cells_) {
-        cell = dist(rng) < density ? 1 : 0;
+        cell = randomUnit() < density ? 1 : 0;
     }
     std::fill(fadeFramesRemaining_.begin(), fadeFramesRemaining_.end(), 0);
     dirty_ = true;
@@ -537,4 +557,13 @@ void GameOfLifeLayer::triggerReseed(float density) {
     randomize(density);
     reseedPending_ = false;
     pendingReseedBeat_ = -1.0f;
+}
+
+std::uint32_t GameOfLifeLayer::requestedSeed() const {
+    return static_cast<std::uint32_t>(
+        std::round(ofClamp(paramSeed_, 1.0f, 999999.0f)));
+}
+
+float GameOfLifeLayer::randomUnit() {
+    return std::generate_canonical<float, 24>(rng_);
 }

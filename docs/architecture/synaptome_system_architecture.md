@@ -4,11 +4,22 @@ Status: Human-readable framework map for Synaptome as a public live-performance 
 
 Source: [`synaptome_subsystem_anatomy.md`](synaptome_subsystem_anatomy.md), [`synaptome_external_contracts.md`](synaptome_external_contracts.md), [`synaptome_artist_sdk.md`](synaptome_artist_sdk.md), [`docs/contracts/README.md`](../contracts/README.md), [`docs/contracts/contract_gaps.md`](../contracts/contract_gaps.md), and the current `synaptome` app source.
 
+Terminology authority:
+[`synaptome_spine_element_model.md`](synaptome_spine_element_model.md).
+In canonical public language, creative modules are **elements** and the eight
+ordered Console composition containers are **layers**. This document still
+uses `Layer` where it describes current C++ classes, catalog fields, and other
+compatibility surfaces.
+
 ## Working Thesis
 
-Synaptome is an openFrameworks-based runtime for modular, parameterized, sensor-reactive live audiovisual performance.
+Synaptome is an openFrameworks-based spine for modular, parameterized,
+sensor-reactive live audiovisual performance.
 
-It exists so an audiovisual artist can build or load openFrameworks scenes without rebuilding the same show-control system every time: scene slots, parameter UI, MIDI mapping, OSC routing, sensor input, media browsing, HUD feedback, scene persistence, and validation.
+It exists so an audiovisual artist can build or load compatible creative
+elements without rebuilding the same show-control system every time: layered
+composition, parameter UI, MIDI mapping, OSC routing, sensor input, media
+browsing, HUD feedback, scene persistence, and validation.
 
 Synaptome is the reusable app/runtime layer. Hardware helpers, private show content, governance scaffolding, generated hardware config, and product-specific experiments are outside the public runtime unless intentionally promoted as examples.
 

@@ -6,6 +6,8 @@
 #include <vector>
 
 #include "control_mapping_hub_flow.cpp"
+#include "circuit_trace_contract.cpp"
+#include "layer_parameter_builder_contract.cpp"
 
 namespace {
 struct TestCase {
@@ -57,18 +59,29 @@ int main() {
         { "console_slot_hotkeys", browser_flow::RunConsoleSlotHotkeyScenario },
         { "coverage_window_logic", browser_flow::RunCoverageWindowLogicScenario },
         { "scene_parameter_persistence", browser_flow::RunSceneParameterPersistenceScenario },
+        { "mapping_snapshot_round_trip", browser_flow::RunMappingSnapshotRoundTripScenario },
         { "console_store_persistence", browser_flow::RunConsoleStorePersistenceScenario },
         { "viewport_persistence", browser_flow::RunViewportPersistenceScenario },
+        { "collapsed_browser_startup", browser_flow::RunCollapsedBrowserStartupScenario },
         { "layer_opacity_parameter_row", browser_flow::RunLayerOpacityParameterScenario },
         { "hud_asset_catalog", browser_flow::RunHudAssetPlacementScenario },
         { "hud_inline_picker", browser_flow::RunHudInlinePickerScenario },
         { "hud_feed_telemetry", browser_flow::RunHudFeedTelemetryScenario },
         { "hud_routing_manifest", browser_flow::RunHudRoutingManifestScenario },
         { "dual_screen_phase2", browser_flow::RunDualScreenPhase2Scenario },
+        { "window_monitor_placement", browser_flow::RunWindowMonitorPlacementScenario },
         { "layer_package_read_only_inspection", browser_flow::RunLayerPackageReadOnlyInspectionScenario },
         { "labeled_parameter_selection", browser_flow::RunLabeledParameterSelectionScenario },
         { "layer_package_preset_bank_selection", browser_flow::RunLayerPackagePresetBankSelectionScenario },
         { "opt_in_layer_package_activation", browser_flow::RunOptInLayerPackageActivationScenario },
+        { "collapsed_asset_browser_startup", browser_flow::RunCollapsedAssetBrowserStartupScenario },
+        { "asset_browser_search", browser_flow::RunAssetBrowserSearchScenario },
+        { "focused_layer_edit", browser_flow::RunFocusedLayerEditScenario },
+        { "circuit_variant_lifecycle", browser_flow::RunCircuitVariantLifecycleScenario },
+        { "circuit_lenia_lifecycle", browser_flow::RunCircuitLeniaLifecycleScenario },
+        { "circuit_lenia_osc_defaults", browser_flow::RunCircuitLeniaOscDefaultsScenario },
+        { "eight_direction_motion", circuit_trace_contract::RunEightDirectionMotionScenario },
+        { "layer_parameter_builder", layer_parameter_builder_contract::RunLayerParameterBuilderScenario },
     };
 
     int failures = 0;

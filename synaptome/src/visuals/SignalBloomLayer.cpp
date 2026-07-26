@@ -1,4 +1,5 @@
 #include "SignalBloomLayer.h"
+#include "LayerParameterBuilder.h"
 #include "ofGraphics.h"
 #include "ofMath.h"
 #include <algorithm>
@@ -51,18 +52,14 @@ void SignalBloomLayer::configure(const ofJson& config) {
 void SignalBloomLayer::setup(ParameterRegistry& registry) {
     const std::string prefix = registryPrefix().empty() ? "examples.signal_bloom" : registryPrefix();
 
-    ParameterRegistry::Descriptor visibleMeta;
-    visibleMeta.label = "Signal Bloom Visible";
-    visibleMeta.group = "Example";
-    registry.addBool(prefix + ".visible", &visible_, visible_, visibleMeta);
-
-    ParameterRegistry::Descriptor speedMeta;
-    speedMeta.label = "Signal Speed";
-    speedMeta.group = "Example Motion";
-    speedMeta.range.min = 0.0f;
-    speedMeta.range.max = 4.0f;
-    speedMeta.range.step = 0.01f;
-    registry.addFloat(prefix + ".speed", &speed_, speed_, speedMeta);
+    LayerParameterBuilder common(registry, prefix);
+    registry.addBool(
+        prefix + ".visible", &visible_, visible_,
+        common.boolDescriptor({ "Signal Bloom Visible", "Example", {} }));
+    registry.addFloat(
+        prefix + ".speed", &speed_, speed_,
+        common.floatDescriptor(
+            { "Signal Speed", "Example Motion", { 0.0f, 4.0f, 0.01f } }));
 
     ParameterRegistry::Descriptor bpmSyncMeta;
     bpmSyncMeta.label = "BPM Sync";
@@ -94,13 +91,10 @@ void SignalBloomLayer::setup(ParameterRegistry& registry) {
     rotationMeta.range.step = 1.0f;
     registry.addFloat(prefix + ".rotationDeg", &rotationDeg_, rotationDeg_, rotationMeta);
 
-    ParameterRegistry::Descriptor alphaMeta;
-    alphaMeta.label = "Alpha";
-    alphaMeta.group = "Example Color";
-    alphaMeta.range.min = 0.0f;
-    alphaMeta.range.max = 1.0f;
-    alphaMeta.range.step = 0.01f;
-    registry.addFloat(prefix + ".alpha", &alpha_, alpha_, alphaMeta);
+    registry.addFloat(
+        prefix + ".alpha", &alpha_, alpha_,
+        common.floatDescriptor(
+            { "Alpha", "Example Color", { 0.0f, 1.0f, 0.01f } }));
 
     ParameterRegistry::Descriptor gainMeta;
     gainMeta.label = "Sensor Gain";

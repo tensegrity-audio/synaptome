@@ -499,6 +499,7 @@
 		<ClCompile Include="src\main.cpp" />
 
 		<ClCompile Include="src\ofApp.cpp" />
+		<ClCompile Include="src\visuals\CircuitTraceLayer.cpp" />
 		<ClCompile Include="src\visuals\SignalBloomLayer.cpp" />
 
 		<ClCompile Include="src\io\MidiRouter.cpp" />
@@ -688,6 +689,8 @@
 
 		<ClInclude Include="src\ofApp.h" />
 		<ClInclude Include="src\core\OptionProviderRegistry.h" />
+		<ClInclude Include="src\visuals\CircuitTraceLayer.h" />
+		<ClInclude Include="src\visuals\EightDirectionMotion.h" />
 		<ClInclude Include="src\visuals\SignalBloomLayer.h" />
 
 		<ClInclude Include="src\io\MidiRouter.h" />
@@ -725,6 +728,7 @@
 		<ClInclude Include="src\visuals\effects\PostEffectChain.h" />
 		<ClInclude Include="src\media\VideoCatalog.h" />
 		<ClInclude Include="src\ui\AssetBrowser.h" />
+		<ClInclude Include="src\ui\WindowMonitorPlacement.h" />
 		<ClInclude Include="src\ui\HotkeyManager.h" />
 		<ClInclude Include="src\ui\KeyMappingUI.h" />
 		<ClInclude Include="src\ui\DevicesPanel.h" />

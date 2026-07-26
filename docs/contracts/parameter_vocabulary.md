@@ -1,6 +1,12 @@
 # Synaptome Parameter Vocabulary
 
-Status: First public vocabulary draft, paired with `docs/contracts/parameter_manifest.json`.
+Status: First public vocabulary draft, reviewed 2026-07-26 and paired with
+`docs/contracts/parameter_manifest.json`.
+
+Canonical system terminology and new-contract value rules are owned by
+[`../architecture/synaptome_spine_element_model.md`](../architecture/synaptome_spine_element_model.md).
+Creative modules are elements; `console.layer{slot}` addresses the ordered
+composition layers that host their live instances.
 
 Validator: `python tools\gen_parameter_manifest.py --check`
 
@@ -53,8 +59,8 @@ Rules:
 
 | Suffix | Type | Recommended Range / Values | Meaning |
 | --- | --- | --- | --- |
-| `visible` | bool | `true` / `false` | Layer or surface visibility. |
-| `opacity` | float | `0.0` to `1.0` | Slot or layer opacity before composition. |
+| `visible` | bool | `true` / `false` | Composition-layer or named subcomponent visibility. Whole-layer visibility is owned by the Console layer. |
+| `opacity` | float | `0.0` to `1.0` | Composition-layer or named subcomponent opacity. Whole-layer opacity is owned by the Console layer. |
 | `alpha` | float | `0.0` to `1.0` | Visual element alpha inside a layer. |
 | `speed` | float | Layer-specific; document units. | Primary animation speed. |
 | `bpmSync` | bool | `true` / `false` | Whether the layer follows global BPM. |
@@ -64,8 +70,8 @@ Rules:
 | `loop` | bool | `true` / `false` | Media loop behavior. |
 | `scale` | float | Layer-specific. | Spatial or texture scale. |
 | `rotateX`, `rotateY`, `rotateZ`, `rotationDeg` | float | Degrees. | Rotation controls. |
-| `colorR`, `colorG`, `colorB` | float | `0.0` to `255.0` or normalized if documented. | Primary color channels. |
-| `bgColorR`, `bgColorG`, `bgColorB` | float | `0.0` to `255.0` or normalized if documented. | Background color channels. |
+| `colorR`, `colorG`, `colorB` | float | `0.0` to `1.0` for new contracts; legacy `0-255` ranges remain compatibility surfaces. | Primary color channels. |
+| `bgColorR`, `bgColorG`, `bgColorB` | float | `0.0` to `1.0` for new contracts; legacy `0-255` ranges remain compatibility surfaces. | Background color channels. |
 | `lineOpacity`, `faceOpacity` | float | `0.0` to `1.0` | Geometry wire/face composition. |
 | `xInput`, `yInput`, `speedInput` | float | Input selector values. | Sensor/modulation input selectors. |
 | `reseed` | bool | Momentary/latched bool. | Request a new random seed. |

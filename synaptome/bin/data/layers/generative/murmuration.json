@@ -15,11 +15,14 @@
     { "id": "ripple", "label": "Ripple", "kind": "live", "live": true, "description": "Wave-driven topological response." }
   ],
   "defaults": {
+    "visible": true,
     "mode": 0,
     "speed": 16.0,
     "bpmSync": true,
     "bpmMultiplier": 5.0,
     "alpha": 1.0,
+    "seed": 9191,
+    "reseed": false,
     "boidCount": 96,
     "predatorEnabled": false,
     "predatorCount": 1,

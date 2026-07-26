@@ -25,6 +25,7 @@
 #include <algorithm>
 #include <functional>
 #include <iterator>
+#include <limits>
 #include <map>
 #include <memory>
 #include <sstream>
@@ -47,6 +48,11 @@ public:
         std::string label;
         std::string path;
         bool active = false;
+        bool dirty = false;
+        std::string persistenceStatus;
+        std::string mappingSource;
+        std::string loadStatus;
+        std::string saveStatus;
     };
 
     struct OscInputStatus {
@@ -98,6 +104,7 @@ public:
     void setPackagePresetApplyCallback(
         std::function<bool(const std::string&, const std::string&, const std::string&)> cb);
     void setConsoleAssetResolver(std::function<const LayerLibrary::Entry*(const std::string& prefix)> resolver);
+    bool focusAssetById(const std::string& assetId) const;
     void setDeviceMapsDirectory(const std::string& path);
     void setSlotAssignmentsPath(const std::string& path);
     void setMidiPaneStatus(const std::string& description, bool available);
@@ -849,6 +856,89 @@ inline void ControlMappingHubState::setConsoleSlotUnloadCallback(std::function<b
 inline void ControlMappingHubState::setConsoleSlotInventoryCallback(std::function<std::vector<ConsoleLayerInfo>()> cb) {
     consoleSlotInventoryCallback_ = std::move(cb);
     consoleSlotInventoryDirty_ = true;
+}
+
+inline bool ControlMappingHubState::focusAssetById(const std::string& assetId) const {
+    if (assetId.empty()) {
+        return false;
+    }
+    rebuildView();
+    std::string assetKey = assetId;
+    if (const auto it = assetKeyById_.find(assetId); it != assetKeyById_.end()) {
+        assetKey = it->second;
+    }
+
+    std::string categoryName;
+    std::string subcategoryName;
+    std::string assetName;
+    for (const auto& category : tableModel_.categories) {
+        for (const auto& subcategory : category.subcategories) {
+            const auto group = std::find_if(
+                subcategory.assetGroups.begin(),
+                subcategory.assetGroups.end(),
+                [&](const CategorySection::Subcategory::AssetGroup& candidate) {
+                    return candidate.assetKey == assetKey;
+                });
+            if (group != subcategory.assetGroups.end()) {
+                categoryName = category.name;
+                subcategoryName = subcategory.name;
+                assetName = group->name;
+                break;
+            }
+        }
+        if (!assetName.empty()) {
+            break;
+        }
+    }
+    if (assetName.empty()) {
+        return false;
+    }
+
+    setCategoryExpanded(categoryName, true);
+    setCategoryExpanded(subcategoryExpansionKey(categoryName, subcategoryName), true);
+    replayTreeSelection(categoryName, subcategoryName, assetName);
+    rebuildView();
+
+    focusPane_ = FocusPane::kGrid;
+    selectedGridSectionKey_.clear();
+    selectedRow_ = -1;
+    float bestOrder = std::numeric_limits<float>::max();
+    for (int rowIndex : activeRowIndices()) {
+        if (rowIndex < 0 || rowIndex >= static_cast<int>(tableModel_.rows.size())) {
+            continue;
+        }
+        const auto& row = tableModel_.rows[static_cast<std::size_t>(rowIndex)];
+        const ParameterRegistry::Descriptor* descriptor = nullptr;
+        if (row.floatParam) {
+            descriptor = &row.floatParam->meta;
+        } else if (row.boolParam) {
+            descriptor = &row.boolParam->meta;
+        } else if (row.stringParam) {
+            descriptor = &row.stringParam->meta;
+        }
+        if (descriptor && descriptor->quickAccess &&
+            static_cast<float>(descriptor->quickAccessOrder) < bestOrder) {
+            bestOrder = static_cast<float>(descriptor->quickAccessOrder);
+            selectedRow_ = rowIndex;
+        }
+        if (selectedRow_ < 0) {
+            selectedRow_ = rowIndex;
+        }
+    }
+    if (selectedRow_ >= 0 &&
+        selectedRow_ < static_cast<int>(tableModel_.rows.size())) {
+        const auto& selectedRow =
+            tableModel_.rows[static_cast<std::size_t>(selectedRow_)];
+        setParameterSectionExpanded(
+            parameterSectionExpansionKey(selectedRow.section), true);
+    }
+    invalidateRowCache();
+    gridScrollOffset_ = 0;
+    clampSelection();
+    if (controller_) {
+        controller_->requestViewModelRefresh();
+    }
+    return selectedAssetKey() == assetKey;
 }
 
 inline void ControlMappingHubState::setSavedSceneListCallback(std::function<std::vector<SavedSceneInfo>()> cb) {
@@ -2972,6 +3062,8 @@ inline void ControlMappingHubState::rebuildModel() const {
     }
 
     std::stable_sort(tableModel_.categories.begin(), tableModel_.categories.end(), [](const CategorySection& a, const CategorySection& b) {
+        if (a.name == "Scenes" && b.name != "Scenes") return true;
+        if (b.name == "Scenes" && a.name != "Scenes") return false;
         if (a.name == "OSC" && b.name != "OSC") return false;
         if (b.name == "OSC" && a.name != "OSC") return true;
         return a.name < b.name;
@@ -5409,7 +5501,11 @@ inline void ControlMappingHubState::appendSceneBrowserRows() const {
         row.id = "scene.saved.entry." + scene.id;
         row.label = scene.label.empty() ? scene.id : scene.label;
         if (scene.active) {
-            row.label += " (current)";
+            row.label += " (current, " +
+                         (scene.persistenceStatus.empty()
+                              ? std::string(scene.dirty ? "MODIFIED" : "SAVED")
+                              : scene.persistenceStatus) +
+                         ")";
         }
         row.section = "Action";
         row.category = "Scenes";
@@ -8206,13 +8302,13 @@ inline std::string ControlMappingHubState::parameterSectionExpansionKey(const st
 
 inline bool ControlMappingHubState::isParameterSectionExpanded(const std::string& key) const {
     if (key.empty()) {
-        return true;
+        return false;
     }
     auto it = parameterSectionExpansionState_.find(key);
     if (it != parameterSectionExpansionState_.end()) {
         return it->second;
     }
-    return true;
+    return false;
 }
 
 inline void ControlMappingHubState::setParameterSectionExpanded(const std::string& key, bool expanded) const {
@@ -8682,13 +8778,13 @@ inline int ControlMappingHubState::firstLeafNodeIndex() const {
 
 inline bool ControlMappingHubState::isCategoryExpanded(const std::string& name) const {
     if (name.empty()) {
-        return true;
+        return false;
     }
     auto it = treeExpansionState_.find(name);
     if (it != treeExpansionState_.end()) {
         return it->second;
     }
-    return true;
+    return false;
 }
 
 inline void ControlMappingHubState::setCategoryExpanded(const std::string& name, bool expanded) const {
@@ -8957,6 +9053,10 @@ inline void ControlMappingHubState::ensurePreferencesDirectory() const {
 }
 
 inline void ControlMappingHubState::loadPreferences() {
+    // Expansion is intentionally session-local. Every app launch starts from a
+    // compact Browser even when an older preference file recorded open rows.
+    treeExpansionState_.clear();
+    parameterSectionExpansionState_.clear();
     if (preferencesPath_.empty()) {
         treeSelectionPending_ = true;
         pendingCategoryPref_.clear();

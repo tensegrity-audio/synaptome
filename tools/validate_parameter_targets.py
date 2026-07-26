@@ -192,11 +192,17 @@ def collect_scene_targets(data: Any, index: ManifestIndex, path: Path, findings:
 
     effects_obj = data.get("effects")
     if isinstance(effects_obj, dict):
+        serialized_effect_aliases = {
+            ("ascii", "aspectMode"): "effects.ascii.aspect",
+        }
         for effect_id, params in effects_obj.items():
             if not isinstance(params, dict):
                 continue
             for key in params:
-                target = f"effects.{effect_id}.{key}"
+                target = serialized_effect_aliases.get(
+                    (effect_id, key),
+                    f"effects.{effect_id}.{key}",
+                )
                 pointer = pointer_join(pointer_join("/effects", effect_id), key)
                 add_finding(findings, index, path, pointer, target, "scene effect parameter")
 

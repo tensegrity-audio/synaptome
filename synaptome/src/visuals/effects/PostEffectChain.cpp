@@ -689,7 +689,7 @@ void main() {
     const char* kMirrorFrag = R"(#version 150
 uniform sampler2D tex0;
 uniform vec2 resolution;
-uniform int mirrorMode; // 0=Horizontal flip 1=Vertical flip 2=Quadrant TR 3=Radial
+uniform int mirrorMode; // 0=Horizontal symmetry 1=Vertical symmetry 2=Quadrant TR 3=Radial
 uniform float segments;
 uniform float angle;
 uniform vec2 origin;
@@ -710,13 +710,13 @@ vec2 rotate2d(vec2 p, float radians) {
 
 vec2 sampleUvForMirror(vec2 uv) {
     int mode = clamp(mirrorMode, 0, 3);
-    // The basic mirror modes are lossless full-frame reflections. They must
-    // not crop one half of the source or depend on artistic warp controls.
+    // The basic modes preserve one source half and reflect it pixel-for-pixel
+    // into the opposite half. They do not use the artistic warp controls.
     if (mode == 0) {
-        return vec2(1.0 - uv.x, uv.y);
+        return vec2(min(uv.x, 1.0 - uv.x), uv.y);
     }
     if (mode == 1) {
-        return vec2(uv.x, 1.0 - uv.y);
+        return vec2(uv.x, min(uv.y, 1.0 - uv.y));
     }
 
     float safeHeight = max(resolution.y, 1.0);
@@ -757,7 +757,7 @@ void main() {
     vec4 original = texture(tex0, vTexCoord);
     float amount = clamp(mixAmount, 0.0, 1.0);
 
-    // Preserve sampled RGBA exactly for the two full-frame flip modes.
+    // Preserve sampled RGBA exactly for the two half-screen symmetry modes.
     if (mirrorMode <= 1) {
         fragColor = mix(original, mirrored, amount);
         return;
@@ -1980,7 +1980,7 @@ void PostEffectChain::setup(ParameterRegistry& registry) {
     mirrorModeMeta.range.min = 0.0f;
     mirrorModeMeta.range.max = 3.0f;
     mirrorModeMeta.range.step = 1.0f;
-    mirrorModeMeta.description = "0=Horizontal Flip 1=Vertical Flip 2=Quadrant Kaleidoscope 3=Radial Kaleidoscope";
+    mirrorModeMeta.description = "0=Left Half Reflected 1=Top Half Reflected 2=Quadrant Kaleidoscope 3=Radial Kaleidoscope";
     mirrorModeMeta.quickAccess = true;
     mirrorModeMeta.quickAccessOrder = 59;
     registry.addFloat("effects.mirror.mode", &mirrorMode_, mirrorMode_, mirrorModeMeta);
@@ -2000,7 +2000,7 @@ void PostEffectChain::setup(ParameterRegistry& registry) {
     mirrorAngleMeta.range.max = 180.0f;
     mirrorAngleMeta.range.step = 1.0f;
     mirrorAngleMeta.units = "deg";
-    mirrorAngleMeta.description = "Rotate the quadrant or radial source wedge (not used by full-frame flips)";
+    mirrorAngleMeta.description = "Rotate the quadrant or radial source wedge (not used by half-screen symmetry)";
     mirrorAngleMeta.quickAccessOrder = 59.2f;
     registry.addFloat("effects.mirror.angle", &mirrorAngle_, mirrorAngle_, mirrorAngleMeta);
 
@@ -2037,7 +2037,7 @@ void PostEffectChain::setup(ParameterRegistry& registry) {
 
     ParameterRegistry::Descriptor mirrorDetailMeta = mirrorMixMeta;
     mirrorDetailMeta.label = "Mirror Detail";
-    mirrorDetailMeta.description = "Add source texture in kaleidoscope modes (full-frame flips remain pixel-preserving)";
+    mirrorDetailMeta.description = "Add source texture in kaleidoscope modes (half-screen symmetry remains pixel-preserving)";
     mirrorDetailMeta.quickAccessOrder = 59.7f;
     registry.addFloat("effects.mirror.detail", &mirrorDetail_, mirrorDetail_, mirrorDetailMeta);
 

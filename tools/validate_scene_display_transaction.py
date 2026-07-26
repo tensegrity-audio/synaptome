@@ -2,9 +2,10 @@
 """Validate the source-level scene/display transaction boundary.
 
 This is intentionally lightweight. It does not prove runtime behavior, but it
-does catch the highest-risk regression class: publish-time side effects drifting
-back into scene apply before rollback/no-write-before-success has a chance to
-work.
+does catch the highest-risk regression classes: publish-time side effects
+drifting back into scene apply, legacy scenes clearing live mappings, and scene
+writes replacing the last-known-good file before a verified recovery copy
+exists.
 """
 from __future__ import annotations
 
@@ -14,6 +15,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 OF_APP = ROOT / "synaptome/src/ofApp.cpp"
+MIDI_ROUTER = ROOT / "synaptome/src/io/MidiRouter.cpp"
 
 
 class ContractError(RuntimeError):
@@ -49,7 +51,7 @@ def require_all(body: str, snippets: tuple[str, ...], context: str) -> None:
 def forbid_all(body: str, snippets: tuple[str, ...], context: str) -> None:
     present = [snippet for snippet in snippets if snippet in body]
     if present:
-        raise ContractError(f"{context} contains publish-only snippet(s): {', '.join(present)}")
+        raise ContractError(f"{context} contains forbidden snippet(s): {', '.join(present)}")
 
 
 def require_order(body: str, snippets: tuple[str, ...], context: str) -> None:
@@ -65,11 +67,134 @@ def require_order(body: str, snippets: tuple[str, ...], context: str) -> None:
 
 def validate() -> None:
     source = OF_APP.read_text(encoding="utf-8", errors="replace")
+    midi_source = MIDI_ROUTER.read_text(encoding="utf-8", errors="replace")
+    recovery_body = function_body(
+        source,
+        "bool writeJsonRecoverably(const std::string& path,",
+    )
+    build_body = function_body(
+        source,
+        "bool ofApp::buildSceneApplyPlan(const std::string& canonicalPath,",
+    )
     apply_body = function_body(source, "bool ofApp::applyScenePlan(SceneApplyPlan& plan)")
     publish_body = function_body(source, "bool ofApp::publishScenePlan(const SceneApplyPlan& plan,")
     rollback_body = function_body(source, "bool ofApp::rollbackSceneLoad(const SceneLoadRollbackSnapshot& snapshot,")
     load_body = function_body(source, "bool ofApp::loadScene(const std::string& path)")
     persist_body = function_body(source, "void ofApp::persistConsoleAssignments()")
+    parse_mapping_body = function_body(
+        midi_source,
+        "ParsedMappingState parseMappingSnapshot(const ofJson& snapshot,",
+    )
+    mapping_load_body = function_body(
+        midi_source,
+        "bool MidiRouter::load(const std::string& jsonPath)",
+    )
+    mapping_import_body = function_body(
+        midi_source,
+        "bool MidiRouter::importMappingSnapshot(const ofJson& snapshot, bool replaceExisting)",
+    )
+
+    require_all(
+        recovery_body,
+        (
+            'const std::string tmpPath = path + ".tmp"',
+            'const std::string backupPath = path + ".bak"',
+            "ofSavePrettyJson(tmpPath, snapshot)",
+            "const ofJson verified = ofLoadJson(tmpPath)",
+            "if (verified != snapshot)",
+            "ofFile::moveFromTo(path, backupPath, false, true)",
+            "ofFile::moveFromTo(tmpPath, path, false, true)",
+            "ofFile::moveFromTo(backupPath, path, false, true)",
+        ),
+        "writeJsonRecoverably",
+    )
+    require_order(
+        recovery_body,
+        (
+            "ofSavePrettyJson(tmpPath, snapshot)",
+            "const ofJson verified = ofLoadJson(tmpPath)",
+            "ofFile::moveFromTo(path, backupPath, false, true)",
+            "ofFile::moveFromTo(tmpPath, path, false, true)",
+            "ofFile::moveFromTo(backupPath, path, false, true)",
+        ),
+        "writeJsonRecoverably",
+    )
+
+    require_all(
+        build_body,
+        (
+            "plan.routerMappingsDefined = true",
+            "plan.slotAssignmentsDefined = true",
+        ),
+        "buildSceneApplyPlan",
+    )
+
+    require_all(
+        parse_mapping_body,
+        (
+            'requireObject(snapshot, "$")',
+            'requireArraySection(snapshot, "cc")',
+            'requireArraySection(snapshot, "buttons")',
+            'requireArraySection(snapshot, "oscSources")',
+            'requireArraySection(snapshot, "osc")',
+            "canonicalizeOscState(initial.oscMaps, initial.oscSourceProfiles)",
+        ),
+        "parseMappingSnapshot",
+    )
+    require_all(
+        mapping_load_body,
+        (
+            "preserving current mappings",
+            "ofJson candidate = ofLoadJson(candidatePath)",
+            "if (!importMappingSnapshot(candidate, true))",
+            "close()",
+            "mappingPath = jsonPath",
+        ),
+        "MidiRouter::load",
+    )
+    require_order(
+        mapping_load_body,
+        (
+            "mappingPath = jsonPath",
+            "ofJson candidate = ofLoadJson(candidatePath)",
+            "if (!importMappingSnapshot(candidate, true))",
+            "close()",
+        ),
+        "MidiRouter::load",
+    )
+    require_all(
+        mapping_import_body,
+        (
+            "ParsedMappingState pending",
+            "pending = parseMappingSnapshot(snapshot, std::move(pending))",
+            "catch (const std::exception& e)",
+            "preserving current mappings",
+            "ccMaps.swap(pending.ccMaps)",
+            "btnMaps.swap(pending.btnMaps)",
+            "oscMaps.swap(pending.oscMaps)",
+            "oscSourceProfiles.swap(pending.oscSourceProfiles)",
+        ),
+        "MidiRouter::importMappingSnapshot",
+    )
+    require_order(
+        mapping_import_body,
+        (
+            "pending = parseMappingSnapshot(snapshot, std::move(pending))",
+            "ccMaps.swap(pending.ccMaps)",
+            "btnMaps.swap(pending.btnMaps)",
+            "oscMaps.swap(pending.oscMaps)",
+            "oscSourceProfiles.swap(pending.oscSourceProfiles)",
+        ),
+        "MidiRouter::importMappingSnapshot",
+    )
+    forbid_all(
+        build_body,
+        (
+            "plan.routerMappingsDefined = scene.contains",
+            "plan.slotAssignmentsDefined = scene.contains",
+        ),
+        "buildSceneApplyPlan",
+    )
 
     forbid_all(
         apply_body,
@@ -99,11 +224,14 @@ def validate() -> None:
     require_all(
         publish_body,
         (
+            "if (plan.routerMappingsDefined &&",
             "midi.importMappingSnapshot(plan.routerSnapshot, true)",
+            "if (plan.slotAssignmentsDefined)",
             "writeJsonSnapshotAtomically(slotAssignmentsPath, plan.slotAssignmentsSnapshot)",
             "controlMappingHub->setSlotAssignmentsPath(slotAssignmentsPath)",
             "activeScenePath_ = plan.canonicalPath",
             "activeNamedScenePath_ = plan.activeNamedScenePath",
+            'sceneMappingSource_ = plan.routerMappingsDefined ? "scene" : "global (preserved)"',
             "persistConsoleAssignments()",
         ),
         "publishScenePlan",
@@ -127,6 +255,7 @@ def validate() -> None:
             "applyScenePlan(rollbackPlan)",
             "activeScenePath_ = snapshot.activeScenePath",
             "activeNamedScenePath_ = snapshot.activeNamedScenePath",
+            "sceneMappingSource_ = snapshot.mappingSource",
             "midi.importMappingSnapshot(snapshot.routerSnapshot, true)",
             "writeJsonSnapshotAtomically(slotAssignmentsPath, snapshot.slotAssignmentsSnapshot)",
             "syncActiveFxWithConsoleSlots()",

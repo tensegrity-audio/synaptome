@@ -2,8 +2,11 @@
 """Validate saved scene persistence fixtures.
 
 This is a static contract gate. It checks committed scene JSON for stable
-scene-owned shape and compares a compact golden summary. Runtime staged apply
-and rollback semantics remain owned by the scene/display transaction child.
+scene-owned shape and compares a compact golden summary. A missing ``mappings``
+member is intentionally represented as ``preserve-live`` for legacy-scene
+compatibility; a present member is an explicit scene-owned snapshot, including
+an intentionally empty snapshot. Runtime staged apply and rollback semantics
+remain owned by the scene/display transaction child.
 """
 from __future__ import annotations
 
@@ -87,6 +90,66 @@ def collect_bank_targets(node: Any) -> list[str]:
 
     walk(node)
     return sorted(set(targets))
+
+
+def summarize_mappings(data: dict[str, Any], path: Path) -> dict[str, Any]:
+    if "mappings" not in data:
+        return {
+            "ownership": "preserve-live",
+            "routerOwnership": "preserve-live",
+            "routerCounts": {},
+            "slotAssignmentOwnership": "preserve-live",
+            "slotAssignmentCount": None,
+            "activeBank": None,
+        }
+
+    mappings = data["mappings"]
+    if not isinstance(mappings, dict):
+        raise ContractError(f"{path}: mappings must be an object")
+
+    router_defined = "router" in mappings
+    router = mappings.get("router", {})
+    if not isinstance(router, dict):
+        raise ContractError(f"{path}: mappings.router must be an object")
+    router_counts: dict[str, int] = {}
+    for key in ("cc", "buttons", "osc", "oscSources"):
+        if key not in router:
+            continue
+        entries = router[key]
+        if not isinstance(entries, list):
+            raise ContractError(f"{path}: mappings.router.{key} must be an array")
+        for index, entry in enumerate(entries):
+            if not isinstance(entry, dict):
+                raise ContractError(f"{path}: mappings.router.{key}[{index}] must be an object")
+        router_counts[key] = len(entries)
+
+    slot_assignments_defined = "slotAssignments" in mappings
+    slot_assignments = mappings.get("slotAssignments", {})
+    if not isinstance(slot_assignments, dict):
+        raise ContractError(f"{path}: mappings.slotAssignments must be an object")
+    assignments = slot_assignments.get("assignments", [])
+    if not isinstance(assignments, list):
+        raise ContractError(f"{path}: mappings.slotAssignments.assignments must be an array")
+    for index, entry in enumerate(assignments):
+        if not isinstance(entry, dict):
+            raise ContractError(
+                f"{path}: mappings.slotAssignments.assignments[{index}] must be an object"
+            )
+
+    active_bank = mappings.get("activeBank")
+    if active_bank is not None and not isinstance(active_bank, str):
+        raise ContractError(f"{path}: mappings.activeBank must be a string")
+
+    return {
+        "ownership": "scene-snapshot"
+        if router_defined or slot_assignments_defined or active_bank is not None
+        else "preserve-live",
+        "routerOwnership": "scene-snapshot" if router_defined else "preserve-live",
+        "routerCounts": router_counts,
+        "slotAssignmentOwnership": "scene-snapshot" if slot_assignments_defined else "preserve-live",
+        "slotAssignmentCount": len(assignments) if slot_assignments_defined else None,
+        "activeBank": active_bank,
+    }
 
 
 def summarize_scene(path: Path, asset_ids: set[str]) -> dict[str, Any]:
@@ -180,6 +243,7 @@ def summarize_scene(path: Path, asset_ids: set[str]) -> dict[str, Any]:
                     raise ContractError(f"{path}: effects.{key} must be an object")
 
     bank_targets = collect_bank_targets(data.get("banks", {}))
+    mapping_summary = summarize_mappings(data, path)
     return {
         "path": relative(path),
         "hash": sha256_text(canonical_json(data)),
@@ -192,6 +256,12 @@ def summarize_scene(path: Path, asset_ids: set[str]) -> dict[str, Any]:
         "effectKeys": sorted(data.get("effects", {}).keys()) if isinstance(data.get("effects", {}), dict) else [],
         "globalKeys": sorted(data.get("globals", {}).keys()) if isinstance(data.get("globals", {}), dict) else [],
         "bankTargets": bank_targets,
+        "mappingOwnership": mapping_summary["ownership"],
+        "mappingRouterOwnership": mapping_summary["routerOwnership"],
+        "mappingRouterCounts": mapping_summary["routerCounts"],
+        "slotAssignmentOwnership": mapping_summary["slotAssignmentOwnership"],
+        "slotAssignmentCount": mapping_summary["slotAssignmentCount"],
+        "mappingActiveBank": mapping_summary["activeBank"],
     }
 
 
@@ -202,7 +272,7 @@ def build_snapshot(scene_dir: Path, scene_last: Path) -> dict[str, Any]:
     scene_paths = sorted(scene_dir.glob("*.json")) + [scene_last]
     scenes = [summarize_scene(path, asset_ids) for path in scene_paths]
     return {
-        "version": 1,
+        "version": 2,
         "sceneCount": len(scenes),
         "layerAssetCount": len(asset_ids),
         "scenes": scenes,

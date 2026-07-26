@@ -32,6 +32,7 @@ synaptome/bin/data/media/local/
 synaptome/bin/data/config/control_hub_prefs.json
 synaptome/bin/data/config/console.json
 synaptome/bin/data/config/scene-last.json
+synaptome/bin/data/config/**/*.bak
 synaptome/bin/data/config/layer-packages.local.json
 synaptome/obj/
 synaptome/x64/

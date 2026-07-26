@@ -3,21 +3,21 @@
 State Summary
 - Request ID: layer_package_compatibility_bench_scaffolding
 - Phase: EXECUTION
-- Status: In Progress
+- Status: Paused behind show and spine contract
 - Steps Complete: 8 / 10 (2 additional steps in progress)
 - Progress: The Browser now provides reusable labeled dropdowns on matching live package parameters for both static `options[]` and registered `optionsSource` choices, alongside the operator-local package preset-bank picker. Selections update the existing live/base parameter value, while unavailable provider values are preserved until the operator explicitly replaces them.
 - Last Step Outcome: 2026-07-24 - Added reusable live labeled parameter selection, including `Half Time` / `Normal` / `Double Time` for BPM and `Compact` / `Default` / `Full` for Scale, with provider-revision cancellation, unavailable-value preservation, telemetry, and scene/mapping/inspection isolation coverage.
-- Next Step: Add an explicit package mapping-preset preview/apply/edit flow with slot expansion, conflict handling, rollback, and no automatic mapping installation.
+- Next Step: After the show-safe checkpoint, rebaseline the package schema and Browser mapping work against the canonical element contract and SEAC-7/SEAC-9; do not resume mapping UI independently.
 - Dependencies / Overlap: `docs/project_ops/synaptome_layer_design_standards.md`, `docs/architecture/synaptome_layer_system_roadmap.md`, `docs/architecture/synaptome_artist_sdk.md`, `docs/contracts/contract_gaps.md`, `docs/contracts/parameter_manifest.json`, `docs/schemas/layer_asset.schema.json`, `tools/layer_catalog_regression.py`, `tools/gen_parameter_manifest.py`.
 - Primary Scope: contracts
 - Secondary Scopes: artist-sdk, docs, tests, runtime
 - Blocking Issues / Unknowns: Generated registration/module loading remains a later architecture decision; mapping-preset editing still needs explicit Browser ownership; beat-reactive mappings depend on the separate transport/reactivity contract.
 - Impact / Priority Notes: Establishes deterministic package and generated-content contracts before more tracked media, Browser activation, or runtime discovery increases compatibility risk.
 - Priority Score: N/A
-- Priority Lane: Fast-Track
+- Priority Lane: Deferred
 - Ready State: Ready
 - Ready Gate: Met for read-only inspection, vetted opt-in source registration, operator-local next-load preset selection, and explicit labeled live parameter selection; automatic discovery and mapping activation remain out of scope.
-- Project Ops / Roadmap Updates (timestamped): 2026-06-25 - Promoted layer package scaffolding from backlog. 2026-07-18 - Reconciled the request with the current Project Ops readiness contract and pre-media gate. 2026-07-18 - Completed the bounded package-owned static option slice and paused before runtime promotion. 2026-07-24 - Converged the reviewed runtime adapter, added package-owned dynamic option metadata and unavailable-value policy, completed the live-window smoke, rendered read-only option/provider state in the Browser, resolved the app-owned transport provider with missing-value preservation, added operator-local next-load preset-bank selection, and promoted static/runtime choices into explicit live labeled dropdowns.
+- Project Ops / Roadmap Updates (timestamped): 2026-06-25 - Promoted layer package scaffolding from backlog. 2026-07-18 - Reconciled the request with the current Project Ops readiness contract and pre-media gate. 2026-07-18 - Completed the bounded package-owned static option slice and paused before runtime promotion. 2026-07-24 - Converged the reviewed runtime adapter, added package-owned dynamic option metadata and unavailable-value policy, completed the live-window smoke, rendered read-only option/provider state in the Browser, resolved the app-owned transport provider with missing-value preservation, added operator-local next-load preset-bank selection, and promoted static/runtime choices into explicit live labeled dropdowns. 2026-07-26 - Paused independent mapping UI work and subordinated package continuation to the canonical spine/element request.
 - Resume From: Execution; define the preview/apply/rollback boundary for package mapping presets.
 
 ## Current State In Plain English

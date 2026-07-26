@@ -2,10 +2,24 @@
   "id": "generative.gameOfLife",
   "label": "Game of Life",
   "category": "Generative",
+  "layerGroup": "Cellular Fields",
+  "model": "gameOfLife",
+  "stateModel": "binary cellular automaton with deterministic seeded starting boards",
+  "description": "Conway's Game of Life with reproducible random seeds, transport-aware stepping, and fading cell trails.",
   "type": "gameOfLife",
   "registryPrefix": "generative.gameOfLife",
   "opacity": 1.0,
+  "modes": [
+    {
+      "id": "evolve",
+      "label": "Evolve",
+      "kind": "live",
+      "live": true,
+      "description": "Run deterministic cellular generations using the selected starting preset."
+    }
+  ],
   "defaults": {
+    "visible": true,
     "speed": 6.0,
     "bpmSync": true,
     "bpmMultiplier": 4.0,
@@ -23,13 +37,22 @@
       0.05
     ],
     "paused": false,
+    "reseed": false,
+    "seed": 1618.0,
     "seedDensity": 0.4,
+    "density": 0.4,
     "preset": 1,
     "reseedQuantizeBeats": 4.0,
     "autoReseed": false,
     "autoReseedEveryBeats": 16.0,
     "aliveAlpha": 1.0,
-    "deadAlpha": 0.0
+    "deadAlpha": 0.0,
+    "aliveR": 0.9,
+    "aliveG": 0.9,
+    "aliveB": 0.9,
+    "deadR": 0.05,
+    "deadG": 0.05,
+    "deadB": 0.05
   },
   "gridSize": [
     192,

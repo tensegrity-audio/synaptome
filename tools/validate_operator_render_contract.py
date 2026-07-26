@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Guard show-critical operator text scaling and lossless mirror behavior."""
+"""Guard show-critical operator text scaling and half-screen mirror behavior."""
 
 from __future__ import annotations
 
@@ -41,6 +41,14 @@ def main() -> int:
         require(app, target, f"text-scale propagation: {target}", errors)
 
     for fragment, label in (
+        ('const std::string quitLine = "QUIT: CTRL+Q"', "quit confirmation action"),
+        ('const std::string cancelLine = "ESC: CANCEL"', "quit cancellation action"),
+        ("drawQuitConfirmationOverlay", "focused-window quit modal"),
+        ("promptBase == OF_KEY_ESC", "Escape quit cancellation"),
+    ):
+        require(app, fragment, label, errors)
+
+    for fragment, label in (
         ("class UiFontRenderer", "shared operator font renderer"),
         ('kFontDataPath = "fonts/unifont-17.0.05.otf"', "GNU Unifont data path"),
         ("ofTrueTypeFontSettings settings", "target-size TrueType rasterization"),
@@ -76,14 +84,14 @@ def main() -> int:
 
     require(
         mirror,
-        "return vec2(1.0 - uv.x, uv.y);",
-        "lossless horizontal full-frame flip",
+        "return vec2(min(uv.x, 1.0 - uv.x), uv.y);",
+        "lossless horizontal half-screen symmetry",
         errors,
     )
     require(
         mirror,
-        "return vec2(uv.x, 1.0 - uv.y);",
-        "lossless vertical full-frame flip",
+        "return vec2(uv.x, min(uv.y, 1.0 - uv.y));",
+        "lossless vertical half-screen symmetry",
         errors,
     )
     require(
@@ -111,7 +119,8 @@ def main() -> int:
 
     print(
         "Operator render contract OK: GNU Unifont is rasterized at the global "
-        "UI size with fallback, and basic mirror modes preserve full-frame RGBA."
+        "UI size with fallback, and basic mirror modes reflect one source half "
+        "pixel-for-pixel into the other."
     )
     return 0
 

@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Layer.h"
+#include <cstdint>
+#include <random>
 #include <vector>
 
 class GameOfLifeLayer : public Layer {
@@ -43,6 +45,8 @@ public:
     const float* deadBParamPtr() const { return &paramDeadB_; }
     float* densityParamPtr() { return &paramSeedDensity_; }
     const float* densityParamPtr() const { return &paramSeedDensity_; }
+    float* seedParamPtr() { return &paramSeed_; }
+    const float* seedParamPtr() const { return &paramSeed_; }
     float* presetParamPtr() { return &paramPresetIndex_; }
     const float* presetParamPtr() const { return &paramPresetIndex_; }
     bool* pausedParamPtr() { return &paramPaused_; }
@@ -75,6 +79,8 @@ private:
     float stepRateFor(const LayerUpdateParams& params) const;
     void schedulePendingReseed(float beatPosition);
     void triggerReseed(float density = -1.0f);
+    std::uint32_t requestedSeed() const;
+    float randomUnit();
 
     bool paramEnabled_ = true;
     float paramSpeed_ = 6.0f;
@@ -90,6 +96,7 @@ private:
     float paramDeadAlpha_ = 1.0f;
     bool paramPaused_ = false;
     bool paramReseedRequested_ = false;
+    float paramSeed_ = 1618.0f;
     float paramSeedDensity_ = 0.35f;
     float paramPresetIndex_ = 0.0f;
     float paramFadeFrames_ = 1.0f;
@@ -113,6 +120,8 @@ private:
     bool reseedPending_ = false;
     float pendingReseedBeat_ = -1.0f;
     float nextAutoReseedBeat_ = -1.0f;
+    std::mt19937 rng_{ 1618u };
+    std::uint32_t appliedSeed_ = 0;
 
     ofFloatPixels pixels_;
     ofTexture texture_;

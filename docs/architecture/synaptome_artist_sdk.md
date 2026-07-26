@@ -6,6 +6,12 @@ is not an independently active workstream; priority and promotion are owned by
 [`../project_ops/roadmap.md`](../project_ops/roadmap.md). This document describes
 what Synaptome can provide to openFrameworks artists and what gaps remain.
 
+Terminology note: the canonical model now calls creative modules **elements**
+and the eight ordered Console composition containers **layers**. See
+[`synaptome_spine_element_model.md`](synaptome_spine_element_model.md). This
+SDK document retains current `Layer` API names while the
+compatibility-preserving Element SDK boundary is extracted.
+
 Read with: [`synaptome_system_architecture.md`](synaptome_system_architecture.md),
 [`synaptome_subsystem_anatomy.md`](synaptome_subsystem_anatomy.md),
 [`synaptome_external_contracts.md`](synaptome_external_contracts.md),
@@ -57,7 +63,9 @@ What Synaptome can provide:
 - Guidance on which assets should become catalog metadata.
 
 Current gap:
-- No migration guide exists yet.
+- The first migration guide now exists at
+  [`layer_migration_workflow.md`](layer_migration_workflow.md); additional
+  layer families still need to be moved through it.
 
 ### Level 1: Wrapped Layer
 

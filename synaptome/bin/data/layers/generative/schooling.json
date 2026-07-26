@@ -15,11 +15,14 @@
     { "id": "panic", "label": "Panic", "kind": "live", "live": true, "description": "Noisier evasive school movement." }
   ],
   "defaults": {
+    "visible": true,
     "mode": 0,
     "speed": 13.0,
     "bpmSync": true,
     "bpmMultiplier": 3.5,
     "alpha": 1.0,
+    "seed": 8181,
+    "reseed": false,
     "boidCount": 36,
     "predatorEnabled": true,
     "predatorCount": 4,

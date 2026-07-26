@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Layer.h"
+#include <cstdint>
+#include <random>
 #include <vector>
 
 class FlockingLayer : public Layer {
@@ -49,6 +51,9 @@ private:
     void stampPredator(ofFloatPixels& pixels, const Boid& predator, const ofFloatColor& color, int radius) const;
     int behaviorMode() const;
     bool predatorsActive() const;
+    float randomUnit();
+    float randomRange(float minimum, float maximum);
+    std::uint32_t requestedSeed() const;
 
     FlockModel model_ = Murmuration;
     bool paramEnabled_ = true;
@@ -56,6 +61,7 @@ private:
     bool paramBpmSync_ = false;
     float paramBpmMultiplier_ = 2.0f;
     float paramAlpha_ = 1.0f;
+    float paramSeed_ = 8181.0f;
     bool paramReseedRequested_ = false;
     float paramMode_ = 0.0f;
     float paramBoidCount_ = 42.0f;
@@ -106,5 +112,7 @@ private:
     ofTexture texture_;
     std::vector<Boid> boids_;
     std::vector<Boid> predators_;
+    std::mt19937 rng_;
+    std::uint32_t appliedSeed_ = 0;
     float stepAccumulator_ = 0.0f;
 };

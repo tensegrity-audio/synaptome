@@ -1,6 +1,8 @@
 # Synaptome
 
-Layer-based openFrameworks runtime for live modular visuals with MIDI/OSC mapping, audio/sensor reactivity, operator HUD and Browser controls, and projection output.
+OpenFrameworks performance spine for running modular creative elements in
+ordered visual layers, with MIDI/OSC mapping, audio/sensor reactivity, operator
+HUD and Browser controls, scenes, presets, and projection output.
 
 Current public baseline: **Synaptome v0.1.0**.
 
@@ -128,10 +130,10 @@ Expected current signals:
 
 - Public extraction manifest reports no review-gated or unclassified files.
 - Built-in OSC route globs match mesh-style sample addresses.
-- Public app contracts report `validated=10`.
+- Public app contracts report `validated=17`.
 - App independence audit reports no firmware implementation references.
 - BrowserFlowTest builds with warnings tracked as cleanup, but 0 errors.
-- BrowserFlow reports all 16 scenarios passed.
+- BrowserFlow reports all 32 scenarios passed.
 - Generated test outputs and runtime logs remain ignored by Git.
 
 ## Docs
@@ -141,6 +143,7 @@ Expected current signals:
 - [Validation Playbook](docs/dev_playbook.md)
 - [Contributing](docs/contributing.md)
 - [Release Policy](docs/release_policy.md)
+- [Spine, Element, and Layer Model](docs/architecture/synaptome_spine_element_model.md)
 - [Artist SDK](docs/architecture/synaptome_artist_sdk.md)
 - [Current roadmap and pre-media safety gate](docs/project_ops/roadmap.md)
 - [External Contracts](docs/architecture/synaptome_external_contracts.md)

@@ -3,7 +3,9 @@
 #include "ofUtils.h"
 #include "ofLog.h"
 #include <algorithm>
+#include <filesystem>
 #include <map>
+#include <stdexcept>
 #include <unordered_map>
 #include <utility>
 #include <cmath>
@@ -130,7 +132,7 @@ namespace {
 
         doc["cc"] = ofJson::array();
         for (const auto& map : ccMaps) {
-            if (map.target.empty()) continue;
+            if (map.target.empty() || map.cc < 0 || map.cc > 127) continue;
             ofJson entry;
             entry["num"] = map.cc;
             if (map.channel >= 0) entry["channel"] = map.channel;
@@ -149,7 +151,7 @@ namespace {
         if (!btnMaps.empty()) {
             doc["buttons"] = ofJson::array();
             for (const auto& map : btnMaps) {
-                if (map.target.empty()) continue;
+                if (map.target.empty() || map.num < 0 || map.num > 127) continue;
                 ofJson entry;
                 entry["num"] = map.num;
                 entry["type"] = map.type;
@@ -196,6 +198,236 @@ namespace {
 
         return doc;
     }
+
+    struct ParsedMappingState {
+        std::vector<MidiRouter::CcMap> ccMaps;
+        std::vector<MidiRouter::BtnMap> btnMaps;
+        std::vector<MidiRouter::OscMap> oscMaps;
+        std::vector<MidiRouter::OscSourceProfile> oscSourceProfiles;
+    };
+
+    [[noreturn]] void mappingSchemaError(const std::string& path, const std::string& expected) {
+        throw std::runtime_error(path + " must be " + expected);
+    }
+
+    void requireObject(const ofJson& value, const std::string& path) {
+        if (!value.is_object()) mappingSchemaError(path, "an object");
+    }
+
+    void requireArraySection(const ofJson& doc, const char* key) {
+        if (doc.contains(key) && !doc[key].is_array()) {
+            mappingSchemaError(std::string("$.") + key, "an array");
+        }
+    }
+
+    std::string requiredString(const ofJson& entry, const char* key, const std::string& path) {
+        if (!entry.contains(key) || !entry[key].is_string()) {
+            mappingSchemaError(path + "." + key, "a non-empty string");
+        }
+        std::string value = entry[key].get<std::string>();
+        if (value.empty()) mappingSchemaError(path + "." + key, "a non-empty string");
+        return value;
+    }
+
+    void optionalString(const ofJson& entry,
+                        const char* key,
+                        const std::string& path,
+                        std::string& destination) {
+        if (!entry.contains(key)) return;
+        if (!entry[key].is_string()) mappingSchemaError(path + "." + key, "a string");
+        destination = entry[key].get<std::string>();
+    }
+
+    void optionalInteger(const ofJson& entry,
+                         const char* key,
+                         const std::string& path,
+                         int& destination) {
+        if (!entry.contains(key)) return;
+        if (!entry[key].is_number_integer()) mappingSchemaError(path + "." + key, "an integer");
+        destination = entry[key].get<int>();
+    }
+
+    int requiredInteger(const ofJson& entry, const char* key, const std::string& path) {
+        if (!entry.contains(key) || !entry[key].is_number_integer()) {
+            mappingSchemaError(path + "." + key, "an integer");
+        }
+        return entry[key].get<int>();
+    }
+
+    void optionalNumber(const ofJson& entry,
+                        const char* key,
+                        const std::string& path,
+                        float& destination) {
+        if (!entry.contains(key)) return;
+        if (!entry[key].is_number()) mappingSchemaError(path + "." + key, "a finite number");
+        destination = entry[key].get<float>();
+        if (!std::isfinite(destination)) mappingSchemaError(path + "." + key, "a finite number");
+    }
+
+    void optionalBool(const ofJson& entry,
+                      const char* key,
+                      const std::string& path,
+                      bool& destination) {
+        if (!entry.contains(key)) return;
+        if (!entry[key].is_boolean()) mappingSchemaError(path + "." + key, "a boolean");
+        destination = entry[key].get<bool>();
+    }
+
+    void optionalRange(const ofJson& entry,
+                       const char* key,
+                       const std::string& path,
+                       float& minimum,
+                       float& maximum) {
+        if (!entry.contains(key)) return;
+        const auto& range = entry[key];
+        if (!range.is_array() || range.size() != 2 || !range[0].is_number() || !range[1].is_number()) {
+            mappingSchemaError(path + "." + key, "a two-number array");
+        }
+        minimum = range[0].get<float>();
+        maximum = range[1].get<float>();
+        if (!std::isfinite(minimum) || !std::isfinite(maximum)) {
+            mappingSchemaError(path + "." + key, "a two-finite-number array");
+        }
+    }
+
+    modifier::BlendMode parseBlendMode(const std::string& value, const std::string& path) {
+        if (value == "add" || value == "additive") return modifier::BlendMode::kAdditive;
+        if (value == "absolute" || value == "abs") return modifier::BlendMode::kAbsolute;
+        if (value == "scale" || value == "mul" || value == "multiply") return modifier::BlendMode::kScale;
+        if (value == "clamp" || value == "limit") return modifier::BlendMode::kClamp;
+        if (value == "toggle") return modifier::BlendMode::kToggle;
+        mappingSchemaError(path, "a supported blend mode");
+    }
+
+    void parseOscProfileFields(const ofJson& entry,
+                               const std::string& path,
+                               MidiRouter::OscSourceProfile& profile) {
+        optionalRange(entry, "in", path, profile.inMin, profile.inMax);
+        optionalRange(entry, "out", path, profile.outMin, profile.outMax);
+        optionalNumber(entry, "smooth", path, profile.smooth);
+        optionalNumber(entry, "deadband", path, profile.deadband);
+        if (profile.smooth < 0.0f) mappingSchemaError(path + ".smooth", "nonnegative");
+        if (profile.deadband < 0.0f) mappingSchemaError(path + ".deadband", "nonnegative");
+        if (entry.contains("blend") || entry.contains("mode")) {
+            const char* key = entry.contains("blend") ? "blend" : "mode";
+            if (!entry[key].is_string()) mappingSchemaError(path + "." + key, "a string");
+            profile.blend = parseBlendMode(entry[key].get<std::string>(), path + "." + key);
+        }
+        optionalBool(entry, "relative", path, profile.relativeToBase);
+    }
+
+    ParsedMappingState parseMappingSnapshot(const ofJson& snapshot, ParsedMappingState initial) {
+        requireObject(snapshot, "$");
+        requireArraySection(snapshot, "cc");
+        requireArraySection(snapshot, "buttons");
+        requireArraySection(snapshot, "oscSources");
+        requireArraySection(snapshot, "osc");
+
+        if (snapshot.contains("cc")) {
+            std::size_t index = 0;
+            for (const auto& entry : snapshot["cc"]) {
+                const std::string path = "$.cc[" + std::to_string(index++) + "]";
+                requireObject(entry, path);
+                MidiRouter::CcMap map;
+                map.target = requiredString(entry, "target", path);
+                map.cc = requiredInteger(entry, "num", path);
+                if (map.cc < 0 || map.cc > 127) {
+                    mappingSchemaError(path + ".num", "an integer from 0 through 127");
+                }
+                optionalInteger(entry, "channel", path, map.channel);
+                if (map.channel != -1 && (map.channel < 1 || map.channel > 16)) {
+                    mappingSchemaError(path + ".channel", "-1 or an integer from 1 through 16");
+                }
+                optionalString(entry, "bank", path, map.bankId);
+                optionalString(entry, "control", path, map.controlId);
+                optionalString(entry, "device", path, map.deviceId);
+                optionalString(entry, "column", path, map.columnId);
+                optionalString(entry, "slot", path, map.slotId);
+                optionalRange(entry, "out", path, map.outMin, map.outMax);
+                optionalBool(entry, "snapInt", path, map.snapInt);
+                optionalNumber(entry, "step", path, map.step);
+                if (map.step < 0.0f) mappingSchemaError(path + ".step", "nonnegative");
+                initial.ccMaps.push_back(std::move(map));
+            }
+        }
+
+        if (snapshot.contains("buttons")) {
+            std::size_t index = 0;
+            for (const auto& entry : snapshot["buttons"]) {
+                const std::string path = "$.buttons[" + std::to_string(index++) + "]";
+                requireObject(entry, path);
+                MidiRouter::BtnMap map;
+                map.target = requiredString(entry, "target", path);
+                map.num = requiredInteger(entry, "num", path);
+                if (map.num < 0 || map.num > 127) {
+                    mappingSchemaError(path + ".num", "an integer from 0 through 127");
+                }
+                optionalInteger(entry, "channel", path, map.channel);
+                if (map.channel != -1 && (map.channel < 1 || map.channel > 16)) {
+                    mappingSchemaError(path + ".channel", "-1 or an integer from 1 through 16");
+                }
+                optionalString(entry, "type", path, map.type);
+                if (map.type != "toggle" && map.type != "set") {
+                    mappingSchemaError(path + ".type", "\"toggle\" or \"set\"");
+                }
+                optionalString(entry, "bank", path, map.bankId);
+                optionalString(entry, "control", path, map.controlId);
+                optionalString(entry, "device", path, map.deviceId);
+                optionalString(entry, "column", path, map.columnId);
+                optionalString(entry, "slot", path, map.slotId);
+                optionalNumber(entry, "setValue", path, map.setValue);
+                initial.btnMaps.push_back(std::move(map));
+            }
+        }
+
+        if (snapshot.contains("oscSources")) {
+            std::size_t index = 0;
+            for (const auto& entry : snapshot["oscSources"]) {
+                const std::string path = "$.oscSources[" + std::to_string(index++) + "]";
+                requireObject(entry, path);
+                MidiRouter::OscSourceProfile profile;
+                profile.pattern = requiredString(entry, "pattern", path);
+                if (profile.pattern.front() != '/') {
+                    mappingSchemaError(path + ".pattern", "an OSC address beginning with '/'");
+                }
+                parseOscProfileFields(entry, path, profile);
+                upsertOscSourceProfile(initial.oscSourceProfiles, profile);
+            }
+        }
+
+        if (snapshot.contains("osc")) {
+            std::size_t index = 0;
+            for (const auto& entry : snapshot["osc"]) {
+                const std::string path = "$.osc[" + std::to_string(index++) + "]";
+                requireObject(entry, path);
+                MidiRouter::OscMap map;
+                map.pattern = requiredString(entry, "pattern", path);
+                if (map.pattern.front() != '/') {
+                    mappingSchemaError(path + ".pattern", "an OSC address beginning with '/'");
+                }
+                map.target = requiredString(entry, "target", path);
+                optionalString(entry, "bank", path, map.bankId);
+                optionalString(entry, "control", path, map.controlId);
+
+                auto profileIt = std::find_if(initial.oscSourceProfiles.begin(),
+                                              initial.oscSourceProfiles.end(),
+                                              [&](const MidiRouter::OscSourceProfile& profile) {
+                                                  return profile.pattern == map.pattern;
+                                              });
+                if (profileIt == initial.oscSourceProfiles.end()) {
+                    MidiRouter::OscSourceProfile profile;
+                    profile.pattern = map.pattern;
+                    initial.oscSourceProfiles.push_back(profile);
+                    profileIt = std::prev(initial.oscSourceProfiles.end());
+                }
+                parseOscProfileFields(entry, path, *profileIt);
+                upsertOscMap(initial.oscMaps, map);
+            }
+        }
+
+        canonicalizeOscState(initial.oscMaps, initial.oscSourceProfiles);
+        return initial;
+    }
 }
 
 void MidiRouter::bindFloat(const std::string& name, float* ptr, float defMin, float defMax, bool snapInt, float step, const std::string& bankId, const std::string& controlId) {
@@ -237,205 +469,78 @@ void MidiRouter::bindBool(const std::string& name, bool* ptr, BoolMode mode, con
 }
 
 bool MidiRouter::load(const std::string& jsonPath) {
-    close();
-
+    // Remember the configured destination even when this is the first run and
+    // neither a primary nor backup file exists, so save("") can create it.
     mappingPath = jsonPath;
-    deviceName.clear();
-    deviceIndex = -1;
-    currentPortLabel.clear();
-    ccMaps.clear();
-    btnMaps.clear();
-    oscMaps.clear();
-    oscSourceProfiles.clear();
-
+    const std::string backupPath = jsonPath + ".bak";
     ofJson doc;
-    if (ofFile::doesFileExist(jsonPath)) {
+    std::string primaryFailure;
+    auto tryCandidate = [&](const std::string& candidatePath, std::string& failure) {
+        if (!ofFile::doesFileExist(candidatePath)) {
+            failure = "file not found";
+            return false;
+        }
         try {
-            doc = ofLoadJson(jsonPath);
+            ofJson candidate = ofLoadJson(candidatePath);
+            if (!candidate.is_object()) mappingSchemaError("$", "an object");
+            if (candidate.contains("device") && !candidate["device"].is_string()) {
+                mappingSchemaError("$.device", "a string");
+            }
+            if (candidate.contains("deviceIndex") && !candidate["deviceIndex"].is_number_integer()) {
+                mappingSchemaError("$.deviceIndex", "an integer");
+            }
+            if (!importMappingSnapshot(candidate, true)) {
+                failure = "mapping schema validation failed";
+                return false;
+            }
+            doc = std::move(candidate);
+            return true;
         } catch (const std::exception& e) {
-            ofLogError("MidiRouter") << "Failed to parse " << jsonPath << ": " << e.what();
+            failure = e.what();
+            return false;
         }
-    } else {
-        ofLogNotice("MidiRouter") << "Mapping file " << jsonPath << " not found; starting empty";
+    };
+
+    bool recoveredFromBackup = false;
+    if (!tryCandidate(jsonPath, primaryFailure)) {
+        std::string backupFailure;
+        if (!tryCandidate(backupPath, backupFailure)) {
+            ofLogError("MidiRouter") << "Failed to load mapping " << jsonPath << ": "
+                                     << primaryFailure << "; backup failed: " << backupFailure
+                                     << "; preserving current mappings";
+            if (!isOpen) {
+                listPortsToLog();
+                if (!openPreferredPort()) {
+                    ofLogWarning("MidiRouter")
+                        << "No MIDI input device could be opened (will retry automatically)";
+                }
+            }
+            return false;
+        }
+        recoveredFromBackup = true;
+        ofLogWarning("MidiRouter") << "Failed to load primary mapping " << jsonPath << ": "
+                                   << primaryFailure << "; recovered last-known-good mappings from "
+                                   << backupPath;
     }
 
-    if (!doc.is_null()) {
-        if (doc.contains("device") && doc["device"].is_string()) {
-            deviceName = doc["device"].get<std::string>();
-        }
-        if (doc.contains("deviceIndex") && doc["deviceIndex"].is_number_integer()) {
-            deviceIndex = doc["deviceIndex"].get<int>();
-        }
+    std::string nextDeviceName;
+    int nextDeviceIndex = -1;
+    if (doc.contains("device")) nextDeviceName = doc["device"].get<std::string>();
+    if (doc.contains("deviceIndex")) nextDeviceIndex = doc["deviceIndex"].get<int>();
 
-        if (doc.contains("cc") && doc["cc"].is_array()) {
-            for (auto& entry : doc["cc"]) {
-                CcMap map;
-                if (entry.contains("num")) map.cc = entry["num"].get<int>();
-                if (entry.contains("channel")) map.channel = entry["channel"].get<int>();
-                if (entry.contains("target")) map.target = entry["target"].get<std::string>();
-                if (entry.contains("bank")) map.bankId = entry["bank"].get<std::string>();
-                if (entry.contains("control")) map.controlId = entry["control"].get<std::string>();
-                if (entry.contains("device")) map.deviceId = entry["device"].get<std::string>();
-                if (entry.contains("column")) map.columnId = entry["column"].get<std::string>();
-                if (entry.contains("slot")) map.slotId = entry["slot"].get<std::string>();
-                if (entry.contains("out") && entry["out"].is_array() && entry["out"].size() == 2) {
-                    map.outMin = entry["out"][0].get<float>();
-                    map.outMax = entry["out"][1].get<float>();
-                }
-                if (entry.contains("snapInt")) map.snapInt = entry["snapInt"].get<bool>();
-                if (entry.contains("step")) map.step = entry["step"].get<float>();
-                if (!map.target.empty()) {
-                    ccMaps.push_back(map);
-                }
-            }
-        }
-
-        if (doc.contains("buttons") && doc["buttons"].is_array()) {
-            for (auto& entry : doc["buttons"]) {
-                BtnMap map;
-                if (entry.contains("num")) map.num = entry["num"].get<int>();
-                if (entry.contains("channel")) map.channel = entry["channel"].get<int>();
-                if (entry.contains("type")) map.type = entry["type"].get<std::string>();
-                if (entry.contains("target")) map.target = entry["target"].get<std::string>();
-                if (entry.contains("bank")) map.bankId = entry["bank"].get<std::string>();
-                if (entry.contains("control")) map.controlId = entry["control"].get<std::string>();
-                if (entry.contains("device")) map.deviceId = entry["device"].get<std::string>();
-                if (entry.contains("column")) map.columnId = entry["column"].get<std::string>();
-                if (entry.contains("slot")) map.slotId = entry["slot"].get<std::string>();
-                if (entry.contains("setValue")) map.setValue = entry["setValue"].get<float>();
-                if (!map.target.empty()) {
-                    btnMaps.push_back(map);
-                }
-            }
-        }
-
-        if (doc.contains("oscSources") && doc["oscSources"].is_array()) {
-            for (auto& entry : doc["oscSources"]) {
-                OscSourceProfile profile;
-                if (entry.contains("pattern")) profile.pattern = entry["pattern"].get<std::string>();
-                if (entry.contains("in") && entry["in"].is_array() && entry["in"].size() == 2) {
-                    profile.inMin = entry["in"][0].get<float>();
-                    profile.inMax = entry["in"][1].get<float>();
-                }
-                if (entry.contains("out") && entry["out"].is_array() && entry["out"].size() == 2) {
-                    profile.outMin = entry["out"][0].get<float>();
-                    profile.outMax = entry["out"][1].get<float>();
-                }
-                if (entry.contains("smooth")) profile.smooth = entry["smooth"].get<float>();
-                if (entry.contains("deadband")) profile.deadband = entry["deadband"].get<float>();
-                if (entry.contains("blend") && entry["blend"].is_string()) {
-                    profile.blend = blendModeFromString(entry["blend"].get<std::string>(), modifier::BlendMode::kScale);
-                } else if (entry.contains("mode") && entry["mode"].is_string()) {
-                    profile.blend = blendModeFromString(entry["mode"].get<std::string>(), modifier::BlendMode::kScale);
-                }
-                if (entry.contains("relative")) {
-                    profile.relativeToBase = entry["relative"].get<bool>();
-                }
-                upsertOscSourceProfile(oscSourceProfiles, profile);
-            }
-        }
-
-        if (doc.contains("osc") && doc["osc"].is_array()) {
-            for (auto& entry : doc["osc"]) {
-                OscMap m;
-                if (entry.contains("pattern")) m.pattern = entry["pattern"].get<std::string>();
-                if (entry.contains("target")) m.target = entry["target"].get<std::string>();
-                if (entry.contains("bank")) m.bankId = entry["bank"].get<std::string>();
-                if (entry.contains("control")) m.controlId = entry["control"].get<std::string>();
-                if (!m.target.empty() && !m.pattern.empty()) {
-                    auto* profile = ensureOscSourceProfile(m.pattern);
-                    if (profile && entry.contains("in") && entry["in"].is_array() && entry["in"].size() == 2) {
-                        profile->inMin = entry["in"][0].get<float>();
-                        profile->inMax = entry["in"][1].get<float>();
-                    }
-                    if (profile && entry.contains("out") && entry["out"].is_array() && entry["out"].size() == 2) {
-                        profile->outMin = entry["out"][0].get<float>();
-                        profile->outMax = entry["out"][1].get<float>();
-                    }
-                    if (profile && entry.contains("smooth")) profile->smooth = entry["smooth"].get<float>();
-                    if (profile && entry.contains("deadband")) profile->deadband = entry["deadband"].get<float>();
-                    if (profile && entry.contains("blend") && entry["blend"].is_string()) {
-                        profile->blend = blendModeFromString(entry["blend"].get<std::string>(), modifier::BlendMode::kScale);
-                    } else if (profile && entry.contains("mode") && entry["mode"].is_string()) {
-                        profile->blend = blendModeFromString(entry["mode"].get<std::string>(), modifier::BlendMode::kScale);
-                    }
-                    if (profile && entry.contains("relative")) {
-                        profile->relativeToBase = entry["relative"].get<bool>();
-                    }
-                    upsertOscMap(oscMaps, m);
-                }
-            }
-        }
-    }
-
-    canonicalizeOscState(oscMaps, oscSourceProfiles);
-
-    for (auto& map : ccMaps) {
-        if (map.controlId.empty()) {
-            map.controlId = map.target;
-        }
-        auto fit = floatTargets.find(map.target);
-        if (fit != floatTargets.end()) {
-            const auto& meta = fit->second;
-            if (map.outMin == 0.0f && map.outMax == 1.0f && (meta.defMin != 0.0f || meta.defMax != 1.0f)) {
-                map.outMin = meta.defMin;
-                map.outMax = meta.defMax;
-            }
-            if (meta.snapInt) map.snapInt = true;
-            if (meta.step > 0.0f && map.step == 0.0f) map.step = meta.step;
-            if (map.bankId.empty() && !meta.defaultBankId.empty()) {
-                map.bankId = meta.defaultBankId;
-            }
-            if (map.controlId.empty() && !meta.defaultControlId.empty()) {
-                map.controlId = meta.defaultControlId;
-            }
-        }
-        if (map.controlId.empty()) {
-            map.controlId = map.target;
-        }
-    }
-    for (auto& map : btnMaps) {
-        if (map.controlId.empty()) {
-            map.controlId = map.target;
-        }
-        auto it = boolTargets.find(map.target);
-        if (it != boolTargets.end()) {
-            const auto& meta = it->second;
-            if (map.bankId.empty() && !meta.defaultBankId.empty()) {
-                map.bankId = meta.defaultBankId;
-            }
-            if (map.controlId.empty() && !meta.defaultControlId.empty()) {
-                map.controlId = meta.defaultControlId;
-            }
-        }
-        if (map.controlId.empty()) {
-            map.controlId = map.target;
-        }
-    }
-    for (auto& m : oscMaps) {
-        if (m.controlId.empty()) {
-            m.controlId = m.target;
-        }
-        if (auto* profile = ensureOscSourceProfile(m.pattern)) {
-            copyOscProfileToMap(*profile, m);
-        }
-    }
-    for (auto& entry : boolTargets) {
-        entry.second.lastHigh = false;
-    }
-
-    if (!activeBankId.empty()) {
-        std::string current = activeBankId;
-        activeBankId.clear();
-        setActiveBank(current);
-    }
+    close();
+    deviceName = std::move(nextDeviceName);
+    deviceIndex = nextDeviceIndex;
+    currentPortLabel.clear();
 
     listPortsToLog();
 
     if (!openPreferredPort()) {
         ofLogWarning("MidiRouter") << "No MIDI input device could be opened (will retry automatically)";
     } else {
-        ofLogNotice("MidiRouter") << "Loaded " << jsonPath << "  cc: " << ccMaps.size()
+        ofLogNotice("MidiRouter") << "Loaded "
+                                   << (recoveredFromBackup ? backupPath : jsonPath)
+                                   << "  cc: " << ccMaps.size()
                                    << " buttons: " << btnMaps.size() << " osc: " << oscMaps.size();
     }
     return true;
@@ -456,17 +561,76 @@ bool MidiRouter::save(const std::string& jsonPath) {
     }
 
     std::string tmpPath = outPath + ".tmp";
+    std::string backupPath = outPath + ".bak";
+    ofFile::removeFile(tmpPath, false);
     try {
-        ofSavePrettyJson(tmpPath, doc);
+        if (!ofSavePrettyJson(tmpPath, doc)) {
+            ofLogError("MidiRouter") << "Failed to write temporary mapping " << tmpPath;
+            return false;
+        }
+        const ofJson verified = ofLoadJson(tmpPath);
+        if (verified != doc) {
+            ofLogError("MidiRouter") << "Temporary mapping verification failed for " << outPath;
+            ofFile::removeFile(tmpPath, false);
+            return false;
+        }
     } catch (const std::exception& e) {
         ofLogError("MidiRouter") << "Failed to save " << tmpPath << ": " << e.what();
         ofFile::removeFile(tmpPath, false);
         return false;
     }
 
-    if (!ofFile::moveFromTo(tmpPath, outPath, true, true)) {
+    if (ofFile::doesFileExist(outPath)) {
+        bool previousValid = false;
+        try {
+            const ofJson previous = ofLoadJson(outPath);
+            if (previous.is_object()) {
+                if (previous.contains("device") && !previous["device"].is_string()) {
+                    mappingSchemaError("$.device", "a string");
+                }
+                if (previous.contains("deviceIndex") && !previous["deviceIndex"].is_number_integer()) {
+                    mappingSchemaError("$.deviceIndex", "an integer");
+                }
+                parseMappingSnapshot(previous, ParsedMappingState{});
+                previousValid = true;
+            }
+        } catch (...) {
+            previousValid = false;
+        }
+
+        if (previousValid) {
+            ofFile::removeFile(backupPath, false);
+            if (!ofFile::moveFromTo(outPath, backupPath, false, true)) {
+                ofLogError("MidiRouter") << "Failed to preserve last-known-good mapping " << outPath;
+                ofFile::removeFile(tmpPath, false);
+                return false;
+            }
+        } else {
+            ofLogWarning("MidiRouter") << "Replacing invalid primary mapping while retaining backup "
+                                       << backupPath;
+            if (!ofFile::removeFile(outPath, false)) {
+                ofLogError("MidiRouter") << "Failed to remove invalid primary mapping " << outPath;
+                ofFile::removeFile(tmpPath, false);
+                return false;
+            }
+        }
+    }
+
+    if (!ofFile::moveFromTo(tmpPath, outPath, false, true)) {
         ofLogError("MidiRouter") << "Failed to commit mapping file to " << outPath;
         ofFile::removeFile(tmpPath, false);
+        if (ofFile::doesFileExist(backupPath)) {
+            std::error_code restoreError;
+            std::filesystem::copy_file(backupPath,
+                                       outPath,
+                                       std::filesystem::copy_options::overwrite_existing,
+                                       restoreError);
+            if (restoreError) {
+                ofLogError("MidiRouter") << "Failed to restore last-known-good mapping to " << outPath
+                                         << ": " << restoreError.message()
+                                         << "; recovery copy remains at " << backupPath;
+            }
+        }
         return false;
     }
 
@@ -480,127 +644,28 @@ ofJson MidiRouter::exportMappingSnapshot() const {
 
 bool MidiRouter::importMappingSnapshot(const ofJson& snapshot, bool replaceExisting) {
     if (!snapshot.is_object() && !snapshot.is_null()) {
-        ofLogWarning("MidiRouter") << "Ignoring invalid mapping snapshot";
+        ofLogWarning("MidiRouter") << "Rejected invalid mapping snapshot root; preserving current mappings";
         return false;
     }
 
-    if (replaceExisting) {
-        ccMaps.clear();
-        btnMaps.clear();
-        oscMaps.clear();
-        oscSourceProfiles.clear();
+    ParsedMappingState pending;
+    if (!replaceExisting) {
+        pending.ccMaps = ccMaps;
+        pending.btnMaps = btnMaps;
+        pending.oscMaps = oscMaps;
+        pending.oscSourceProfiles = oscSourceProfiles;
     }
-
-    if (!snapshot.is_object()) {
-        for (auto& entry : boolTargets) {
-            entry.second.lastHigh = false;
+    try {
+        if (snapshot.is_object()) {
+            pending = parseMappingSnapshot(snapshot, std::move(pending));
         }
-        return true;
+    } catch (const std::exception& e) {
+        ofLogWarning("MidiRouter") << "Rejected invalid mapping snapshot: " << e.what()
+                                    << "; preserving current mappings";
+        return false;
     }
 
-    if (snapshot.contains("cc") && snapshot["cc"].is_array()) {
-        for (const auto& entry : snapshot["cc"]) {
-            CcMap map;
-            if (entry.contains("num")) map.cc = entry["num"].get<int>();
-            if (entry.contains("channel")) map.channel = entry["channel"].get<int>();
-            if (entry.contains("target")) map.target = entry["target"].get<std::string>();
-            if (entry.contains("bank")) map.bankId = entry["bank"].get<std::string>();
-            if (entry.contains("control")) map.controlId = entry["control"].get<std::string>();
-            if (entry.contains("device")) map.deviceId = entry["device"].get<std::string>();
-            if (entry.contains("column")) map.columnId = entry["column"].get<std::string>();
-            if (entry.contains("slot")) map.slotId = entry["slot"].get<std::string>();
-            if (entry.contains("out") && entry["out"].is_array() && entry["out"].size() == 2) {
-                map.outMin = entry["out"][0].get<float>();
-                map.outMax = entry["out"][1].get<float>();
-            }
-            if (entry.contains("snapInt")) map.snapInt = entry["snapInt"].get<bool>();
-            if (entry.contains("step")) map.step = entry["step"].get<float>();
-            if (!map.target.empty()) {
-                ccMaps.push_back(std::move(map));
-            }
-        }
-    }
-
-    if (snapshot.contains("buttons") && snapshot["buttons"].is_array()) {
-        for (const auto& entry : snapshot["buttons"]) {
-            BtnMap map;
-            if (entry.contains("num")) map.num = entry["num"].get<int>();
-            if (entry.contains("channel")) map.channel = entry["channel"].get<int>();
-            if (entry.contains("type")) map.type = entry["type"].get<std::string>();
-            if (entry.contains("target")) map.target = entry["target"].get<std::string>();
-            if (entry.contains("bank")) map.bankId = entry["bank"].get<std::string>();
-            if (entry.contains("control")) map.controlId = entry["control"].get<std::string>();
-            if (entry.contains("device")) map.deviceId = entry["device"].get<std::string>();
-            if (entry.contains("column")) map.columnId = entry["column"].get<std::string>();
-            if (entry.contains("slot")) map.slotId = entry["slot"].get<std::string>();
-            if (entry.contains("setValue")) map.setValue = entry["setValue"].get<float>();
-            if (!map.target.empty()) {
-                btnMaps.push_back(std::move(map));
-            }
-        }
-    }
-
-    if (snapshot.contains("oscSources") && snapshot["oscSources"].is_array()) {
-        for (const auto& entry : snapshot["oscSources"]) {
-            OscSourceProfile profile;
-            if (entry.contains("pattern")) profile.pattern = entry["pattern"].get<std::string>();
-            if (entry.contains("in") && entry["in"].is_array() && entry["in"].size() == 2) {
-                profile.inMin = entry["in"][0].get<float>();
-                profile.inMax = entry["in"][1].get<float>();
-            }
-            if (entry.contains("out") && entry["out"].is_array() && entry["out"].size() == 2) {
-                profile.outMin = entry["out"][0].get<float>();
-                profile.outMax = entry["out"][1].get<float>();
-            }
-            if (entry.contains("smooth")) profile.smooth = entry["smooth"].get<float>();
-            if (entry.contains("deadband")) profile.deadband = entry["deadband"].get<float>();
-            if (entry.contains("blend") && entry["blend"].is_string()) {
-                profile.blend = blendModeFromString(entry["blend"].get<std::string>(), modifier::BlendMode::kScale);
-            } else if (entry.contains("mode") && entry["mode"].is_string()) {
-                profile.blend = blendModeFromString(entry["mode"].get<std::string>(), modifier::BlendMode::kScale);
-            }
-            if (entry.contains("relative")) {
-                profile.relativeToBase = entry["relative"].get<bool>();
-            }
-            upsertOscSourceProfile(oscSourceProfiles, profile);
-        }
-    }
-
-    if (snapshot.contains("osc") && snapshot["osc"].is_array()) {
-        for (const auto& entry : snapshot["osc"]) {
-            OscMap map;
-            if (entry.contains("pattern")) map.pattern = entry["pattern"].get<std::string>();
-            if (entry.contains("target")) map.target = entry["target"].get<std::string>();
-            if (entry.contains("bank")) map.bankId = entry["bank"].get<std::string>();
-            if (entry.contains("control")) map.controlId = entry["control"].get<std::string>();
-            if (!map.target.empty() && !map.pattern.empty()) {
-                auto* profile = ensureOscSourceProfile(map.pattern);
-                if (profile && entry.contains("in") && entry["in"].is_array() && entry["in"].size() == 2) {
-                    profile->inMin = entry["in"][0].get<float>();
-                    profile->inMax = entry["in"][1].get<float>();
-                }
-                if (profile && entry.contains("out") && entry["out"].is_array() && entry["out"].size() == 2) {
-                    profile->outMin = entry["out"][0].get<float>();
-                    profile->outMax = entry["out"][1].get<float>();
-                }
-                if (profile && entry.contains("smooth")) profile->smooth = entry["smooth"].get<float>();
-                if (profile && entry.contains("deadband")) profile->deadband = entry["deadband"].get<float>();
-                if (profile && entry.contains("blend") && entry["blend"].is_string()) {
-                    profile->blend = blendModeFromString(entry["blend"].get<std::string>(), modifier::BlendMode::kScale);
-                } else if (profile && entry.contains("mode") && entry["mode"].is_string()) {
-                    profile->blend = blendModeFromString(entry["mode"].get<std::string>(), modifier::BlendMode::kScale);
-                }
-                if (profile && entry.contains("relative")) {
-                    profile->relativeToBase = entry["relative"].get<bool>();
-                }
-                upsertOscMap(oscMaps, map);
-            }
-        }
-    }
-
-    canonicalizeOscState(oscMaps, oscSourceProfiles);
-
-    for (auto& map : ccMaps) {
+    for (auto& map : pending.ccMaps) {
         if (map.controlId.empty()) {
             map.controlId = map.target;
         }
@@ -625,7 +690,7 @@ bool MidiRouter::importMappingSnapshot(const ofJson& snapshot, bool replaceExist
         }
     }
 
-    for (auto& map : btnMaps) {
+    for (auto& map : pending.btnMaps) {
         if (map.controlId.empty()) {
             map.controlId = map.target;
         }
@@ -644,14 +709,24 @@ bool MidiRouter::importMappingSnapshot(const ofJson& snapshot, bool replaceExist
         }
     }
 
-    for (auto& map : oscMaps) {
+    for (auto& map : pending.oscMaps) {
         if (map.controlId.empty()) {
             map.controlId = map.target;
         }
-        if (auto* profile = ensureOscSourceProfile(map.pattern)) {
-            copyOscProfileToMap(*profile, map);
+        auto profileIt = std::find_if(pending.oscSourceProfiles.begin(),
+                                     pending.oscSourceProfiles.end(),
+                                     [&](const OscSourceProfile& profile) {
+                                         return profile.pattern == map.pattern;
+                                     });
+        if (profileIt != pending.oscSourceProfiles.end()) {
+            copyOscProfileToMap(*profileIt, map);
         }
     }
+
+    ccMaps.swap(pending.ccMaps);
+    btnMaps.swap(pending.btnMaps);
+    oscMaps.swap(pending.oscMaps);
+    oscSourceProfiles.swap(pending.oscSourceProfiles);
 
     for (auto& entry : boolTargets) {
         entry.second.lastHigh = false;

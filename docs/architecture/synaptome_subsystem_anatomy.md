@@ -4,6 +4,13 @@ Status: Detailed architecture companion. This document expands the high-level Sy
 
 Read with: [`synaptome_system_architecture.md`](synaptome_system_architecture.md), [`synaptome_external_contracts.md`](synaptome_external_contracts.md), [`synaptome_artist_sdk.md`](synaptome_artist_sdk.md), [`docs/contracts/README.md`](../contracts/README.md), and [`docs/contracts/contract_gaps.md`](../contracts/contract_gaps.md).
 
+Canonical public terminology is defined by
+[`synaptome_spine_element_model.md`](synaptome_spine_element_model.md):
+creative modules are **elements**, while the eight ordered Console composition
+containers are **layers**. This anatomy retains current source names such as
+`Layer`, `LayerFactory`, `LayerLibrary`, and slot where it describes existing
+code.
+
 ## Purpose
 
 This is the "synaptome" of Synaptome: a living map of the app's core concepts and how the code currently realizes them.
@@ -496,6 +503,8 @@ What it is:
 Current implementation:
 - `ConsoleState` renders and navigates eight slots.
 - `Ctrl+1..8` opens the asset picker for a slot.
+- `Ctrl+E` opens the focused slot's layer in the Browser and selects its first
+  quick-access parameter.
 - `Ctrl+U` unloads the focused slot.
 - It displays slot labels, active/assigned state, opacity, and parameter previews.
 

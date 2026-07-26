@@ -95,6 +95,7 @@ private:
     ofFloatPixels pixels_;
     ofTexture texture_;
     std::mt19937 rng_{ 3773u };
+    std::uint32_t appliedSeed_ = 0;
     float stepAccumulator_ = 0.0f;
     float nextAutoReseedBeat_ = -1.0f;
 };

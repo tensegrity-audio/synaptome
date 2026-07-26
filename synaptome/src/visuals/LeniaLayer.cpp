@@ -17,6 +17,11 @@ namespace {
 }
 
 void LeniaLayer::configure(const ofJson& config) {
+    presentation_ =
+        config.value("presentation", std::string()) == "circuit"
+            ? Presentation::Circuit
+            : Presentation::Organic;
+
     if (config.contains("defaults") && config["defaults"].is_object()) {
         const auto& def = config["defaults"];
         paramSpeed_ = def.value("speed", paramSpeed_);
@@ -51,6 +56,12 @@ void LeniaLayer::configure(const ofJson& config) {
         paramEdgeR_ = def.value("edgeR", paramEdgeR_);
         paramEdgeG_ = def.value("edgeG", paramEdgeG_);
         paramEdgeB_ = def.value("edgeB", paramEdgeB_);
+        paramCircuitThreshold_ =
+            def.value("circuitThreshold", paramCircuitThreshold_);
+        paramCircuitLevels_ =
+            def.value("circuitLevels", paramCircuitLevels_);
+        paramCircuitTraceWidth_ =
+            def.value("circuitTraceWidth", paramCircuitTraceWidth_);
         readColorArray(def, "backgroundColor", paramBgR_, paramBgG_, paramBgB_);
         readColorArray(def, "fieldColor", paramFieldR_, paramFieldG_, paramFieldB_);
         readColorArray(def, "edgeColor", paramEdgeR_, paramEdgeG_, paramEdgeB_);
@@ -121,6 +132,27 @@ void LeniaLayer::setup(ParameterRegistry& registry) {
     registerFloat(registry, prefix + ".edgeR", &paramEdgeR_, paramEdgeR_, "Color: Edge R", 0.0f, 1.0f, 0.01f);
     registerFloat(registry, prefix + ".edgeG", &paramEdgeG_, paramEdgeG_, "Color: Edge G", 0.0f, 1.0f, 0.01f);
     registerFloat(registry, prefix + ".edgeB", &paramEdgeB_, paramEdgeB_, "Color: Edge B", 0.0f, 1.0f, 0.01f);
+
+    if (presentation_ == Presentation::Circuit) {
+        registerFloat(
+            registry, prefix + ".circuitThreshold",
+            &paramCircuitThreshold_, paramCircuitThreshold_,
+            "Level: Circuit Threshold", 0.0f, 0.95f, 0.01f,
+            "Field values below this level do not produce circuit contours.",
+            "Circuit Appearance", true, 20);
+        registerFloat(
+            registry, prefix + ".circuitLevels",
+            &paramCircuitLevels_, paramCircuitLevels_,
+            "Count: Circuit Contour Levels", 2.0f, 8.0f, 1.0f,
+            "Number of hard isocontour bands extracted from the Lenia field.",
+            "Circuit Appearance");
+        registerFloat(
+            registry, prefix + ".circuitTraceWidth",
+            &paramCircuitTraceWidth_, paramCircuitTraceWidth_,
+            "Scale: Circuit Trace Width", 1.0f, 4.0f, 1.0f,
+            "Hard-edged contour width in simulation pixels.",
+            "Circuit Appearance", true, 30);
+    }
 
     allocateField();
     resetField();
@@ -312,6 +344,50 @@ void LeniaLayer::syncTexture() {
                                  ofClamp(paramEdgeB_, 0.0f, 1.0f),
                                  ofClamp(paramEdgeOpacity_, 0.0f, 1.0f));
 
+    if (presentation_ == Presentation::Circuit) {
+        const int levels = static_cast<int>(std::round(paramCircuitLevels_));
+        const int radius = std::max(
+            0, static_cast<int>(std::round(paramCircuitTraceWidth_)) - 1);
+        for (int y = 0; y < textureSize_.y; ++y) {
+            for (int x = 0; x < textureSize_.x; ++x) {
+                const int band = circuitBandAt(x, y);
+                bool contour = false;
+                for (int oy = -radius; oy <= radius && !contour; ++oy) {
+                    for (int ox = -radius; ox <= radius; ++ox) {
+                        if (ox * ox + oy * oy > radius * radius) {
+                            continue;
+                        }
+                        if (circuitContourAt(x + ox, y + oy)) {
+                            contour = true;
+                            break;
+                        }
+                    }
+                }
+
+                const float platedFill = band > 0
+                    ? (0.08f + 0.16f *
+                        static_cast<float>(band) /
+                        static_cast<float>(std::max(1, levels))) *
+                        fieldColor.a
+                    : 0.0f;
+                const float trace =
+                    contour ? ofClamp(edgeColor.a, 0.0f, 1.0f) : 0.0f;
+                ofFloatColor color(
+                    ofLerp(bg.r, fieldColor.r, platedFill),
+                    ofLerp(bg.g, fieldColor.g, platedFill),
+                    ofLerp(bg.b, fieldColor.b, platedFill),
+                    ofLerp(bg.a, fieldColor.a, platedFill));
+                color.r = ofLerp(color.r, edgeColor.r, trace);
+                color.g = ofLerp(color.g, edgeColor.g, trace);
+                color.b = ofLerp(color.b, edgeColor.b, trace);
+                color.a = ofClamp(std::max(color.a, trace), 0.0f, 1.0f);
+                pixels_.setColor(x, y, color);
+            }
+        }
+        texture_.loadData(pixels_);
+        return;
+    }
+
     for (int y = 0; y < textureSize_.y; ++y) {
         for (int x = 0; x < textureSize_.x; ++x) {
             const float value = ofClamp(sampleField(x, y) * paramFieldScale_, 0.0f, 1.0f);
@@ -331,6 +407,34 @@ void LeniaLayer::syncTexture() {
     }
 
     texture_.loadData(pixels_);
+}
+
+int LeniaLayer::circuitBandAt(int x, int y) const {
+    const float threshold =
+        ofClamp(paramCircuitThreshold_, 0.0f, 0.95f);
+    const int levels = std::max(
+        2, static_cast<int>(std::round(paramCircuitLevels_)));
+    const float value =
+        ofClamp(sampleField(x, y) * paramFieldScale_, 0.0f, 1.0f);
+    if (value <= threshold) {
+        return 0;
+    }
+    const float normalized =
+        (value - threshold) / std::max(0.001f, 1.0f - threshold);
+    return ofClamp(
+        1 + static_cast<int>(std::floor(normalized * levels)),
+        1, levels);
+}
+
+bool LeniaLayer::circuitContourAt(int x, int y) const {
+    const int center = circuitBandAt(x, y);
+    if (center == 0) {
+        return false;
+    }
+    return circuitBandAt(x - 1, y) != center ||
+        circuitBandAt(x + 1, y) != center ||
+        circuitBandAt(x, y - 1) != center ||
+        circuitBandAt(x, y + 1) != center;
 }
 
 void LeniaLayer::clampParams() {
@@ -363,6 +467,12 @@ void LeniaLayer::clampParams() {
     paramEdgeR_ = ofClamp(paramEdgeR_, 0.0f, 1.0f);
     paramEdgeG_ = ofClamp(paramEdgeG_, 0.0f, 1.0f);
     paramEdgeB_ = ofClamp(paramEdgeB_, 0.0f, 1.0f);
+    paramCircuitThreshold_ =
+        ofClamp(paramCircuitThreshold_, 0.0f, 0.95f);
+    paramCircuitLevels_ =
+        std::round(ofClamp(paramCircuitLevels_, 2.0f, 8.0f));
+    paramCircuitTraceWidth_ =
+        std::round(ofClamp(paramCircuitTraceWidth_, 1.0f, 4.0f));
 }
 
 float LeniaLayer::sampleField(int x, int y) const {
@@ -411,6 +521,22 @@ int LeniaLayer::indexFor(int x, int y) const {
     return y * textureSize_.x + x;
 }
 
+std::uint64_t LeniaLayer::debugStateSignature() const {
+    std::uint64_t hash = 1469598103934665603ULL;
+    constexpr std::uint64_t prime = 1099511628211ULL;
+    auto mix = [&](std::uint64_t value) {
+        hash ^= value;
+        hash *= prime;
+    };
+    mix(static_cast<std::uint64_t>(presentation_));
+    mix(activeSeed());
+    for (std::size_t i = 0; i < field_.size(); i += 7) {
+        mix(static_cast<std::uint64_t>(
+            std::round(ofClamp(field_[i], 0.0f, 1.0f) * 65535.0f)));
+    }
+    return hash;
+}
+
 void LeniaLayer::registerFloat(ParameterRegistry& registry,
                                const std::string& id,
                                float* target,
@@ -419,13 +545,18 @@ void LeniaLayer::registerFloat(ParameterRegistry& registry,
                                float minValue,
                                float maxValue,
                                float step,
-                               const char* description) {
+                               const char* description,
+                               const char* group,
+                               bool quickAccess,
+                               int quickAccessOrder) {
     ParameterRegistry::Descriptor meta;
-    meta.group = "Generative";
+    meta.group = group;
     meta.label = label;
     meta.range.min = minValue;
     meta.range.max = maxValue;
     meta.range.step = step;
     meta.description = description;
+    meta.quickAccess = quickAccess;
+    meta.quickAccessOrder = quickAccessOrder;
     registry.addFloat(id, target, initial, meta);
 }

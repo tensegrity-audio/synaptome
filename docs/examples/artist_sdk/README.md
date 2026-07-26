@@ -45,3 +45,8 @@ factory.registerType("example.signalBloom", []() {
 ```
 
 The final public package mechanism must preserve this contract without requiring artists to edit unrelated app internals. Until then, public docs should present this as source registration, not hot-loaded plugins.
+
+For a multi-asset example backed by one configurable runtime type, see
+[`circuit_trace_family.md`](circuit_trace_family.md). It uses three standard
+catalog manifests because the current package schema is intentionally
+single-asset.

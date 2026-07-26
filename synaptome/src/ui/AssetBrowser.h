@@ -17,6 +17,8 @@ public:
     void setCommandHandler(std::function<void(const LayerLibrary::Entry& entry, int key)> handler);
     void setAllowEntryPredicate(std::function<bool(const LayerLibrary::Entry&)> predicate);
     void setMenuSkin(const MenuSkin& skin) { skin_ = skin; }
+    void setSearchQuery(const std::string& query);
+    const std::string& searchQuery() const { return searchQuery_; }
 
     bool isActive() const { return active_; }
 
@@ -29,6 +31,8 @@ public:
     bool handleInput(MenuController& controller, int key) override;
     void onEnter(MenuController& controller) override;
     void onExit(MenuController& controller) override;
+    bool capturesInputBeforeHotkeys() const override { return true; }
+    bool wantsRawKeyInput() const override { return true; }
 
 private:
     struct Row {
@@ -56,7 +60,10 @@ private:
     MenuController* controller_ = nullptr;
     bool active_ = false;
     int selected_ = 0;
-    std::set<std::string> collapsedKeys_;
+    std::string searchQuery_;
+    // A fresh browser starts compact. Rows enter this set only after the
+    // operator explicitly opens them during the current browser session.
+    std::set<std::string> expandedKeys_;
     MenuSkin skin_ = MenuSkin::ConsoleHub();
 
     const std::string stateId = "ui.assets";

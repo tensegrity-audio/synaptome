@@ -37,6 +37,7 @@ public:
     // specific console layer index (1..8). ConsoleState will call this when
     // the operator presses Enter or Ctrl+1..Ctrl+8.
     void setRequestAssetBrowserCallback(std::function<void(int)> cb);
+    void setRequestEditLayerCallback(std::function<void(int)> cb);
     void setRequestClearLayerCallback(std::function<void(int)> cb);
     void setQueryLayerCallback(std::function<ConsoleLayerInfo(int)> cb);
     void setQueryParameterPreviewCallback(std::function<ParameterPreview(int,int)> cb);
@@ -51,6 +52,7 @@ private:
     mutable int selectedColumn_ = 0;
     bool active_ = false;
     std::function<void(int)> requestAssetBrowserCallback_;
+    std::function<void(int)> requestEditLayerCallback_;
     std::function<void(int)> requestClearLayerCallback_;
     std::function<ConsoleLayerInfo(int)> queryLayerCallback_;
     std::function<ParameterPreview(int,int)> queryParameterPreviewCallback_;
@@ -79,6 +81,10 @@ inline ConsoleState::ConsoleState() {
 
 inline void ConsoleState::setRequestAssetBrowserCallback(std::function<void(int)> cb) {
     requestAssetBrowserCallback_ = std::move(cb);
+}
+
+inline void ConsoleState::setRequestEditLayerCallback(std::function<void(int)> cb) {
+    requestEditLayerCallback_ = std::move(cb);
 }
 
 inline void ConsoleState::setRequestClearLayerCallback(std::function<void(int)> cb) {
@@ -155,6 +161,7 @@ inline MenuController::StateView ConsoleState::view() const {
     appendHint(OF_KEY_LEFT, "Left/Right", "Change focused console slot");
     appendHint(OF_KEY_RETURN, "Enter", "Open the asset picker for the focused slot");
     appendHint(MenuController::HOTKEY_MOD_CTRL | '1', "Ctrl+1..8", "Open a specific slot's asset picker");
+    appendHint(MenuController::HOTKEY_MOD_CTRL | 'e', "Ctrl+E", "Edit the focused layer");
     appendHint(MenuController::HOTKEY_MOD_CTRL | 'u', "Ctrl+U", "Unload the focused slot");
 
     return view;
@@ -217,6 +224,13 @@ inline bool ConsoleState::handleInput(MenuController& controller, int key) {
                 ofLogWarning("ConsoleState") << "Ctrl+digit detected but no requestAssetBrowserCallback_ set!";
             }
             handled = true;
+        } else if (baseKey == 'e' || baseKey == 'E') {
+            if (requestEditLayerCallback_) {
+                requestEditLayerCallback_(selectedColumn_ + 1);
+                handled = true;
+            } else {
+                ofLogWarning("ConsoleState") << "Ctrl+E pressed but no requestEditLayerCallback_ set!";
+            }
         } else if (baseKey == 'u' || baseKey == 'U') {
             if (requestClearLayerCallback_) {
                 requestClearLayerCallback_(selectedColumn_ + 1);

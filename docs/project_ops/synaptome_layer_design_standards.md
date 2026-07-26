@@ -2,6 +2,13 @@
 
 _Started: 2026-06-24_
 
+Terminology transition: this document's creative “layers” are **elements** in
+the canonical model, while Console slots are public **layers** in the ordered
+composition. See
+[`../architecture/synaptome_spine_element_model.md`](../architecture/synaptome_spine_element_model.md).
+Existing code, schema, asset, and parameter names remain compatibility
+surfaces until a separately validated migration.
+
 ## Purpose
 
 This is the canonical best-practices document for Synaptome visual layers. It

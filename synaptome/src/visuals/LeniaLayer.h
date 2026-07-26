@@ -17,13 +17,25 @@ public:
     bool isEnabled() const override { return enabled_; }
     void setExternalEnabled(bool enabled) override;
 
+    std::uint64_t debugStateSignature() const;
+    bool debugUsesCircuitPresentation() const {
+        return presentation_ == Presentation::Circuit;
+    }
+
 private:
+    enum class Presentation {
+        Organic,
+        Circuit
+    };
+
     void allocateField();
     void resetField();
     void seedPatch(int centerX, int centerY, int radius, float amount);
     void stepSimulation();
     void injectPatch();
     void syncTexture();
+    int circuitBandAt(int x, int y) const;
+    bool circuitContourAt(int x, int y) const;
     void clampParams();
     float sampleField(int x, int y) const;
     float kernelWeight(float normalizedDistance) const;
@@ -42,8 +54,12 @@ private:
                        float minValue,
                        float maxValue,
                        float step,
-                       const char* description = "");
+                       const char* description = "",
+                       const char* group = "Generative",
+                       bool quickAccess = false,
+                       int quickAccessOrder = 0);
 
+    Presentation presentation_ = Presentation::Organic;
     bool paramEnabled_ = true;
     float paramSpeed_ = 18.0f;
     bool paramBpmSync_ = true;
@@ -78,6 +94,9 @@ private:
     float paramEdgeR_ = 0.35f;
     float paramEdgeG_ = 0.95f;
     float paramEdgeB_ = 0.72f;
+    float paramCircuitThreshold_ = 0.18f;
+    float paramCircuitLevels_ = 4.0f;
+    float paramCircuitTraceWidth_ = 1.0f;
 
     bool enabled_ = true;
     bool dirty_ = true;

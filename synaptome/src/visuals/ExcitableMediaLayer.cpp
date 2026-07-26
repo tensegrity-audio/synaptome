@@ -1,4 +1,5 @@
 #include "ExcitableMediaLayer.h"
+#include "LayerParameterBuilder.h"
 
 #include "ofGraphics.h"
 #include "ofUtils.h"
@@ -19,11 +20,13 @@ namespace {
 void ExcitableMediaLayer::configure(const ofJson& config) {
     if (config.contains("defaults") && config["defaults"].is_object()) {
         const auto& def = config["defaults"];
+        paramEnabled_ = def.value("visible", paramEnabled_);
         paramSpeed_ = def.value("speed", paramSpeed_);
         paramBpmSync_ = def.value("bpmSync", paramBpmSync_);
         paramBpmMultiplier_ = def.value("bpmMultiplier", paramBpmMultiplier_);
         paramAlpha_ = def.value("alpha", paramAlpha_);
         paramPaused_ = def.value("paused", paramPaused_);
+        paramReseedRequested_ = def.value("reseed", paramReseedRequested_);
         paramAutoReseed_ = def.value("autoReseed", paramAutoReseed_);
         paramAutoReseedEveryBeats_ = def.value("autoReseedEveryBeats", paramAutoReseedEveryBeats_);
         paramSeed_ = def.value("seed", paramSeed_);
@@ -69,40 +72,55 @@ void ExcitableMediaLayer::configure(const ofJson& config) {
 void ExcitableMediaLayer::setup(ParameterRegistry& registry) {
     const std::string prefix = registryPrefix().empty() ? "layer.excitableMedia" : registryPrefix();
     clampParams();
+    LayerParameterBuilder common(registry, prefix, "Generative");
+
+    registry.addBool(prefix + ".visible", &paramEnabled_, paramEnabled_,
+                     common.boolDescriptor({ "Action: Visible", {}, {} }));
+
+    registry.addFloat(
+        prefix + ".speed", &paramSpeed_, paramSpeed_,
+        common.floatDescriptor(
+            { "Time: Simulation Speed", {}, { 0.0f, 96.0f, 0.1f },
+              {}, {}, true, 10 }));
 
     ParameterRegistry::Descriptor meta;
-    meta.group = "Generative";
-    meta.label = "Action: Visible";
-    registry.addBool(prefix + ".visible", &paramEnabled_, paramEnabled_, meta);
-
-    registerFloat(registry, prefix + ".speed", &paramSpeed_, paramSpeed_, "Time: Simulation Speed", 0.0f, 96.0f, 0.1f);
-
-    meta = {};
     meta.group = "Generative";
     meta.label = "Action: BPM Sync";
     meta.description = "Use transport BPM instead of free-running excitation updates.";
     registry.addBool(prefix + ".bpmSync", &paramBpmSync_, paramBpmSync_, meta);
 
     registerFloat(registry, prefix + ".bpmMultiplier", &paramBpmMultiplier_, paramBpmMultiplier_, "Time: BPM Mult", 0.25f, 24.0f, 0.25f);
-    registerFloat(registry, prefix + ".alpha", &paramAlpha_, paramAlpha_, "Visibility: Layer Opacity", 0.0f, 1.0f, 0.01f);
+    registry.addFloat(
+        prefix + ".alpha", &paramAlpha_, paramAlpha_,
+        common.floatDescriptor(
+            { "Visibility: Layer Opacity", {}, { 0.0f, 1.0f, 0.01f } }));
 
     meta = {};
     meta.group = "Generative";
     meta.label = "Action: Paused";
     registry.addBool(prefix + ".paused", &paramPaused_, paramPaused_, meta);
 
-    meta.label = "Action: Reseed";
-    meta.description = "Reset the resting, excited, and refractory fields.";
-    registry.addBool(prefix + ".reseed", &paramReseedRequested_, paramReseedRequested_, meta);
+    registry.addBool(
+        prefix + ".reseed", &paramReseedRequested_, paramReseedRequested_,
+        common.boolDescriptor(
+            { "Action: Reseed", {},
+              "Reset the resting, excited, and refractory fields." }));
 
     meta.label = "Action: Auto Reseed";
     meta.description = "Reset on a transport-quantized cadence.";
     registry.addBool(prefix + ".autoReseed", &paramAutoReseed_, paramAutoReseed_, meta);
 
     registerFloat(registry, prefix + ".autoReseedEveryBeats", &paramAutoReseedEveryBeats_, paramAutoReseedEveryBeats_, "Time: Auto Reseed Beats", 1.0f, 128.0f, 1.0f);
-    registerFloat(registry, prefix + ".seed", &paramSeed_, paramSeed_, "Seed: Pattern Seed", 0.0f, 999999.0f, 1.0f);
+    registry.addFloat(
+        prefix + ".seed", &paramSeed_, paramSeed_,
+        common.floatDescriptor(
+            { "Seed: Pattern Seed", {}, { 0.0f, 999999.0f, 1.0f } }));
     registerFloat(registry, prefix + ".seedDensity", &paramSeedDensity_, paramSeedDensity_, "Seed: Spark Density", 0.0f, 0.5f, 0.01f);
-    registerFloat(registry, prefix + ".propagationRate", &paramPropagationRate_, paramPropagationRate_, "Force: Propagation Rate", 0.0f, 3.0f, 0.01f);
+    registry.addFloat(
+        prefix + ".propagationRate", &paramPropagationRate_, paramPropagationRate_,
+        common.floatDescriptor(
+            { "Force: Propagation Rate", {}, { 0.0f, 3.0f, 0.01f },
+              {}, {}, true, 20 }));
     registerFloat(registry, prefix + ".excitationThreshold", &paramExcitationThreshold_, paramExcitationThreshold_, "Growth: Excitation Threshold", 0.01f, 1.0f, 0.01f);
     registerFloat(registry, prefix + ".refractoryTime", &paramRefractoryTime_, paramRefractoryTime_, "Time: Refractory Time", 1.0f, 64.0f, 1.0f);
     registerFloat(registry, prefix + ".seedRate", &paramSeedRate_, paramSeedRate_, "Growth: Spark Rate", 0.0f, 0.2f, 0.001f);
@@ -140,7 +158,7 @@ void ExcitableMediaLayer::update(const LayerUpdateParams& params) {
 
     clampParams();
 
-    if (paramReseedRequested_) {
+    if (activeSeed() != appliedSeed_ || paramReseedRequested_) {
         resetField();
         paramReseedRequested_ = false;
     }
@@ -229,7 +247,8 @@ void ExcitableMediaLayer::resetField() {
     if (field_.empty()) {
         allocateField();
     }
-    rng_.seed(activeSeed());
+    appliedSeed_ = activeSeed();
+    rng_.seed(appliedSeed_);
     for (auto& cell : field_) {
         cell.excitation = 0.0f;
         cell.refractory = 0.0f;

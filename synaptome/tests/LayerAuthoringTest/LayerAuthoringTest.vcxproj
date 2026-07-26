@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{A7D54984-5B72-45E6-AE51-C4C08FB14142}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>LayerAuthoringTest</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset Condition="'$(PlatformToolset)'=='' and Exists('$(VCTargetsPath)\Platforms\$(Platform)\PlatformToolsets\v145\Toolset.props')">v145</PlatformToolset>
+    <PlatformToolset Condition="'$(PlatformToolset)'==''">v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset Condition="'$(PlatformToolset)'=='' and Exists('$(VCTargetsPath)\Platforms\$(Platform)\PlatformToolsets\v145\Toolset.props')">v145</PlatformToolset>
+    <PlatformToolset Condition="'$(PlatformToolset)'==''">v143</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <AdditionalIncludeDirectories>$(SynaptomeThirdPartyRoot);$(SynaptomeTestRoot)\stubs;$(SynaptomeOpenFrameworksRoot)\libs\glm\include;$(SynaptomeTestRoot);$(SynaptomeAppRoot)\src;$(SynaptomeAppRoot)\src\visuals;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="$(SynaptomeTestRoot)\layer_authoring_native_main.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>

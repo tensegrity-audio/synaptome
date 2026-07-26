@@ -1,0 +1,29 @@
+{
+  "name": "Circuit Lenia view",
+  "stages": {
+    "fast": [
+      {
+        "label": "shared Lenia simulation and circuit presentation contract",
+        "command": [
+          "{python}",
+          "tools/validate_circuit_lenia.py"
+        ]
+      }
+    ],
+    "native": [],
+    "incrementalApp": [
+      {
+        "label": "incremental Synaptome app build",
+        "command": [
+          "{msbuild}",
+          "synaptome/Synaptome.vcxproj",
+          "/p:Configuration=Release",
+          "/p:Platform=x64",
+          "/p:BuildProjectReferences=false",
+          "/m",
+          "/v:minimal"
+        ]
+      }
+    ]
+  }
+}

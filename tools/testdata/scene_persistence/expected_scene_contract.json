@@ -1,5 +1,5 @@
 {
-  "layerAssetCount": 59,
+  "layerAssetCount": 65,
   "sceneCount": 3,
   "scenes": [
     {
@@ -19,6 +19,10 @@
         "ui.hud"
       ],
       "hash": "d7eb94a5a5b7d3cffc462ae3fa4a7853b4ff61cb6513d6a2180cf33a6896080e",
+      "mappingActiveBank": null,
+      "mappingOwnership": "preserve-live",
+      "mappingRouterCounts": {},
+      "mappingRouterOwnership": "preserve-live",
       "path": "tools/testdata/runtime_state/layers/scenes/default.json",
       "slotAssets": [
         "geometry.grid",
@@ -26,6 +30,8 @@
         "generative.perlin",
         "generative.gameOfLife"
       ],
+      "slotAssignmentCount": null,
+      "slotAssignmentOwnership": "preserve-live",
       "slotCount": 4,
       "slotParameterCount": 5,
       "topLevelKeys": [
@@ -54,12 +60,21 @@
         "transport.bpm"
       ],
       "hash": "5f5f0f902c8223ad08aa4025ac6290c8622ffc6bb2db21ca5028716c37b51c77",
+      "mappingActiveBank": null,
+      "mappingOwnership": "scene-snapshot",
+      "mappingRouterCounts": {
+        "osc": 3,
+        "oscSources": 0
+      },
+      "mappingRouterOwnership": "scene-snapshot",
       "path": "tools/testdata/runtime_state/layers/scenes/stl-demo.json",
       "slotAssets": [
         "generative.antTunnels",
         "text.layer",
         "geometry.stl_foot"
       ],
+      "slotAssignmentCount": 0,
+      "slotAssignmentOwnership": "scene-snapshot",
       "slotCount": 3,
       "slotParameterCount": 4,
       "topLevelKeys": [
@@ -88,6 +103,10 @@
         "ui.hud"
       ],
       "hash": "d7eb94a5a5b7d3cffc462ae3fa4a7853b4ff61cb6513d6a2180cf33a6896080e",
+      "mappingActiveBank": null,
+      "mappingOwnership": "preserve-live",
+      "mappingRouterCounts": {},
+      "mappingRouterOwnership": "preserve-live",
       "path": "tools/testdata/runtime_state/config/scene-last.json",
       "slotAssets": [
         "geometry.grid",
@@ -95,6 +114,8 @@
         "generative.perlin",
         "generative.gameOfLife"
       ],
+      "slotAssignmentCount": null,
+      "slotAssignmentOwnership": "preserve-live",
       "slotCount": 4,
       "slotParameterCount": 5,
       "topLevelKeys": [
@@ -104,5 +125,5 @@
       ]
     }
   ],
-  "version": 1
+  "version": 2
 }

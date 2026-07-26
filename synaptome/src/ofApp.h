@@ -67,6 +67,7 @@ public:
     void draw() override;
 
     void keyPressed(int key) override;
+    void keyReleased(int key) override;
     void mousePressed(int x, int y, int button) override;
     void mouseDragged(int x, int y, int button) override;
     void mouseReleased(int x, int y, int button) override;
@@ -398,6 +399,20 @@ public:
         bool controllerFocusConsole = true;
     } sceneLoadUiSnapshot_;
     SceneLoadPhase sceneLoadPhase_ = SceneLoadPhase::Idle;
+    struct SceneSaveUiSnapshot {
+        bool hasResult = false;
+        bool success = false;
+        std::string scenePath;
+        std::string displayName;
+        std::string status;
+        uint64_t updatedMs = 0;
+    } sceneSaveUiSnapshot_;
+    bool sceneDirty_ = false;
+    bool sceneRecoveryPendingSave_ = false;
+    std::string sceneBaselineSnapshot_;
+    uint64_t nextSceneDirtyCheckMs_ = 0;
+    uint64_t nextSceneRecoveryAutosaveMs_ = 0;
+    std::string sceneMappingSource_ = "global";
     struct SceneApplyPlan {
         std::string canonicalPath;
         std::string fullPath;
@@ -405,6 +420,11 @@ public:
         std::string activeNamedScenePath;
         ofJson routerSnapshot;
         ofJson slotAssignmentsSnapshot;
+        std::string activeBank;
+        bool routerMappingsDefined = false;
+        bool slotAssignmentsDefined = false;
+        bool activeBankDefined = false;
+        bool recoveredFromBackup = false;
         bool restoreSecondaryDisplay = false;
         bool restoreControllerFocusConsole = true;
         bool restorePersistenceSuspended = false;
@@ -414,6 +434,7 @@ public:
     struct SceneLoadRollbackSnapshot {
         std::string activeScenePath;
         std::string activeNamedScenePath;
+        std::string mappingSource;
         ofJson scene;
         ofJson routerSnapshot;
         ofJson slotAssignmentsSnapshot;
@@ -457,8 +478,23 @@ public:
     std::optional<bool> secondaryDisplayCliOverride_;
     std::optional<std::string> secondaryDisplayMonitorCliOverride_;
     std::string secondaryDisplayActiveMonitor_;
+    std::shared_ptr<ofAppBaseWindow> primaryWindow_;
     std::shared_ptr<ofAppBaseWindow> secondaryWindow_;
     std::shared_ptr<SecondaryDisplayView> secondaryWindowApp_;
+    struct WindowedGeometry {
+        int x = 0;
+        int y = 0;
+        int width = 0;
+        int height = 0;
+        bool valid = false;
+    };
+    WindowedGeometry primaryWindowedGeometry_;
+    WindowedGeometry secondaryWindowedGeometry_;
+    bool dualDisplayRolesSwapped_ = false;
+    bool fullscreenShortcutHeld_ = false;
+    bool quitShortcutHeld_ = false;
+    std::optional<uint64_t> quitConfirmationArmedAtMs_;
+    bool quitConfirmationControllerWindow_ = false;
     float appliedMenuTextSize_ = -1.0f;
     bool consolePersistenceSuspended_ = false;
     bool secondaryDisplayRenderPaused_ = false;
@@ -515,7 +551,7 @@ private:
     void syncActiveFxWithConsoleSlots(bool enablePresent = true);
     void refreshLayerReferences();
     bool loadScene(const std::string& path);
-    void saveScene(const std::string& path);
+    bool saveScene(const std::string& path);
     std::vector<ControlMappingHubState::SavedSceneInfo> listSavedScenes() const;
     bool loadSavedSceneById(const std::string& sceneId);
     bool saveNamedScene(const std::string& sceneName, bool overwrite);
@@ -524,6 +560,11 @@ private:
     bool isAutosaveScenePath(const std::string& path) const;
     std::string sceneDisplayNameForPath(const std::string& path) const;
     const char* sceneLoadPhaseLabel(SceneLoadPhase phase) const;
+    std::string sceneComparableSnapshot(const std::string& path) const;
+    void captureSceneBaseline();
+    void updateSceneDirtyState();
+    std::string scenePersistenceStatusLabel() const;
+    std::size_t unresolvedMappingTargetCount() const;
     void beginSceneLoadPhase(SceneLoadPhase phase,
                              const std::string& canonicalPath,
                              const std::string& status = std::string());
@@ -588,6 +629,18 @@ private:
     void publishOverlayVisibilityTelemetry(const std::string& feedId, bool visible);
     void publishDualDisplayTelemetry(const std::string& mode);
     void handleSecondaryDisplayParamChange();
+    void handleSecondaryDisplayKeyPressed(int key);
+    void handleAppShortcutReleased(int key);
+    bool toggleFocusedWindowFullscreen();
+    bool toggleWindowFullscreen(const std::shared_ptr<ofAppBaseWindow>& window,
+                                bool controllerWindow);
+    void swapDualDisplayRoles();
+    bool primaryWindowIsControlSurface() const;
+    bool secondaryWindowIsControlSurface() const;
+    bool quitConfirmationActive() const;
+    void cancelQuitConfirmation();
+    void drawQuitConfirmationOverlay(float width, float height) const;
+    bool requestQuitConfirmation();
     bool requestSecondaryDisplay(bool enable, const std::string& reason);
     bool spawnSecondaryDisplayShell(const std::string& reason);
     void destroySecondaryDisplayShell(const std::string& reason);
@@ -633,6 +686,13 @@ private:
                         bool showConsole,
                         bool showControlHub,
                         bool showMenus);
+    void drawSceneWindow(float width, float height);
+    void drawControlWindow(float width,
+                           float height,
+                           bool secondaryPhysicalWindow);
+    void handleSceneMousePressed(int x, int y, int button);
+    void handleSceneMouseDragged(int x, int y, int button);
+    void handleSceneMouseReleased(int x, int y, int button);
     void drawSceneLoadSnapshot(float width, float height) const;
     void drawSecondaryDisplayWindow(float width, float height);
     void syncHudLayoutTarget();

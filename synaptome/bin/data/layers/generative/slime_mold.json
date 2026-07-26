@@ -14,11 +14,14 @@
     { "id": "exploit", "label": "Exploit", "kind": "live", "live": true }
   ],
   "defaults": {
+    "visible": true,
     "mode": 0,
     "speed": 12.0,
     "bpmSync": true,
     "bpmMultiplier": 3.0,
     "alpha": 1.0,
+    "seed": 2202,
+    "reseed": false,
     "autoReseed": false,
     "autoReseedEveryBeats": 16.0,
     "agentCount": 56,
@@ -33,8 +36,12 @@
     "backgroundAlpha": 0.0,
     "trailAlpha": 1.0,
     "resetCoverage": 0.58,
-    "backgroundColor": [0.01, 0.04, 0.01],
-    "trailColor": [0.55, 1.00, 0.45]
+    "bgR": 0.01,
+    "bgG": 0.04,
+    "bgB": 0.01,
+    "trailR": 0.55,
+    "trailG": 1.00,
+    "trailB": 0.45
   },
   "textureSize": [192, 108]
 }

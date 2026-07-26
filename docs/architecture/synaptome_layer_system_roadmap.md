@@ -1,11 +1,18 @@
-# Synaptome Layer System Roadmap
+# Synaptome Element System Roadmap
 
-Status: Active supporting architecture; reviewed 2026-07-19. Current priority
+Status: Active supporting architecture; reviewed 2026-07-25. Current priority
 and execution state are owned by
 [`../project_ops/roadmap.md`](../project_ops/roadmap.md). This document owns the
 implementation sequence for packages, folder discovery, generated layer
 assets, package-declared parameters, layer presets, visible mapping presets,
 Browser integration, validation, and single-layer testing.
+
+Canonical terminology is defined by
+[`synaptome_spine_element_model.md`](synaptome_spine_element_model.md).
+Creative modules are now called **elements**, while the ordered Console
+composition containers are **layers**. This transitional roadmap retains
+legacy `layer` filenames, schema fields, commands, and C++ names where changing
+them would break current contracts.
 
 Read with: [`synaptome_artist_sdk.md`](synaptome_artist_sdk.md),
 [`synaptome_biological_layer_roadmap.md`](synaptome_biological_layer_roadmap.md),
@@ -171,16 +178,17 @@ What is only draft tooling:
   Browser; inspection remains separate from activation.
 - Generated-layer template output is a docs/tools fixture only; it does not
   mean Synaptome scans model folders at runtime.
-- Static and resolved dynamic option metadata is visible in read-only Browser
-  inspection; editable dropdown behavior is not implemented yet.
+- Generated-layer option metadata remains read-only until generated content
+  has a runtime activation seam. Active, source-registered packages already
+  reuse the labeled live dropdown path for static and resolved dynamic choices.
 - The generated-layer `materialPreset` provider remains intentionally
   unresolved because generated content is still fixture-only.
 
 What is not implemented yet:
 
 - Runtime or Browser scanning of STL/model/media folders.
-- Browser controls for package presets, preset banks, mapping presets, static
-  dropdown options, or dynamic option providers.
+- Browser apply/edit controls for package mapping presets.
+- Runtime activation controls for fixture-only generated layers.
 - Runtime package loading or generated registration.
 
 Current breakage risk is low because the new work is mostly schemas, fixtures,
@@ -232,8 +240,8 @@ Promotion ladder:
 | 2 | Combined package/runtime compatibility snapshots | None | No package/runtime ID conflicts. Done. |
 | 3 | File-backed generated-layer template fixture | None | A dropped-file fixture produces stable generated IDs and parameters. Done for one STL fixture. |
 | 4 | Schema-checked read-only inspection payload | None | Package and generated-layer metadata can be inspected without runtime loading, instantiation, or scene mutation. Done for current fixtures. |
-| 5 | Browser read-only package/generated-layer inspection UI | Read-only UI only | Browser can display inspection data without loading or mutating scenes. |
-| 6 | Browser opt-in package activation | Controlled UI path | Scene save/load and target validation pass with package-derived entries. |
+| 5 | Browser read-only package/generated-layer inspection UI | Read-only UI only | Browser displays inspection data without loading or mutating scenes. Done. |
+| 6 | Browser opt-in package activation | Controlled UI path | One source-registered package is default-off, can be activated explicitly, and participates in scene/target validation. Done for the bounded seam. |
 | 7 | Canonical manifest/catalog integration | Contract change | Runtime registration agrees with package declarations or has explicit exceptions. |
 | 8 | Runtime package root scanning | Runtime discovery | Disabled-by-default smoke path, strict conflict handling, no source-edit promise. |
 | 9 | Generated registration or loader evolution | Runtime/build behavior | Single-layer bench and compatibility policy are in place. |

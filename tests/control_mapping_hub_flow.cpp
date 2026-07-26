@@ -28,10 +28,59 @@
 #include "../synaptome/src/ui/ColumnControls.cpp"
 #include "../synaptome/src/ui/DevicesPanel.h"
 #include "../synaptome/src/ui/DevicesPanel.cpp"
+#include "../synaptome/src/ui/WindowMonitorPlacement.h"
 #include "../synaptome/src/io/MidiRouter.h"
 #include "../synaptome/src/io/MidiRouter.cpp"
 #include "../synaptome/src/visuals/LayerFactory.cpp"
 #include "../synaptome/src/visuals/LayerLibrary.cpp"
+
+// The BrowserFlow harness uses deliberately small openFrameworks stubs. These
+// adapters are sufficient to instantiate the real CircuitTraceLayer and run
+// its production parameter registration without requiring a GL context.
+namespace glm {
+inline constexpr ivec2 operator+(ivec2 left, ivec2 right) {
+    return { left.x + right.x, left.y + right.y };
+}
+inline constexpr ivec2 operator-(ivec2 left, ivec2 right) {
+    return { left.x - right.x, left.y - right.y };
+}
+inline constexpr ivec2 operator*(ivec2 value, int scalar) {
+    return { value.x * scalar, value.y * scalar };
+}
+inline constexpr ivec2 operator/(ivec2 value, int scalar) {
+    return { value.x / scalar, value.y / scalar };
+}
+}
+
+struct ofFloatColor {
+    float r = 0.0f;
+    float g = 0.0f;
+    float b = 0.0f;
+    float a = 0.0f;
+
+    ofFloatColor() = default;
+    ofFloatColor(float red, float green, float blue, float alpha)
+        : r(red), g(green), b(blue), a(alpha) {}
+};
+
+class ofFloatPixels : public ofPixels {
+public:
+    void allocate(int width, int height, int channels) {
+        ofPixels::allocate(
+            width, height,
+            channels == 4 ? OF_PIXELS_RGBA : OF_PIXELS_RGB);
+    }
+    bool isAllocated() const { return size() > 0; }
+    void setColor(int, int, const ofFloatColor&) {}
+};
+
+inline constexpr int GL_RGBA32F = 0;
+inline constexpr int GL_NEAREST = 0;
+
+#include "../synaptome/src/visuals/CircuitTraceLayer.cpp"
+#include "../synaptome/src/visuals/LeniaLayer.cpp"
+#include "../synaptome/src/ui/AssetBrowser.cpp"
+#include "../synaptome/src/ui/ConsoleState.h"
 #include "../synaptome/src/visuals/effects/PostEffectChain.h"
 #include "../synaptome/src/visuals/effects/PostEffectChain.cpp"
 #define TENSEGRITY_CUSTOM_VIDEO_GRABBER_HEADER "../../../tests/stubs/ofVideoGrabber.h"
@@ -835,6 +884,9 @@ bool RunSlotDropdownFocusScenario() {
     hub.onEnter(controller);
     hub.view();
 
+    if (!hub.focusAssetById("tests.asset.dropdown")) {
+        throw std::runtime_error("Could not explicitly focus dropdown asset");
+    }
     hub.rebuildView();
     const auto& rows = hub.activeRowIndices();
     if (rows.empty()) {
@@ -1433,7 +1485,9 @@ bool RunConsoleSlotHotkeyScenario() {
     MenuController controller;
     hub.onEnter(controller);
     hub.view();
-    hub.replayTreeSelection("Tests", "Test Asset");
+    if (!hub.focusAssetById("tests.asset.simple")) {
+        throw std::runtime_error("Could not explicitly focus console hotkey asset");
+    }
     hub.view();
     hub.rebuildView();
     const auto& groupedItems = hub.activeGridItems();
@@ -1454,6 +1508,10 @@ bool RunConsoleSlotHotkeyScenario() {
     }
 
     hub.rebuildView();
+    if (!hub.focusAssetById("tests.asset.simple")) {
+        throw std::runtime_error(
+            "Could not restore asset focus after loading console slot");
+    }
     const auto& rows = hub.activeRowIndices();
     if (rows.empty()) {
         throw std::runtime_error("No parameter rows available after loading console slot");
@@ -1470,9 +1528,24 @@ bool RunConsoleSlotHotkeyScenario() {
     if (targetRowIndex < 0) {
         throw std::runtime_error("Console layer opacity row not available for slot picker scenario");
     }
-    hub.selectedRow_ = targetRowIndex;
-    hub.selectedColumn_ = static_cast<ControlMappingHubState::Column>(slotColumn);
-    hub.focusPane_ = ControlMappingHubState::FocusPane::kGrid;
+    const auto& targetRow =
+        hub.tableModel_.rows[static_cast<std::size_t>(targetRowIndex)];
+    hub.setParameterSectionExpanded(
+        hub.parameterSectionExpansionKey(targetRow.section), true);
+    hub.invalidateRowCache();
+    const auto& slotItems = hub.activeGridItems();
+    auto targetItemIt = std::find_if(
+        slotItems.begin(), slotItems.end(),
+        [&](const ControlMappingHubState::GridItem& item) {
+            return !item.sectionHeader && item.rowIndex == targetRowIndex;
+        });
+    if (targetItemIt == slotItems.end() ||
+        !hub.debugSetGridSelection(
+            static_cast<int>(std::distance(slotItems.begin(), targetItemIt)),
+            slotColumn)) {
+        throw std::runtime_error(
+            "Could not focus console layer opacity slot cell");
+    }
     if (!hub.handleInput(controller, OF_KEY_RETURN)) {
         throw std::runtime_error("Slot picker hotkey was not handled in console slot scenario");
     }
@@ -1577,6 +1650,299 @@ bool RunSceneParameterPersistenceScenario() {
     return true;
 }
 
+bool RunMappingSnapshotRoundTripScenario() {
+    auto require = [](bool condition, const std::string& message) {
+        if (!condition) {
+            throw std::runtime_error(message);
+        }
+    };
+
+    float depth = 0.35f;
+    bool enabled = false;
+    std::string timingMode = "halftime";
+    ParameterRegistry registry;
+    ParameterRegistry::Descriptor depthMeta;
+    depthMeta.id = "test.scene.depth";
+    depthMeta.label = "Depth";
+    depthMeta.group = "Scene Test";
+    depthMeta.range.min = -2.0f;
+    depthMeta.range.max = 3.0f;
+    registry.addFloat(depthMeta.id, &depth, depth, depthMeta);
+    ParameterRegistry::Descriptor enabledMeta;
+    enabledMeta.id = "test.scene.enabled";
+    enabledMeta.label = "Enabled";
+    enabledMeta.group = "Scene Test";
+    registry.addBool(enabledMeta.id, &enabled, enabled, enabledMeta);
+    ParameterRegistry::Descriptor timingMeta;
+    timingMeta.id = "test.scene.timing";
+    timingMeta.label = "Timing";
+    timingMeta.group = "Scene Test";
+    registry.addString(timingMeta.id, &timingMode, timingMode, timingMeta);
+
+    MidiRouter router;
+    router.bindFloat("test.scene.depth",
+                     &depth,
+                     -2.0f,
+                     3.0f,
+                     true,
+                     0.25f,
+                     "performance",
+                     "depth-knob");
+    router.bindBool("test.scene.enabled",
+                    &enabled,
+                    MidiRouter::BoolMode::Toggle,
+                    "performance",
+                    "enable-button");
+    router.setTestPortList({});
+
+    const ofJson savedSceneMappings = {
+        {"cc", ofJson::array({
+            {
+                {"num", 74},
+                {"channel", 3},
+                {"target", "test.scene.depth"},
+                {"bank", "performance"},
+                {"control", "depth-knob"},
+                {"device", "show-controller"},
+                {"column", "console.column.2"},
+                {"slot", "encoder.4"},
+                {"out", ofJson::array({-1.5f, 2.75f})},
+                {"snapInt", true},
+                {"step", 0.25f}
+            }
+        })},
+        {"buttons", ofJson::array({
+            {
+                {"num", 42},
+                {"channel", 9},
+                {"type", "toggle"},
+                {"target", "test.scene.enabled"},
+                {"bank", "performance"},
+                {"control", "enable-button"},
+                {"device", "show-controller"},
+                {"column", "console.column.2"},
+                {"slot", "pad.2"},
+                {"setValue", 0.625f}
+            }
+        })},
+        {"oscSources", ofJson::array({
+            {
+                {"pattern", "/sensor/deck/*/intensity"},
+                {"in", ofJson::array({0.1f, 0.9f})},
+                {"out", ofJson::array({-0.75f, 1.8f})},
+                {"smooth", 0.63f},
+                {"deadband", 0.075f},
+                {"blend", "additive"},
+                {"relative", false}
+            }
+        })},
+        {"osc", ofJson::array({
+            {
+                {"pattern", "/sensor/deck/*/intensity"},
+                {"target", "test.scene.depth"},
+                {"bank", "performance"},
+                {"control", "deck-intensity"}
+            }
+        })}
+    };
+
+    require(router.importMappingSnapshot(savedSceneMappings, true),
+            "Complete scene mapping snapshot was rejected");
+    const ofJson canonicalBaseline = router.exportMappingSnapshot();
+    ofJson combinedSceneState = {
+        {"parameters", {
+            {"floats", {{"test.scene.depth", registry.getFloatBase("test.scene.depth")}}},
+            {"bools", {{"test.scene.enabled", registry.getBoolBase("test.scene.enabled")}}},
+            {"strings", {{"test.scene.timing", registry.getStringBase("test.scene.timing")}}}
+        }},
+        {"mappings", {{"router", canonicalBaseline}}}
+    };
+    require(canonicalBaseline.contains("cc") && canonicalBaseline["cc"].size() == 1,
+            "CC mapping was not captured in the canonical scene snapshot");
+    require(canonicalBaseline.contains("buttons") &&
+                canonicalBaseline["buttons"].size() == 1,
+            "Button mapping was not captured in the canonical scene snapshot");
+    require(canonicalBaseline.contains("osc") && canonicalBaseline["osc"].size() == 1 &&
+                canonicalBaseline.contains("oscSources") &&
+                canonicalBaseline["oscSources"].size() == 1,
+            "OSC route and source profile were not captured together");
+
+    const auto& cc = router.getCcMaps().front();
+    require(cc.cc == 74 && cc.channel == 3 && cc.target == "test.scene.depth",
+            "CC identity did not survive import");
+    require(cc.bankId == "performance" && cc.controlId == "depth-knob" &&
+                cc.deviceId == "show-controller" &&
+                cc.columnId == "console.column.2" && cc.slotId == "encoder.4",
+            "CC control metadata did not survive import");
+    require(std::fabs(cc.outMin - -1.5f) < 0.0001f &&
+                std::fabs(cc.outMax - 2.75f) < 0.0001f &&
+                cc.snapInt && std::fabs(cc.step - 0.25f) < 0.0001f,
+            "CC output range or stepping metadata did not survive import");
+
+    const auto& button = router.getBtnMaps().front();
+    require(button.num == 42 && button.channel == 9 &&
+                button.type == "toggle" &&
+                std::fabs(button.setValue - 0.625f) < 0.0001f,
+            "Button mapping behavior did not survive import");
+    require(button.target == "test.scene.enabled" &&
+                button.bankId == "performance" &&
+                button.controlId == "enable-button" &&
+                button.deviceId == "show-controller" &&
+                button.columnId == "console.column.2" &&
+                button.slotId == "pad.2",
+            "Button mapping metadata did not survive import");
+
+    const auto* profile =
+        router.findOscSourceProfile("/sensor/deck/*/intensity");
+    require(profile != nullptr, "OSC source profile was not restored");
+    require(std::fabs(profile->inMin - 0.1f) < 0.0001f &&
+                std::fabs(profile->inMax - 0.9f) < 0.0001f &&
+                std::fabs(profile->outMin - -0.75f) < 0.0001f &&
+                std::fabs(profile->outMax - 1.8f) < 0.0001f &&
+                std::fabs(profile->smooth - 0.63f) < 0.0001f &&
+                std::fabs(profile->deadband - 0.075f) < 0.0001f &&
+                profile->blend == modifier::BlendMode::kAdditive &&
+                !profile->relativeToBase,
+            "OSC range, smoothing, deadband, blend, or relative mode was lost");
+    const auto* osc = router.findOscMap("test.scene.depth");
+    require(osc != nullptr && osc->pattern == "/sensor/deck/*/intensity" &&
+                osc->bankId == "performance" &&
+                osc->controlId == "deck-intensity",
+            "OSC route identity or control metadata was lost");
+
+    const ofJson mutatedMappings = {
+        {"cc", ofJson::array({
+            {
+                {"num", 7},
+                {"target", "test.scene.depth"},
+                {"out", ofJson::array({0.0f, 1.0f})}
+            }
+        })}
+    };
+    require(router.importMappingSnapshot(mutatedMappings, true),
+            "Mutated mapping state was rejected");
+    registry.setFloatBase("test.scene.depth", 2.2f, true);
+    registry.setBoolBase("test.scene.enabled", true, true);
+    registry.setStringBase("test.scene.timing", "doubletime", true);
+    require(router.getCcMaps().size() == 1 && router.getCcMaps().front().cc == 7 &&
+                router.getBtnMaps().empty() && router.getOscMaps().empty(),
+            "Replace import did not remove the prior scene mapping state");
+    const auto& savedParameters = combinedSceneState["parameters"];
+    registry.setFloatBase(
+        "test.scene.depth",
+        savedParameters["floats"]["test.scene.depth"].get<float>(),
+        true);
+    registry.setBoolBase(
+        "test.scene.enabled",
+        savedParameters["bools"]["test.scene.enabled"].get<bool>(),
+        true);
+    registry.setStringBase(
+        "test.scene.timing",
+        savedParameters["strings"]["test.scene.timing"].get<std::string>(),
+        true);
+    require(router.importMappingSnapshot(
+                combinedSceneState["mappings"]["router"], true),
+            "Saved mapping state could not be restored after mutation");
+    require(std::fabs(depth - 0.35f) < 0.0001f && !enabled &&
+                timingMode == "halftime",
+            "Combined scene parameter state did not restore with its mappings");
+    require(router.exportMappingSnapshot() == canonicalBaseline,
+            "Save, mutate, and restore did not reproduce the exact mapping snapshot");
+
+    const ofJson additionalMapping = {
+        {"cc", ofJson::array({
+            {
+                {"num", 91},
+                {"target", "test.scene.secondary"},
+                {"out", ofJson::array({0.2f, 0.8f})}
+            }
+        })}
+    };
+    require(router.importMappingSnapshot(additionalMapping, false),
+            "Non-replacing mapping import was rejected");
+    require(router.getCcMaps().size() == 2,
+            "Non-replacing import did not preserve the active scene mapping");
+    require(std::any_of(router.getCcMaps().begin(),
+                        router.getCcMaps().end(),
+                        [](const MidiRouter::CcMap& map) {
+                            return map.target == "test.scene.depth" && map.cc == 74;
+                        }),
+            "Non-replacing import erased the prior CC mapping");
+    require(router.importMappingSnapshot(canonicalBaseline, true),
+            "Replacing import could not restore the canonical mapping set");
+    require(router.getCcMaps().size() == 1 &&
+                router.getCcMaps().front().target == "test.scene.depth",
+            "Replacing import retained mappings absent from the scene snapshot");
+
+    const ofJson beforeMalformedImport = router.exportMappingSnapshot();
+    const ofJson malformedSnapshot = {
+        {"cc", "not-an-array"},
+        {"buttons", ofJson::array({
+            {{"num", "not-a-number"}, {"target", "test.scene.enabled"}}
+        })}
+    };
+    bool malformedAccepted = false;
+    try {
+        malformedAccepted = router.importMappingSnapshot(malformedSnapshot, true);
+    } catch (...) {
+        throw std::runtime_error(
+            "Malformed mapping snapshot escaped validation as an exception");
+    }
+    require(!malformedAccepted,
+            "Malformed mapping snapshot was reported as successfully imported");
+    require(router.exportMappingSnapshot() == beforeMalformedImport,
+            "Malformed mapping import damaged the last-known-good mapping set");
+
+    float restartedDepth = 0.0f;
+    bool restartedEnabled = false;
+    MidiRouter restartedRouter;
+    restartedRouter.bindFloat("test.scene.depth",
+                              &restartedDepth,
+                              -2.0f,
+                              3.0f,
+                              true,
+                              0.25f,
+                              "performance",
+                              "depth-knob");
+    restartedRouter.bindBool("test.scene.enabled",
+                             &restartedEnabled,
+                             MidiRouter::BoolMode::Toggle,
+                             "performance",
+                             "enable-button");
+    restartedRouter.setTestPortList({});
+    require(restartedRouter.availableInputPorts().empty(),
+            "Missing-device test unexpectedly exposed a MIDI port");
+    require(restartedRouter.importMappingSnapshot(canonicalBaseline, true),
+            "Fresh router could not restore mappings while the device was missing");
+    require(restartedRouter.exportMappingSnapshot() == canonicalBaseline,
+            "Unavailable MIDI hardware caused saved mappings to be discarded");
+    restartedRouter.setActiveBank("performance");
+
+    ofxMidiMessage ccMessage;
+    ccMessage.status = MIDI_CONTROL_CHANGE;
+    ccMessage.control = 74;
+    ccMessage.channel = 3;
+    ccMessage.value = 45;
+    restartedRouter.newMidiMessage(ccMessage);
+    ccMessage.value = 127;
+    restartedRouter.newMidiMessage(ccMessage);
+    require(std::fabs(restartedDepth - 3.0f) < 0.0001f,
+            "Restored CC mapping did not become usable after soft-takeover catch");
+
+    ofxMidiMessage buttonMessage;
+    buttonMessage.status = MIDI_NOTE_ON;
+    buttonMessage.pitch = 42;
+    buttonMessage.channel = 9;
+    buttonMessage.velocity = 127;
+    restartedRouter.newMidiMessage(buttonMessage);
+    require(restartedEnabled,
+            "Restored button mapping did not become usable after restart");
+
+    router.clearTestPortList();
+    restartedRouter.clearTestPortList();
+    return true;
+}
+
 bool RunViewportPersistenceScenario() {
     ControlMappingHubState hub;
     ParameterRegistry registry;
@@ -1586,8 +1952,8 @@ bool RunViewportPersistenceScenario() {
     hub.setMidiRouter(&router);
     hub.setLayerLibrary(&library);
 
-    // Default tree selection lands on the alphabetically first asset (Effects), so
-    // allocate enough rows under that asset to force grid scrolling.
+    // Explicitly open Effects for this within-session persistence scenario. Browser
+    // startup itself is intentionally collapsed and is covered separately below.
     const int kActiveAssetRowCount = 18;
     const int kSecondaryAssetRowCount = 6;
     const int kParamCount = kActiveAssetRowCount + kSecondaryAssetRowCount;
@@ -1610,6 +1976,37 @@ bool RunViewportPersistenceScenario() {
     hub.onEnter(controller);
     hub.view();
 
+    hub.setCategoryExpanded("Effects", true);
+    hub.tableModel_.dirty = true;
+    hub.rebuildView();
+    int effectsNodeIndex = -1;
+    for (std::size_t i = 0; i < hub.tableModel_.tree.size(); ++i) {
+        const auto& node = hub.tableModel_.tree[i];
+        if (node.categoryName == "Effects" && node.depth == 1) {
+            effectsNodeIndex = static_cast<int>(i);
+            break;
+        }
+    }
+    if (effectsNodeIndex < 0) {
+        throw std::runtime_error("Expanded Effects category did not expose a child node");
+    }
+    hub.applyTreeSelection(effectsNodeIndex, false);
+
+    std::vector<std::string> sectionKeys;
+    for (const auto& item : hub.activeGridItems()) {
+        if (item.sectionHeader && !item.sectionKey.empty()) {
+            sectionKeys.push_back(item.sectionKey);
+        }
+    }
+    for (const auto& sectionKey : sectionKeys) {
+        hub.setParameterSectionExpanded(sectionKey, true);
+    }
+    hub.invalidateRowCache();
+    const auto& activeRows = hub.activeRowIndices();
+    hub.selectedGridSectionKey_.clear();
+    hub.selectedRow_ = activeRows.empty() ? -1 : activeRows.front();
+    hub.clampSelection();
+
     auto baseline = hub.snapshotViewport(640.0f, 320.0f);
     if (baseline.treeNodeCount <= 0) {
         throw std::runtime_error("Control hub tree did not produce any nodes");
@@ -1626,9 +2023,8 @@ bool RunViewportPersistenceScenario() {
         throw std::runtime_error(oss.str());
     }
 
-    hub.handleInput(controller, OF_KEY_TAB);
-    hub.handleInput(controller, OF_KEY_LEFT);
-    hub.handleInput(controller, OF_KEY_LEFT);
+    hub.setCategoryExpanded("Effects", false);
+    hub.tableModel_.dirty = true;
     auto collapsed = hub.snapshotViewport(640.0f, 180.0f);
     if (collapsed.treeNodeCount >= baseline.treeNodeCount) {
         throw std::runtime_error("Collapsing a category did not reduce the visible tree node count");
@@ -1643,12 +2039,144 @@ bool RunViewportPersistenceScenario() {
         throw std::runtime_error("Collapsed tree state did not survive push/pop");
     }
 
-    hub.handleInput(controller, OF_KEY_TAB);
-    hub.handleInput(controller, OF_KEY_RIGHT);
+    hub.setCategoryExpanded("Effects", true);
+    hub.tableModel_.dirty = true;
     auto expandedAgain = hub.snapshotViewport(640.0f, 180.0f);
     if (expandedAgain.treeNodeCount != baseline.treeNodeCount) {
         throw std::runtime_error("Expanding a category after push/pop did not restore the tree nodes");
     }
+
+    hub.onExit(controller);
+    return true;
+}
+
+bool RunCollapsedBrowserStartupScenario() {
+    auto require = [](bool condition, const std::string& message) {
+        if (!condition) {
+            throw std::runtime_error(message);
+        }
+    };
+
+    ControlMappingHubState hub;
+    ParameterRegistry registry;
+    MidiRouter router;
+    LayerLibrary library;
+    hub.setParameterRegistry(&registry);
+    hub.setMidiRouter(&router);
+    hub.setLayerLibrary(&library);
+
+    float generativeIntensity = 0.5f;
+    float generativeSpeed = 1.0f;
+    bool effectEnabled = true;
+
+    ParameterRegistry::Descriptor intensityMeta;
+    intensityMeta.group = "Generative";
+    intensityMeta.label = "Appearance: Intensity";
+    registry.addFloat(
+        "generative.startupFixture.intensity",
+        &generativeIntensity,
+        generativeIntensity,
+        intensityMeta);
+
+    ParameterRegistry::Descriptor speedMeta;
+    speedMeta.group = "Generative";
+    speedMeta.label = "Motion: Speed";
+    registry.addFloat(
+        "generative.startupFixture.speed",
+        &generativeSpeed,
+        generativeSpeed,
+        speedMeta);
+
+    ParameterRegistry::Descriptor enabledMeta;
+    enabledMeta.group = "Post FX";
+    enabledMeta.label = "Behavior: Enabled";
+    registry.addBool(
+        "effects.startupFixture.enabled",
+        &effectEnabled,
+        effectEnabled,
+        enabledMeta);
+
+    hub.setSavedSceneListCallback([] {
+        ControlMappingHubState::SavedSceneInfo scene;
+        scene.id = "startup-fixture";
+        scene.label = "Startup Fixture";
+        return std::vector<ControlMappingHubState::SavedSceneInfo>{scene};
+    });
+
+    MenuController controller;
+    hub.onEnter(controller);
+    hub.view();
+
+    require(!hub.tableModel_.categories.empty(),
+            "Fresh browser did not build any categories");
+    require(hub.tableModel_.categories.front().name == "Scenes",
+            "Scenes was not the first category on fresh browser startup");
+
+    int expandableCategoryCount = 0;
+    for (const auto& node : hub.tableModel_.tree) {
+        if (node.depth != 0 || !node.expandable) {
+            continue;
+        }
+        ++expandableCategoryCount;
+        require(!node.expanded,
+                "Expandable category opened on fresh browser startup: " +
+                    node.categoryName);
+    }
+    require(expandableCategoryCount > 0,
+            "Startup fixture did not exercise an expandable category");
+
+    int parameterSectionCount = 0;
+    auto inspectParameterScope =
+        [&](int categoryIndex, int subcategoryIndex, int assetGroupIndex) {
+        ControlMappingHubState::TreeNode scopeNode;
+        scopeNode.categoryIndex = categoryIndex;
+        scopeNode.subcategoryIndex = subcategoryIndex;
+        scopeNode.assetGroupIndex = assetGroupIndex;
+        hub.tableModel_.tree.push_back(scopeNode);
+        hub.selectedTreeNodeIndex_ =
+            static_cast<int>(hub.tableModel_.tree.size() - 1);
+        hub.selectedRow_ = -1;
+        hub.selectedGridSectionKey_.clear();
+        hub.invalidateRowCache();
+        const auto& items = hub.activeGridItems();
+        for (const auto& item : items) {
+            require(item.sectionHeader,
+                    "Parameter row was visible beneath a collapsed startup section");
+            ++parameterSectionCount;
+            require(!item.expanded,
+                    "Parameter section opened on fresh browser startup: " +
+                        item.sectionName);
+        }
+        hub.tableModel_.tree.pop_back();
+    };
+    for (std::size_t categoryIndex = 0;
+         categoryIndex < hub.tableModel_.categories.size();
+         ++categoryIndex) {
+        const auto& category = hub.tableModel_.categories[categoryIndex];
+        for (std::size_t subcategoryIndex = 0;
+             subcategoryIndex < category.subcategories.size();
+             ++subcategoryIndex) {
+            const auto& subcategory =
+                category.subcategories[subcategoryIndex];
+            if (subcategory.assetGroups.empty()) {
+                inspectParameterScope(
+                    static_cast<int>(categoryIndex),
+                    static_cast<int>(subcategoryIndex),
+                    -1);
+                continue;
+            }
+            for (std::size_t assetGroupIndex = 0;
+                 assetGroupIndex < subcategory.assetGroups.size();
+                 ++assetGroupIndex) {
+                inspectParameterScope(
+                    static_cast<int>(categoryIndex),
+                    static_cast<int>(subcategoryIndex),
+                    static_cast<int>(assetGroupIndex));
+            }
+        }
+    }
+    require(parameterSectionCount > 0,
+            "Startup fixture did not exercise a parameter-section scope");
 
     hub.onExit(controller);
     return true;
@@ -2507,6 +3035,43 @@ bool RunDualScreenPhase2Scenario() {
     return true;
 }
 
+bool RunWindowMonitorPlacementScenario() {
+    using window_monitor_placement::Rect;
+    const std::vector<Rect> sideBySide = {
+        {0, 0, 1920, 1080},
+        {1920, 0, 1920, 1080},
+    };
+
+    // Reproduces the show bug: the top-left is still on the laptop, but most
+    // of the dragged window is already on the projector.
+    const Rect mostlyProjector{1750, 120, 1280, 720};
+    if (window_monitor_placement::selectMonitorForWindow(
+            mostlyProjector, sideBySide) != 1) {
+        throw std::runtime_error(
+            "Fullscreen monitor selection followed the top-left pixel "
+            "instead of the largest window overlap");
+    }
+
+    const std::vector<Rect> projectorLeft = {
+        {0, 0, 1920, 1080},
+        {-1920, 0, 1920, 1080},
+    };
+    const Rect leftProjectorWindow{-1700, 80, 1280, 720};
+    if (window_monitor_placement::selectMonitorForWindow(
+            leftProjectorWindow, projectorLeft) != 1) {
+        throw std::runtime_error(
+            "Fullscreen monitor selection failed for a negative-coordinate projector");
+    }
+
+    const Rect disconnectedPosition{5000, 5000, 1280, 720};
+    if (window_monitor_placement::selectMonitorForWindow(
+            disconnectedPosition, sideBySide) != 1) {
+        throw std::runtime_error(
+            "Off-screen window did not select the nearest available monitor");
+    }
+    return true;
+}
+
 bool RunLayerPackageReadOnlyInspectionScenario() {
     ParameterRegistry registry;
     OptionProviderRegistry optionProviders;
@@ -3013,6 +3578,389 @@ bool RunOptInLayerPackageActivationScenario() {
             "invalid package activation leaked into the runtime catalog");
     std::error_code cleanupError;
     std::filesystem::remove(activationPath, cleanupError);
+    return true;
+}
+
+bool RunCollapsedAssetBrowserStartupScenario() {
+    auto require = [](bool condition, const std::string& message) {
+        if (!condition) {
+            throw std::runtime_error(message);
+        }
+    };
+
+    const std::filesystem::path tempRoot =
+        std::filesystem::temp_directory_path() /
+        "synaptome-collapsed-asset-browser";
+    std::filesystem::create_directories(tempRoot);
+    {
+        std::ofstream out(tempRoot / "generative.json", std::ios::trunc);
+        out << R"JSON({
+  "id": "tests.browser.generative",
+  "label": "Generative Fixture",
+  "category": "Generative",
+  "layerGroup": "Elements",
+  "type": "generative.perlin"
+})JSON";
+    }
+    {
+        std::ofstream out(tempRoot / "scene.json", std::ios::trunc);
+        out << R"JSON({
+  "id": "tests.browser.scene",
+  "label": "Scene Fixture",
+  "category": "Scenes",
+  "layerGroup": "Saved Scenes",
+  "type": "generative.perlin"
+})JSON";
+    }
+
+    LayerLibrary library;
+    require(library.reload(tempRoot.string()),
+            "asset-browser startup fixture did not load");
+
+    auto browser = std::make_shared<AssetBrowser>();
+    browser->setLibrary(&library);
+    MenuController controller;
+    controller.pushState(browser);
+
+    auto startup = controller.viewModel();
+    require(startup.state.entries.size() == 2,
+            "collapsed asset browser exposed groups or assets on startup");
+    require(startup.state.entries.front().id == "category:Scenes",
+            "Scenes was not the first asset-browser category");
+    require(startup.state.entries[1].id == "category:Generative",
+            "asset-browser startup did not contain only collapsed categories");
+
+    require(controller.handleInput(OF_KEY_RIGHT),
+            "asset browser did not expand the selected Scenes category");
+    auto categoryOpen = controller.viewModel();
+    require(categoryOpen.state.entries.size() == 3 &&
+                categoryOpen.state.entries[1].id ==
+                    "group:Scenes/Saved Scenes",
+            "opening a category did not reveal its collapsed element group");
+    require(std::none_of(
+                categoryOpen.state.entries.begin(),
+                categoryOpen.state.entries.end(),
+                [](const MenuController::EntryView& entry) {
+                    return entry.id == "tests.browser.scene";
+                }),
+            "asset appeared before its element group was explicitly opened");
+
+    require(controller.handleInput(OF_KEY_DOWN) &&
+                controller.handleInput(OF_KEY_RIGHT),
+            "asset browser did not expand the selected element group");
+    auto groupOpen = controller.viewModel();
+    require(std::any_of(
+                groupOpen.state.entries.begin(),
+                groupOpen.state.entries.end(),
+                [](const MenuController::EntryView& entry) {
+                    return entry.id == "tests.browser.scene";
+                }),
+            "opening an element group did not reveal its asset");
+    return true;
+}
+
+bool RunAssetBrowserSearchScenario() {
+    auto require = [](bool condition, const std::string& message) {
+        if (!condition) {
+            throw std::runtime_error(message);
+        }
+    };
+
+    LayerLibrary library;
+    require(library.reload(
+                (synaptome_test_paths::dataRoot() / "layers").string()),
+            "canonical layer catalog did not load for asset search");
+
+    auto browser = std::make_shared<AssetBrowser>();
+    browser->setLibrary(&library);
+    browser->setAllowEntryPredicate([](const LayerLibrary::Entry& entry) {
+        return !entry.isHudWidget();
+    });
+
+    MenuController controller;
+    controller.pushState(browser);
+    for (const char ch : std::string("circuit river")) {
+        require(controller.handleInput(static_cast<int>(ch)),
+                "type-to-search did not consume printable input");
+    }
+
+    const auto filtered = controller.viewModel();
+    require(browser->searchQuery() == "circuit river",
+            "asset search query did not preserve typed text");
+    require(filtered.state.entries.size() == 1,
+            "multi-token asset search did not narrow to one result");
+    require(filtered.state.entries.front().id == "generative.circuitRiver",
+            "asset search selected the wrong circuit profile");
+    require(filtered.state.selectedIndex == 0 &&
+                filtered.state.entries.front().selected,
+            "filtered asset result did not receive deterministic focus");
+
+    require(controller.handleInput(OF_KEY_ESC),
+            "first Escape did not clear active asset search");
+    require(controller.isCurrent(browser->id()) && browser->searchQuery().empty(),
+            "first Escape closed the picker instead of clearing search");
+    require(controller.handleInput(OF_KEY_ESC),
+            "second Escape did not close the asset picker");
+    require(!controller.isCurrent(browser->id()),
+            "asset picker remained open after cleared Escape");
+    return true;
+}
+
+bool RunFocusedLayerEditScenario() {
+    auto require = [](bool condition, const std::string& message) {
+        if (!condition) {
+            throw std::runtime_error(message);
+        }
+    };
+
+    ParameterRegistry registry;
+    CircuitTraceLayer circuitRiver(CircuitTraceLayer::Model::CircuitRiver);
+    circuitRiver.setRegistryPrefix("generative.circuitRiver");
+    circuitRiver.setup(registry);
+
+    const auto quickParameters = registry.orderedQuickFloat();
+    require(quickParameters.size() >= 2,
+            "Circuit River did not register its deliberate quick-access set");
+    require(quickParameters[0]->meta.id == "generative.circuitRiver.speed" &&
+                quickParameters[0]->meta.quickAccessOrder == 10,
+            "Circuit River growth speed is not its primary quick-access parameter");
+    require(quickParameters[1]->meta.id == "generative.circuitRiver.behavior" &&
+                quickParameters[1]->meta.quickAccessOrder == 20,
+            "Circuit River growth behavior is not its secondary quick-access parameter");
+    const std::string expectedQuickParameter =
+        "generative.circuitRiver.speed";
+
+    LayerLibrary library;
+    require(library.reload(
+                (synaptome_test_paths::dataRoot() / "layers").string()),
+            "canonical catalog did not load for focused-layer edit");
+
+    ControlMappingHubState hub;
+    hub.setLayerLibrary(&library);
+    hub.setParameterRegistry(&registry);
+
+    auto console = std::make_shared<ConsoleState>();
+    int editRequest = 0;
+    bool focusedLayer = false;
+    console->setRequestEditLayerCallback([&](int layerIndex) {
+        editRequest = layerIndex;
+        focusedLayer = hub.focusAssetById("generative.circuitRiver");
+    });
+    MenuController controller;
+    controller.pushState(console);
+    require(controller.handleInput(MenuController::HOTKEY_MOD_CTRL | 'e'),
+            "Console Ctrl+E was not handled");
+    require(editRequest == 1,
+            "Console Ctrl+E did not target the focused slot");
+    require(focusedLayer,
+            "Browser could not focus the active layer by public asset ID");
+
+    const auto focusedView = hub.view();
+    require(focusedView.selectedIndex >= 0 &&
+                focusedView.selectedIndex <
+                    static_cast<int>(focusedView.entries.size()),
+            "focused layer did not expose a selected parameter");
+    require(focusedView.entries[
+                static_cast<std::size_t>(focusedView.selectedIndex)].id ==
+                expectedQuickParameter,
+            "focused layer did not select its lowest-order quick-access parameter");
+    return true;
+}
+
+bool RunCircuitVariantLifecycleScenario() {
+    auto require = [](bool condition, const std::string& message) {
+        if (!condition) {
+            throw std::runtime_error(message);
+        }
+    };
+
+    require(
+        CircuitTraceLayer::modelFromId("circuitAntTunnels") ==
+            CircuitTraceLayer::Model::CircuitAntTunnels,
+        "Circuit Ant Tunnels model identity did not resolve");
+    require(
+        CircuitTraceLayer::modelFromId("circuitFlowField") ==
+            CircuitTraceLayer::Model::CircuitFlowField,
+        "Circuit Flow Field model identity did not resolve");
+
+    auto runModel = [&](CircuitTraceLayer::Model model,
+                        const std::string& prefix) {
+        CircuitTraceLayer first(model);
+        CircuitTraceLayer second(model);
+        ParameterRegistry firstRegistry;
+        ParameterRegistry secondRegistry;
+        first.setRegistryPrefix(prefix + ".first");
+        second.setRegistryPrefix(prefix + ".second");
+        first.setup(firstRegistry);
+        second.setup(secondRegistry);
+
+        LayerUpdateParams params;
+        params.dt = 1.0f / 30.0f;
+        params.bpm = 120.0f;
+        params.speed = 1.0f;
+        for (int frame = 0; frame < 90; ++frame) {
+            params.time += params.dt;
+            first.update(params);
+            second.update(params);
+        }
+        require(first.debugStateSignature() == second.debugStateSignature(),
+                prefix + " did not reproduce from its owned seed");
+        for (int heading : first.debugAgentHeadings()) {
+            require(heading >= 0 && heading < 8,
+                    prefix + " emitted a heading outside the eight-direction lattice");
+        }
+        return first.debugStateSignature();
+    };
+
+    const std::uint64_t antSignature = runModel(
+        CircuitTraceLayer::Model::CircuitAntTunnels,
+        "generative.circuitAntTunnels");
+    const std::uint64_t flowSignature = runModel(
+        CircuitTraceLayer::Model::CircuitFlowField,
+        "generative.circuitFlowField");
+    require(antSignature != flowSignature,
+            "new circuit variants collapsed to the same routing lifecycle");
+    return true;
+}
+
+bool RunCircuitLeniaLifecycleScenario() {
+    auto require = [](bool condition, const std::string& message) {
+        if (!condition) {
+            throw std::runtime_error(message);
+        }
+    };
+
+    ofJson config;
+    config["presentation"] = "circuit";
+    config["textureSize"] = { 64, 36 };
+    config["defaults"]["seed"] = 2112.0f;
+    config["defaults"]["injectionRate"] = 0.0f;
+    config["defaults"]["circuitThreshold"] = 0.12f;
+    config["defaults"]["circuitLevels"] = 4.0f;
+    config["defaults"]["circuitTraceWidth"] = 1.0f;
+
+    LeniaLayer first;
+    LeniaLayer second;
+    ParameterRegistry firstRegistry;
+    ParameterRegistry secondRegistry;
+    first.setRegistryPrefix("generative.circuitLenia.first");
+    second.setRegistryPrefix("generative.circuitLenia.second");
+    first.configure(config);
+    second.configure(config);
+    first.setup(firstRegistry);
+    second.setup(secondRegistry);
+
+    require(first.debugUsesCircuitPresentation() &&
+                second.debugUsesCircuitPresentation(),
+            "Circuit Lenia did not retain its catalog-selected presentation");
+    const auto* threshold = firstRegistry.findFloat(
+        "generative.circuitLenia.first.circuitThreshold");
+    const auto* traceWidth = firstRegistry.findFloat(
+        "generative.circuitLenia.first.circuitTraceWidth");
+    require(threshold && threshold->meta.group == "Circuit Appearance" &&
+                threshold->meta.quickAccess &&
+                threshold->meta.quickAccessOrder == 20,
+            "Circuit Lenia threshold is not a labeled quick-access control");
+    require(traceWidth && traceWidth->meta.quickAccess &&
+                traceWidth->meta.quickAccessOrder == 30,
+            "Circuit Lenia trace width is not a quick-access control");
+
+    LayerUpdateParams params;
+    params.dt = 1.0f / 30.0f;
+    params.bpm = 120.0f;
+    params.speed = 1.0f;
+    for (int frame = 0; frame < 60; ++frame) {
+        params.time += params.dt;
+        first.update(params);
+        second.update(params);
+    }
+    require(first.debugStateSignature() == second.debugStateSignature(),
+            "Circuit Lenia did not reproduce from the same seed and parameters");
+
+    LeniaLayer organic;
+    ParameterRegistry organicRegistry;
+    organic.setRegistryPrefix("generative.lenia.test");
+    organic.setup(organicRegistry);
+    require(!organic.debugUsesCircuitPresentation(),
+            "established Lenia unexpectedly switched to circuit presentation");
+    require(organicRegistry.findFloat(
+                "generative.lenia.test.circuitThreshold") == nullptr,
+            "circuit-only controls leaked into the established Lenia UI");
+    return true;
+}
+
+bool RunCircuitLeniaOscDefaultsScenario() {
+    auto require = [](bool condition, const std::string& message) {
+        if (!condition) {
+            throw std::runtime_error(message);
+        }
+    };
+
+    const std::string mapPath =
+        (synaptome_test_paths::dataRoot() / "config" / "midi-map.json").string();
+    MidiRouter router;
+    require(router.load(mapPath),
+            "Circuit Lenia editable OSC defaults did not load through MidiRouter");
+
+    struct ExpectedRoute {
+        const char* pattern;
+        const char* target;
+        float outMin;
+        float outMax;
+    };
+    const ExpectedRoute routes[] = {
+        { "/control/circuit-lenia/threshold",
+          "generative.circuitLenia.circuitThreshold", 0.0f, 0.55f },
+        { "/control/circuit-lenia/levels",
+          "generative.circuitLenia.circuitLevels", 2.0f, 8.0f },
+        { "/control/circuit-lenia/trace-width",
+          "generative.circuitLenia.circuitTraceWidth", 1.0f, 4.0f },
+        { "/control/circuit-lenia/growth-center",
+          "generative.circuitLenia.growthCenter", 0.20f, 0.55f },
+        { "/control/circuit-lenia/growth-width",
+          "generative.circuitLenia.growthWidth", 0.02f, 0.18f },
+        { "/control/circuit-lenia/injection-rate",
+          "generative.circuitLenia.injectionRate", 0.0f, 0.12f },
+        { "/control/circuit-lenia/field-scale",
+          "generative.circuitLenia.fieldScale", 0.5f, 4.0f },
+    };
+
+    for (const auto& expected : routes) {
+        const auto* route = router.findOscMap(expected.target);
+        require(route != nullptr,
+                std::string("missing Circuit Lenia OSC route: ") + expected.target);
+        require(route->pattern == expected.pattern && route->bankId == "home",
+                std::string("Circuit Lenia OSC route identity drifted: ") +
+                    expected.target);
+        require(route->blend == modifier::BlendMode::kAbsolute &&
+                    !route->relativeToBase &&
+                    std::abs(route->outMin - expected.outMin) < 0.0001f &&
+                    std::abs(route->outMax - expected.outMax) < 0.0001f,
+                std::string("Circuit Lenia OSC profile drifted: ") +
+                    expected.target);
+    }
+
+    const std::string editedTarget =
+        "generative.circuitLenia.circuitThreshold";
+    require(router.adjustOscMap(
+                editedTarget, 0.0f, 0.0f, 0.01f, -0.02f, 0.03f, 0.001f),
+            "normal mapping flow could not edit a Circuit Lenia OSC default");
+    const auto* edited = router.findOscMap(editedTarget);
+    require(edited != nullptr &&
+                std::abs(edited->outMin - 0.01f) < 0.0001f &&
+                std::abs(edited->outMax - 0.53f) < 0.0001f,
+            "Circuit Lenia OSC range edit was not applied");
+
+    const ofJson snapshot = router.exportMappingSnapshot();
+    MidiRouter restored;
+    require(restored.importMappingSnapshot(snapshot, true),
+            "Circuit Lenia OSC edit did not import from a scene mapping snapshot");
+    const auto* restoredRoute = restored.findOscMap(editedTarget);
+    require(restoredRoute != nullptr &&
+                restoredRoute->pattern == "/control/circuit-lenia/threshold" &&
+                std::abs(restoredRoute->outMin - 0.01f) < 0.0001f &&
+                std::abs(restoredRoute->outMax - 0.53f) < 0.0001f,
+            "Circuit Lenia OSC edit did not survive scene mapping persistence");
     return true;
 }
 

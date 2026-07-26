@@ -2,6 +2,7 @@
 #include "ofGraphics.h"
 #include "ofMath.h"
 #include <algorithm>
+#include <cctype>
 #include <sstream>
 #include <utility>
 
@@ -41,6 +42,56 @@ namespace {
         }
         return displayCategory(entry);
     }
+
+    std::string lowercase(std::string value) {
+        std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
+            return static_cast<char>(std::tolower(ch));
+        });
+        return value;
+    }
+
+    std::vector<std::string> searchTokens(const std::string& query) {
+        std::vector<std::string> tokens;
+        std::istringstream input(lowercase(query));
+        std::string token;
+        while (input >> token) {
+            tokens.push_back(std::move(token));
+        }
+        return tokens;
+    }
+
+    std::string searchableText(const LayerLibrary::Entry& entry) {
+        const std::string description = entry.config.is_object()
+            ? entry.config.value("description", std::string())
+            : std::string();
+        return lowercase(entry.label + " " + entry.id + " " + entry.category + " " +
+                         entry.layerGroup + " " + entry.type + " " + entry.model + " " +
+                         entry.stateModel + " " + description);
+    }
+
+    bool matchesSearch(const LayerLibrary::Entry& entry,
+                       const std::vector<std::string>& tokens) {
+        if (tokens.empty()) {
+            return true;
+        }
+        const std::string text = searchableText(entry);
+        return std::all_of(tokens.begin(), tokens.end(), [&](const std::string& token) {
+            return text.find(token) != std::string::npos;
+        });
+    }
+
+    int searchRank(const LayerLibrary::Entry& entry, const std::string& query) {
+        const std::string needle = lowercase(query);
+        const std::string label = lowercase(entry.label);
+        const std::string id = lowercase(entry.id);
+        if (label == needle || id == needle) {
+            return 0;
+        }
+        if (label.rfind(needle, 0) == 0 || id.rfind(needle, 0) == 0) {
+            return 1;
+        }
+        return 2;
+    }
 }
 
 void AssetBrowser::setLibrary(const LayerLibrary* library) {
@@ -74,6 +125,15 @@ void AssetBrowser::setAllowEntryPredicate(std::function<bool(const LayerLibrary:
     if (active_) notifyViewModel();
 }
 
+void AssetBrowser::setSearchQuery(const std::string& query) {
+    searchQuery_ = query;
+    selected_ = 0;
+    clampSelection();
+    if (active_) {
+        notifyViewModel();
+    }
+}
+
 void AssetBrowser::draw() const {
     if (!active_) return;
     if (!library_) return;
@@ -83,12 +143,21 @@ void AssetBrowser::draw() const {
     const float rowStep = 18.0f * textScale;
     int clampedSelected = rows.empty() ? 0 : ofClamp(selected_, 0, static_cast<int>(rows.size()) - 1);
     if (rows.empty()) {
-        drawBitmapStringHighlightScaled("Asset library empty", 20.0f, 40.0f, textScale);
+        const std::string emptyMessage = searchQuery_.empty()
+            ? "Asset library empty"
+            : "No assets match: " + searchQuery_ + "  [Backspace] edit  [Esc] clear";
+        drawBitmapStringHighlightScaled(emptyMessage, 20.0f, 40.0f, textScale);
         return;
     }
 
     float y = 40.0f;
-    std::string header = "Asset Browser  [Up/Down] select   [Left/Right] collapse/expand   [Enter] load/toggle";
+    std::string header;
+    if (searchQuery_.empty()) {
+        header = "Asset Browser  [Type] search   [Up/Down] select   [Left/Right] groups   [Enter] load";
+    } else {
+        header = "Search: " + searchQuery_ + "  (" + std::to_string(rows.size()) +
+                 " matches)  [Backspace] edit   [Esc] clear   [Enter] load";
+    }
     drawBitmapStringHighlightScaled(header, 20.0f, y, textScale);
     y += headerStep;
 
@@ -174,6 +243,15 @@ MenuController::StateView AssetBrowser::view() const {
     state.hotkeys.push_back(MenuController::KeyHint{OF_KEY_LEFT, "Left", "Collapse group"});
     state.hotkeys.push_back(MenuController::KeyHint{OF_KEY_RIGHT, "Right", "Expand group"});
     state.hotkeys.push_back(MenuController::KeyHint{OF_KEY_RETURN, "Enter", "Load into console slot"});
+    state.hotkeys.push_back(MenuController::KeyHint{
+        0,
+        "Type",
+        searchQuery_.empty() ? "Search assets" : "Search: " + searchQuery_
+    });
+    if (!searchQuery_.empty()) {
+        state.hotkeys.push_back(MenuController::KeyHint{OF_KEY_BACKSPACE, "Backspace", "Edit search"});
+        state.hotkeys.push_back(MenuController::KeyHint{OF_KEY_ESC, "Esc", "Clear search"});
+    }
     return state;
 }
 
@@ -183,13 +261,36 @@ bool AssetBrowser::handleInput(MenuController& controller, int key) {
         return false;
     }
 
+    const int baseKey = key & 0xFFFF;
+    const int modifiers = key & MenuController::HOTKEY_MOD_MASK;
+    const bool textModifiersOnly =
+        (modifiers & ~MenuController::HOTKEY_MOD_SHIFT) == 0;
     bool handled = false;
     bool selectionChanged = false;
     auto rows = visibleRows();
     int rowIndex = rows.empty() ? 0 : ofClamp(selected_, 0, static_cast<int>(rows.size()) - 1);
     const Row* row = rows.empty() ? nullptr : &rows[static_cast<std::size_t>(rowIndex)];
 
-    switch (key) {
+    if (modifiers == 0 && baseKey == OF_KEY_BACKSPACE && !searchQuery_.empty()) {
+        searchQuery_.pop_back();
+        selected_ = 0;
+        clampSelection();
+        handled = true;
+        selectionChanged = true;
+    } else if (modifiers == 0 && baseKey == OF_KEY_ESC && !searchQuery_.empty()) {
+        searchQuery_.clear();
+        selected_ = 0;
+        clampSelection();
+        handled = true;
+        selectionChanged = true;
+    } else if (textModifiersOnly && baseKey >= 32 && baseKey <= 126 &&
+               (baseKey != ' ' || !searchQuery_.empty())) {
+        searchQuery_.push_back(static_cast<char>(baseKey));
+        selected_ = 0;
+        clampSelection();
+        handled = true;
+        selectionChanged = true;
+    } else switch (baseKey) {
     case OF_KEY_UP:
         selected_ -= 1;
         clampSelection();
@@ -232,8 +333,8 @@ bool AssetBrowser::handleInput(MenuController& controller, int key) {
 
     const auto* entry = currentEntry();
     if (!handled && commandHandler_ && entry) {
-        commandHandler_(*entry, key);
-        if (key != OF_KEY_BACKSPACE && key != OF_KEY_ESC) {
+        commandHandler_(*entry, baseKey);
+        if (baseKey != OF_KEY_BACKSPACE && baseKey != OF_KEY_ESC) {
             handled = true;
         }
     }
@@ -248,6 +349,7 @@ bool AssetBrowser::handleInput(MenuController& controller, int key) {
 void AssetBrowser::onEnter(MenuController& controller) {
     controller_ = &controller;
     active_ = true;
+    searchQuery_.clear();
     clampSelection();
     notifyViewModel();
 }
@@ -285,12 +387,42 @@ std::vector<std::reference_wrapper<const LayerLibrary::Entry>> AssetBrowser::vis
         return entries;
     }
     const auto& allEntries = library_->entries();
+    const auto tokens = searchTokens(searchQuery_);
     entries.reserve(allEntries.size());
     for (const auto& e : allEntries) {
         if (allowEntryPredicate_ && !allowEntryPredicate_(e)) {
             continue;
         }
+        if (!matchesSearch(e, tokens)) {
+            continue;
+        }
         entries.push_back(std::cref(e));
+    }
+    if (!tokens.empty()) {
+        std::stable_sort(entries.begin(), entries.end(), [&](const auto& lhs, const auto& rhs) {
+            return searchRank(lhs.get(), searchQuery_) < searchRank(rhs.get(), searchQuery_);
+        });
+    } else {
+        std::stable_sort(entries.begin(), entries.end(), [](const auto& lhsRef, const auto& rhsRef) {
+            const auto& lhs = lhsRef.get();
+            const auto& rhs = rhsRef.get();
+            const std::string lhsCategory = displayCategory(lhs);
+            const std::string rhsCategory = displayCategory(rhs);
+            const bool lhsScenes = lowercase(lhsCategory) == "scenes";
+            const bool rhsScenes = lowercase(rhsCategory) == "scenes";
+            if (lhsScenes != rhsScenes) {
+                return lhsScenes;
+            }
+            if (lhsCategory != rhsCategory) {
+                return lhsCategory < rhsCategory;
+            }
+            if (lhs.layerGroup != rhs.layerGroup) {
+                return lhs.layerGroup < rhs.layerGroup;
+            }
+            const std::string lhsLabel = lhs.label.empty() ? lhs.id : lhs.label;
+            const std::string rhsLabel = rhs.label.empty() ? rhs.id : rhs.label;
+            return lhsLabel < rhsLabel;
+        });
     }
     return entries;
 }
@@ -299,6 +431,21 @@ std::vector<AssetBrowser::Row> AssetBrowser::visibleRows() const {
     std::vector<Row> rows;
     auto entries = visibleEntries();
     rows.reserve(entries.size() + 8);
+
+    if (!searchTokens(searchQuery_).empty()) {
+        for (const auto& entryRef : entries) {
+            const auto& entry = entryRef.get();
+            Row row;
+            row.kind = Row::Asset;
+            row.key = entry.id;
+            row.label = entry.label.empty() ? entry.id : entry.label;
+            row.description = entryDescription(entry);
+            row.depth = 0;
+            row.entry = &entry;
+            rows.push_back(std::move(row));
+        }
+        return rows;
+    }
 
     std::string currentCategory;
     std::string currentGroup;
@@ -362,13 +509,13 @@ std::vector<AssetBrowser::Row> AssetBrowser::visibleRows() const {
 }
 
 bool AssetBrowser::isExpanded(const std::string& key) const {
-    return collapsedKeys_.find(key) == collapsedKeys_.end();
+    return expandedKeys_.find(key) != expandedKeys_.end();
 }
 
 void AssetBrowser::setExpanded(const std::string& key, bool expanded) {
     if (expanded) {
-        collapsedKeys_.erase(key);
+        expandedKeys_.insert(key);
     } else {
-        collapsedKeys_.insert(key);
+        expandedKeys_.erase(key);
     }
 }
