@@ -2,6 +2,22 @@
 
 This changelog records Project Ops and administrative workflow changes. Product release versioning remains governed by `docs/release_policy.md`.
 
+## 2026-07-26 - architecture - element_sdk_v1_boundary
+
+- Request ID: `spine_element_architecture_convergence`
+- Phase / Milestone: SEAC-2 complete; SEAC-3 ready
+- Summary: Inventoried the monolithic host, build graph, element registration,
+  lifecycle, services, parameters, package adapter, and fragmented test seams.
+  Froze Element SDK v1 as a compiler-matched source/static-link contract, with
+  runtime core owning catalogs, composition, state, and control; the host
+  owning platform/UI adapters; and generated built-in registration as the only
+  concrete-element bridge.
+- Compatibility: Existing `Layer` implementations, public IDs,
+  `console.layerN.*` addresses, scenes, mappings, and runtime behavior are
+  unchanged. Dynamic native modules and raw `ofApp` loading are not promised.
+- Next: Begin SEAC-3 with shared build properties, a Signal Bloom SDK
+  compile-contract target, and the no-output-change runtime facade extraction.
+
 ## 2026-07-26 - roadmap - defer_dual_screen_start_seac
 
 - Request IDs: `show_readiness_operator_stability`,

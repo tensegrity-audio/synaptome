@@ -4,21 +4,21 @@ State Summary
 - Request ID: spine_element_architecture_convergence
 - Phase: EXECUTION
 - Status: In Progress
-- Steps Complete: 1 / 12
-- Progress: The canonical model and prioritized roadmap are accepted, show-only residual validation is deferred, and SEAC-2 dependency and registration boundary work is authorized to begin.
-- Last Step Outcome: 2026-07-26 - The operator promoted this request to execution after explicitly postponing dual-screen testing.
-- Next Step: Inventory current host-to-element includes, registrations, services, build dependencies, and test seams and record the minimum Element SDK v1 boundary before moving code.
+- Steps Complete: 2 / 12
+- Progress: The canonical model is accepted and the current host, build, registration, parameter, service, and test dependencies are inventoried. Element SDK v1 is frozen as a compiler-matched source/static-link boundary with runtime-core ownership, generated registration, scoped services, explicit lifecycle, and a no-output-change extraction order.
+- Last Step Outcome: 2026-07-26 - Completed SEAC-2 and published `docs/architecture/element_sdk_v1_boundary.md` as the dependency and ownership decision record.
+- Next Step: Begin SEAC-3 with shared build properties and an SDK compile-contract target for Signal Bloom, then introduce the runtime facade without changing output.
 - Dependencies / Overlap: `show_readiness_operator_stability`, `layer_package_compatibility_bench_scaffolding`, `docs/architecture/synaptome_spine_element_model.md`, `docs/architecture/synaptome_layer_system_roadmap.md`, `docs/architecture/synaptome_artist_sdk.md`, parameter/scene/mapping contracts, and layer-authoring tests.
 - Primary Scope: runtime
 - Secondary Scopes: contracts, artist-sdk, tests, docs, release
-- Blocking Issues / Unknowns: Native binary modules remain an optional architecture decision rather than a promised deliverable; no blocker prevents SEAC-2 boundary inventory.
+- Blocking Issues / Unknowns: Native binary modules remain an optional architecture decision rather than a promised deliverable; no blocker prevents the SEAC-3 build-boundary extraction.
 - Impact / Priority Notes: This is the active architecture lane and precedes automatic discovery, broader package activation, or new content-family expansion.
 - Priority Score: N/A
 - Priority Lane: Fast-Track
 - Ready State: Ready
 - Ready Gate: The architecture direction, compatibility policy, ordered tasks, and stop conditions are explicit; the operator accepted residual show-validation risk and authorized execution.
-- Project Ops / Roadmap Updates (timestamped): 2026-07-26 - Added the canonical model and subordinated package/discovery work to its contract and build gates. 2026-07-26 - Promoted SEAC to execution after dual-screen validation was deferred.
-- Resume From: Phase EXECUTION, State In Progress, Next Action run the host/SDK dependency and registration boundary inventory.
+- Project Ops / Roadmap Updates (timestamped): 2026-07-26 - Added the canonical model and subordinated package/discovery work to its contract and build gates. 2026-07-26 - Promoted SEAC to execution after dual-screen validation was deferred. 2026-07-26 - Completed the dependency inventory and froze the Element SDK v1 source/static-link boundary.
+- Resume From: Phase EXECUTION, State In Progress, Next Action add the shared SDK build properties and Signal Bloom compile-contract target.
 
 ## Milestone Synthesis
 
@@ -112,7 +112,7 @@ State Summary
 | Task ID | Description | Status |
 | --- | --- | --- |
 | SEAC-1 | Accept and route one canonical spine/element/layer vocabulary, capability ladder, and compatibility policy. | Done |
-| SEAC-2 | Inventory current host/element dependencies and freeze Element SDK v1 identities, lifecycle, service, render, resource, and capability decisions. | Planned |
+| SEAC-2 | Inventory current host/element dependencies and freeze Element SDK v1 identities, lifecycle, service, render, resource, and capability decisions. | Done |
 | SEAC-3 | Extract build boundaries for the Element SDK, runtime core, host composition root, and per-element targets without changing runtime output. | Planned |
 | SEAC-4 | Make parameter declarations authoritative and structured, including groups, labels, types, units, defaults, options, deprecation, runtime binding, and generated manifests. | Planned |
 | SEAC-5 | Define and implement versioned state ownership for defaults, presets, scenes, mapping banks, machine profiles, operator preferences, provenance, and migrations. | Planned |
@@ -297,6 +297,9 @@ source-code archaeology or private host knowledge.
 - 2026-07-26 - Accepted the spine/element/layer terminology and capability model.
 - 2026-07-26 - Created the consolidated Project Ops sequence and placed it behind the show-safe checkpoint.
 - 2026-07-26 - Promoted SEAC to execution after the operator deferred dual-screen and full recovery rehearsal.
+- 2026-07-26 - Completed the host/build/registration/test inventory and froze
+  Element SDK v1 as a source/static-link boundary in
+  `docs/architecture/element_sdk_v1_boundary.md`.
 
 ## Validation
 
@@ -304,7 +307,11 @@ source-code archaeology or private host knowledge.
 - Passed: Project Ops repository audit.
 - Passed: `show_readiness_operator_stability` request audit.
 - Passed: `git diff --check`.
-- Not Run: Runtime or build validation because this planning request changes no executable contract.
+- Passed: The pre-extraction Release/public-app, BrowserFlow, Hotkey,
+  LayerPackageBench, authoring-profile, and Project Ops baselines remain the
+  preserved promotion baseline.
+- Not Run: New runtime validation because SEAC-2 records dependency decisions
+  and changes no executable contract.
 - Manual Evidence: User approved the architecture direction and requested a prioritized Project Ops roadmap.
 
 ## Doc Sync

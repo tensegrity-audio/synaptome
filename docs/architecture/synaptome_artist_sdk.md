@@ -350,9 +350,9 @@ For a normal openFrameworks sketch:
 
 | Item | Core Synaptome | Example Content |
 | --- | --- | --- |
-| `Layer` interface | Yes | No |
-| `ParameterRegistry` | Yes | No |
-| `LayerFactory` and catalog loading | Yes | No |
+| Element lifecycle and declaration interfaces | Yes, as public SDK headers | No |
+| Scoped parameter declaration/binding interface | Yes, as public SDK headers | No |
+| Element registry, catalog, and package loading | Yes, in runtime core rather than the public SDK | No |
 | Generic media layers | Yes | Maybe with example media |
 | Generic geometry/generative demo layers | Maybe minimal examples | Yes for style-specific variations |
 | Specific STL models/videos/scenes | No | Yes |
@@ -381,10 +381,11 @@ For a normal openFrameworks sketch:
 
 The smallest useful public SDK slice should include:
 
-- `Layer.h`
-- `ParameterRegistry.h`
+- the compatibility `Layer` interface and target `VisualElement` lifecycle,
+- lifecycle, render, identity, capability, and service contexts,
+- structured parameter declarations and scoped storage binding,
+- one atomic element descriptor/creator registration record,
 - `modifier.h`
-- `LayerFactory` and `LayerLibrary`
 - a minimal example layer,
 - a minimal media layer example,
 - a minimal device-map example,
@@ -392,6 +393,12 @@ The smallest useful public SDK slice should include:
 - a Browser-visible asset fixture,
 - docs for mapping MIDI/OSC to parameters,
 - docs for projection/control-window setup.
+
+`LayerFactory`, `LayerLibrary`, package activation, and filesystem catalog
+loading are runtime-core facilities. They are not author-facing SDK
+dependencies. The frozen source/static-link boundary and extraction sequence
+are documented in
+[`element_sdk_v1_boundary.md`](element_sdk_v1_boundary.md).
 
 That slice would explain why Synaptome deserves to exist without depending on any specific show scene.
 

@@ -15,6 +15,7 @@ surface, not private source-workspace details or helper implementations.
 ## Architecture
 
 - [Spine, element, and layer model](architecture/synaptome_spine_element_model.md)
+- [Element SDK v1 boundary](architecture/element_sdk_v1_boundary.md)
 - [System architecture](architecture/synaptome_system_architecture.md)
 - [Subsystem anatomy](architecture/synaptome_subsystem_anatomy.md)
 - [External contracts](architecture/synaptome_external_contracts.md)

@@ -144,6 +144,7 @@ Expected current signals:
 - [Contributing](docs/contributing.md)
 - [Release Policy](docs/release_policy.md)
 - [Spine, Element, and Layer Model](docs/architecture/synaptome_spine_element_model.md)
+- [Element SDK v1 Boundary](docs/architecture/element_sdk_v1_boundary.md)
 - [Artist SDK](docs/architecture/synaptome_artist_sdk.md)
 - [Current roadmap and pre-media safety gate](docs/project_ops/roadmap.md)
 - [External Contracts](docs/architecture/synaptome_external_contracts.md)

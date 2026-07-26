@@ -15,18 +15,19 @@ This roadmap does not replace the public runtime documentation or
 
 Status: Active 2026-07-26.
 
-Begin the spine/element architecture convergence while preserving the current
-working show baseline. Dual-screen and full show-machine recovery rehearsal are
-explicitly deferred by operator decision; they remain open validation work but
-do not block the SDK, dependency, registration, and build-boundary inventory.
+Continue the spine/element architecture convergence while preserving the
+current working show baseline. Dual-screen and full show-machine recovery
+rehearsal are explicitly deferred by operator decision. The host/dependency
+inventory and Element SDK v1 boundary are now frozen, so the active work is the
+no-output-change build extraction.
 
 The current safe sequence is:
 
 ```text
 preserve the validated show/runtime baseline
   -> record deferred dual-screen and recovery risk
-  -> inventory host-to-element dependencies and registrations
-  -> freeze the Element SDK v1 boundary
+  -> [done] inventory host-to-element dependencies and registrations
+  -> [done] freeze the Element SDK v1 boundary
   -> extract build seams without changing output
   -> unify parameters and persisted state
   -> resume package controls and discovery through those contracts
@@ -124,21 +125,21 @@ State Summary
 - Request ID: spine_element_architecture_convergence
 - Phase: EXECUTION
 - Status: In Progress
-- Steps Complete: 1 / 12
-- Progress: The canonical model and prioritized roadmap are accepted, show-only residual validation is deferred, and SEAC-2 dependency and registration boundary work is authorized to begin.
-- Last Step Outcome: 2026-07-26 - The operator promoted this request to execution after explicitly postponing dual-screen testing.
-- Next Step: Inventory current host-to-element includes, registrations, services, build dependencies, and test seams and record the minimum Element SDK v1 boundary before moving code.
+- Steps Complete: 2 / 12
+- Progress: The canonical model is accepted and the current host, build, registration, parameter, service, and test dependencies are inventoried. Element SDK v1 is frozen as a compiler-matched source/static-link boundary with runtime-core ownership, generated registration, scoped services, explicit lifecycle, and a no-output-change extraction order.
+- Last Step Outcome: 2026-07-26 - Completed SEAC-2 and published `docs/architecture/element_sdk_v1_boundary.md` as the dependency and ownership decision record.
+- Next Step: Begin SEAC-3 with shared build properties and an SDK compile-contract target for Signal Bloom, then introduce the runtime facade without changing output.
 - Dependencies / Overlap: `show_readiness_operator_stability`, `layer_package_compatibility_bench_scaffolding`, `docs/architecture/synaptome_spine_element_model.md`, `docs/architecture/synaptome_layer_system_roadmap.md`, `docs/architecture/synaptome_artist_sdk.md`, parameter/scene/mapping contracts, and layer-authoring tests.
 - Primary Scope: runtime
 - Secondary Scopes: contracts, artist-sdk, tests, docs, release
-- Blocking Issues / Unknowns: Native binary modules remain an optional architecture decision rather than a promised deliverable; no blocker prevents SEAC-2 boundary inventory.
+- Blocking Issues / Unknowns: Native binary modules remain an optional architecture decision rather than a promised deliverable; no blocker prevents the SEAC-3 build-boundary extraction.
 - Impact / Priority Notes: This is the active architecture lane and precedes automatic discovery, broader package activation, or new content-family expansion.
 - Priority Score: N/A
 - Priority Lane: Fast-Track
 - Ready State: Ready
 - Ready Gate: The architecture direction, compatibility policy, ordered tasks, and stop conditions are explicit; the operator accepted residual show-validation risk and authorized execution.
-- Project Ops / Roadmap Updates (timestamped): 2026-07-26 - Added the canonical model and subordinated package/discovery work to its contract and build gates. 2026-07-26 - Promoted SEAC to execution after dual-screen validation was deferred.
-- Resume From: Phase EXECUTION, State In Progress, Next Action run the host/SDK dependency and registration boundary inventory.
+- Project Ops / Roadmap Updates (timestamped): 2026-07-26 - Added the canonical model and subordinated package/discovery work to its contract and build gates. 2026-07-26 - Promoted SEAC to execution after dual-screen validation was deferred. 2026-07-26 - Completed the dependency inventory and froze the Element SDK v1 source/static-link boundary.
+- Resume From: Phase EXECUTION, State In Progress, Next Action add the shared SDK build properties and Signal Bloom compile-contract target.
 Request Doc: docs/project_ops/in_progress/spine_element_architecture_convergence.md
 
 Current Direction
@@ -158,6 +159,8 @@ Current Direction
   IDs remain stable until a focused migration provides aliases and fixtures.
 - Contract Authority:
   [`docs/architecture/synaptome_spine_element_model.md`](../architecture/synaptome_spine_element_model.md).
+- SDK Boundary Authority:
+  [`docs/architecture/element_sdk_v1_boundary.md`](../architecture/element_sdk_v1_boundary.md).
 - First Architecture Slice:
   1. Freeze identity, parameter metadata, state ownership, compatibility
      levels, and capability declarations.
