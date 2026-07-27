@@ -98,7 +98,8 @@ Layer package activation artifacts:
   package, its preset files, the reviewed optional catalog adapter, mapping
   ownership, and committed default-off activation.
 - `LayerPackageBench` instantiates Signal Bloom, registers all 18 parameters,
-  advances 240 frames, and draws into an offscreen framebuffer.
+  advances 240 frames, and issues a stub-backed draw call. It does not prove
+  framebuffer pixels or real GL behavior.
 
 Coverage commands:
 

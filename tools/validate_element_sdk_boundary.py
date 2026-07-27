@@ -66,6 +66,18 @@ def main() -> int:
         APP / "runtime" / "SynaptomeRuntimeCore.vcxproj",
         errors,
     )
+    host_effects_header = read(
+        APP / "src" / "host" / "HostCompositionEffects.h",
+        errors,
+    )
+    host_renderer_header = read(
+        APP / "src" / "host" / "HostCompositionRenderer.h",
+        errors,
+    )
+    host_renderer_source = read(
+        APP / "src" / "host" / "HostCompositionRenderer.cpp",
+        errors,
+    )
     builtin_host_bindings_header = read(
         APP / "src" / "runtime" / "BuiltinElementHostBindings.h",
         errors,
@@ -204,6 +216,8 @@ def main() -> int:
             "CompositionRenderTargets",
             "CompositionCoverageWindow",
             "PostEffectChain",
+            "HostCompositionRenderer",
+            "HostCompositionEffects",
         ):
             if token in text:
                 errors.append(
@@ -221,7 +235,15 @@ def main() -> int:
                 errors.append(f"{name} escapes its public include roots: {include}")
             if any(
                 token in normalized.lower()
-                for token in ("ofapp", "layerfactory", "layerlibrary", "/ui/", "/io/")
+                for token in (
+                    "ofapp",
+                    "layerfactory",
+                    "layerlibrary",
+                    "hostcomposition",
+                    "/host/",
+                    "/ui/",
+                    "/io/",
+                )
             ):
                 errors.append(f"{name} imports a host/runtime dependency: {include}")
 
@@ -450,6 +472,62 @@ def main() -> int:
             + ", ".join(leaked_classes)
         )
     runtime_project_lower = runtime_project.lower()
+    app_project_lower = app_project.lower()
+    for token in (
+        r'clcompile include="src\host\hostcompositionrenderer.cpp"',
+        r'clinclude include="src\host\hostcompositionrenderer.h"',
+        r'clinclude include="src\host\hostcompositioneffects.h"',
+    ):
+        if token not in app_project_lower:
+            errors.append(
+                "host application project is missing composition-renderer "
+                "wiring " + token
+            )
+    for token in (
+        "class HostCompositionEffects",
+        "isConsoleRouted",
+        "defaultCoverageForType",
+        "applySlot",
+        "applyGlobal",
+    ):
+        if token not in host_effects_header:
+            errors.append(f"host composition effect interface is missing {token}")
+    for token in (
+        "enum class RenderStatus",
+        "class HostCompositionRenderer",
+        "HostCompositionRenderer(",
+        "RenderStatus render(",
+        "drawLatest(",
+        "drawPreview(",
+        "hasFrame(",
+        "releaseGraphicsResources(",
+    ):
+        if token not in host_renderer_header + host_renderer_source:
+            errors.append(f"host composition renderer is missing {token}")
+    for target_name, target_text in (
+        ("RuntimeCore", runtime_project),
+        (
+            "Element SDK compile contract",
+            contract_project + "\n" + example_header + "\n" + example_source,
+        ),
+        (
+            "Signal Bloom element",
+            element_project + "\n" + runtime_header + "\n" + runtime_source,
+        ),
+        ("layer package bench", bench_project + "\n" + bench_source),
+        ("browser flow", browser_flow_project),
+    ):
+        lowered_target = target_text.lower()
+        for token in (
+            "hostcompositionrenderer",
+            "hostcompositioneffects",
+            r"\src\host",
+        ):
+            if token in lowered_target:
+                errors.append(
+                    f"{target_name} must exclude host-only composition "
+                    f"rendering: {token}"
+                )
     for registration_unit in (
         "builtinelementhostbindings.cpp",
         "builtinelements.cpp",
@@ -496,7 +574,7 @@ def main() -> int:
     print(
         "[element-sdk-boundary] PASS public includes, shipping static library, "
         "pointer-free live action and typed telemetry contracts, controlled registration, "
-        "compile-contract roots, and no Runtime composition leak"
+        "compile-contract roots, and no Runtime/host-renderer composition leak"
     )
     return 0
 

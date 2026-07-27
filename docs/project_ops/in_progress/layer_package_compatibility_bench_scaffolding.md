@@ -51,7 +51,7 @@ What is real:
 - Disabled-by-default Signal Bloom activation with defaults -> preset ->
   activation override -> scene value precedence.
 - Suggestion-only package mappings that activation never silently applies.
-- A native headless/offscreen Signal Bloom lifecycle bench.
+- A native stub-backed Signal Bloom lifecycle/draw-dispatch bench.
 - One generated-layer static option fixture (`materialMode`) that flows through
   the generated catalog and inspection payload.
 - One generated-layer dynamic option-source fixture (`materialPreset`) that
@@ -165,7 +165,7 @@ Risk profile:
 - Milestone Name: Layer Package And Compatibility Bench Scaffolding
 - Milestone Type: Contract and validation scaffolding
 - Source Requests: layer_package_compatibility_bench_scaffolding
-- Outcome Statement (Done When): Package and generated-content metadata can be validated and inspected deterministically, a static package command exists, and the runtime/offscreen bench is either implemented behind a safe seam or explicitly split into a follow-up request.
+- Outcome Statement (Done When): Package and generated-content metadata can be validated and inspected deterministically, a static package command exists, and a stub-backed lifecycle/draw-dispatch bench is implemented without overstating real graphics evidence.
 - KPI / Success Signal: Package-only, combined compatibility, inspection, canonical catalog/manifest, and public-app checks pass with stable IDs and no unintended runtime behavior change.
 - Target Window: Before the next tracked generated-media or show-content request.
 - Dependency Gates: Stable public IDs, deterministic fixture roots, current runtime catalog compatibility, and a documented media intake/discovery policy.
@@ -205,7 +205,7 @@ Risk profile:
 - Level: High.
 - Predicted Count: 12
 - Count Drivers: 3 contract surfaces, 3 generated outputs, 2 runtime compatibility boundaries, 2 Browser/mapping boundaries, 1 media policy dependency, and 1 future test seam.
-- Drivers: Package schema design, folder discovery, file-backed generated assets, legacy asset coexistence, generated manifest changes, Browser dropdown behavior, OSC mapping presets, dynamic runtime providers, preset storage, and runtime/offscreen bench requirements.
+- Drivers: Package schema design, folder discovery, file-backed generated assets, legacy asset coexistence, generated manifest changes, Browser dropdown behavior, OSC mapping presets, dynamic runtime providers, preset storage, stub-backed lifecycle/draw-dispatch requirements, and future real-GL/pixel requirements.
 - Confidence: Medium.
 
 ## Intake
@@ -254,7 +254,9 @@ Risk profile:
   7. Add package OSC mapping preset metadata and validation for suffix expansion, OSC pattern/range/smoothing/deadband/blend fields, and conflict policy.
   8. Add `layer_preset.schema.json`, bundled preset banks, fixtures, and validation.
   9. Add Browser support for static dropdown options, runtime-owned dynamic option providers, mapping preset activation, and preset-bank toggling.
-  10. Add a single-layer static validation command, then a runtime/offscreen bench when the test seam exists.
+  10. Add a single-layer static validation command and a stub-backed
+      lifecycle/draw-dispatch bench; defer real-GL/pixel checks until that test
+      seam exists.
 - Validation Plan: Start with schema and fixture validators; keep `python tools\gen_parameter_manifest.py --check`, `python tools\layer_catalog_regression.py --check`, package-only checks, combined `--include-packages` checks, and `python tools\validate_configs.py --public-app` passing as the package surface expands.
 - Rollback / Stop Conditions: Stop if the package shape requires scene ID migration without a compatibility path, if generated IDs depend on absolute paths, if combined checks find package/runtime ID conflicts, or if docs imply no-source-edit installation before registration/loading support exists.
 
@@ -271,7 +273,7 @@ Risk profile:
 | LPB-7 | Add package OSC mapping preset metadata and validation. | Done |
 | LPB-8 | Add layer preset schema, preset banks, fixtures, and validation. | Done |
 | LPB-9 | Add Browser dropdown rendering, dynamic option providers, mapping preset activation, and preset-bank toggling. | In Progress |
-| LPB-10 | Add static package command and later runtime/offscreen single-layer bench. | Done |
+| LPB-10 | Add static package command and stub-backed single-layer lifecycle/draw-dispatch bench; keep real-GL/pixel evidence as follow-up. | Done |
 
 ## Execution
 
@@ -333,7 +335,8 @@ Risk profile:
 - Passed: `python tools\validate_configs.py docs\examples\generated_layers\stl_models\generated_layer.template.json docs\examples\generated_layers\stl_models\tetrahedron.generated_layer.json docs\examples\layer_packages\signal_bloom\layer.package.json docs\examples\layer_packages\signal_bloom\presets\default.json docs\examples\layer_packages\signal_bloom\presets\bright.json docs\examples\layer_packages\signal_bloom\presets\calm.json tools\testdata\layer_browser_inspection\expected_layer_browser_inspection_payload.json`
 - Passed: `python tools\synaptome_layer.py check docs\examples\layer_packages\signal_bloom\layer.package.json`
 - Passed: `python tools\synaptome_layer.py runtime-adapter docs\examples\layer_packages\signal_bloom\layer.package.json --output synaptome\bin\data\layers-optional\examples.signal_bloom.json --check`
-- Passed: `LayerPackageBench.exe` (18 parameters, 240 updates, offscreen draw).
+- Passed: `LayerPackageBench.exe` (18 parameters, 240 updates, stub-backed draw
+  dispatch; no pixel or real-GL claim).
 - Passed: `BrowserFlowTest.exe` (19 scenarios, including read-only inspection,
   opt-in activation, and preset-bank selection/rollback/immutability).
 - Passed: `BrowserFlowTest.exe` (20 scenarios, adding static/runtime labeled

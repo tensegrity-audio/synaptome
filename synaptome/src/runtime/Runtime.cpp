@@ -571,17 +571,6 @@ CompositionTelemetryResult Runtime::compositionElementTelemetry(
     }
 }
 
-Runtime::CompositionRenderTargets Runtime::compositionRenderTargetsForHost(
-    std::size_t zeroBasedIndex) noexcept {
-    auto* layer = mutableCompositionLayer(zeroBasedIndex);
-    if (!layer) return {};
-    return {
-        &layer->layerFbo,
-        &layer->upstreamFbo,
-        &layer->effectFbo,
-    };
-}
-
 float Runtime::normalizeOpacity(float opacity) noexcept {
     return std::isfinite(opacity)
         ? std::clamp(opacity, 0.0f, 1.0f)
@@ -1129,9 +1118,6 @@ void Runtime::shutdownComposition() {
             // registry.
             forceClearCompositionLayerNoexcept(layer);
         }
-        layer.layerFbo.clear();
-        layer.upstreamFbo.clear();
-        layer.effectFbo.clear();
     }
 }
 

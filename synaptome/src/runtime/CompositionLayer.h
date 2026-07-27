@@ -27,9 +27,6 @@ public:
     bool active = false;
     float opacity = 1.0f;
     CompositionCoverage coverage;
-    ofFbo layerFbo;
-    ofFbo upstreamFbo;
-    ofFbo effectFbo;
 
 private:
     friend class Runtime;

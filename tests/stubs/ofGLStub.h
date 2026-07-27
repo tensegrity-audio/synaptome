@@ -4,6 +4,10 @@
 #include <gl/ofGLUtils.h>
 #else
 
+#if defined(SYNAPTOME_OF_STUB_TRACE)
+#include "ofStubTrace.h"
+#endif
+
 using GLenum = unsigned int;
 using GLboolean = unsigned char;
 
@@ -15,11 +19,30 @@ constexpr GLenum GL_TEXTURE_2D = 0x0DE1;
 constexpr GLenum GL_RGBA = 0x1908;
 constexpr GLenum GL_LINEAR = 0x2601;
 constexpr GLenum GL_CLAMP_TO_EDGE = 0x812F;
+constexpr GLenum GL_DEPTH_BUFFER_BIT = 0x00000100;
 
 constexpr GLboolean GL_TRUE = 1;
 constexpr GLboolean GL_FALSE = 0;
 
 inline GLboolean glIsEnabled(GLenum) { return GL_FALSE; }
+inline void glClear(GLenum bits) {
+#if defined(SYNAPTOME_OF_STUB_TRACE)
+    ofstub::record({
+        ofstub::EventKind::ClearBits,
+        0,
+        ofstub::activeTargetId(),
+        {},
+        0.0f,
+        0.0f,
+        0.0f,
+        0.0f,
+        bits,
+        false,
+    });
+#else
+    (void)bits;
+#endif
+}
 inline void glDisable(GLenum) {}
 inline void glEnable(GLenum) {}
 

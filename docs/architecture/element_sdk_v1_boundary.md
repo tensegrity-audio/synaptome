@@ -2,26 +2,33 @@
 
 Status: Frozen architecture decision for SEAC-2, 2026-07-26.
 
-Implementation status: SEAC-3 in progress. Signal Bloom now has a shipping
-static-library target, a separate stub compile-contract target, public
-compatibility include paths, and a controlled built-in registration entrypoint.
+Implementation status: SEAC-3 complete; SEAC-4A is the current gate. Signal
+Bloom has a shipping static-library target, a separate stub compile-contract
+target, public compatibility include paths, and a controlled built-in
+registration entrypoint.
 The first Runtime facade now owns compatibility element preparation/release,
 distinct instance identity, prefix reservation, exact parameter registration
 cleanup, namespace enforcement, and structured failure context.
 `SynaptomeRuntimeCore` is now an independently linked static library and owns
-the fixed composition records, element pointers, per-layer FBOs, and generic
-resize/update/draw dispatch. Prepared ownership cannot escape the facade,
+the fixed composition records, element pointers, state/lifecycle/policy, and
+generic resize/update/draw dispatch without owning GPU targets. Prepared
+ownership cannot escape the facade,
 adoption validates its source runtime and canonical `console.layerN` address,
-and explicit shutdown releases elements and FBO resources while the graphics
-context is live. Candidate setup now writes to an isolated parameter registry;
-same-address adoption commits the registry, action table, and element together,
-while failed setup or commit leaves the live layer unchanged. Replacement preparation now
-selects the current element by zero-based composition-layer index inside
-Runtime; the host no longer obtains a mutable element pointer for the generic
-replacement transaction. The caller-held prepared result retains the retired
-action table and element after commit until host invalidation is complete. The host still adapts
-effect compositing and compatibility inspection through named host-only seams
-while persistence and mapping consumers read copied snapshots. Element type
+and explicit Runtime shutdown releases elements while
+`HostCompositionRenderer::releaseGraphicsResources()` releases host GPU targets
+while the graphics context is live. Candidate setup now writes to an isolated
+parameter registry; same-address adoption commits the registry, action table,
+and element together,
+while failed setup or commit leaves the live layer unchanged. Replacement
+preparation now selects the current element by zero-based composition-layer
+index inside Runtime; the host no longer obtains a mutable element pointer for
+the generic replacement transaction. The caller-held prepared result retains the retired
+action table and element after commit until host invalidation is complete.
+`HostCompositionRenderer` privately owns per-slot and composite FBOs, performs
+composition presentation, and reaches the concrete `PostEffectChain` only
+through the narrow internal `HostCompositionEffects` interface. `ofApp`
+delegates rendering and presentation, while persistence and mapping consumers
+read copied snapshots. No raw mutable render target crosses Runtime. Element type
 registration is now scoped per Runtime:
 the legacy-named `LayerFactory` has no process-global singleton, the host and
 each bench own an independent registry, scene validation uses non-constructing
@@ -39,10 +46,10 @@ existing singleton from the application root; it does not replace that
 singleton, make its parameters authoritative, or add an Element SDK service.
 Runtime now owns the pure, zero-based effect coverage-window policy through
 `CompositionCoverageWindow` and `Runtime::resolveEffectCoverage`; `drawConsole`
-consumes its half-open input range. `PostEffectChain` remains the host-side
-concrete shader and parameter executor. Apart from the source-compatible live
-action contract, this extraction adds no effect interface, dynamic-loading
-surface, or ABI promise. Typed composition mutation now goes through
+delegates to the host renderer, which consumes its half-open input range.
+`PostEffectChain` remains the host-side concrete shader and parameter executor
+behind `HostCompositionEffects`. This private host interface is not an Element
+SDK effect contract, dynamic-loading surface, or ABI promise. Typed composition mutation now goes through
 `CompositionAssignment`,
 `CompositionMutationResult`, and explicit Runtime commands for element
 adoption, effect/overlay assignment, active state, label, coverage, and clear.
@@ -58,8 +65,8 @@ kind, support, rejection, and execution failures. Read-only element inspection
 has been replaced by the separate on-demand
 `Runtime::compositionElementTelemetry()` query. Telemetry collection is not
 part of the ordinary composition snapshot because it reads volatile live
-values. Mutable FBO access remains a separate named host seam. The host no
-longer caches derived Grid, Geodesic, Perlin, or Game of Life pointers:
+values. Mutable FBO access is retired rather than exposed as a Runtime seam.
+The host no longer caches derived Grid, Geodesic, Perlin, or Game of Life pointers:
 ordinary HUD reads, MIDI/OSC binding, Grid density cycling, and Game of Life
 pause resolve snapshot prefixes through `ParameterRegistry`. Geodesic
 subdivisions are durable parameter state; video source label and capture
@@ -92,19 +99,19 @@ architecture.
 
 | Area | Current evidence | Boundary problem |
 | --- | --- | --- |
-| Application root | `synaptome/src/ofApp.cpp` still combines platform callbacks, composition adaptation, mappings, scenes, devices, and UI wiring, but delegates all element creator binding to `registerBuiltinElements()`. | The host remains the service container and composition adapter even though registration ownership moved out. |
+| Application root | `synaptome/src/ofApp.cpp` still combines platform callbacks, mappings, scenes, devices, and UI wiring, but delegates element registration and composition rendering. | The host remains a broad service container even though creator and render-target ownership moved out. |
 | Compile graph | `synaptome/Synaptome.vcxproj:497` compiles the host, runtime facilities, UI, and every visual implementation into one executable. | A small element change rebuilds and relinks the application. |
 | Element API | `synaptome/src/visuals/Layer.h:3` includes `ofMain.h`, `ofJson`, and the concrete `ParameterRegistry`; its draw context exposes mutable `ofCamera&`. | The public seam is broad and tied to runtime internals. |
 | Concrete dependencies | Registration-only concrete headers and creator lambdas now live in the handwritten `BuiltinElements.cpp` aggregate. Signal Bloom's package leaf registrar is shared by that aggregate and its bench. Legacy Text parameter/state access lives behind host-only `BuiltinElementHostBindings`. | Adding a built-in no longer adds a creator lambda or concrete state dependency to `ofApp`, but still edits the aggregate/project until SEAC-8 generation exists; the shared Text singleton remains internal compatibility debt. |
-| Type special cases | Mutable element-specific action and status casts have been replaced by registered parameters, live actions, and typed telemetry. The host render-target adapter remains the final named SEAC-3R compatibility path. | The generic control/query plane is established, but host composition rendering is not yet isolated. |
-| Lifecycle | `synaptome/src/visuals/Layer.h:23` has configure, setup, update, draw, resize, and enable methods, then relies on destruction. | There is no setup result, explicit teardown, health, or transactional replacement. |
-| Composition | `ConsoleSlot` at `synaptome/src/ofApp.h:326` owns assignment state, element ownership, coverage, and render targets; `drawConsole` starts at `synaptome/src/ofApp.cpp:4219`. | The reusable composition engine is embedded in the host. |
+| Type special cases | Mutable element-specific action/status casts have been replaced by registered parameters, live actions, and typed telemetry. GPU-target ownership and presentation are isolated in `HostCompositionRenderer`; the raw Runtime target adapter is retired. | SEAC-3 control/query/render ownership is closed; static declaration parity is the SEAC-4A gap. |
+| Lifecycle | `synaptome/src/visuals/Layer.h:23` has configure, setup, update, draw, resize, and enable methods, then relies on destruction. Runtime replacement is transactional. | There is still no typed setup result, explicit element teardown hook, or normalized health contract. |
+| Composition | Runtime owns the fixed assignment/state/lifecycle records and coverage policy. `HostCompositionRenderer` owns per-slot/composite FBOs and presentation behind `HostCompositionEffects`; `ofApp::drawConsole` delegates. | The state and graphics owners are now explicit; real pixel/GL evidence remains a later confidence-suite gate. |
 | Registry | At the SEAC-2 freeze, `LayerFactory` was process-global. It is now a Runtime-scoped type-to-creator map, but still has no descriptor, owner, version, enumeration, unregister, or atomic package registration. | Type creation is isolated; identity and package metadata still lack one typed authority. |
 | Catalog | `LayerLibrary` owns legacy JSON loading, package activation, and preset merging; package tools generate a second legacy catalog representation. | The package manifest is not yet the runtime's typed source of truth. |
 | Parameters | Package JSON, C++ `setup()`, and generated adapters repeat parameter metadata; `ParameterRegistry::Descriptor` at `synaptome/src/core/ParameterRegistry.h:24` is incomplete for the target contract. | Runtime binding and declaration metadata can drift. |
 | Services | Elements reach global services such as audio analysis, video catalog, and text state directly. | Isolated tests can still depend on hidden process state. |
 | Inspection | Browser/control inspection can instantiate an element and call `setup()` to discover parameters. | Inspection may allocate resources or touch devices. |
-| Tests | The package bench and Browser tests include implementation `.cpp` files and private internals directly. | They test behavior, but not the promised include and linkage boundary. |
+| Tests | The package bench proves stub-backed element lifecycle/draw dispatch. Browser tests still use private app internals. `HostCompositionRendererTest` separately compiles the production renderer/Runtime sources against FBO/GL stubs. | The renderer harness proves traversal/policy/failure behavior, not pixels, shader execution, or a real GL context; Browser execution is deferred with dual-screen testing. |
 
 The inventory also identifies two state risks that later tasks must preserve:
 
@@ -154,9 +161,8 @@ Depends on the Element SDK and owns:
 - element registration, descriptors, compatibility checks, and catalog/package
   resolution;
 - element lifecycle, instance ownership, and failure-safe replacement;
-- the eight ordered composition layers, render targets, composition/effect
-  routing policy, including coverage-window resolution, and graphics-state
-  containment;
+- the eight ordered composition records and composition/effect routing policy,
+  including coverage-window resolution;
 - parameter values, modifiers, options, banks, transport, telemetry, resource
   service implementations, and control target exposure;
 - mapping resolution and provenance;
@@ -165,10 +171,10 @@ Depends on the Element SDK and owns:
 - runtime commands, immutable query snapshots, health, diagnostics, and
   performance accounting.
 
-Runtime core must not depend on concrete elements, `ofApp`, or operator UI.
-During SEAC-3, concrete built-in effect selection, default values, coverage-mask
-parameters, and shader execution remain in the host's `PostEffectChain`
-adapter. Runtime core must not include that adapter.
+Runtime core must not depend on concrete elements, `ofApp`, operator UI,
+`HostCompositionRenderer`, or `HostCompositionEffects`. Concrete built-in
+effect selection, default values, coverage-mask parameters, and shader
+execution remain in the host's `PostEffectChain` adapter.
 
 The current control-plane extraction exposes `CompositionKind`,
 `CompositionAssignment`, `CompositionMutationError`, and
@@ -199,6 +205,10 @@ The executable owns:
 - platform event translation;
 - construction of concrete filesystem, MIDI, OSC, serial, audio, and sensor
   adapters;
+- `HostCompositionRenderer`, its per-slot/composite GPU targets, render
+  traversal, latest-frame presentation, and preview drawing;
+- concrete built-in effect execution through `PostEffectChain` behind the
+  private `HostCompositionEffects` interface;
 - Browser, Console, HUD, and other operator presentation/controllers.
 
 The host calls a runtime facade and consumes runtime query models. It does not
@@ -566,23 +576,24 @@ provenance data. Nothing auto-applies a mapping, preset, or scene mutation.
 
 ## Runtime Facade
 
-The first host/runtime seam is a `Runtime` facade with the semantic surface:
+The host/runtime seam is a `Runtime` facade with the semantic surface:
 
 ```text
 setup
 update
-render
 resize
 shutdown
 submit typed command
 read immutable snapshot
-read output texture/target
+resolve composition policy
+dispatch one element draw
 ```
 
-`ofApp` can initially delegate to this facade while behavior remains unchanged.
-The first runtime-owned aggregate should be the composition layer model
-currently represented by `ConsoleSlot`, followed by generic element
-create/configure/setup/update/render/clear behavior.
+Runtime owns composition state and generic element lifecycle/dispatch, not the
+GPU composition buffers. `ofApp` delegates composition traversal and
+presentation to `HostCompositionRenderer`, which requests copied state,
+coverage policy, resize, and one element draw at a time. Neither the host nor
+renderer receives a raw Runtime-owned output texture or target.
 
 UI calls runtime commands and reads snapshots. It does not receive a raw
 `ofApp*` as its service API.
@@ -596,8 +607,12 @@ Host metadata reads now use `Runtime::compositionSnapshot()` or
 `Runtime::compositionLayerSnapshot()`. Writes use Runtime's transactional
 adoption, assignment, active, label, coverage, and clear commands. No live
 composition aggregate or public `CompositionLayer` accessor crosses the
-boundary. Per-layer render FBOs remain available through
-`CompositionRenderTargets`. Mutable Geodesic subdivision and Game of Life
+boundary. Runtime owns no FBO and exposes no raw mutable target accessor.
+`HostCompositionRenderer` privately owns per-slot/composite GPU targets,
+consumes Runtime snapshots and coverage policy, calls Runtime's generic element
+draw dispatch, and presents the latest frame or preview. Its only effect
+dependency is `HostCompositionEffects`, implemented by `PostEffectChain`.
+Mutable Geodesic subdivision and Game of Life
 randomization register live actions and are invoked through
 `Runtime::invokeCompositionAction()`, replacing the retired
 `legacyCompositionElementForHost` seam. Their descriptors are copied into the
@@ -614,12 +629,13 @@ telemetry query. `compositionElementForHost` and all host concrete status casts
 are removed. Direct Text state access has also left `ofApp` through
 `BuiltinElementHostBindings`; the shared singleton and its pre-adoption
 configuration side effects remain SEAC-4B/SEAC-5 state-ownership debt. The
-render-target seam remains host-only SEAC-3 migration debt. Static/offline
-action descriptors remain SEAC-4 debt.
+retired `CompositionRenderTargets`/`compositionRenderTargetsForHost` seam does
+not remain as compatibility debt. Static/offline action descriptors are the
+current SEAC-4A gate.
 
-## SEAC-3 Extraction Sequence
+## Completed SEAC-3 Extraction Sequence
 
-SEAC-3 must preserve output and proceed in this order:
+SEAC-3 preserved output and proceeded in this order:
 
 1. Add shared MSBuild property sheets, public SDK include roots, and
    compatibility forwarding headers.
@@ -637,13 +653,15 @@ SEAC-3 must preserve output and proceed in this order:
    `ofApp`. Deterministic generation of the aggregate remains SEAC-8.
 7. Replace element-specific host casts and MIDI helpers with parameter/action
    contracts.
-8. Inject audio, media/resource, logging, and path services; migrate singleton
-   consumers incrementally.
-9. Move remaining implementations by cohesive family and add their focused
-   targets and benches to the solution.
+8. Extract `HostCompositionRenderer`, move per-slot/composite GPU targets and
+   presentation out of Runtime/`ofApp`, retire the raw target seam, and prove
+   renderer policy/failure behavior in a dedicated stub-backed target.
 
 `BuiltinElementHostBindings` completes direct application-root isolation for
-the legacy Text bridge; it does not complete step 8's singleton migration.
+the legacy Text bridge. The shared singleton and pre-adoption configuration
+effects remain SEAC-4B/SEAC-5 debt. Broader service injection and cohesive
+family targets remain later migration work; generated registration remains
+SEAC-8.
 
 The solution must stop hard-coding a machine-specific openFrameworks project
 path. The authoring and package bench projects must become first-class solution
@@ -671,10 +689,18 @@ No-output-change extraction is accepted only when:
   snapshots;
 - no host read-only element pointer or concrete status cast remains;
 - failed replacement preserves the prior live layer;
-- setup/update/offscreen render/shutdown/reload pass through the real SDK seam;
-- graphics-state containment and declaration parity pass;
-- Release, public-app, BrowserFlow, scene round-trip, and existing authoring
-  profiles remain green.
+- setup/update/stub-backed draw dispatch/shutdown/reload pass through the real
+  SDK seam;
+- renderer traversal, effect coverage/order, fail-open behavior, target
+  reuse/release, and allocation-status handling pass through the production
+  renderer against controlled stubs;
+- Release, public-app, BrowserFlow Release build, scene round-trip, and
+  existing authoring profiles remain green.
+
+`HostCompositionRendererTest` is policy and draw-dispatch evidence. It does not
+prove pixels, shader execution, graphics-state containment in a real context,
+or live projection. BrowserFlow execution and live dual-screen hardware
+rehearsal were not run in this checkpoint and remain explicitly deferred.
 
 ## Explicitly Deferred
 

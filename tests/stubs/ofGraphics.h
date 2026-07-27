@@ -7,6 +7,9 @@
 #include "ofUtils.h"
 #include "ofMesh.h"
 #include "ofTexture.h"
+#if defined(SYNAPTOME_OF_STUB_TRACE)
+#include "ofStubTrace.h"
+#endif
 #include <limits>
 #include <string>
 
@@ -70,18 +73,75 @@ struct ofStyle {};
 
 inline ofStyle ofGetStyle() { return ofStyle(); }
 
-inline void ofClear(float, float, float, float = 0.0f) {}
-inline void ofPushStyle() {}
-inline void ofPopStyle() {}
+inline void ofClear(float r, float g, float b, float a = 0.0f) {
+#if defined(SYNAPTOME_OF_STUB_TRACE)
+    ofstub::record({
+        ofstub::EventKind::ClearColor,
+        0,
+        ofstub::activeTargetId(),
+        {},
+        r,
+        g,
+        b,
+        a,
+    });
+#endif
+}
+inline void ofPushStyle() {
+#if defined(SYNAPTOME_OF_STUB_TRACE)
+    ofstub::record({
+        ofstub::EventKind::PushStyle,
+        0,
+        ofstub::activeTargetId(),
+    });
+#endif
+}
+inline void ofPopStyle() {
+#if defined(SYNAPTOME_OF_STUB_TRACE)
+    ofstub::record({
+        ofstub::EventKind::PopStyle,
+        0,
+        ofstub::activeTargetId(),
+    });
+#endif
+}
 inline void ofPushMatrix() {}
 inline void ofPopMatrix() {}
 inline void ofPushView() {}
 inline void ofPopView() {}
 inline void ofTranslate(float, float) {}
 inline void ofScale(float, float) {}
-inline void ofSetColor(const ofColor&) {}
-inline void ofSetColor(int, int, int, int = 255) {}
-inline void ofSetColor(int gray) { ofSetColor(gray, gray, gray); }
+inline void ofSetColor(const ofColor& color) {
+#if defined(SYNAPTOME_OF_STUB_TRACE)
+    ofstub::record({
+        ofstub::EventKind::SetColor,
+        0,
+        ofstub::activeTargetId(),
+        {},
+        static_cast<float>(color.r),
+        static_cast<float>(color.g),
+        static_cast<float>(color.b),
+        static_cast<float>(color.a),
+    });
+#endif
+}
+inline void ofSetColor(int r, int g, int b, int a = 255) {
+#if defined(SYNAPTOME_OF_STUB_TRACE)
+    ofstub::record({
+        ofstub::EventKind::SetColor,
+        0,
+        ofstub::activeTargetId(),
+        {},
+        static_cast<float>(r),
+        static_cast<float>(g),
+        static_cast<float>(b),
+        static_cast<float>(a),
+    });
+#endif
+}
+inline void ofSetColor(int gray) {
+    ofSetColor(gray, gray, gray);
+}
 inline void ofNoFill() {}
 inline void ofFill() {}
 inline void ofSetLineWidth(float) {}
@@ -127,8 +187,26 @@ enum ofBlendMode {
     OF_BLENDMODE_ADD = 1,
 };
 
-inline void ofEnableBlendMode(ofBlendMode) {}
-inline void ofDisableBlendMode() {}
+inline void ofEnableBlendMode(ofBlendMode mode) {
+#if defined(SYNAPTOME_OF_STUB_TRACE)
+    ofstub::record({
+        ofstub::EventKind::EnableBlend,
+        0,
+        ofstub::activeTargetId(),
+        {},
+        static_cast<float>(mode),
+    });
+#endif
+}
+inline void ofDisableBlendMode() {
+#if defined(SYNAPTOME_OF_STUB_TRACE)
+    ofstub::record({
+        ofstub::EventKind::DisableBlend,
+        0,
+        ofstub::activeTargetId(),
+    });
+#endif
+}
 inline void ofDisableDepthTest() {}
 inline void ofEnableDepthTest() {}
 inline bool ofIsVFlipped() { return false; }

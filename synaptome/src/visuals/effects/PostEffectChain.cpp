@@ -2500,6 +2500,63 @@ void PostEffectChain::applyGlobal(ofFbo& fbo) {
     process(fbo, active);
 }
 
+bool PostEffectChain::isConsoleRouted(
+    std::string_view effectType) const noexcept {
+    if (effectType == "fx.mirror") {
+        return routeFromValue(mirrorRoute_) == Route::Console;
+    }
+    if (effectType == "fx.dither") {
+        return routeFromValue(ditherRoute_) == Route::Console;
+    }
+    if (effectType == "fx.ascii") {
+        return routeFromValue(asciiRoute_) == Route::Console;
+    }
+    if (effectType == "fx.ascii_supersample") {
+        return routeFromValue(asciiSupersampleRoute_) == Route::Console;
+    }
+    if (effectType == "fx.crt") {
+        return routeFromValue(crtRoute_) == Route::Console;
+    }
+    if (effectType == "fx.motion_extract") {
+        return routeFromValue(motionRoute_) == Route::Console;
+    }
+    return false;
+}
+
+bool PostEffectChain::applySlot(
+    std::string_view effectType,
+    const ofFbo& source,
+    ofFbo& destination) {
+    if (!source.isAllocated() || !destination.isAllocated()) {
+        return false;
+    }
+    if (effectType == "fx.mirror") {
+        applyMirror(source, destination);
+        return true;
+    }
+    if (effectType == "fx.dither") {
+        applyDither(source, destination);
+        return true;
+    }
+    if (effectType == "fx.ascii") {
+        applyAscii(source, destination);
+        return true;
+    }
+    if (effectType == "fx.ascii_supersample") {
+        applyAsciiSupersample(source, destination);
+        return true;
+    }
+    if (effectType == "fx.crt") {
+        applyCrt(source, destination);
+        return true;
+    }
+    if (effectType == "fx.motion_extract") {
+        applyMotionExtract(source, destination);
+        return true;
+    }
+    return false;
+}
+
 void PostEffectChain::applyDither(const ofFbo& src, ofFbo& dst) {
     if (ditherEffect_) {
         ditherEffect_->apply(src, dst);
@@ -2536,7 +2593,8 @@ void PostEffectChain::applyMirror(const ofFbo& src, ofFbo& dst) {
     }
 }
 
-float PostEffectChain::defaultCoverageForType(const std::string& effectType) const {
+float PostEffectChain::defaultCoverageForType(
+    std::string_view effectType) const noexcept {
     if (effectType == "fx.mirror") return mirrorCoverage_;
     if (effectType == "fx.dither") return ditherCoverage_;
     if (effectType == "fx.ascii") return asciiCoverage_;

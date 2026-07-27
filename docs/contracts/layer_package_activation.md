@@ -66,4 +66,7 @@ documented order, preset selection uses stable IDs and rolls back on
 persistence failure, labeled static/runtime choices update the existing live
 parameter while preserving unavailable values, mapping suggestions are not
 auto-applied, and inspection/catalog/mapping state remains unchanged. The layer
-bench compares all 18 runtime IDs, kinds, and float ranges against the package.
+bench compares all 18 runtime IDs, kinds, and float ranges against the package
+and dispatches lifecycle/draw calls through openFrameworks stubs. It does not
+create a graphics context, execute a real FBO/GL render, read pixels, or detect
+blank output.

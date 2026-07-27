@@ -4403,252 +4403,19 @@ std::optional<HudFeedRegistry::FeedEntry> ofApp::latestHudFeed(const std::string
 }
 
 bool ofApp::hasScenePreview() const {
-    return compositeFbo.isAllocated() && compositeWidth > 0 && compositeHeight > 0;
+    return compositionRenderer_.hasFrame();
 }
 
 void ofApp::drawScenePreview(const ofRectangle& bounds) const {
-    if (!hasScenePreview() || bounds.width <= 0.0f || bounds.height <= 0.0f) {
-        return;
-    }
-    ofPushStyle();
-    ofSetColor(255);
-    compositeFbo.draw(bounds.x, bounds.y, bounds.width, bounds.height);
-    ofPopStyle();
-}
-
-void ofApp::ensureConsoleLayerViewports(glm::ivec2 viewport) {
-    if (!compositeFbo.isAllocated() || compositeWidth != viewport.x || compositeHeight != viewport.y) {
-        ofFbo::Settings settings;
-        settings.width = viewport.x;
-        settings.height = viewport.y;
-        settings.useDepth = false;
-        settings.useStencil = false;
-        settings.internalformat = GL_RGBA;
-        settings.textureTarget = GL_TEXTURE_2D;
-        settings.minFilter = GL_LINEAR;
-        settings.maxFilter = GL_LINEAR;
-        settings.wrapModeHorizontal = GL_CLAMP_TO_EDGE;
-        settings.wrapModeVertical = GL_CLAMP_TO_EDGE;
-        compositeFbo.allocate(settings);
-        compositeWidth = viewport.x;
-        compositeHeight = viewport.y;
-
-        runtime_.resizeCompositionElements(viewport.x, viewport.y);
-    }
-}
-
-void ofApp::ensureSlotFbo(ofFbo& fbo, glm::ivec2 viewport) {
-    if (viewport.x <= 0 || viewport.y <= 0) {
-        return;
-    }
-    if (fbo.isAllocated() && static_cast<int>(fbo.getWidth()) == viewport.x &&
-        static_cast<int>(fbo.getHeight()) == viewport.y) {
-        return;
-    }
-
-    ofFbo::Settings settings;
-    settings.width = viewport.x;
-    settings.height = viewport.y;
-    settings.useDepth = true;
-    settings.useStencil = false;
-    settings.internalformat = GL_RGBA;
-    settings.textureTarget = GL_TEXTURE_2D;
-    settings.minFilter = GL_LINEAR;
-    settings.maxFilter = GL_LINEAR;
-    settings.wrapModeHorizontal = GL_CLAMP_TO_EDGE;
-    settings.wrapModeVertical = GL_CLAMP_TO_EDGE;
-    fbo.allocate(settings);
-    fbo.begin();
-    ofClear(0, 0, 0, 0);
-    glClear(GL_DEPTH_BUFFER_BIT);
-    fbo.end();
+    compositionRenderer_.drawPreview(bounds);
 }
 
 void ofApp::drawConsole(glm::ivec2 viewport, float beatPhase) {
-    ensureConsoleLayerViewports(viewport);
-    const auto composition = runtime_.compositionSnapshot();
-    const auto& consoleSlots = composition.layers;
-    const int layerCount = static_cast<int>(consoleSlots.size());
-
-    auto clearFbo = [](ofFbo& fbo) {
-        if (!fbo.isAllocated()) return;
-        fbo.begin();
-        ofClear(0, 0, 0, 0);
-        glClear(GL_DEPTH_BUFFER_BIT);
-        fbo.end();
-    };
-
-    auto routeStateForSlot =
-        [&](const ConsoleSlotSnapshot& slot) -> int {
-        const float* routePtr = fxRouteParamForType(slot.typeId);
-        float raw = routePtr ? *routePtr : 0.0f;
-        return static_cast<int>(std::round(ofClamp(raw, 0.0f, 2.0f)));
-    };
-
-    std::vector<bool> slotVisible(layerCount, false);
-
-    ofPushStyle();
-    for (std::size_t i = 0; i < consoleSlots.size(); ++i) {
-        const auto& slot = consoleSlots[i];
-        if (!slot.active) {
-            continue;
-        }
-        auto renderTargets =
-            runtime_.compositionRenderTargetsForHost(i);
-        if (!renderTargets) {
-            continue;
-        }
-
-        if (isFxType(slot.typeId)) {
-            int routeState = routeStateForSlot(slot);
-            if (routeState != 1) {
-                continue;
-            }
-
-            const int effectColumn = static_cast<int>(i) + 1;
-            float coverageValue = slot.coverage.defined
-                ? static_cast<float>(slot.coverage.columns)
-                : postEffects.defaultCoverageForType(slot.typeId);
-            const auto window =
-                runtime_.resolveEffectCoverage(i, coverageValue);
-            std::vector<int> processedColumns;
-            std::vector<int> passthroughColumns;
-
-            ensureSlotFbo(*renderTargets.layer, viewport);
-            ensureSlotFbo(*renderTargets.upstream, viewport);
-            ensureSlotFbo(*renderTargets.effect, viewport);
-
-            renderTargets.upstream->begin();
-            ofClear(0, 0, 0, 0);
-            ofEnableBlendMode(OF_BLENDMODE_ALPHA);
-            bool haveInput = false;
-            for (int column = 1; column < effectColumn; ++column) {
-                if (!window.contains(
-                        static_cast<std::size_t>(column - 1))) continue;
-                if (!slotVisible[column - 1]) continue;
-                const auto& upstreamSlot = consoleSlots[column - 1];
-                if (!upstreamSlot.active) continue;
-                auto upstreamTargets =
-                    runtime_.compositionRenderTargetsForHost(
-                        static_cast<std::size_t>(column - 1));
-                if (!upstreamTargets ||
-                    !upstreamTargets.layer->isAllocated()) continue;
-                upstreamTargets.layer->draw(
-                    0,
-                    0,
-                    viewport.x,
-                    viewport.y);
-                processedColumns.push_back(column - 1);
-                haveInput = true;
-            }
-            ofDisableBlendMode();
-            renderTargets.upstream->end();
-
-            renderTargets.layer->begin();
-            ofClear(0, 0, 0, 0);
-            ofDisableBlendMode();
-            renderTargets.layer->end();
-
-            if (haveInput) {
-                renderTargets.effect->begin();
-                ofClear(0, 0, 0, 0);
-                renderTargets.effect->end();
-            }
-
-            bool effectApplied = false;
-            if (haveInput &&
-                applyEffectSlot(
-                    slot,
-                    *renderTargets.upstream,
-                    *renderTargets.effect)) {
-                effectApplied = true;
-                renderTargets.layer->begin();
-                ofEnableBlendMode(OF_BLENDMODE_ALPHA);
-                renderTargets.effect->draw(0, 0, viewport.x, viewport.y);
-                ofDisableBlendMode();
-                renderTargets.layer->end();
-            }
-
-            renderTargets.layer->begin();
-            ofEnableBlendMode(OF_BLENDMODE_ALPHA);
-            for (int column = 1; column < effectColumn; ++column) {
-                if (window.contains(
-                        static_cast<std::size_t>(column - 1))) continue;
-                if (!slotVisible[column - 1]) continue;
-                const auto& upstreamSlot = consoleSlots[column - 1];
-                if (!upstreamSlot.active) continue;
-                auto upstreamTargets =
-                    runtime_.compositionRenderTargetsForHost(
-                        static_cast<std::size_t>(column - 1));
-                if (!upstreamTargets ||
-                    !upstreamTargets.layer->isAllocated()) continue;
-                upstreamTargets.layer->draw(
-                    0,
-                    0,
-                    viewport.x,
-                    viewport.y);
-                passthroughColumns.push_back(column - 1);
-            }
-            ofDisableBlendMode();
-            renderTargets.layer->end();
-
-            if (effectApplied || !passthroughColumns.empty()) {
-                if (effectApplied) {
-                    for (int columnIndex : processedColumns) {
-                        slotVisible[columnIndex] = false;
-                    }
-                }
-                for (int columnIndex : passthroughColumns) {
-                    slotVisible[columnIndex] = false;
-                }
-                slotVisible[i] = true;
-            }
-        } else if (slot.hasElement) {
-            ensureSlotFbo(*renderTargets.layer, viewport);
-            float slotOpacity = ofClamp(slot.opacity, 0.0f, 1.0f);
-            renderTargets.layer->begin();
-            ofClear(0, 0, 0, 0);
-            ofEnableBlendMode(OF_BLENDMODE_ALPHA);
-            LayerDrawParams params{
-                cam,
-                viewport,
-                t,
-                beatPhase,
-                slotOpacity
-            };
-            runtime_.drawCompositionElement(i, params);
-            ofDisableBlendMode();
-            renderTargets.layer->end();
-            slotVisible[i] = true;
-        } else {
-            clearFbo(*renderTargets.layer);
-        }
+    const auto status =
+        compositionRenderer_.render(viewport, cam, t, beatPhase);
+    if (status == synaptome::host::RenderStatus::Rendered) {
+        compositionRenderer_.drawLatest();
     }
-    ofPopStyle();
-
-    compositeFbo.begin();
-    ofClear(0, 0, 0, 0);
-    ofPushStyle();
-    ofEnableBlendMode(OF_BLENDMODE_ALPHA);
-    for (std::size_t i = 0; i < consoleSlots.size(); ++i) {
-        if (!slotVisible[i]) continue;
-        const auto& slot = consoleSlots[i];
-        if (!slot.active) continue;
-        auto renderTargets =
-            runtime_.compositionRenderTargetsForHost(i);
-        if (!renderTargets ||
-            !renderTargets.layer->isAllocated()) continue;
-        ofSetColor(255);
-        renderTargets.layer->draw(0, 0, viewport.x, viewport.y);
-    }
-    ofDisableBlendMode();
-    ofPopStyle();
-    compositeFbo.end();
-
-    postEffects.applyGlobal(compositeFbo);
-
-    ofSetColor(255);
-    compositeFbo.draw(0, 0);
 }
 
 void ofApp::updateConsoleLayers(const LayerUpdateParams& params) {
@@ -5155,6 +4922,7 @@ void ofApp::exit() {
     ofLogNotice("ofApp") << "hotkeys saved";
     stopRouterUdpReceiver();
     midi.close();
+    compositionRenderer_.releaseGraphicsResources();
     runtime_.shutdownComposition();
     ofLogNotice("ofApp") << "exit done";
 }
@@ -6391,40 +6159,6 @@ void ofApp::propagateEffectCoverageChange(const std::string& effectType, float c
             controlMappingHub->markConsoleSlotsDirty();
         }
     }
-}
-
-bool ofApp::applyEffectSlot(
-    const ConsoleSlotSnapshot& slot,
-    ofFbo& src,
-    ofFbo& dst) {
-    if (!src.isAllocated() || !dst.isAllocated()) {
-        return false;
-    }
-    if (slot.typeId == "fx.mirror") {
-        postEffects.applyMirror(src, dst);
-        return true;
-    }
-    if (slot.typeId == "fx.dither") {
-        postEffects.applyDither(src, dst);
-        return true;
-    }
-    if (slot.typeId == "fx.ascii") {
-        postEffects.applyAscii(src, dst);
-        return true;
-    }
-    if (slot.typeId == "fx.ascii_supersample") {
-        postEffects.applyAsciiSupersample(src, dst);
-        return true;
-    }
-    if (slot.typeId == "fx.crt") {
-        postEffects.applyCrt(src, dst);
-        return true;
-    }
-    if (slot.typeId == "fx.motion_extract") {
-        postEffects.applyMotionExtract(src, dst);
-        return true;
-    }
-    return false;
 }
 
 float ofApp::consoleSlotBaseOpacity(int layerIndex) const {

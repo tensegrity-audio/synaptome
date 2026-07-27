@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../../host/HostCompositionEffects.h"
 #include "MotionExtractProcessor.h"
 #include "ofFbo.h"
 #include "ofTexture.h"
@@ -8,6 +9,7 @@
 #include <vector>
 #include <array>
 #include <string>
+#include <string_view>
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 
@@ -35,11 +37,17 @@ private:
     std::vector<std::shared_ptr<FontAtlas>> fonts_;
 };
 
-class PostEffectChain {
+class PostEffectChain : public synaptome::host::HostCompositionEffects {
 public:
     void setup(ParameterRegistry& registry);
     void applyConsole(ofFbo& fbo);
-    void applyGlobal(ofFbo& fbo);
+    void applyGlobal(ofFbo& fbo) override;
+    bool isConsoleRouted(
+        std::string_view effectType) const noexcept override;
+    bool applySlot(
+        std::string_view effectType,
+        const ofFbo& source,
+        ofFbo& destination) override;
     void applyDither(const ofFbo& src, ofFbo& dst);
     void applyAscii(const ofFbo& src, ofFbo& dst);
     void applyAsciiSupersample(const ofFbo& src, ofFbo& dst);
@@ -289,7 +297,8 @@ public:
     float mirrorDetailValue() const { return mirrorDetail_; }
     float mirrorCoverageValue() const { return mirrorCoverage_; }
     bool coverageMaskEnabled(const std::string& effectType) const;
-    float defaultCoverageForType(const std::string& effectType) const;
+    float defaultCoverageForType(
+        std::string_view effectType) const noexcept override;
     MotionExtractProcessor* motionProcessor() { return motionProcessor_.get(); }
     const MotionExtractProcessor* motionProcessor() const { return motionProcessor_.get(); }
 

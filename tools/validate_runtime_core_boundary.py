@@ -198,6 +198,15 @@ def main() -> int:
     post_effect_source = (
         ROOT / "synaptome/src/visuals/effects/PostEffectChain.cpp"
     ).read_text(encoding="utf-8")
+    host_effects_header = (
+        ROOT / "synaptome/src/host/HostCompositionEffects.h"
+    ).read_text(encoding="utf-8")
+    host_renderer_header = (
+        ROOT / "synaptome/src/host/HostCompositionRenderer.h"
+    ).read_text(encoding="utf-8")
+    host_renderer_source = (
+        ROOT / "synaptome/src/host/HostCompositionRenderer.cpp"
+    ).read_text(encoding="utf-8")
     sdk_include_root = ROOT / "synaptome/sdk/include"
     sdk_public_headers = sorted(
         path
@@ -209,6 +218,9 @@ def main() -> int:
         ROOT / "synaptome/src/visuals/LayerParameterBuilder.h",
     ]
     project = (ROOT / "synaptome/Synaptome.vcxproj").read_text(encoding="utf-8")
+    project_filters = (
+        ROOT / "synaptome/Synaptome.vcxproj.filters"
+    ).read_text(encoding="utf-8")
     solution = (ROOT / "synaptome/Synaptome.sln").read_text(encoding="utf-8")
     core_project = (
         ROOT / "synaptome/runtime/SynaptomeRuntimeCore.vcxproj"
@@ -216,8 +228,21 @@ def main() -> int:
     test_project = (
         ROOT / "synaptome/tests/RuntimeCoreTest/RuntimeCoreTest.vcxproj"
     ).read_text(encoding="utf-8")
+    renderer_test_project = (
+        ROOT
+        / "synaptome/tests/HostCompositionRendererTest"
+        / "HostCompositionRendererTest.vcxproj"
+    ).read_text(encoding="utf-8")
+    renderer_test_filters = (
+        ROOT
+        / "synaptome/tests/HostCompositionRendererTest"
+        / "HostCompositionRendererTest.vcxproj.filters"
+    ).read_text(encoding="utf-8")
     runtime_test = (
         ROOT / "tests/runtime_core_native_main.cpp"
+    ).read_text(encoding="utf-8")
+    renderer_test = (
+        ROOT / "tests/host_composition_renderer_native_main.cpp"
     ).read_text(encoding="utf-8")
     package_bench = (
         ROOT / "tests/layer_package_bench_main.cpp"
@@ -259,7 +284,6 @@ def main() -> int:
         "setCompositionLayerLabel",
         "setCompositionLayerCoverage",
         "clearCompositionLayer",
-        "compositionRenderTargetsForHost",
     ):
         if token not in runtime_source and token not in runtime_header:
             errors.append(f"runtime lifecycle seam is missing {token}")
@@ -821,7 +845,6 @@ def main() -> int:
         "std::optional<CompositionLayerSnapshot> compositionLayerSnapshot(",
         "CompositionActionResult invokeCompositionAction(",
         "CompositionTelemetryResult compositionElementTelemetry(",
-        "CompositionRenderTargets compositionRenderTargetsForHost(",
     ):
         if token not in runtime_header:
             errors.append(f"Runtime immutable query/host seam is missing {token}")
@@ -877,6 +900,27 @@ def main() -> int:
         errors.append("ofApp must own and inject one scoped element type registry")
     if "std::unique_ptr<Layer> element_" not in composition_header:
         errors.append("runtime composition layer must own its element privately")
+    for token in (
+        "CompositionRenderTargets",
+        "compositionRenderTargetsForHost",
+        "layerFbo",
+        "upstreamFbo",
+        "effectFbo",
+    ):
+        if (
+            token in runtime_header
+            or token in runtime_source
+            or token in composition_header
+            or token in runtime_test
+        ):
+            errors.append(
+                "RuntimeCore must not own or expose host composition render "
+                f"targets: {token}"
+            )
+    if "ofFbo" in runtime_header + runtime_source + composition_header:
+        errors.append(
+            "RuntimeCore must not depend on the host composition FBO type"
+        )
     if "struct CompositionCoverageWindow" not in composition_types:
         errors.append("runtime composition types are missing the effect coverage window")
     for token in ("CoverageWindow", "resolveCoverageWindow"):
@@ -887,6 +931,130 @@ def main() -> int:
     if "postEffects.resolveCoverageWindow" in app:
         errors.append(
             "host still resolves effect coverage through PostEffectChain"
+        )
+    for token in (
+        "class HostCompositionEffects",
+        "isConsoleRouted",
+        "defaultCoverageForType",
+        "applySlot",
+        "applyGlobal",
+    ):
+        if token not in host_effects_header:
+            errors.append(
+                f"host composition effect interface is missing {token}"
+            )
+    for pattern, description in (
+        (
+            r"virtual\s+bool\s+isConsoleRouted\s*\(\s*"
+            r"std::string_view\b[^)]*\)\s*const\s+noexcept\s*=\s*0",
+            "noexcept console-route query",
+        ),
+        (
+            r"virtual\s+float\s+defaultCoverageForType\s*\(\s*"
+            r"std::string_view\b[^)]*\)\s*const\s+noexcept\s*=\s*0",
+            "noexcept default-coverage query",
+        ),
+        (
+            r"virtual\s+bool\s+applySlot\s*\(\s*std::string_view\b[^,]*,\s*"
+            r"const\s+ofFbo\s*&\s*\w+\s*,\s*ofFbo\s*&\s*\w+\s*\)\s*=\s*0",
+            "slot-effect application",
+        ),
+        (
+            r"virtual\s+void\s+applyGlobal\s*\(\s*ofFbo\s*&\s*\w+\s*\)\s*=\s*0",
+            "global-effect application",
+        ),
+    ):
+        if not re.search(pattern, host_effects_header, re.DOTALL):
+            errors.append(
+                "host composition effect interface is missing canonical "
+                + description
+            )
+    if (
+        "routeStateForType" in host_effects_header
+        or "routeStateForType" in host_renderer_header + host_renderer_source
+    ):
+        errors.append(
+            "host composition rendering must consume a boolean route query, "
+            "not a route enum/integer"
+        )
+    for token in (
+        "HostCompositionEffects",
+        "isConsoleRouted",
+        "defaultCoverageForType",
+        "applySlot",
+        "applyGlobal",
+    ):
+        if token not in post_effect_header + post_effect_source:
+            errors.append(
+                f"PostEffectChain is missing host effect-pipeline contract {token}"
+            )
+    for token in (
+        "enum class RenderStatus",
+        "Rendered",
+        "InvalidViewport",
+        "CompositeAllocationFailed",
+        "class HostCompositionRenderer",
+        "HostCompositionRenderer(",
+        "RenderStatus render(",
+        "drawLatest(",
+        "drawPreview(",
+        "hasFrame(",
+        "releaseGraphicsResources(",
+        "runtime::Runtime& runtime_",
+        "HostCompositionEffects& effects_",
+    ):
+        if token not in host_renderer_header + host_renderer_source:
+            errors.append(f"host composition renderer is missing {token}")
+    renderer_class_surface = host_renderer_header[
+        host_renderer_header.find("class HostCompositionRenderer"):
+    ]
+    renderer_public_surface = renderer_class_surface.split("private:", 1)[0]
+    if "ofFbo" in renderer_public_surface:
+        errors.append(
+            "HostCompositionRenderer must not expose a composition FBO"
+        )
+    renderer_private_surface = (
+        renderer_class_surface.split("private:", 1)[1]
+        if "private:" in renderer_class_surface
+        else ""
+    )
+    private_fbo_members = re.findall(
+        r"^\s*ofFbo\s+[A-Za-z_][A-Za-z0-9_]*\s*;",
+        renderer_private_surface,
+        re.MULTILINE,
+    )
+    if len(private_fbo_members) < 4 or "std::array<" not in renderer_private_surface:
+        errors.append(
+            "HostCompositionRenderer must privately own the per-slot and "
+            "composite render targets"
+        )
+    for token in (
+        "compositionSnapshot",
+        "resolveEffectCoverage",
+        "resizeCompositionElements",
+        "drawCompositionElement",
+        "isConsoleRouted",
+        "defaultCoverageForType",
+        "applySlot",
+        "applyGlobal",
+    ):
+        if token not in host_renderer_source:
+            errors.append(
+                f"HostCompositionRenderer is missing delegated render behavior: {token}"
+            )
+    for token in (
+        "PostEffectChain",
+        "HostCompositionRenderer",
+        "HostCompositionEffects",
+    ):
+        if token in runtime_header + runtime_source + composition_header:
+            errors.append(
+                f"RuntimeCore depends on forbidden host renderer/effect surface: {token}"
+            )
+    if "PostEffectChain" in host_renderer_header + host_renderer_source:
+        errors.append(
+            "HostCompositionRenderer must depend on HostCompositionEffects, "
+            "not concrete PostEffectChain"
         )
     for header_path in sdk_public_surfaces:
         header_text = header_path.read_text(encoding="utf-8")
@@ -901,6 +1069,8 @@ def main() -> int:
             "CompositionCoverageWindow",
             "resolveEffectCoverage",
             "PostEffectChain",
+            "HostCompositionRenderer",
+            "HostCompositionEffects",
         ):
             if token in header_text:
                 relative_path = header_path.relative_to(ROOT)
@@ -921,15 +1091,40 @@ def main() -> int:
         "runtime_.compositionLayerSnapshot",
         "runtime_.invokeCompositionAction",
         "runtime_.compositionElementTelemetry",
-        "runtime_.compositionRenderTargetsForHost",
-        "runtime_.resizeCompositionElements",
         "runtime_.updateCompositionElements",
-        "runtime_.drawCompositionElement",
-        "runtime_.resolveEffectCoverage",
         "runtime_.shutdownComposition",
     ):
         if token not in app:
             errors.append(f"ofApp must delegate generic composition behavior: {token}")
+    for token in (
+        "compositionRenderer_.render(",
+        "compositionRenderer_.drawLatest(",
+        "compositionRenderer_.drawPreview(",
+        "compositionRenderer_.hasFrame(",
+        "compositionRenderer_.releaseGraphicsResources(",
+    ):
+        if token not in app:
+            errors.append(f"ofApp must delegate composition rendering: {token}")
+    for token in (
+        '#include "host/HostCompositionRenderer.h"',
+        "synaptome::host::HostCompositionRenderer compositionRenderer_",
+    ):
+        if token not in app_header:
+            errors.append(
+                f"ofApp is missing its host composition renderer dependency: {token}"
+            )
+    for token in (
+        "compositionRenderTargetsForHost",
+        "CompositionRenderTargets",
+        "compositeFbo",
+        "ensureConsoleLayerViewports",
+        "ensureSlotFbo",
+        "applyEffectSlot",
+    ):
+        if token in app_header + app:
+            errors.append(
+                f"ofApp still owns retired composition render behavior: {token}"
+            )
     for token in (
         'telemetry.valueAs<std::string>(',
         '"media.sourceLabel"',
@@ -976,13 +1171,10 @@ def main() -> int:
             )
     if "runtime_.compositionLayer(" in app or "runtime_.releaseCompositionElement" in app:
         errors.append("ofApp still calls a transitional mutable Runtime composition API")
-    if re.search(
-        r"(?:\.|->)(?:layerFbo|upstreamFbo|effectFbo)\b",
-        app,
-    ):
-        errors.append(
-            "ofApp bypasses the named CompositionRenderTargets host seam"
-        )
+    if re.search(r"(?:\.|->)(?:layerFbo|upstreamFbo|effectFbo)\b", app):
+        errors.append("ofApp directly consumes a composition render target")
+    if "ofFbo" in app_header + app:
+        errors.append("ofApp must not directly own or manipulate an FBO")
     if "std::unique_ptr<Layer> element;" in runtime_header:
         errors.append("prepared element ownership must not be publicly transferable")
     if "replacingIds" not in parameter_registry or "void swap(" not in parameter_registry:
@@ -1497,6 +1689,31 @@ def main() -> int:
     if r"runtime\SynaptomeRuntimeCore.vcxproj".lower() not in project.lower():
         errors.append("host must link the SynaptomeRuntimeCore project")
     for token in (
+        r'ClCompile Include="src\host\HostCompositionRenderer.cpp"',
+        r'ClInclude Include="src\host\HostCompositionRenderer.h"',
+        r'ClInclude Include="src\host\HostCompositionEffects.h"',
+    ):
+        if token.lower() not in project.lower():
+            errors.append(f"host project is missing composition renderer wiring: {token}")
+    for token in (
+        r'src\host\HostCompositionRenderer.cpp',
+        r'src\host\HostCompositionRenderer.h',
+        r'src\host\HostCompositionEffects.h',
+    ):
+        if token.lower() not in project_filters.lower():
+            errors.append(
+                f"host project filters are missing composition renderer wiring: {token}"
+            )
+    for token in (
+        "HostCompositionRenderer",
+        "HostCompositionEffects",
+        r"src\host",
+    ):
+        if token.lower() in core_project.lower():
+            errors.append(
+                f"RuntimeCore project includes forbidden host render surface: {token}"
+            )
+    for token in (
         r'ClCompile Include="src\runtime\Runtime.cpp"',
         r'ClCompile Include="src\visuals\LayerFactory.cpp"',
     ):
@@ -1516,6 +1733,137 @@ def main() -> int:
     ):
         if token.lower() in test_project.lower():
             errors.append(f"runtime-core test bypasses the shipping link/header seam: {token}")
+    renderer_test_lower = renderer_test_project.lower()
+    required_renderer_test_items = (
+        "configurationtype>application",
+        r"$(synaptometestroot)\host_composition_renderer_native_main.cpp",
+        r"$(synaptomeapproot)\src\host\hostcompositionrenderer.cpp",
+        r"$(synaptomeapproot)\src\runtime\runtime.cpp",
+        r"$(synaptomeapproot)\src\visuals\layerfactory.cpp",
+        r"$(synaptometestroot)\stubs\offbo.h",
+        r"$(synaptometestroot)\stubs\ofglstub.h",
+        r"$(synaptometestroot)\stubs\ofrectangle.h",
+        r"$(synaptomeapproot)\src\host\hostcompositioneffects.h",
+        r"$(synaptomeapproot)\src\host\hostcompositionrenderer.h",
+    )
+    for token in required_renderer_test_items:
+        if token not in renderer_test_lower:
+            errors.append(
+                "host composition renderer test target is missing shipping/stub "
+                f"wiring: {token}"
+            )
+    include_directories_match = re.search(
+        r"<AdditionalIncludeDirectories>(.*?)</AdditionalIncludeDirectories>",
+        renderer_test_project,
+        re.DOTALL,
+    )
+    if include_directories_match is None:
+        errors.append(
+            "host composition renderer test target is missing include directories"
+        )
+    else:
+        include_directories = include_directories_match.group(1).lower()
+        stub_root = r"$(synaptometestroot)\stubs"
+        app_source_root = r"$(synaptomeapproot)\src"
+        if (
+            stub_root not in include_directories
+            or app_source_root not in include_directories
+            or include_directories.index(stub_root)
+            > include_directories.index(app_source_root)
+        ):
+            errors.append(
+                "host composition renderer test must resolve stubs before "
+                "shipping application source roots"
+            )
+    for token in (
+        "posteffectchain",
+        "ofapp",
+        r"openframeworkslib.vcxproj",
+        r"synaptomeruntimecore.vcxproj",
+    ):
+        if token in renderer_test_lower:
+            errors.append(
+                "host composition renderer test must compile the narrow "
+                f"shipping-source seam without {token}"
+            )
+    required_renderer_test_filter_items = (
+        r"host_composition_renderer_native_main.cpp",
+        r"hostcompositionrenderer.cpp",
+        r"runtime.cpp",
+        r"layerfactory.cpp",
+        r"offbo.h",
+        r"ofglstub.h",
+        r"ofrectangle.h",
+        r"hostcompositioneffects.h",
+        r"hostcompositionrenderer.h",
+    )
+    renderer_test_filters_lower = renderer_test_filters.lower()
+    for token in required_renderer_test_filter_items:
+        if token not in renderer_test_filters_lower:
+            errors.append(
+                "host composition renderer test filters are missing "
+                f"project item: {token}"
+            )
+    renderer_test_guid_match = re.search(
+        r"<ProjectGuid>\s*(\{[0-9A-Fa-f-]+\})\s*</ProjectGuid>",
+        renderer_test_project,
+    )
+    if renderer_test_guid_match is None:
+        errors.append(
+            "host composition renderer test project is missing its project GUID"
+        )
+    else:
+        renderer_test_guid = renderer_test_guid_match.group(1).upper()
+        if (
+            '"HostCompositionRendererTest", '
+            '"tests\\HostCompositionRendererTest\\'
+            'HostCompositionRendererTest.vcxproj", '
+            f'"{renderer_test_guid}"'
+        ) not in solution:
+            errors.append(
+                "solution is missing the host composition renderer test project"
+            )
+        for configuration in ("Debug", "Release"):
+            for suffix in ("ActiveCfg", "Build.0"):
+                token = (
+                    f"{renderer_test_guid}.{configuration}|x64.{suffix} = "
+                    f"{configuration}|x64"
+                )
+                if token not in solution:
+                    errors.append(
+                        "solution is missing host composition renderer test "
+                        f"configuration wiring: {token}"
+                    )
+    for token in (
+        "FboTrace",
+        "RenderStatus::Rendered",
+        "RenderStatus::InvalidViewport",
+        "RenderStatus::CompositeAllocationFailed",
+        "isConsoleRouted(",
+        "applySlot(",
+        "applyGlobal(",
+        "drawLatest(",
+        "drawPreview(",
+        "releaseGraphicsResources(",
+        "ofstub::failAllocationOnAttempt(",
+    ):
+        if token not in renderer_test:
+            errors.append(
+                "host composition renderer test is missing lifecycle/effect "
+                f"coverage: {token}"
+            )
+    for token in (
+        "PostEffectChain",
+        "ofApp",
+        '#include "../synaptome/src/host/HostCompositionRenderer.cpp"',
+        '#include "../synaptome/src/runtime/Runtime.cpp"',
+        '#include "../synaptome/src/visuals/LayerFactory.cpp"',
+    ):
+        if token in renderer_test:
+            errors.append(
+                "host composition renderer test bypasses its narrow project "
+                f"boundary: {token}"
+            )
     if "SynaptomeRuntimeCore" not in solution:
         errors.append("runtime-core library must be a first-class solution target")
     if "RunEffectCoverageWindowScenario" not in runtime_test:
@@ -1544,7 +1892,6 @@ def main() -> int:
         "setCompositionLayerLabel",
         "setCompositionLayerCoverage",
         "clearCompositionLayer",
-        "compositionRenderTargetsForHost",
         "tests.stable-opacity-mapping",
         "RunCompositionActionScenario",
         "InvalidActionMode::InvalidUnderscore",
@@ -1603,7 +1950,8 @@ def main() -> int:
     print(
         "[runtime-core-boundary] PASS linked RuntimeCore lifecycle and "
         "immutable composition query/control/replacement plus live action and "
-        "on-demand typed telemetry planes"
+        "on-demand typed telemetry planes, with host-only composition rendering "
+        "and its stub-backed renderer contract"
     )
     return 0
 

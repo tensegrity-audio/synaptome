@@ -114,11 +114,12 @@ fractional values are floored, and a request at least as large as the number of
 prior layers also means all prior layers. An invalid effect-layer index
 produces an empty window that does not claim to include all prior layers.
 
-Runtime owns this routing math. The current host-side `PostEffectChain` still
-owns concrete built-in effect defaults, coverage-mask parameters, render
-targets, shaders, and type-specific execution. That adapter is transitional
-implementation, not a public Effect SDK and not evidence that arbitrary effects
-can be dropped in or hot-loaded. The public Element SDK remains the
+Runtime owns this routing math. The host-only `HostCompositionRenderer` owns
+the per-layer/composite GPU targets and presentation. `PostEffectChain` owns
+concrete built-in effect defaults, coverage-mask parameters, shaders, and
+type-specific execution behind the narrow private `HostCompositionEffects`
+interface. Neither host type is a public Effect SDK or evidence that arbitrary
+effects can be dropped in or hot-loaded. The public Element SDK remains the
 compiler-matched source/static-link boundary described by the SDK decision
 record.
 
@@ -155,17 +156,20 @@ point. After commit, the caller-held prepared result keeps the retired action
 table and element alive together until pointer-bearing parameter, mapping,
 MIDI, and OSC consumers have been invalidated or rebound.
 
-Mutable FBO access and read-only element inspection remain named host seams and
-SEAC-3 migration debt. Mutable element-specific action access has been replaced
-by a generic live-instance contract. During candidate preparation an element
-may register pointer-free action descriptors and no-argument handlers. Runtime
-validates the local IDs and handlers, owns the handler table, copies only the
-descriptors into `CompositionLayerSnapshot`, and invokes a command by
-zero-based composition-layer index plus local action ID. The host no longer
-caches derived Grid, Geodesic, Perlin, or Game of Life pointers. It selects
-instances from immutable composition snapshots and uses each copied registry
-prefix for live parameter reads, MIDI/OSC binding, Grid density cycling, and
-Game of Life pause.
+That ownership split retires the raw mutable render-target seam:
+`ofApp` delegates composition rendering and no GPU target crosses Runtime. The
+dedicated renderer test proves stub-backed traversal/policy/failure behavior,
+not pixels, shaders, or a real GL context.
+
+Mutable element-specific action access has been replaced by a generic
+live-instance contract. During candidate preparation an element may register
+pointer-free action descriptors and no-argument handlers. Runtime validates the
+local IDs and handlers, owns the handler table, copies only the descriptors
+into `CompositionLayerSnapshot`, and invokes a command by zero-based
+composition-layer index plus local action ID. The host no longer caches derived
+Grid, Geodesic, Perlin, or Game of Life pointers. It selects instances from
+immutable composition snapshots and uses each copied registry prefix for live
+parameter reads, MIDI/OSC binding, Grid density cycling, and Game of Life pause.
 
 This first action slice is intentionally not a persistence or mapping contract.
 Actions do not become parameter state, receive an expanded

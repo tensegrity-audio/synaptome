@@ -2638,10 +2638,6 @@ int main() {
 
         require(runtime.compositionLayerCount() == 8,
                 "runtime composition capacity drifted");
-        require(
-            static_cast<bool>(runtime.compositionRenderTargetsForHost(2)) &&
-                !runtime.compositionRenderTargetsForHost(99),
-            "runtime render-target access did not enforce composition bounds");
 
         request.typeId = "tests.runtime.good";
         request.definitionId = "tests.definition.control-plane-a";

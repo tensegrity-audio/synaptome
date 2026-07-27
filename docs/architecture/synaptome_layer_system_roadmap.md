@@ -54,7 +54,7 @@ creative modules without churning stable public IDs.
   mapping surface.
 - Layer catalog and parameter manifest generation from package metadata.
 - Source registration now, generated registration or loaders later.
-- Single-layer static validation and runtime/offscreen bench.
+- Single-layer static validation and a stub-backed lifecycle/draw-dispatch bench.
 
 ## What Does Not Belong Here
 
@@ -120,7 +120,7 @@ package-only snapshots, opt-in combined catalog/manifest snapshots, generated
 content snapshots, and a schema-checked read-only Browser inspection payload.
 The Browser consumes that payload without instantiating packages, one reviewed
 source-registered package can be activated explicitly, and a focused
-offscreen lifecycle bench exists. Automatic package discovery/loading remains
+stub-backed lifecycle/draw-dispatch bench exists. Automatic package discovery/loading remains
 a future phase.
 
 ## Where We Stand
@@ -161,7 +161,7 @@ What is real today:
 - Missing provider defaults are marked and preserved without changing package
   metadata or stored values.
 - Signal Bloom has explicit default-off source registration and a focused
-  native lifecycle/offscreen bench.
+  native stub-backed lifecycle/draw-dispatch bench.
 - Active packages expose ordered preset banks as labeled Browser choices.
   Selection persists stable IDs in the ignored show-machine override and
   affects the next layer instantiation without mutating current scene or
@@ -260,7 +260,7 @@ indexes them, but this document owns their meaning and next actions.
 | CG-13 | Manifest generation from package parameters | Package-derived parameter manifest snapshots expand package suffixes through `registryPrefix`; `gen_parameter_manifest.py --include-packages` now writes/checks a draft combined manifest without changing the canonical manifest. | Decide when package-derived entries become part of the canonical `parameter_manifest.json` rather than a draft combined gate. |
 | CG-14 | Dropdown option metadata and dynamic providers | Matching live package parameters use one labeled picker for static `options[]` and registered `optionsSource` choices. Selection updates the existing registry value, provider revisions close stale pickers, and unavailable current values remain preserved until explicit replacement. | Reuse the same metadata/picker path on the next packaged layer and keep raw numeric/string editing available only where no choices are declared. |
 | CG-15 | Layer preset package contract | Package-owned suffix-based presets and ordered banks are schema-validated. The Browser persists a stable bank/preset selection in the operator-local override and applies it on the next layer load with tested precedence and rollback. | Keep current scene values authoritative; consider live preset application only after value provenance and transactional rollback exist. |
-| CG-16 | Single-layer package validator and runtime bench | Signal Bloom now passes a focused static check and native lifecycle/offscreen bench; full package-vs-runtime descriptor comparison and pixel/non-blank output checks remain. | Compare every runtime descriptor against package declarations, then add optional rendered-output assertions. |
+| CG-16 | Single-layer package validator and runtime bench | Signal Bloom now passes a focused static check and native stub-backed lifecycle/draw-dispatch bench; full package-vs-runtime descriptor comparison and pixel/non-blank output checks remain. | Compare every runtime descriptor against package declarations, then add optional rendered-output assertions. |
 | CG-17 | Folder-driven discovery and file-backed generated layers | Current catalog behavior relies on explicit layer JSON entries; STL-style dropped files do not yet have a standard generated asset/template path. | Define discovery roots, folder-to-Browser rules, stable generated IDs, sidecar overrides, and template schemas for file-backed generated layers. |
 | CG-18 | Package OSC mapping presets | Packages can ship validated suffix-based OSC/audio/control mapping suggestions, and activation records but never applies the chosen mapping preset. Editable Browser mapping rows do not exist yet. | Add explicit apply/edit controls with slot expansion, conflict preview, and rollback while retaining scene/operator ownership. |
 
@@ -484,10 +484,10 @@ Success means one layer can prove that it works without launching the full
 performance UI.
 
 Implemented lifecycle seam: `LayerPackageBench` creates Signal Bloom through
-`LayerFactory`, registers 18 parameters, advances 240 frames, draws into an
-offscreen framebuffer, verifies scene-value precedence, and rejects duplicate
-factory registration. Pixel/non-blank image comparison remains future bench
-depth.
+`LayerFactory`, registers 18 parameters, advances 240 frames, issues a
+stub-backed draw call, verifies scene-value precedence, and rejects duplicate
+factory registration. It does not create a real framebuffer or prove pixels,
+GL state, or non-blank output; those remain future bench depth.
 
 ### Phase 10: Registration Evolution
 
@@ -517,7 +517,7 @@ The safe vertical slice now includes a generated optional runtime adapter,
 revisioned app-owned dynamic option resolution, explicit labeled live parameter
 selection with unavailable-value preservation, and labeled operator-local
 preset selection for the next layer load. Release, incremental, native-flow,
-contract, and offscreen bench gates pass.
+contract, and stub-backed lifecycle/draw-dispatch bench gates pass.
 
 1. Add mapping-preset preview/apply/edit controls with slot expansion, conflict
    handling, and rollback;

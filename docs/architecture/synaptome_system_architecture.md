@@ -207,11 +207,23 @@ Synaptome may consume device data, but it must not depend on device implementati
 
 ### App Shell
 
-The current shell is `synaptome`. `ofApp.cpp` remains the host composition root for openFrameworks lifecycle, windows, UI, device adapters, persistence orchestration, and current compositor/effect adapters. `SynaptomeRuntimeCore` owns the fixed composition records, generic element lifecycle and control, exact parameter ownership, and immutable composition snapshots. The remaining host-only render-target, read-only element, and mutable legacy-element seams are named migration debt.
+The current shell is `synaptome`. `ofApp.cpp` remains the host composition root
+for openFrameworks lifecycle, windows, UI, device adapters, and persistence
+orchestration, but delegates composition rendering and presentation.
+`SynaptomeRuntimeCore` owns the fixed composition records, generic element
+lifecycle/control, exact parameter ownership, immutable composition snapshots,
+and effect-coverage policy without owning GPU targets.
+`HostCompositionRenderer` privately owns per-slot/composite GPU targets and
+presentation, and reaches `PostEffectChain` only through the narrow internal
+`HostCompositionEffects` interface. No raw mutable render target crosses
+Runtime or the Element SDK. The legacy Text singleton behind
+`BuiltinElementHostBindings` and broader service-container responsibilities
+remain migration debt.
 
 This is the right runtime center, but it still needs smaller internal service boundaries:
 
-- App composition: `main.cpp`, `ofApp.cpp`, `ofApp.h`.
+- App composition: `main.cpp`, `ofApp.cpp`, `ofApp.h`,
+  `src/host/HostCompositionRenderer.*`, and `HostCompositionEffects.h`.
 - Core runtime state: `SynaptomeRuntimeCore`, `ParameterRegistry`, `BankRegistry`, `ConsoleStore`.
 - Runtime surfaces: projection draw, Console draw, Control Window draw, HUD/Browser layout.
 

@@ -2,6 +2,48 @@
 
 This changelog records Project Ops and administrative workflow changes. Product release versioning remains governed by `docs/release_policy.md`.
 
+## 2026-07-27 - architecture - seac3r_host_composition_renderer_boundary
+
+- Request ID: `spine_element_architecture_convergence`
+- Phase / Milestone: SEAC-3 and SEAC-3R complete; 3 of 12 roadmap steps done
+- Runtime ownership: `SynaptomeRuntimeCore` retains composition state,
+  lifecycle, transactional replacement/mutation, immutable queries, effect
+  coverage policy, actions, telemetry, and generic update/resize/draw dispatch.
+  Runtime and `CompositionLayer` no longer own FBOs.
+- Host rendering: `HostCompositionRenderer` privately owns all fixed per-slot
+  and composite GPU targets, composition traversal, latest-frame presentation,
+  preview presentation, and graphics-resource release. `ofApp` delegates these
+  responsibilities.
+- Effect boundary: The renderer reaches the concrete `PostEffectChain` only
+  through the narrow internal `HostCompositionEffects` interface. This is a
+  host implementation seam, not a public Element SDK effect API or ABI.
+- Retired surface: `CompositionRenderTargets` and
+  `compositionRenderTargetsForHost` are removed. No raw mutable render target
+  crosses Runtime, the Element SDK, or `ofApp`.
+- Focused confidence: Added `HostCompositionRendererTest`, which compiles the
+  production renderer, Runtime, and `LayerFactory` against controlled FBO/GL
+  stubs without `ofApp`, `PostEffectChain`, the RuntimeCore library shortcut,
+  or the openFrameworks library. Its Release executable passes traversal,
+  effect coverage/order, fail-open, target reuse/release, preview/presentation,
+  and allocation-status scenarios.
+- Evidence boundary: The dedicated renderer target is stub-backed policy and
+  draw-dispatch evidence. It does not prove pixels, shader execution,
+  graphics-state containment in a real GL context, or live projection.
+  `LayerPackageBench` likewise proves lifecycle and stub-backed draw dispatch,
+  not an offscreen framebuffer image.
+- Deferred validation: BrowserFlow execution and live dual-screen hardware
+  rehearsal were explicitly not run because the postponed dual-screen path
+  remains in that suite.
+- Validation: Release host, RuntimeCore and renderer native tests, BrowserFlow
+  Release compile/link, Element SDK and RuntimeCore boundaries, all 17
+  public-app contracts, scene/display contracts, pytest, Project Ops, and diff
+  checks pass.
+- Remaining debt / next gate: Handwritten aggregate registration remains until
+  SEAC-8. The shared `TextLayerState` singleton and pre-adoption
+  `configure()` effects remain SEAC-4B/SEAC-5 debt. SEAC-4A static
+  `ElementDescriptor` identity/action declarations and exact live-binding
+  parity are now the active gate.
+
 ## 2026-07-27 - architecture - seac3r_builtin_host_binding_isolation
 
 - Request ID: `spine_element_architecture_convergence`
@@ -762,7 +804,8 @@ This changelog records Project Ops and administrative workflow changes. Product 
 - Request Doc: `docs/project_ops/in_progress/layer_package_compatibility_bench_scaffolding.md`
 - Roadmap Entry: `docs/project_ops/roadmap.md`
 - Validation: All 13 public-app contracts, package-only and combined gates, all
-  19 BrowserFlow scenarios, Signal Bloom offscreen bench, Release x64 build,
+  19 BrowserFlow scenarios, Signal Bloom stub-backed lifecycle/draw-dispatch
+  bench, Release x64 build,
   and 2.55-second identical incremental build.
 - Follow-Up Actions: Promote named static/runtime option values into an
   explicit labeled dropdown before adding mapping-preset apply/edit controls.
@@ -777,8 +820,9 @@ This changelog records Project Ops and administrative workflow changes. Product 
 - Request Doc: `docs/project_ops/in_progress/layer_package_compatibility_bench_scaffolding.md`
 - Roadmap Entry: `docs/project_ops/roadmap.md`
 - Validation: All 13 public-app contracts, package-only and combined
-  catalog/manifest gates, all 18 BrowserFlow scenarios, Signal Bloom offscreen
-  bench, Release x64 build, and 1.92-second identical incremental build.
+  catalog/manifest gates, all 18 BrowserFlow scenarios, Signal Bloom
+  stub-backed lifecycle/draw-dispatch bench, Release x64 build, and 1.92-second
+  identical incremental build.
 - Follow-Up Actions: Add explicit package preset-bank selection with the
   locked value precedence before mapping-preset apply/edit controls.
 
@@ -795,7 +839,8 @@ This changelog records Project Ops and administrative workflow changes. Product 
 - Roadmap Entry: `docs/project_ops/roadmap.md`
 - Validation: All 13 public-app contracts, package-only and combined
   catalog/manifest gates, inspection schemas, all 18 BrowserFlow scenarios,
-  Signal Bloom offscreen bench, Release x64 builds, 2.14-second incremental
+  Signal Bloom stub-backed lifecycle/draw-dispatch bench, Release x64 builds,
+  2.14-second incremental
   rebuild, payload immutability assertion, and live-window Signal Bloom/Aurora
   Veil loading.
 - Follow-Up Actions: Add an explicit runtime option-provider registry and
@@ -809,7 +854,7 @@ This changelog records Project Ops and administrative workflow changes. Product 
 - Summary: Added a focused package check command, manifest-only Browser
   inspection rows, disabled-by-default source-registered Signal Bloom
   activation, deterministic preset/override precedence, suggestion-only
-  mappings, and a native headless/offscreen lifecycle bench.
+  mappings, and a native stub-backed lifecycle/draw-dispatch bench.
 - Request Doc: `docs/project_ops/in_progress/layer_package_compatibility_bench_scaffolding.md`
 - Roadmap Entry: `docs/project_ops/roadmap.md`
 - Validation: `synaptome-layer check`; `LayerPackageBench.exe`; all 18

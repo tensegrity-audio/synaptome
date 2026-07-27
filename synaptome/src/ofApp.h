@@ -21,6 +21,7 @@
 #include "core/BankRegistry.h"
 #include "core/OptionProviderRegistry.h"
 #include "runtime/Runtime.h"
+#include "host/HostCompositionRenderer.h"
 #include "visuals/LayerFactory.h"
 #include "visuals/LayerLibrary.h"
 #include "visuals/effects/PostEffectChain.h"
@@ -469,9 +470,10 @@ public:
 
 
     PostEffectChain postEffects;
-    ofFbo compositeFbo;
-    int compositeWidth = 0;
-    int compositeHeight = 0;
+    synaptome::host::HostCompositionRenderer compositionRenderer_{
+        runtime_,
+        postEffects,
+    };
 
     void setupOscRoutes();
     void loadOscInputSettings();
@@ -622,12 +624,6 @@ private:
     float consoleSlotBaseOpacity(int layerIndex) const;
     void updateConsoleLayers(const LayerUpdateParams& params);
     void drawConsole(glm::ivec2 viewport, float beatPhase);
-    void ensureConsoleLayerViewports(glm::ivec2 viewport);
-    void ensureSlotFbo(ofFbo& fbo, glm::ivec2 viewport);
-    bool applyEffectSlot(
-        const ConsoleSlotSnapshot& slot,
-        ofFbo& src,
-        ofFbo& dst);
     void handleHudVisibilityChanged(bool visible);
     bool toggleHudTools(MenuController& controller);
     bool openHudLayoutEditor(MenuController& controller);

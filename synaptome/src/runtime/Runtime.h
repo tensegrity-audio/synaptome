@@ -113,18 +113,6 @@ public:
     CompositionTelemetryResult compositionElementTelemetry(
         std::size_t zeroBasedIndex) const;
 
-    struct CompositionRenderTargets {
-        ofFbo* layer = nullptr;
-        ofFbo* upstream = nullptr;
-        ofFbo* effect = nullptr;
-
-        explicit operator bool() const noexcept {
-            return layer && upstream && effect;
-        }
-    };
-
-    CompositionRenderTargets compositionRenderTargetsForHost(
-        std::size_t zeroBasedIndex) noexcept;
     CompositionCoverageWindow resolveEffectCoverage(
         std::size_t effectLayerIndex,
         float coverage) const noexcept;

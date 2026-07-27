@@ -46,7 +46,9 @@ Everything below should support or clarify that spine.
 
 | Subsystem | Current Code Anchors | Current Role | Target Boundary |
 | --- | --- | --- | --- |
-| App shell | `synaptome/src/ofApp.*`, `main.cpp` | Host composition root for openFrameworks lifecycle and platform adapters; some rendering and persistence orchestration remains host-owned. | Synaptome runtime host, with smaller services extracted internally. |
+| App shell | `synaptome/src/ofApp.*`, `main.cpp` | Host composition root for openFrameworks lifecycle and platform adapters; delegates composition rendering/presentation and still orchestrates persistence. | Synaptome runtime host, with smaller services extracted internally. |
+| Composition runtime | `src/runtime/Runtime.*`, `CompositionTypes.h` | Owns the eight composition records, element lifecycle, mutation/replacement, copied queries, effect-coverage policy, and generic resize/update/draw dispatch. | State/lifecycle/policy owner with no GPU-target or host dependency. |
+| Composition renderer | `src/host/HostCompositionRenderer.*`, `HostCompositionEffects.h` | Privately owns per-slot/composite GPU targets, traverses copied Runtime state, applies host effects, and presents the latest frame/preview. | Host-only graphics owner; no raw mutable target crosses Runtime or the Element SDK. |
 | Parameter runtime | `src/core/ParameterRegistry.h`, `src/common/modifier.h` | Shared controllable value registry. | Public core contract. |
 | Banks | `src/core/BankRegistry.h` | Groups controls by global, scene, and layer scope. | Public control-bank contract. |
 | Layer SDK | `src/visuals/Layer.h`, `LayerFactory.*`, `LayerLibrary.*` | Loadable visual/module contract and catalog. | Public layer authoring SDK. |
@@ -65,7 +67,13 @@ Everything below should support or clarify that spine.
 
 The first subsystem audit pass surfaced these high-priority facts:
 
-- `ofApp` is still the primary host composition root and wires most platform-facing services. `SynaptomeRuntimeCore` now owns composition records, generic element lifecycle and control, exact parameter ownership, and immutable composition snapshots. Smaller internal services are still needed around scenes, Browser state, adapters, HUD, rendering, and persistence.
+- `ofApp` is still the primary host composition root and wires most
+  platform-facing services. `SynaptomeRuntimeCore` owns composition records,
+  generic element lifecycle/control, exact parameter ownership, copied
+  snapshots, and effect-coverage policy without owning FBOs.
+  `HostCompositionRenderer` owns GPU targets and presentation behind a narrow
+  host-only effect interface. Smaller internal services are still needed around
+  scenes, Browser state, adapters, HUD, and persistence.
 - Browser is the public term. The implementation still carries legacy names such as `ControlMappingHubState`, `ControlHub`, `ui.hub.visible`, `overlay.hub.visible`, `control_hub_prefs.json`, and `tools/run_control_hub_flow.py`. These are compatibility/internal names, not language for public docs.
 - Parameter IDs are the central contract, but duplicate ID enforcement, range semantics, pointer lifetime, deprecation policy, and generated manifests need hardening before public release.
 - State boundaries are currently blended. Scene state, Console presentation state, window/display state, local operator preferences, mapping state, and runtime sensor snapshots all exist, but not every one has an explicit contract.
@@ -298,7 +306,11 @@ What it is:
 Current implementation:
 - The Console currently has eight slots.
 - `ConsoleState::kSlotCount = 8`.
-- `SynaptomeRuntimeCore` owns the live composition records; `ofApp` consumes immutable `CompositionSnapshot` values plus three named host-only migration seams for render targets and element adapters.
+- `SynaptomeRuntimeCore` owns the live composition records, lifecycle, and
+  policy. `ofApp` consumes immutable `CompositionSnapshot` values and delegates
+  graphics traversal to `HostCompositionRenderer`; Runtime exposes no raw
+  mutable render target. Legacy Text parameter/font synchronization remains a
+  separate host-only compatibility adapter.
 - `ConsoleStore` persists slot inventory and presentation state.
 
 Slot state includes:

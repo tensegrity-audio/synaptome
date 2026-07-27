@@ -10,7 +10,6 @@
 #include "ofFileUtils.h"
 #include "ofEvents.h"
 #include "ofLog.h"
-
-class ofCamera {};
+#include "ofCamera.h"
 
 #endif

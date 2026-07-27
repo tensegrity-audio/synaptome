@@ -501,6 +501,7 @@
 		<ClCompile Include="src\main.cpp" />
 
 		<ClCompile Include="src\ofApp.cpp" />
+		<ClCompile Include="src\host\HostCompositionRenderer.cpp" />
 		<ClCompile Include="src\runtime\BuiltinElementHostBindings.cpp" />
 		<ClCompile Include="src\runtime\BuiltinElements.cpp" />
 		<ClCompile Include="src\runtime\SignalBloomRegistration.cpp" />
@@ -692,6 +693,8 @@
 
 		<ClInclude Include="src\ofApp.h" />
 		<ClInclude Include="src\core\OptionProviderRegistry.h" />
+		<ClInclude Include="src\host\HostCompositionEffects.h" />
+		<ClInclude Include="src\host\HostCompositionRenderer.h" />
 		<ClInclude Include="src\runtime\BuiltinElementHostBindings.h" />
 		<ClInclude Include="src\runtime\BuiltinElements.h" />
 		<ClInclude Include="src\runtime\SignalBloomRegistration.h" />
