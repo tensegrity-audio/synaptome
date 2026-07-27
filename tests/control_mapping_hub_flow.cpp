@@ -928,6 +928,294 @@ bool RunParameterRegistryStorageInvalidationScenario() {
     return true;
 }
 
+bool RunElementParameterRegistryContractScenario() {
+    auto require = [](bool condition, const std::string& message) {
+        if (!condition) throw std::runtime_error(message);
+    };
+    auto nearlyEqual = [](float left, float right) {
+        return std::fabs(left - right) < 0.0001f;
+    };
+
+    ParameterRegistry registry;
+    float liveScale = 2.0f;
+    bool liveEnabled = true;
+
+    ParameterRegistry::Descriptor scaleDescriptor;
+    scaleDescriptor.label = "Element Scale";
+    scaleDescriptor.group = "Tests";
+    scaleDescriptor.range.min = 0.1f;
+    scaleDescriptor.range.max = 10.0f;
+    scaleDescriptor.range.step = 0.1f;
+    registry.addFloat(
+        "console.layer1.scale",
+        &liveScale,
+        liveScale,
+        scaleDescriptor);
+
+    ParameterRegistry::Descriptor enabledDescriptor;
+    enabledDescriptor.label = "Element Enabled";
+    enabledDescriptor.group = "Tests";
+    registry.addBool(
+        "console.layer1.enabled",
+        &liveEnabled,
+        liveEnabled,
+        enabledDescriptor);
+
+    modifier::Modifier scaleMod;
+    scaleMod.type = modifier::Type::kAutomation;
+    scaleMod.blend = modifier::BlendMode::kAbsolute;
+    scaleMod.inputRange = {0.0f, 1.0f, false};
+    scaleMod.outputRange = {0.0f, 1.0f, false};
+    registry.addFloatModifier("console.layer1.scale", scaleMod);
+    registry.setFloatModifierInput(
+        "console.layer1.scale",
+        0,
+        0.75f,
+        true);
+
+    modifier::Modifier enabledMod;
+    enabledMod.type = modifier::Type::kAutomation;
+    enabledMod.blend = modifier::BlendMode::kToggle;
+    enabledMod.inputRange = {0.0f, 1.0f, false};
+    enabledMod.outputRange = {0.0f, 1.0f, false};
+    registry.addBoolModifier("console.layer1.enabled", enabledMod);
+    registry.setBoolModifierInput(
+        "console.layer1.enabled",
+        0,
+        0.0f,
+        true);
+    registry.evaluateAllModifiers();
+
+    const auto* scale = registry.findFloat("console.layer1.scale");
+    const auto* enabled = registry.findBool("console.layer1.enabled");
+    require(
+        scale &&
+            scale->value == &liveScale &&
+            nearlyEqual(scale->baseValue, 2.0f) &&
+            nearlyEqual(*scale->value, 0.75f),
+        "typed float lookup did not preserve distinct base and live values");
+    require(
+        enabled &&
+            enabled->value == &liveEnabled &&
+            enabled->baseValue &&
+            !*enabled->value,
+        "typed bool lookup did not preserve distinct base and live values");
+
+    const ParameterRegistry::Range copiedRange = scale->meta.range;
+    require(
+        nearlyEqual(copiedRange.min, 0.1f) &&
+            nearlyEqual(copiedRange.max, 10.0f) &&
+            nearlyEqual(copiedRange.step, 0.1f),
+        "float lookup did not expose complete range metadata");
+
+    registry.setFloatBase("console.layer1.scale", 3.25f, true);
+    registry.setBoolBase("console.layer1.enabled", false, true);
+    require(
+        nearlyEqual(registry.getFloatBase("console.layer1.scale"), 3.25f) &&
+            nearlyEqual(liveScale, 3.25f) &&
+            !registry.getBoolBase("console.layer1.enabled") &&
+            !liveEnabled,
+        "base-plus-live writes did not update both registry and live storage");
+
+    ParameterRegistry replacement;
+    float replacementScale = 4.0f;
+    ParameterRegistry::Descriptor replacementDescriptor = scaleDescriptor;
+    replacementDescriptor.range.min = 0.0f;
+    replacementDescriptor.range.max = 5.0f;
+    replacementDescriptor.range.step = 0.5f;
+    replacement.addFloat(
+        "console.layer1.scale",
+        &replacementScale,
+        replacementScale,
+        replacementDescriptor);
+    registry.swap(replacement);
+
+    const auto* replacementParam =
+        registry.findFloat("console.layer1.scale");
+    require(
+        replacementParam &&
+            replacementParam->value == &replacementScale &&
+            nearlyEqual(replacementParam->meta.range.min, 0.0f) &&
+            nearlyEqual(replacementParam->meta.range.max, 5.0f) &&
+            nearlyEqual(replacementParam->meta.range.step, 0.5f),
+        "registry replacement did not publish the replacement storage and range");
+    require(
+        nearlyEqual(copiedRange.min, 0.1f) &&
+            nearlyEqual(copiedRange.max, 10.0f) &&
+            nearlyEqual(copiedRange.step, 0.1f),
+        "by-value range metadata changed after registry storage replacement");
+    require(
+        registry.findBool("console.layer1.enabled") == nullptr,
+        "registry replacement retained a removed bool parameter");
+    return true;
+}
+
+bool RunElementParameterMidiRebindScenario() {
+    auto require = [](bool condition, const std::string& message) {
+        if (!condition) throw std::runtime_error(message);
+    };
+    auto nearlyEqual = [](float left, float right) {
+        return std::fabs(left - right) < 0.0001f;
+    };
+
+    constexpr const char* kPrefix = "console.layer1";
+    constexpr const char* kContinuousId = "console.layer1.scale";
+    constexpr const char* kSteppedId = "console.layer1.octaves";
+    constexpr int kContinuousCc = 21;
+    constexpr int kSteppedCc = 22;
+
+    ParameterRegistry::Range continuousRange;
+    continuousRange.min = 0.1f;
+    continuousRange.max = 10.0f;
+    continuousRange.step = 0.1f;
+    ParameterRegistry::Range steppedRange;
+    steppedRange.min = 1.0f;
+    steppedRange.max = 8.0f;
+    steppedRange.step = 1.0f;
+
+    float retiredContinuous = 2.0f;
+    float retiredStepped = 3.0f;
+    MidiRouter router;
+    router.bindFloat(
+        kContinuousId,
+        &retiredContinuous,
+        continuousRange.min,
+        continuousRange.max,
+        false,
+        0.0f);
+    router.bindFloat(
+        kSteppedId,
+        &retiredStepped,
+        steppedRange.min,
+        steppedRange.max,
+        true,
+        steppedRange.step);
+    router.setOrUpdateCc(kContinuousId, kContinuousCc);
+    router.setOrUpdateCc(kSteppedId, kSteppedCc);
+
+    auto mappingFor = [&](const std::string& target)
+        -> const MidiRouter::CcMap* {
+        const auto& mappings = router.getCcMaps();
+        const auto found = std::find_if(
+            mappings.begin(),
+            mappings.end(),
+            [&](const MidiRouter::CcMap& mapping) {
+                return mapping.target == target;
+            });
+        return found != mappings.end() ? &*found : nullptr;
+    };
+
+    const auto* continuousMapping = mappingFor(kContinuousId);
+    const auto* steppedMapping = mappingFor(kSteppedId);
+    require(
+        continuousMapping &&
+            nearlyEqual(continuousMapping->outMin, continuousRange.min) &&
+            nearlyEqual(continuousMapping->outMax, continuousRange.max) &&
+            !continuousMapping->snapInt &&
+            nearlyEqual(continuousMapping->step, 0.0f),
+        "continuous MIDI binding adopted descriptor quantization");
+    require(
+        steppedMapping &&
+            nearlyEqual(steppedMapping->outMin, steppedRange.min) &&
+            nearlyEqual(steppedMapping->outMax, steppedRange.max) &&
+            steppedMapping->snapInt &&
+            nearlyEqual(steppedMapping->step, steppedRange.step),
+        "stepped MIDI binding lost its explicit snap/step policy");
+
+    ofxMidiMessage continuousMessage;
+    continuousMessage.status = MIDI_CONTROL_CHANGE;
+    continuousMessage.control = kContinuousCc;
+    continuousMessage.channel = 0;
+    continuousMessage.value = 64;
+    router.newMidiMessage(continuousMessage);
+    const float expectedContinuous =
+        continuousRange.min +
+        (continuousRange.max - continuousRange.min) *
+            (static_cast<float>(continuousMessage.value) / 127.0f);
+    require(
+        std::fabs(retiredContinuous - expectedContinuous) < 0.001f,
+        "continuous MIDI target was quantized by descriptor step");
+
+    ofxMidiMessage steppedMessage;
+    steppedMessage.status = MIDI_CONTROL_CHANGE;
+    steppedMessage.control = kSteppedCc;
+    steppedMessage.channel = 0;
+    steppedMessage.value = 64;
+    router.newMidiMessage(steppedMessage);
+    const float expectedStepped = std::round(
+        steppedRange.min +
+        (steppedRange.max - steppedRange.min) *
+            (static_cast<float>(steppedMessage.value) / 127.0f));
+    require(
+        nearlyEqual(retiredStepped, expectedStepped),
+        "stepped MIDI target did not honor integer snapping");
+
+    router.unbindTargetsByPrefix(kPrefix);
+    const float retiredContinuousAtUnbind = retiredContinuous;
+    const float retiredSteppedAtUnbind = retiredStepped;
+    continuousMessage.value = 100;
+    steppedMessage.value = 100;
+    router.newMidiMessage(continuousMessage);
+    router.newMidiMessage(steppedMessage);
+    require(
+        nearlyEqual(retiredContinuous, retiredContinuousAtUnbind) &&
+            nearlyEqual(retiredStepped, retiredSteppedAtUnbind),
+        "retired element storage received MIDI after target invalidation");
+
+    float replacementContinuous = 1.0f;
+    float replacementStepped = 1.0f;
+    router.bindFloat(
+        kContinuousId,
+        &replacementContinuous,
+        continuousRange.min,
+        continuousRange.max,
+        false,
+        0.0f);
+    router.bindFloat(
+        kSteppedId,
+        &replacementStepped,
+        steppedRange.min,
+        steppedRange.max,
+        true,
+        steppedRange.step);
+    continuousMessage.value = 96;
+    steppedMessage.value = 96;
+    router.newMidiMessage(continuousMessage);
+    router.newMidiMessage(steppedMessage);
+    require(
+        !nearlyEqual(replacementContinuous, 1.0f) &&
+            !nearlyEqual(replacementStepped, 1.0f) &&
+            nearlyEqual(retiredContinuous, retiredContinuousAtUnbind) &&
+            nearlyEqual(retiredStepped, retiredSteppedAtUnbind),
+        "MIDI replacement rebind retained or failed to replace a live target");
+
+    continuousMapping = mappingFor(kContinuousId);
+    steppedMapping = mappingFor(kSteppedId);
+    require(
+        continuousMapping &&
+            !continuousMapping->snapInt &&
+            nearlyEqual(continuousMapping->step, 0.0f) &&
+            steppedMapping &&
+            steppedMapping->snapInt &&
+            nearlyEqual(steppedMapping->step, 1.0f),
+        "MIDI replacement rebind changed explicit snap/step policy");
+
+    router.unbindTargetsByPrefix(kPrefix);
+    const float replacementContinuousAtClear = replacementContinuous;
+    const float replacementSteppedAtClear = replacementStepped;
+    continuousMessage.value = 12;
+    steppedMessage.value = 12;
+    router.newMidiMessage(continuousMessage);
+    router.newMidiMessage(steppedMessage);
+    require(
+        nearlyEqual(
+            replacementContinuous,
+            replacementContinuousAtClear) &&
+            nearlyEqual(replacementStepped, replacementSteppedAtClear),
+        "cleared element storage remained reachable through MIDI targets");
+    return true;
+}
+
 bool RunSlotDropdownFocusScenario() {
     ControlMappingHubState hub;
     ParameterRegistry registry;

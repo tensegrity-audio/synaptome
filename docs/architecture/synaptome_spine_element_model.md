@@ -146,16 +146,21 @@ passes a zero-based composition-layer index to
 rejects out-of-range, empty, effect, or overlay layers before construction, and
 keeps the old instance live through candidate setup. Adoption is the commit
 point. After commit, the caller-held prepared result keeps the retired element
-alive until parameter and derived-pointer consumers have been invalidated.
+alive until pointer-bearing parameter, mapping, MIDI, and OSC consumers have
+been invalidated or rebound.
 
 Mutable FBO access, read-only element inspection, and mutable element-specific
 compatibility actions still use three separate named host seams. Those seams are
 SEAC-3 migration debt. Generic replacement no longer consumes the mutable
-element seam. Its two remaining host consumer areas are optional post-install
-Perlin/Game of Life actions and derived Grid/Geodesic/Perlin/Game of Life
-pointer-cache refresh for legacy consumers. The next boundary moves those
-actions and cached consumers behind narrower Runtime/parameter/action contracts
-so the mutable seam can retire.
+element seam. The host no longer caches derived Grid, Geodesic, Perlin, or Game
+of Life pointers. It selects instances from immutable composition snapshots and
+uses each copied registry prefix for live parameter reads, MIDI/OSC binding,
+Grid density cycling, and Game of Life pause. Mutable legacy access is
+structurally isolated to two slot-addressed compatibility actions: Geodesic
+subdivision adjustment and immediate Game of Life randomization. The Geodesic
+subdivision status query and current video status inspection remain read-only
+compatibility debt. The next boundary replaces those action and status adapters
+with declared contracts so the mutable and read-only seams can retire.
 
 The spine does not:
 

@@ -8,6 +8,27 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def function_body(source: str, signature: str) -> str:
+    """Return one brace-balanced C++ function body."""
+    start = source.find(signature)
+    if start < 0:
+        raise ValueError(f"missing function signature: {signature}")
+    brace = source.find("{", start)
+    if brace < 0:
+        raise ValueError(f"missing function body: {signature}")
+
+    depth = 0
+    for index in range(brace, len(source)):
+        char = source[index]
+        if char == "{":
+            depth += 1
+        elif char == "}":
+            depth -= 1
+            if depth == 0:
+                return source[brace + 1:index]
+    raise ValueError(f"unterminated function body: {signature}")
+
+
 def main() -> int:
     errors: list[str] = []
     runtime_header = (ROOT / "synaptome/src/runtime/Runtime.h").read_text(encoding="utf-8")
@@ -290,14 +311,27 @@ def main() -> int:
             "remaining read-only element inspection must use the named "
             "composition-element seam"
         )
-    legacy_mutable_use_count = app.count(
-        "runtime_.legacyCompositionElementForHost"
-    )
-    if legacy_mutable_use_count != 2:
-        errors.append(
-            "mutable legacy composition-element access must remain limited to "
-            "the two documented compatibility areas"
-        )
+    for token in (
+        "GridLayer* gridLayer",
+        "GeodesicLayer* geodesicLayer",
+        "PerlinNoiseLayer* perlinLayer",
+        "GameOfLifeLayer* gameOfLifeLayer",
+        "refreshLayerReferences",
+    ):
+        if token in app_header or token in app:
+            errors.append(
+                "ofApp must not retain derived element-pointer caches or their "
+                f"refresh path: {token}"
+            )
+    for token in (
+        "void registerPerlinMidi(PerlinNoiseLayer*",
+        "void registerGameOfLifeMidi(GameOfLifeLayer*",
+    ):
+        if token in app_header or token in app:
+            errors.append(
+                "element-specific MIDI registration still accepts a concrete "
+                f"element pointer: {token}"
+            )
     if "runtime_.compositionLayer(" in app or "runtime_.releaseCompositionElement" in app:
         errors.append("ofApp still calls a transitional mutable Runtime composition API")
     if re.search(
@@ -363,61 +397,267 @@ def main() -> int:
         "invalidateParameterRegistryStorage",
         replacement_adopt,
     )
-    retired_reference_refresh = add_body.find(
-        "refreshLayerReferences()",
+    post_adoption_snapshot = add_body.find(
+        "runtime_.compositionLayerSnapshot",
         replacement_adopt,
     )
-    post_adoption_legacy_adapter = add_body.find(
-        "runtime_.legacyCompositionElementForHost",
-        replacement_adopt,
+    perlin_registry_bind = add_body.find(
+        "registerPerlinMidi(*installed)",
+        post_adoption_snapshot,
+    )
+    game_of_life_registry_bind = add_body.find(
+        "registerGameOfLifeMidi(*installed)",
+        post_adoption_snapshot,
+    )
+    game_of_life_randomize = add_body.find(
+        "randomizeGameOfLifeAtSlot",
+        post_adoption_snapshot,
     )
     if min(
         replacement_prepare,
         replacement_adopt,
         destructive_clear,
         registry_invalidation,
-        retired_reference_refresh,
-        post_adoption_legacy_adapter,
+        post_adoption_snapshot,
+        perlin_registry_bind,
+        game_of_life_registry_bind,
+        game_of_life_randomize,
     ) < 0:
         errors.append("host visual replacement transaction is incomplete")
     elif not (
         replacement_prepare <
         replacement_adopt <
         registry_invalidation <=
-        retired_reference_refresh <
-        post_adoption_legacy_adapter <
+        post_adoption_snapshot <
+        perlin_registry_bind <
+        game_of_life_registry_bind <
+        game_of_life_randomize <
         destructive_clear
     ):
         errors.append(
-            "host must adopt, invalidate registry consumers and retired "
-            "references, run only post-adoption legacy adapters, and keep "
-            "destructive non-element clear after the atomic Runtime path"
+            "host must adopt, invalidate registry consumers, resolve the "
+            "installed snapshot, bind registry-backed controls, run the "
+            "narrow GoL action, and keep destructive non-element clear after "
+            "the atomic Runtime path"
         )
-    if add_body.find(
-        "runtime_.legacyCompositionElementForHost",
-        replacement_prepare,
-        replacement_adopt,
-    ) >= 0:
+    if "runtime_.legacyCompositionElementForHost" in add_body:
         errors.append(
-            "generic replacement preparation must not request a mutable live "
-            "element from the host seam"
+            "host add/replacement flow must invoke named action adapters "
+            "rather than requesting a mutable live element"
         )
-    refresh_start = app.find("void ofApp::refreshLayerReferences")
-    refresh_end = app.find(
-        "std::string ofApp::canonicalScenePath",
-        refresh_start,
-    )
-    refresh_body = app[refresh_start:refresh_end]
-    if (
-        refresh_start < 0
-        or refresh_body.count("runtime_.legacyCompositionElementForHost") != 1
-        or "dynamic_cast<GridLayer*>" not in refresh_body
-        or "dynamic_cast<GameOfLifeLayer*>" not in refresh_body
-    ):
-        errors.append(
-            "the second mutable legacy seam use must remain isolated to "
-            "derived-pointer cache refresh"
+
+    try:
+        geodesic_query_body = function_body(
+            app,
+            "std::optional<int> ofApp::geodesicSubdivisionAtSlot",
         )
+        geodesic_adjust_body = function_body(
+            app,
+            "bool ofApp::adjustGeodesicSubdivisionAtSlot",
+        )
+        game_of_life_randomize_body = function_body(
+            app,
+            "bool ofApp::randomizeGameOfLifeAtSlot",
+        )
+        first_type_body = function_body(
+            app,
+            "ofApp::firstConsoleElementOfType",
+        )
+        float_value_body = function_body(
+            app,
+            "std::optional<float> ofApp::consoleFloatValue",
+        )
+        bool_value_body = function_body(
+            app,
+            "std::optional<bool> ofApp::consoleBoolValue",
+        )
+        float_write_body = function_body(
+            app,
+            "bool ofApp::writeConsoleFloatLive",
+        )
+        bool_write_body = function_body(
+            app,
+            "bool ofApp::writeConsoleBoolLive",
+        )
+        perlin_midi_body = function_body(
+            app,
+            "void ofApp::registerPerlinMidi",
+        )
+        game_of_life_midi_body = function_body(
+            app,
+            "void ofApp::registerGameOfLifeMidi",
+        )
+        osc_routes_body = function_body(
+            app,
+            "void ofApp::setupOscRoutes",
+        )
+    except ValueError as exc:
+        errors.append(str(exc))
+    else:
+        for token in (
+            "runtime_.compositionLayerSnapshot",
+            'slot->typeId != "geodesic"',
+            "runtime_.compositionElementForHost",
+            "dynamic_cast<const GeodesicLayer*>",
+            "geodesic->subdivisions()",
+        ):
+            if token not in geodesic_query_body:
+                errors.append(
+                    "read-only Geodesic subdivision query is missing "
+                    f"semantic guard: {token}"
+                )
+        if "legacyCompositionElementForHost" in geodesic_query_body:
+            errors.append(
+                "read-only Geodesic subdivision query must not use mutable "
+                "legacy access"
+            )
+
+        for token in (
+            "runtime_.compositionLayerSnapshot",
+            'slot->typeId != "geodesic"',
+            "delta == 0",
+            "runtime_.legacyCompositionElementForHost",
+            "dynamic_cast<GeodesicLayer*>",
+            "geodesic->incrementSubdivision()",
+            "geodesic->decrementSubdivision()",
+        ):
+            if token not in geodesic_adjust_body:
+                errors.append(
+                    "Geodesic mutable action adapter is missing semantic "
+                    f"guard: {token}"
+                )
+        for token in (
+            "runtime_.compositionLayerSnapshot",
+            'slot->typeId != "gameOfLife"',
+            "runtime_.legacyCompositionElementForHost",
+            "dynamic_cast<GameOfLifeLayer*>",
+            "gameOfLife->randomize()",
+        ):
+            if token not in game_of_life_randomize_body:
+                errors.append(
+                    "Game of Life mutable action adapter is missing semantic "
+                    f"guard: {token}"
+                )
+
+        app_without_mutable_action_bodies = app.replace(
+            geodesic_adjust_body,
+            "",
+            1,
+        ).replace(
+            game_of_life_randomize_body,
+            "",
+            1,
+        )
+        if "runtime_.legacyCompositionElementForHost" in app_without_mutable_action_bodies:
+            errors.append(
+                "mutable legacy composition-element access escaped the two "
+                "named action adapter bodies"
+            )
+        for token in (
+            "dynamic_cast<GridLayer*>",
+            "dynamic_cast<PerlinNoiseLayer*>",
+            "dynamic_cast<const PerlinNoiseLayer*>",
+            "dynamic_cast<const GameOfLifeLayer*>",
+        ):
+            if token in app:
+                errors.append(
+                    "ordinary parameter views still inspect a concrete "
+                    f"element: {token}"
+                )
+
+        for body, context in (
+            (first_type_body, "composition type lookup"),
+            (float_value_body, "float parameter view"),
+            (bool_value_body, "bool parameter view"),
+            (float_write_body, "float live action"),
+            (bool_write_body, "bool live action"),
+        ):
+            if "legacyCompositionElementForHost" in body:
+                errors.append(
+                    f"{context} must not use mutable element access"
+                )
+        for token in (
+            "runtime_.compositionSnapshot",
+            "slot.hasElement",
+            "slot.typeId == typeId",
+        ):
+            if token not in first_type_body:
+                errors.append(
+                    "first-element lookup is missing snapshot ordering/type "
+                    f"semantics: {token}"
+                )
+        for body, kind in (
+            (float_value_body, "float"),
+            (bool_value_body, "bool"),
+        ):
+            for token in ("param->value", "param->baseValue"):
+                if token not in body:
+                    errors.append(
+                        f"{kind} parameter view must prefer live storage and "
+                        f"retain a base fallback: {token}"
+                    )
+        if "*param->value = value" not in float_write_body:
+            errors.append("float console action must write live registry storage")
+        if "*param->value = value" not in bool_write_body:
+            errors.append("bool console action must write live registry storage")
+
+        for body, type_id in (
+            (perlin_midi_body, "perlin"),
+            (game_of_life_midi_body, "gameOfLife"),
+        ):
+            for token in (
+                f'slot.typeId != "{type_id}"',
+                "consoleFloatParam(slot, suffix)",
+                "param->meta.range.min",
+                "param->meta.range.max",
+                "param->value",
+            ):
+                if token not in body:
+                    errors.append(
+                        f"{type_id} MIDI adapter is missing registry-backed "
+                        f"binding semantics: {token}"
+                    )
+            for forbidden in (
+                "legacyCompositionElementForHost",
+                "dynamic_cast<",
+                "ParamPtr()",
+            ):
+                if forbidden in body:
+                    errors.append(
+                        f"{type_id} MIDI adapter still uses a concrete "
+                        f"element seam: {forbidden}"
+                    )
+        for token in (
+            'bindFloat("octaves", true, 1.0f)',
+            'bindFloat("palette", true, 1.0f)',
+        ):
+            if token not in perlin_midi_body:
+                errors.append(
+                    "Perlin MIDI adapter changed established snap/step "
+                    f"semantics: {token}"
+                )
+        for token in (
+            'bindFloat("fadeFrames", true, 1.0f)',
+            'bindFloat("preset", true, 1.0f)',
+            'bindBool("reseed", MidiRouter::BoolMode::Assign)',
+        ):
+            if token not in game_of_life_midi_body:
+                errors.append(
+                    "Game of Life MIDI adapter changed established binding "
+                    f"semantics: {token}"
+                )
+        for token in (
+            'firstConsoleElementOfType("geodesic")',
+            'consoleFloatParam(*geodesic, "hover")',
+            'consoleFloatParam(*geodesic, "spin")',
+            'firstConsoleElementOfType("grid")',
+            'consoleBoolParam(*grid, "visible")',
+        ):
+            if token not in osc_routes_body:
+                errors.append(
+                    "core OSC routes are missing snapshot/registry-backed "
+                    f"binding: {token}"
+                )
     direct_metadata_write = re.compile(
         r"(?:\bslot|consoleSlots\s*(?:\[[^\]]+\]|\.at\([^)]*\)))"
         r"(?:\.|->)(?:assetId|label|type|paramPrefix|kind|active|opacity|"
@@ -523,7 +763,7 @@ def main() -> int:
         "effect slot replacement constructed an element",
         "overlay slot replacement constructed an element",
         "slot replacement preparation changed the live element",
-        "slot adoption did not retain the retired element through invalidation",
+        "slot adoption did not replace registry storage while retaining the retired element",
         "stale slot replacement changed the winning live element",
         "prepared replacement generation is stale",
         "Runtime expiry destroyed or invalidated its prepared replacement",

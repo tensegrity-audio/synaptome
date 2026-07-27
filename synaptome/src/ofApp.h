@@ -21,15 +21,11 @@
 #include "core/BankRegistry.h"
 #include "core/OptionProviderRegistry.h"
 #include "runtime/Runtime.h"
-#include "visuals/GridLayer.h"
-#include "visuals/GeodesicLayer.h"
 #include "visuals/LayerFactory.h"
 #include "visuals/LayerLibrary.h"
 #include "visuals/AudioWaveformLayer.h"
 #include "visuals/OscilloscopeLayer.h"
-#include "visuals/PerlinNoiseLayer.h"
 #include "visuals/StlModelLayer.h"
-#include "visuals/GameOfLifeLayer.h"
 #include "visuals/ReactionDiffusionLayer.h"
 #include "visuals/LeniaLayer.h"
 #include "visuals/ExcitableMediaLayer.h"
@@ -488,10 +484,6 @@ public:
     bool consolePersistenceSuspended_ = false;
     bool secondaryDisplayRenderPaused_ = false;
 
-    GridLayer* gridLayer = nullptr;
-    GeodesicLayer* geodesicLayer = nullptr;
-    PerlinNoiseLayer* perlinLayer = nullptr;
-    GameOfLifeLayer* gameOfLifeLayer = nullptr;
 
     PostEffectChain postEffects;
     ofFbo compositeFbo;
@@ -532,13 +524,12 @@ private:
     bool ensureTextOverlayFontLoaded();
     bool toggleMenuState(MenuController& controller, const std::shared_ptr<MenuController::State>& state, bool allowStack = false);
     bool toggleConsoleAndControlHub(MenuController& controller);
-    void registerPerlinMidi(PerlinNoiseLayer* layer);
-    void registerGameOfLifeMidi(GameOfLifeLayer* layer);
+    void registerPerlinMidi(const ConsoleSlotSnapshot& slot);
+    void registerGameOfLifeMidi(const ConsoleSlotSnapshot& slot);
     float* fxRouteParamForType(const std::string& type);
     const float* fxRouteParamForType(const std::string& type) const;
     void setFxRouteForType(const std::string& type, float routeValue);
     void syncActiveFxWithConsoleSlots(bool enablePresent = true);
-    void refreshLayerReferences();
     bool loadScene(const std::string& path);
     bool saveScene(const std::string& path);
     std::vector<ControlMappingHubState::SavedSceneInfo> listSavedScenes() const;
@@ -598,6 +589,45 @@ private:
         const ConsoleSlotSnapshot& slot) const;
     std::optional<ConsoleSlotSnapshot> consoleSlotForIndex(
         int layerIndex) const;
+    std::optional<ConsoleSlotSnapshot> firstConsoleElementOfType(
+        const std::string& typeId) const;
+    static std::string consoleParameterId(
+        const ConsoleSlotSnapshot& slot,
+        const std::string& suffix);
+    ParameterRegistry::FloatParam* consoleFloatParam(
+        const ConsoleSlotSnapshot& slot,
+        const std::string& suffix);
+    const ParameterRegistry::FloatParam* consoleFloatParam(
+        const ConsoleSlotSnapshot& slot,
+        const std::string& suffix) const;
+    ParameterRegistry::BoolParam* consoleBoolParam(
+        const ConsoleSlotSnapshot& slot,
+        const std::string& suffix);
+    const ParameterRegistry::BoolParam* consoleBoolParam(
+        const ConsoleSlotSnapshot& slot,
+        const std::string& suffix) const;
+    std::optional<float> consoleFloatValue(
+        const ConsoleSlotSnapshot& slot,
+        const std::string& suffix) const;
+    std::optional<bool> consoleBoolValue(
+        const ConsoleSlotSnapshot& slot,
+        const std::string& suffix) const;
+    bool writeConsoleFloatLive(
+        const ConsoleSlotSnapshot& slot,
+        const std::string& suffix,
+        float value);
+    bool writeConsoleBoolLive(
+        const ConsoleSlotSnapshot& slot,
+        const std::string& suffix,
+        bool value);
+    std::optional<int> geodesicSubdivisionAtSlot(
+        std::size_t zeroBasedIndex) const;
+    bool adjustGeodesicSubdivisionAtSlot(
+        std::size_t zeroBasedIndex,
+        int delta);
+    bool randomizeGameOfLifeAtSlot(std::size_t zeroBasedIndex);
+    std::string gridDeformationSummary(
+        const ConsoleSlotSnapshot& slot) const;
     int findConsoleSlotByAsset(const std::string& assetId) const;
     std::string consoleSlotPrefix(int layerIndex) const;
     void registerConsoleLayerOpacityParam(int layerIndex);

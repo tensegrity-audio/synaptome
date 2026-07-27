@@ -111,6 +111,9 @@ public:
     void setup(ParameterRegistry& registry) override {
         ParameterRegistry::Descriptor descriptor;
         descriptor.label = "Slot Replacement Lifetime";
+        descriptor.range.min = 0.0f;
+        descriptor.range.max = 1.0f;
+        descriptor.range.step = 0.05f;
         registry.addFloat(
             registryPrefix() + ".value",
             &value_,
@@ -709,6 +712,13 @@ void RunCompositionSlotReplacementScenario() {
         "slot replacement scenario did not adopt its initial element");
     const Layer* const initialLive =
         runtime.compositionElementForHost(0);
+    const auto* initialParam =
+        parameters.findFloat("console.layer1.value");
+    require(
+        initialParam && initialParam->value,
+        "slot replacement scenario did not publish initial parameter storage");
+    float* const initialValueStorage = initialParam->value;
+    const ParameterRegistry::Range initialRange = initialParam->meta.range;
 
     auto wrongPrefixRequest = request;
     wrongPrefixRequest.registryPrefix = "console.layer2";
@@ -778,15 +788,23 @@ void RunCompositionSlotReplacementScenario() {
         const auto* retired =
             dynamic_cast<const SlotReplacementLifetimeElement*>(
                 prepared.element());
+        const auto* replacementParam =
+            parameters.findFloat("console.layer1.value");
         require(
             replacementLive &&
                 replacementLive->serial() == 2 &&
                 retired &&
                 retired->serial() == 0 &&
                 !lifetime.destroyed[0] &&
-                parameters.findFloat("console.layer1.value") != nullptr &&
+                replacementParam &&
+                replacementParam->value &&
+                replacementParam->value != initialValueStorage &&
+                std::fabs(*initialValueStorage - 0.25f) < 0.0001f &&
+                std::fabs(initialRange.min - 0.0f) < 0.0001f &&
+                std::fabs(initialRange.max - 1.0f) < 0.0001f &&
+                std::fabs(initialRange.step - 0.05f) < 0.0001f &&
                 parameters.findFloat("console.layer1.opacity") != nullptr,
-            "slot adoption did not retain the retired element through invalidation");
+            "slot adoption did not replace registry storage while retaining the retired element");
     }
     require(
         lifetime.destroyed[0] &&
@@ -851,7 +869,8 @@ void RunCompositionSlotReplacementScenario() {
     require(
         clearStale &&
             lifetime.constructionCount == 6 &&
-            runtime.clearCompositionLayer(0),
+            runtime.clearCompositionLayer(0) &&
+            parameters.findFloat("console.layer1.value") == nullptr,
         "clear-stale replacement setup failed");
     const auto clearStaleCommit = runtime.adoptPreparedElement(
         0,

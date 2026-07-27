@@ -40,8 +40,14 @@ by-value snapshot, or one bounds-checked optional layer snapshot.
 `CompositionLayerSnapshot` carries only assignment identity and layer state;
 it exposes no element, FBO, registry, creator, or host pointers. Read-only
 element inspection, mutable legacy element access, and mutable FBO access remain
-separate named host seams. The live aggregate and public `CompositionLayer`
-accessors are gone. Typed descriptor/catalog ownership is not yet complete.
+separate named host seams. The host no longer caches derived Grid, Geodesic,
+Perlin, or Game of Life pointers: ordinary HUD reads, MIDI/OSC binding, Grid
+density cycling, and Game of Life pause resolve snapshot prefixes through
+`ParameterRegistry`. Mutable element access is isolated to slot-validated
+Geodesic subdivision adjustment and immediate Game of Life randomization.
+Geodesic subdivision status and video-specific status still use read-only
+inspection. The live aggregate and public `CompositionLayer` accessors are
+gone. Typed descriptor/catalog ownership is not yet complete.
 
 This document records the dependency inventory and the minimum Element SDK v1
 contract that must exist before Synaptome moves code into new build targets.
@@ -454,11 +460,17 @@ boundary. Per-layer render FBOs remain available through
 use `legacyCompositionElementForHost`. Generic replacement no longer uses that
 mutable seam: `Runtime::prepareCompositionElementReplacement()` selects the
 live element by zero-based layer index and preserves the two-phase
-prepare/adopt transaction. The mutable seam now has exactly two host consumer
-areas: optional post-install Perlin/Game of Life MIDI and randomize actions, and
-`refreshLayerReferences()` caching of derived Grid/Geodesic/Perlin/Game of Life
-pointers for legacy consumers. The three host-only methods remain SEAC-3
-migration debt and are not public Element SDK headers.
+prepare/adopt transaction. There is no derived element-pointer cache or refresh
+path. `firstConsoleElementOfType()` selects the first matching copied slot in
+composition order; its registry prefix drives live parameter reads and writes,
+HUD projection, and MIDI/OSC binding. Perlin and Game of Life MIDI ranges come
+from registered descriptors while their established snap/step behavior remains
+unchanged. Mutable access is permitted only inside
+`adjustGeodesicSubdivisionAtSlot()` and `randomizeGameOfLifeAtSlot()`, after
+snapshot kind/type validation. `geodesicSubdivisionAtSlot()` uses the read-only
+inspection seam for unregistered subdivision status; video status is the other
+remaining concrete read-only consumer. The three Runtime host-only methods
+remain SEAC-3 migration debt and are not public Element SDK headers.
 
 ## SEAC-3 Extraction Sequence
 

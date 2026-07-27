@@ -259,7 +259,6 @@ def validate() -> None:
             "midi.importMappingSnapshot(snapshot.routerSnapshot, true)",
             "writeJsonSnapshotAtomically(slotAssignmentsPath, snapshot.slotAssignmentsSnapshot)",
             "syncActiveFxWithConsoleSlots()",
-            "refreshLayerReferences()",
         ),
         "rollbackSceneLoad",
     )

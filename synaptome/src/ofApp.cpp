@@ -16,6 +16,10 @@
 #include "ui/WindowMonitorPlacement.h"
 #include "ui/ControlHubEventBridge_clean.h"
 #include "visuals/CircuitTraceLayer.h"
+#include "visuals/GameOfLifeLayer.h"
+#include "visuals/GeodesicLayer.h"
+#include "visuals/GridLayer.h"
+#include "visuals/PerlinNoiseLayer.h"
 #include "runtime/BuiltinElements.h"
 #ifdef _WIN32
 #ifndef NOMINMAX
@@ -2199,14 +2203,12 @@ void ofApp::setup() {
     setStringBaseIfPresent("console.secondary_display.monitor", param_secondaryDisplayMonitor);
     setBoolBaseIfPresent("console.secondary_display.follow_primary", param_secondaryDisplayFollowPrimary);
     seedConsoleDefaultsIfEmpty();
-    refreshLayerReferences();
 
     bool sceneLoaded = loadScene(kSceneAutosavePath);
     if (!sceneLoaded) {
         sceneLoaded = loadScene(kDefaultScenePath);
     }
     seedConsoleDefaultsIfEmpty();
-    refreshLayerReferences();
     ensureActiveBankValid();
     consolePersistenceSuspended_ = false;
     if (sceneLoaded || consoleConfigNeedsUpgrade) {
@@ -3261,7 +3263,7 @@ std::string ofApp::composeHudControls() const {
         { "R", "reconnect" }
     };
     std::vector<ControlAction> layerSpecificHints;
-    if (gameOfLifeLayer) {
+    if (firstConsoleElementOfType("gameOfLife")) {
         layerSpecificHints.push_back({ "Ctrl+N", "reseed GoL" });
         layerSpecificHints.push_back({ "Ctrl+O", "pause" });
     }
@@ -3283,11 +3285,18 @@ std::string ofApp::composeHudControls() const {
         { "Ctrl+Shift+Tab", "focus toggle" }
     };
 
+    int geodesicSubdivisions = 0;
+    if (const auto geodesic =
+            firstConsoleElementOfType("geodesic")) {
+        geodesicSubdivisions =
+            geodesicSubdivisionAtSlot(
+                geodesic->zeroBasedIndex).value_or(0);
+    }
     ControlLine modifiersLine;
     modifiersLine.actions = {
         { "Ctrl+G", "cycle grid density" },
         { "[ [ ] ]", "geodesic subdivision (now " +
-            ofToString(geodesicLayer ? geodesicLayer->subdivisions() : 0) + ")" }
+            ofToString(geodesicSubdivisions) + ")" }
     };
 
     auto writeActions = [](std::ostringstream& stream, const std::vector<ControlAction>& actions) {
@@ -3367,22 +3376,76 @@ std::string ofApp::composeHudControls() const {
 
 std::string ofApp::composeHudLayerSummary() const {
     std::ostringstream out;
-    if (gridLayer) {
-        out << "\nGrid segments: " << ofToString(static_cast<int>(*gridLayer->segmentsParamPtr()))
-            << "   modes: " << gridLayer->deformationSummary()
-            << "   faces: " << ofToString(*gridLayer->faceOpacityParamPtr(), 2)
-            << "   visible: " << (gridLayer->isEnabled() ? "yes" : "no");
+    if (const auto grid =
+            firstConsoleElementOfType("grid")) {
+        out << "\nGrid segments: "
+            << ofToString(static_cast<int>(
+                consoleFloatValue(*grid, "segments")
+                    .value_or(0.0f)))
+            << "   modes: " << gridDeformationSummary(*grid)
+            << "   faces: "
+            << ofToString(
+                consoleFloatValue(*grid, "faceOpacity")
+                    .value_or(0.0f),
+                2)
+            << "   visible: "
+            << (consoleBoolValue(*grid, "visible")
+                    .value_or(false)
+                ? "yes"
+                : "no");
     }
-    if (geodesicLayer) {
-        out << "\nSphere spin: " << ofToString(*geodesicLayer->spinParamPtr(), 1)
-            << "   hover: " << ofToString(*geodesicLayer->hoverParamPtr(), 1)
-            << "   baseY: " << ofToString(*geodesicLayer->baseHeightParamPtr(), 1)
-            << "   orbitR: " << ofToString(*geodesicLayer->orbitRadiusParamPtr(), 1)
-            << "   orbitSpd: " << ofToString(*geodesicLayer->orbitSpeedParamPtr(), 1)
-            << "   radius: " << ofToString(*geodesicLayer->radiusParamPtr(), 1)
-            << "   deform: " << (*geodesicLayer->deformParamPtr() ? ofToString(*geodesicLayer->deformAmountParamPtr(), 1) : "off")
-            << "   faces: " << ofToString(*geodesicLayer->faceOpacityParamPtr(), 2)
-            << "   visible: " << (geodesicLayer->isEnabled() ? "yes" : "no");
+    if (const auto geodesic =
+            firstConsoleElementOfType("geodesic")) {
+        const bool deform =
+            consoleBoolValue(*geodesic, "deform")
+                .value_or(false);
+        out << "\nSphere spin: "
+            << ofToString(
+                consoleFloatValue(*geodesic, "spin")
+                    .value_or(0.0f),
+                1)
+            << "   hover: "
+            << ofToString(
+                consoleFloatValue(*geodesic, "hover")
+                    .value_or(0.0f),
+                1)
+            << "   baseY: "
+            << ofToString(
+                consoleFloatValue(*geodesic, "baseHeight")
+                    .value_or(0.0f),
+                1)
+            << "   orbitR: "
+            << ofToString(
+                consoleFloatValue(*geodesic, "orbitRadius")
+                    .value_or(0.0f),
+                1)
+            << "   orbitSpd: "
+            << ofToString(
+                consoleFloatValue(*geodesic, "orbitSpeed")
+                    .value_or(0.0f),
+                1)
+            << "   radius: "
+            << ofToString(
+                consoleFloatValue(*geodesic, "radius")
+                    .value_or(0.0f),
+                1)
+            << "   deform: "
+            << (deform
+                ? ofToString(
+                    consoleFloatValue(*geodesic, "deformAmount")
+                        .value_or(0.0f),
+                    1)
+                : "off")
+            << "   faces: "
+            << ofToString(
+                consoleFloatValue(*geodesic, "faceOpacity")
+                    .value_or(0.0f),
+                2)
+            << "   visible: "
+            << (consoleBoolValue(*geodesic, "visible")
+                    .value_or(false)
+                ? "yes"
+                : "no");
     }
     return out.str();
 }
@@ -3408,35 +3471,92 @@ std::string ofApp::composeHudLayerDetails() const {
             label = entry ? entry->label : slot.definitionId;
         }
         out << label << (slot.active ? " *" : " (off)");
-        const Layer* base = slot.hasElement
-            ? runtime_.compositionElementForHost(i)
-            : nullptr;
-        if (base) {
-            if (auto* webcam = dynamic_cast<const VideoGrabberLayer*>(base)) {
+        if (slot.hasElement &&
+            slot.typeId == "perlin") {
+            out << "  scale="
+                << ofToString(
+                    consoleFloatValue(slot, "scale")
+                        .value_or(0.0f),
+                    2);
+            out << " texZoom="
+                << ofToString(
+                    consoleFloatValue(slot, "texelZoom")
+                        .value_or(0.0f),
+                    2);
+            out << " oct="
+                << ofToString(static_cast<int>(std::round(
+                    consoleFloatValue(slot, "octaves")
+                        .value_or(0.0f))));
+            out << " palette="
+                << ofToString(static_cast<int>(std::round(
+                    consoleFloatValue(slot, "palette")
+                        .value_or(0.0f))));
+        } else if (slot.hasElement &&
+                   slot.typeId == "gameOfLife") {
+            const auto* presetParam =
+                consoleFloatParam(slot, "preset");
+            int preset = static_cast<int>(std::round(
+                consoleFloatValue(slot, "preset")
+                    .value_or(0.0f)));
+            if (presetParam &&
+                std::isfinite(presetParam->meta.range.min) &&
+                std::isfinite(presetParam->meta.range.max)) {
+                preset = std::max(
+                    static_cast<int>(std::round(
+                        presetParam->meta.range.min)),
+                    std::min(
+                        static_cast<int>(std::round(
+                            presetParam->meta.range.max)),
+                        preset));
+            }
+            out << (consoleBoolValue(slot, "paused")
+                        .value_or(false)
+                    ? " paused"
+                    : " running");
+            out << " preset=" << ofToString(preset);
+            out << " dens="
+                << ofToString(
+                    consoleFloatValue(slot, "density")
+                        .value_or(0.0f),
+                    2);
+            out << " fade="
+                << ofToString(static_cast<int>(std::round(
+                    consoleFloatValue(slot, "fadeFrames")
+                        .value_or(0.0f))));
+            out << " bpmSync="
+                << (consoleBoolValue(slot, "bpmSync")
+                        .value_or(false)
+                    ? "on"
+                    : "off");
+            out << " aAlpha="
+                << ofToString(
+                    consoleFloatValue(slot, "aliveAlpha")
+                        .value_or(0.0f),
+                    2);
+            out << " dAlpha="
+                << ofToString(
+                    consoleFloatValue(slot, "deadAlpha")
+                        .value_or(0.0f),
+                    2);
+        } else if (slot.hasElement &&
+                   (slot.typeId == "media.webcam" ||
+                    slot.typeId == "media.clip")) {
+            const Layer* base =
+                runtime_.compositionElementForHost(i);
+            if (auto* webcam =
+                    dynamic_cast<const VideoGrabberLayer*>(base)) {
                 out << "  [" << webcam->currentDeviceLabel() << "]";
                 out << " gain=" << ofToString(webcam->gain(), 2);
                 if (webcam->mirror()) out << " mirror";
-            } else if (auto* clip = dynamic_cast<const VideoClipLayer*>(base)) {
+            } else if (auto* clip =
+                           dynamic_cast<const VideoClipLayer*>(base)) {
                 out << "  [" << clip->currentClipLabel() << "]";
                 out << " gain=" << ofToString(clip->gain(), 2);
                 if (clip->mirror()) out << " mirror";
                 if (!clip->loop()) out << " loop=off";
-            } else if (auto* perlin = dynamic_cast<const PerlinNoiseLayer*>(base)) {
-                out << "  scale=" << ofToString(*perlin->scaleParamPtr(), 2);
-                out << " texZoom=" << ofToString(*perlin->texelZoomParamPtr(), 2);
-                out << " oct=" << ofToString(static_cast<int>(std::round(*perlin->octavesParamPtr())));
-                out << " palette=" << ofToString(static_cast<int>(std::round(*perlin->paletteIndexParamPtr())));
-            } else if (auto* golLayer = dynamic_cast<const GameOfLifeLayer*>(base)) {
-                int preset = std::max(0, std::min(golLayer->presetCount() - 1,
-                                                  static_cast<int>(std::round(*golLayer->presetParamPtr()))));
-                out << (golLayer->isPaused() ? " paused" : " running");
-                out << " preset=" << ofToString(preset);
-                out << " dens=" << ofToString(*golLayer->densityParamPtr(), 2);
-                out << " fade=" << ofToString(static_cast<int>(std::round(*golLayer->fadeFramesParamPtr())));
-                out << " bpmSync=" << (*golLayer->bpmSyncParamPtr() ? "on" : "off");
-                out << " aAlpha=" << ofToString(*golLayer->aliveAlphaParamPtr(), 2);
-                out << " dAlpha=" << ofToString(*golLayer->deadAlphaParamPtr(), 2);
             }
+        }
+        if (slot.hasElement) {
             out << " opacity=" << ofToString(slot.opacity, 2);
         } else if (isFxType(slot.typeId)) {
             out << " (FX)";
@@ -3482,47 +3602,118 @@ std::string ofApp::composeHudLayers() const {
 
     ofJson feed = ofJson::object();
     ofJson summaryJson = ofJson::object();
-    if (gridLayer) {
-        ofJson grid;
-        grid["segments"] = static_cast<int>(*gridLayer->segmentsParamPtr());
-        grid["wave"] = *gridLayer->waveParamPtr();
-        grid["waveAmount"] = *gridLayer->waveAmountParamPtr();
-        grid["waveFrequency"] = *gridLayer->waveFrequencyParamPtr();
-        grid["waveSpeed"] = *gridLayer->waveSpeedParamPtr();
-        grid["bend"] = *gridLayer->bendParamPtr();
-        grid["bendAmount"] = *gridLayer->bendAmountParamPtr();
-        grid["bendFrequency"] = *gridLayer->bendFrequencyParamPtr();
-        grid["bendSpeed"] = *gridLayer->bendSpeedParamPtr();
-        grid["deform"] = *gridLayer->deformParamPtr();
-        grid["deformAmount"] = *gridLayer->deformAmountParamPtr();
-        grid["deformScale"] = *gridLayer->deformScaleParamPtr();
-        grid["deformSpeed"] = *gridLayer->deformSpeedParamPtr();
-        grid["twist"] = *gridLayer->twistParamPtr();
-        grid["twistAmount"] = *gridLayer->twistAmountParamPtr();
-        grid["twistSpeed"] = *gridLayer->twistSpeedParamPtr();
-        grid["bulge"] = *gridLayer->bulgeParamPtr();
-        grid["bulgeAmount"] = *gridLayer->bulgeAmountParamPtr();
-        grid["bulgeRadius"] = *gridLayer->bulgeRadiusParamPtr();
-        grid["bulgeSpeed"] = *gridLayer->bulgeSpeedParamPtr();
-        grid["deformationSummary"] = gridLayer->deformationSummary();
-        grid["faceOpacity"] = *gridLayer->faceOpacityParamPtr();
-        grid["visible"] = gridLayer->isEnabled();
-        summaryJson["grid"] = std::move(grid);
+    if (const auto grid =
+            firstConsoleElementOfType("grid")) {
+        ofJson gridJson;
+        gridJson["segments"] = static_cast<int>(
+            consoleFloatValue(*grid, "segments")
+                .value_or(0.0f));
+        gridJson["wave"] =
+            consoleBoolValue(*grid, "wave")
+                .value_or(false);
+        gridJson["waveAmount"] =
+            consoleFloatValue(*grid, "waveAmount")
+                .value_or(0.0f);
+        gridJson["waveFrequency"] =
+            consoleFloatValue(*grid, "waveFrequency")
+                .value_or(0.0f);
+        gridJson["waveSpeed"] =
+            consoleFloatValue(*grid, "waveSpeed")
+                .value_or(0.0f);
+        gridJson["bend"] =
+            consoleBoolValue(*grid, "bend")
+                .value_or(false);
+        gridJson["bendAmount"] =
+            consoleFloatValue(*grid, "bendAmount")
+                .value_or(0.0f);
+        gridJson["bendFrequency"] =
+            consoleFloatValue(*grid, "bendFrequency")
+                .value_or(0.0f);
+        gridJson["bendSpeed"] =
+            consoleFloatValue(*grid, "bendSpeed")
+                .value_or(0.0f);
+        gridJson["deform"] =
+            consoleBoolValue(*grid, "deform")
+                .value_or(false);
+        gridJson["deformAmount"] =
+            consoleFloatValue(*grid, "deformAmount")
+                .value_or(0.0f);
+        gridJson["deformScale"] =
+            consoleFloatValue(*grid, "deformScale")
+                .value_or(0.0f);
+        gridJson["deformSpeed"] =
+            consoleFloatValue(*grid, "deformSpeed")
+                .value_or(0.0f);
+        gridJson["twist"] =
+            consoleBoolValue(*grid, "twist")
+                .value_or(false);
+        gridJson["twistAmount"] =
+            consoleFloatValue(*grid, "twistAmount")
+                .value_or(0.0f);
+        gridJson["twistSpeed"] =
+            consoleFloatValue(*grid, "twistSpeed")
+                .value_or(0.0f);
+        gridJson["bulge"] =
+            consoleBoolValue(*grid, "bulge")
+                .value_or(false);
+        gridJson["bulgeAmount"] =
+            consoleFloatValue(*grid, "bulgeAmount")
+                .value_or(0.0f);
+        gridJson["bulgeRadius"] =
+            consoleFloatValue(*grid, "bulgeRadius")
+                .value_or(0.0f);
+        gridJson["bulgeSpeed"] =
+            consoleFloatValue(*grid, "bulgeSpeed")
+                .value_or(0.0f);
+        gridJson["deformationSummary"] =
+            gridDeformationSummary(*grid);
+        gridJson["faceOpacity"] =
+            consoleFloatValue(*grid, "faceOpacity")
+                .value_or(0.0f);
+        gridJson["visible"] =
+            consoleBoolValue(*grid, "visible")
+                .value_or(false);
+        summaryJson["grid"] = std::move(gridJson);
     }
-    if (geodesicLayer) {
+    if (const auto geodesic =
+            firstConsoleElementOfType("geodesic")) {
         ofJson sphere;
-        sphere["spin"] = *geodesicLayer->spinParamPtr();
-        sphere["hover"] = *geodesicLayer->hoverParamPtr();
-        sphere["baseHeight"] = *geodesicLayer->baseHeightParamPtr();
-        sphere["orbitRadius"] = *geodesicLayer->orbitRadiusParamPtr();
-        sphere["orbitSpeed"] = *geodesicLayer->orbitSpeedParamPtr();
-        sphere["radius"] = *geodesicLayer->radiusParamPtr();
-        sphere["deform"] = *geodesicLayer->deformParamPtr();
-        sphere["deformAmount"] = *geodesicLayer->deformAmountParamPtr();
-        sphere["deformScale"] = *geodesicLayer->deformScaleParamPtr();
-        sphere["deformSpeed"] = *geodesicLayer->deformSpeedParamPtr();
-        sphere["faceOpacity"] = *geodesicLayer->faceOpacityParamPtr();
-        sphere["visible"] = geodesicLayer->isEnabled();
+        sphere["spin"] =
+            consoleFloatValue(*geodesic, "spin")
+                .value_or(0.0f);
+        sphere["hover"] =
+            consoleFloatValue(*geodesic, "hover")
+                .value_or(0.0f);
+        sphere["baseHeight"] =
+            consoleFloatValue(*geodesic, "baseHeight")
+                .value_or(0.0f);
+        sphere["orbitRadius"] =
+            consoleFloatValue(*geodesic, "orbitRadius")
+                .value_or(0.0f);
+        sphere["orbitSpeed"] =
+            consoleFloatValue(*geodesic, "orbitSpeed")
+                .value_or(0.0f);
+        sphere["radius"] =
+            consoleFloatValue(*geodesic, "radius")
+                .value_or(0.0f);
+        sphere["deform"] =
+            consoleBoolValue(*geodesic, "deform")
+                .value_or(false);
+        sphere["deformAmount"] =
+            consoleFloatValue(*geodesic, "deformAmount")
+                .value_or(0.0f);
+        sphere["deformScale"] =
+            consoleFloatValue(*geodesic, "deformScale")
+                .value_or(0.0f);
+        sphere["deformSpeed"] =
+            consoleFloatValue(*geodesic, "deformSpeed")
+                .value_or(0.0f);
+        sphere["faceOpacity"] =
+            consoleFloatValue(*geodesic, "faceOpacity")
+                .value_or(0.0f);
+        sphere["visible"] =
+            consoleBoolValue(*geodesic, "visible")
+                .value_or(false);
         summaryJson["geodesic"] = std::move(sphere);
     }
     feed["summary"] = std::move(summaryJson);
@@ -3561,44 +3752,104 @@ std::string ofApp::composeHudLayers() const {
             coverage["columns"] = std::max(0, slot.coverage.columns);
             slotJson["coverage"] = std::move(coverage);
         }
-        const Layer* base = slot.hasElement
-            ? runtime_.compositionElementForHost(i)
-            : nullptr;
-        if (base) {
+        if (slot.hasElement) {
             ofJson metadata;
             std::string module;
-            if (auto* webcam = dynamic_cast<const VideoGrabberLayer*>(base)) {
-                module = "video.grabber";
-                metadata["deviceLabel"] = webcam->currentDeviceLabel();
-                metadata["gain"] = webcam->gain();
-                metadata["mirror"] = webcam->mirror();
-            } else if (auto* clip = dynamic_cast<const VideoClipLayer*>(base)) {
-                module = "video.clip";
-                metadata["clipLabel"] = clip->currentClipLabel();
-                metadata["gain"] = clip->gain();
-                metadata["mirror"] = clip->mirror();
-                metadata["loop"] = clip->loop();
-            } else if (auto* perlin = dynamic_cast<const PerlinNoiseLayer*>(base)) {
+            if (slot.typeId == "perlin") {
                 module = "perlin";
-                metadata["scale"] = *perlin->scaleParamPtr();
-                metadata["texelZoom"] = *perlin->texelZoomParamPtr();
-                metadata["octaves"] = static_cast<int>(std::round(*perlin->octavesParamPtr()));
-                metadata["paletteIndex"] = static_cast<int>(std::round(*perlin->paletteIndexParamPtr()));
-            } else if (auto* golLayer = dynamic_cast<const GameOfLifeLayer*>(base)) {
+                metadata["scale"] =
+                    consoleFloatValue(slot, "scale")
+                        .value_or(0.0f);
+                metadata["texelZoom"] =
+                    consoleFloatValue(slot, "texelZoom")
+                        .value_or(0.0f);
+                metadata["octaves"] =
+                    static_cast<int>(std::round(
+                        consoleFloatValue(slot, "octaves")
+                            .value_or(0.0f)));
+                metadata["paletteIndex"] =
+                    static_cast<int>(std::round(
+                        consoleFloatValue(slot, "palette")
+                            .value_or(0.0f)));
+            } else if (slot.typeId == "gameOfLife") {
                 module = "gameOfLife";
-                int preset = std::max(0, std::min(golLayer->presetCount() - 1,
-                                                  static_cast<int>(std::round(*golLayer->presetParamPtr()))));
-                metadata["paused"] = golLayer->isPaused();
+                const auto* presetParam =
+                    consoleFloatParam(slot, "preset");
+                int preset = static_cast<int>(std::round(
+                    consoleFloatValue(slot, "preset")
+                        .value_or(0.0f)));
+                if (presetParam &&
+                    std::isfinite(presetParam->meta.range.min) &&
+                    std::isfinite(presetParam->meta.range.max)) {
+                    preset = std::max(
+                        static_cast<int>(std::round(
+                            presetParam->meta.range.min)),
+                        std::min(
+                            static_cast<int>(std::round(
+                                presetParam->meta.range.max)),
+                            preset));
+                }
+                metadata["paused"] =
+                    consoleBoolValue(slot, "paused")
+                        .value_or(false);
                 metadata["preset"] = preset;
-                metadata["density"] = *golLayer->densityParamPtr();
-                metadata["fadeFrames"] = static_cast<int>(std::round(*golLayer->fadeFramesParamPtr()));
-                metadata["bpmSync"] = *golLayer->bpmSyncParamPtr();
-                metadata["bpmMultiplier"] = *golLayer->bpmMultiplierParamPtr();
-                metadata["reseedQuantizeBeats"] = static_cast<int>(std::round(*golLayer->reseedQuantizeBeatsParamPtr()));
-                metadata["autoReseed"] = *golLayer->autoReseedParamPtr();
-                metadata["autoReseedEveryBeats"] = static_cast<int>(std::round(*golLayer->autoReseedEveryBeatsParamPtr()));
-                metadata["aliveAlpha"] = *golLayer->aliveAlphaParamPtr();
-                metadata["deadAlpha"] = *golLayer->deadAlphaParamPtr();
+                metadata["density"] =
+                    consoleFloatValue(slot, "density")
+                        .value_or(0.0f);
+                metadata["fadeFrames"] =
+                    static_cast<int>(std::round(
+                        consoleFloatValue(slot, "fadeFrames")
+                            .value_or(0.0f)));
+                metadata["bpmSync"] =
+                    consoleBoolValue(slot, "bpmSync")
+                        .value_or(false);
+                metadata["bpmMultiplier"] =
+                    consoleFloatValue(slot, "bpmMultiplier")
+                        .value_or(0.0f);
+                metadata["reseedQuantizeBeats"] =
+                    static_cast<int>(std::round(
+                        consoleFloatValue(
+                            slot,
+                            "reseedQuantizeBeats")
+                            .value_or(0.0f)));
+                metadata["autoReseed"] =
+                    consoleBoolValue(slot, "autoReseed")
+                        .value_or(false);
+                metadata["autoReseedEveryBeats"] =
+                    static_cast<int>(std::round(
+                        consoleFloatValue(
+                            slot,
+                            "autoReseedEveryBeats")
+                            .value_or(0.0f)));
+                metadata["aliveAlpha"] =
+                    consoleFloatValue(slot, "aliveAlpha")
+                        .value_or(0.0f);
+                metadata["deadAlpha"] =
+                    consoleFloatValue(slot, "deadAlpha")
+                        .value_or(0.0f);
+            } else if (slot.typeId == "media.webcam") {
+                const Layer* base =
+                    runtime_.compositionElementForHost(i);
+                if (auto* webcam =
+                        dynamic_cast<const VideoGrabberLayer*>(base)) {
+                    module = "video.grabber";
+                    metadata["deviceLabel"] =
+                        webcam->currentDeviceLabel();
+                    metadata["gain"] = webcam->gain();
+                    metadata["mirror"] = webcam->mirror();
+                }
+            } else if (slot.typeId == "media.clip") {
+                const Layer* base =
+                    runtime_.compositionElementForHost(i);
+                if (auto* clip =
+                        dynamic_cast<const VideoClipLayer*>(base)) {
+                    module = "video.clip";
+                    metadata["clipLabel"] =
+                        clip->currentClipLabel();
+                    metadata["gain"] = clip->gain();
+                    metadata["mirror"] = clip->mirror();
+                    metadata["loop"] = clip->loop();
+                }
             }
             if (!module.empty()) {
                 slotJson["module"] = module;
@@ -4636,8 +4887,25 @@ void ofApp::keyPressed(int key) {
         if ((combinedKey & MenuController::HOTKEY_MOD_CTRL) == 0) {
             break;
         }
-        if (gridLayer) {
-            gridLayer->cycleSegments();
+        if (const auto grid =
+                firstConsoleElementOfType("grid")) {
+            auto* segments =
+                consoleFloatParam(*grid, "segments");
+            if (segments && segments->value &&
+                std::isfinite(segments->meta.range.min) &&
+                std::isfinite(segments->meta.range.max) &&
+                segments->meta.range.step > 0.0f) {
+                float next =
+                    *segments->value +
+                    segments->meta.range.step;
+                if (next > segments->meta.range.max) {
+                    next = segments->meta.range.min;
+                }
+                writeConsoleFloatLive(
+                    *grid,
+                    "segments",
+                    next);
+            }
         }
         break;
     case OF_KEY_UP:
@@ -4646,23 +4914,33 @@ void ofApp::keyPressed(int key) {
     case OF_KEY_DOWN:
         param_camDist = ofClamp(param_camDist * 1.1f, 150.0f, 4000.0f);
         break;
-    case ']':
-        if (geodesicLayer) {
-            geodesicLayer->incrementSubdivision();
+    case ']': {
+        if (const auto geodesic =
+                firstConsoleElementOfType("geodesic")) {
+            adjustGeodesicSubdivisionAtSlot(
+                geodesic->zeroBasedIndex,
+                1);
         }
         break;
-    case '[':
-        if (geodesicLayer) {
-            geodesicLayer->decrementSubdivision();
+    }
+    case '[': {
+        if (const auto geodesic =
+                firstConsoleElementOfType("geodesic")) {
+            adjustGeodesicSubdivisionAtSlot(
+                geodesic->zeroBasedIndex,
+                -1);
         }
         break;
+    }
     case 'n':
     case 'N':
         if ((combinedKey & MenuController::HOTKEY_MOD_CTRL) == 0) {
             break;
         }
-        if (gameOfLifeLayer) {
-            gameOfLifeLayer->randomize();
+        if (const auto gameOfLife =
+                firstConsoleElementOfType("gameOfLife")) {
+            randomizeGameOfLifeAtSlot(
+                gameOfLife->zeroBasedIndex);
         }
         break;
     case 'o':
@@ -4670,8 +4948,15 @@ void ofApp::keyPressed(int key) {
         if ((combinedKey & MenuController::HOTKEY_MOD_CTRL) == 0) {
             break;
         }
-        if (gameOfLifeLayer) {
-            gameOfLifeLayer->setPaused(!gameOfLifeLayer->isPaused());
+        if (const auto gameOfLife =
+                firstConsoleElementOfType("gameOfLife")) {
+            const bool paused =
+                consoleBoolValue(*gameOfLife, "paused")
+                    .value_or(false);
+            writeConsoleBoolLive(
+                *gameOfLife,
+                "paused",
+                !paused);
         }
         break;
     default:
@@ -5049,31 +5334,51 @@ void ofApp::setupOscRoutes() {
     cfg.deadband = 0.02f;
     oscRouter.addFloatRoute(cfg);
 
-    if (geodesicLayer) {
-        cfg.pattern = "/sensor/matrix/*/mic-level";
-        cfg.target = geodesicLayer->hoverParamPtr();
-        cfg.inMin = 0.0f;
-        cfg.inMax = 1.0f;
-        cfg.outMin = 0.0f;
-        cfg.outMax = 200.0f;
-        cfg.smooth = 0.20f;
-        cfg.deadband = 0.5f;
-        oscRouter.addFloatRoute(cfg);
+    if (const auto geodesic =
+            firstConsoleElementOfType("geodesic")) {
+        if (auto* hover =
+                consoleFloatParam(*geodesic, "hover");
+            hover && hover->value) {
+            cfg.pattern = "/sensor/matrix/*/mic-level";
+            cfg.target = hover->value;
+            cfg.inMin = 0.0f;
+            cfg.inMax = 1.0f;
+            cfg.outMin = 0.0f;
+            cfg.outMax = 200.0f;
+            cfg.smooth = 0.20f;
+            cfg.deadband = 0.5f;
+            oscRouter.addFloatRoute(cfg);
+        }
 
-        cfg.pattern = "/sensor/matrix/*/mic-peak";
-        cfg.target = geodesicLayer->spinParamPtr();
-        cfg.inMin = 0.0f;
-        cfg.inMax = 1.0f;
-        cfg.outMin = 0.0f;
-        cfg.outMax = 360.0f;
-        cfg.smooth = 0.25f;
-        cfg.deadband = 0.5f;
-        oscRouter.addFloatRoute(cfg);
+        if (auto* spin =
+                consoleFloatParam(*geodesic, "spin");
+            spin && spin->value) {
+            cfg.pattern = "/sensor/matrix/*/mic-peak";
+            cfg.target = spin->value;
+            cfg.inMin = 0.0f;
+            cfg.inMax = 1.0f;
+            cfg.outMin = 0.0f;
+            cfg.outMax = 360.0f;
+            cfg.smooth = 0.25f;
+            cfg.deadband = 0.5f;
+            oscRouter.addFloatRoute(cfg);
+        }
     }
 
-    if (gridLayer) {
-        oscRouter.addBoolRoute("/sensor/deck/*/deck-scene", gridLayer->enabledParamPtr(), 0.5f);
-        oscRouter.addBoolRoute("/sensor/deck/*/scene", gridLayer->enabledParamPtr(), 0.5f);
+    if (const auto grid =
+            firstConsoleElementOfType("grid")) {
+        if (auto* visible =
+                consoleBoolParam(*grid, "visible");
+            visible && visible->value) {
+            oscRouter.addBoolRoute(
+                "/sensor/deck/*/deck-scene",
+                visible->value,
+                0.5f);
+            oscRouter.addBoolRoute(
+                "/sensor/deck/*/scene",
+                visible->value,
+                0.5f);
+        }
     }
 }
 
@@ -5364,7 +5669,6 @@ bool ofApp::addAssetToConsoleLayer(int layerIndex,
         if (replacingElement) {
             midi.unbindTargetsByPrefix(prefix);
         }
-        refreshLayerReferences();
         try {
             rebuildDynamicOscRoutes();
         } catch (const std::exception& ex) {
@@ -5393,15 +5697,19 @@ bool ofApp::addAssetToConsoleLayer(int layerIndex,
             }
         }
 
-        Layer* layerPtr = runtime_.legacyCompositionElementForHost(
-            static_cast<std::size_t>(idx));
         try {
-            if (auto* perlin = dynamic_cast<PerlinNoiseLayer*>(layerPtr)) {
-                registerPerlinMidi(perlin);
-            } else if (auto* gol = dynamic_cast<GameOfLifeLayer*>(layerPtr)) {
-                registerGameOfLifeMidi(gol);
+            const auto installed =
+                runtime_.compositionLayerSnapshot(
+                    static_cast<std::size_t>(idx));
+            if (installed &&
+                installed->typeId == "perlin") {
+                registerPerlinMidi(*installed);
+            } else if (installed &&
+                       installed->typeId == "gameOfLife") {
+                registerGameOfLifeMidi(*installed);
                 if (activate) {
-                    gol->randomize();
+                    randomizeGameOfLifeAtSlot(
+                        static_cast<std::size_t>(idx));
                 }
             }
         } catch (const std::exception& ex) {
@@ -5530,9 +5838,6 @@ bool ofApp::clearConsoleSlot(int index) {
         midi.unbindByPrefix(retiredElementPrefix);
     }
     unregisterConsoleLayerCoverageParam(index + 1);
-    if (clearResult.elementChanged) {
-        refreshLayerReferences();
-    }
     if (!retiredAssetId.empty() && isFxType(retiredType)) {
         setFxRouteForType(retiredType, 0.0f);
     }
@@ -5832,6 +6137,198 @@ ofApp::consoleSlotForIndex(int layerIndex) const {
         static_cast<std::size_t>(idx));
 }
 
+std::optional<ofApp::ConsoleSlotSnapshot>
+ofApp::firstConsoleElementOfType(const std::string& typeId) const {
+    const auto composition = runtime_.compositionSnapshot();
+    for (const auto& slot : composition.layers) {
+        if (slot.hasElement && slot.typeId == typeId) {
+            return slot;
+        }
+    }
+    return std::nullopt;
+}
+
+std::string ofApp::consoleParameterId(
+    const ConsoleSlotSnapshot& slot,
+    const std::string& suffix) {
+    if (slot.registryPrefix.empty() || suffix.empty()) {
+        return std::string();
+    }
+    return slot.registryPrefix + "." + suffix;
+}
+
+ParameterRegistry::FloatParam* ofApp::consoleFloatParam(
+    const ConsoleSlotSnapshot& slot,
+    const std::string& suffix) {
+    const std::string id = consoleParameterId(slot, suffix);
+    return id.empty() ? nullptr : paramRegistry.findFloat(id);
+}
+
+const ParameterRegistry::FloatParam* ofApp::consoleFloatParam(
+    const ConsoleSlotSnapshot& slot,
+    const std::string& suffix) const {
+    const std::string id = consoleParameterId(slot, suffix);
+    return id.empty() ? nullptr : paramRegistry.findFloat(id);
+}
+
+ParameterRegistry::BoolParam* ofApp::consoleBoolParam(
+    const ConsoleSlotSnapshot& slot,
+    const std::string& suffix) {
+    const std::string id = consoleParameterId(slot, suffix);
+    return id.empty() ? nullptr : paramRegistry.findBool(id);
+}
+
+const ParameterRegistry::BoolParam* ofApp::consoleBoolParam(
+    const ConsoleSlotSnapshot& slot,
+    const std::string& suffix) const {
+    const std::string id = consoleParameterId(slot, suffix);
+    return id.empty() ? nullptr : paramRegistry.findBool(id);
+}
+
+std::optional<float> ofApp::consoleFloatValue(
+    const ConsoleSlotSnapshot& slot,
+    const std::string& suffix) const {
+    const auto* param = consoleFloatParam(slot, suffix);
+    if (!param) {
+        return std::nullopt;
+    }
+    return param->value ? *param->value : param->baseValue;
+}
+
+std::optional<bool> ofApp::consoleBoolValue(
+    const ConsoleSlotSnapshot& slot,
+    const std::string& suffix) const {
+    const auto* param = consoleBoolParam(slot, suffix);
+    if (!param) {
+        return std::nullopt;
+    }
+    return param->value ? *param->value : param->baseValue;
+}
+
+bool ofApp::writeConsoleFloatLive(
+    const ConsoleSlotSnapshot& slot,
+    const std::string& suffix,
+    float value) {
+    auto* param = consoleFloatParam(slot, suffix);
+    if (!param || !param->value) {
+        return false;
+    }
+    *param->value = value;
+    return true;
+}
+
+bool ofApp::writeConsoleBoolLive(
+    const ConsoleSlotSnapshot& slot,
+    const std::string& suffix,
+    bool value) {
+    auto* param = consoleBoolParam(slot, suffix);
+    if (!param || !param->value) {
+        return false;
+    }
+    *param->value = value;
+    return true;
+}
+
+std::optional<int> ofApp::geodesicSubdivisionAtSlot(
+    std::size_t zeroBasedIndex) const {
+    const auto slot =
+        runtime_.compositionLayerSnapshot(zeroBasedIndex);
+    if (!slot || !slot->hasElement ||
+        slot->typeId != "geodesic") {
+        return std::nullopt;
+    }
+
+    const Layer* base =
+        runtime_.compositionElementForHost(zeroBasedIndex);
+    const auto* geodesic =
+        dynamic_cast<const GeodesicLayer*>(base);
+    if (!geodesic) {
+        return std::nullopt;
+    }
+    return geodesic->subdivisions();
+}
+
+bool ofApp::adjustGeodesicSubdivisionAtSlot(
+    std::size_t zeroBasedIndex,
+    int delta) {
+    const auto slot =
+        runtime_.compositionLayerSnapshot(zeroBasedIndex);
+    if (!slot || !slot->hasElement ||
+        slot->typeId != "geodesic" ||
+        delta == 0) {
+        return false;
+    }
+
+    Layer* base =
+        runtime_.legacyCompositionElementForHost(zeroBasedIndex);
+    auto* geodesic = dynamic_cast<GeodesicLayer*>(base);
+    if (!geodesic) {
+        return false;
+    }
+    if (delta > 0) {
+        geodesic->incrementSubdivision();
+    } else {
+        geodesic->decrementSubdivision();
+    }
+    return true;
+}
+
+bool ofApp::randomizeGameOfLifeAtSlot(
+    std::size_t zeroBasedIndex) {
+    const auto slot =
+        runtime_.compositionLayerSnapshot(zeroBasedIndex);
+    if (!slot || !slot->hasElement ||
+        slot->typeId != "gameOfLife") {
+        return false;
+    }
+
+    Layer* base =
+        runtime_.legacyCompositionElementForHost(zeroBasedIndex);
+    auto* gameOfLife = dynamic_cast<GameOfLifeLayer*>(base);
+    if (!gameOfLife) {
+        return false;
+    }
+    gameOfLife->randomize();
+    return true;
+}
+
+std::string ofApp::gridDeformationSummary(
+    const ConsoleSlotSnapshot& slot) const {
+    std::vector<std::string> activeModes;
+    if (consoleBoolValue(slot, "wave").value_or(false) &&
+        consoleFloatValue(slot, "waveAmount").value_or(0.0f) > 0.01f) {
+        activeModes.push_back("wave");
+    }
+    if (consoleBoolValue(slot, "bend").value_or(false) &&
+        consoleFloatValue(slot, "bendAmount").value_or(0.0f) > 0.01f) {
+        activeModes.push_back("bend");
+    }
+    if (consoleBoolValue(slot, "deform").value_or(false) &&
+        consoleFloatValue(slot, "deformAmount").value_or(0.0f) > 0.01f) {
+        activeModes.push_back("noise");
+    }
+    if (consoleBoolValue(slot, "twist").value_or(false) &&
+        std::abs(consoleFloatValue(slot, "twistAmount").value_or(0.0f)) > 0.01f) {
+        activeModes.push_back("twist");
+    }
+    if (consoleBoolValue(slot, "bulge").value_or(false) &&
+        std::abs(consoleFloatValue(slot, "bulgeAmount").value_or(0.0f)) > 0.01f) {
+        activeModes.push_back("bulge");
+    }
+
+    if (activeModes.empty()) {
+        return "flat";
+    }
+    std::ostringstream summary;
+    for (std::size_t i = 0; i < activeModes.size(); ++i) {
+        if (i > 0) {
+            summary << "+";
+        }
+        summary << activeModes[i];
+    }
+    return summary.str();
+}
+
 int ofApp::findConsoleSlotByAsset(const std::string& assetId) const {
     if (assetId.empty()) return -1;
     const auto composition = runtime_.compositionSnapshot();
@@ -6116,43 +6613,94 @@ bool ofApp::toggleConsoleAndControlHub(MenuController& controller) {
     return true;
 }
 
-void ofApp::registerPerlinMidi(PerlinNoiseLayer* layer) {
-    if (!layer) return;
-    const std::string prefix = layer->registryPrefix();
-    midi.bindFloat(prefix + ".scale", layer->scaleParamPtr(), 0.1f, 10.0f, false, 0.0f);
-    midi.bindFloat(prefix + ".texelZoom", layer->texelZoomParamPtr(), 0.25f, 4.0f, false, 0.0f);
-    midi.bindFloat(prefix + ".speed", layer->speedParamPtr(), 0.0f, 5.0f, false, 0.0f);
-    midi.bindFloat(prefix + ".brightness", layer->brightnessParamPtr(), 0.0f, 2.0f, false, 0.0f);
-    midi.bindFloat(prefix + ".contrast", layer->contrastParamPtr(), 0.1f, 4.0f, false, 0.0f);
-    midi.bindFloat(prefix + ".alpha", layer->alphaParamPtr(), 0.0f, 1.0f, false, 0.0f);
-    midi.bindFloat(prefix + ".colorR", layer->colorRParamPtr(), 0.0f, 2.0f, false, 0.0f);
-    midi.bindFloat(prefix + ".colorG", layer->colorGParamPtr(), 0.0f, 2.0f, false, 0.0f);
-    midi.bindFloat(prefix + ".colorB", layer->colorBParamPtr(), 0.0f, 2.0f, false, 0.0f);
-    midi.bindFloat(prefix + ".octaves", layer->octavesParamPtr(), 1.0f, 8.0f, true, 1.0f);
-    midi.bindFloat(prefix + ".lacunarity", layer->lacunarityParamPtr(), 1.0f, 6.0f, false, 0.0f);
-    midi.bindFloat(prefix + ".persistence", layer->persistenceParamPtr(), 0.05f, 1.0f, false, 0.0f);
-    midi.bindFloat(prefix + ".palette", layer->paletteIndexParamPtr(), 0.0f, static_cast<float>(std::max(0, layer->paletteCount() - 1)), true, 1.0f);
-    midi.bindFloat(prefix + ".paletteRate", layer->paletteRateParamPtr(), -3.0f, 3.0f, false, 0.0f);
+void ofApp::registerPerlinMidi(
+    const ConsoleSlotSnapshot& slot) {
+    if (!slot.hasElement || slot.typeId != "perlin") {
+        return;
+    }
+    auto bindFloat = [&](const std::string& suffix,
+                         bool snapToInteger,
+                         float midiStep) {
+        auto* param = consoleFloatParam(slot, suffix);
+        if (!param || !param->value ||
+            !std::isfinite(param->meta.range.min) ||
+            !std::isfinite(param->meta.range.max)) {
+            return;
+        }
+        // Keep each target's established MIDI snap/step policy. Descriptor
+        // ranges define the domain but do not opt controls into quantization.
+        midi.bindFloat(
+            param->meta.id,
+            param->value,
+            param->meta.range.min,
+            param->meta.range.max,
+            snapToInteger,
+            midiStep);
+    };
+
+    bindFloat("scale", false, 0.0f);
+    bindFloat("texelZoom", false, 0.0f);
+    bindFloat("speed", false, 0.0f);
+    bindFloat("brightness", false, 0.0f);
+    bindFloat("contrast", false, 0.0f);
+    bindFloat("alpha", false, 0.0f);
+    bindFloat("colorR", false, 0.0f);
+    bindFloat("colorG", false, 0.0f);
+    bindFloat("colorB", false, 0.0f);
+    bindFloat("octaves", true, 1.0f);
+    bindFloat("lacunarity", false, 0.0f);
+    bindFloat("persistence", false, 0.0f);
+    bindFloat("palette", true, 1.0f);
+    bindFloat("paletteRate", false, 0.0f);
 }
 
-void ofApp::registerGameOfLifeMidi(GameOfLifeLayer* layer) {
-    if (!layer) return;
-    const std::string prefix = layer->registryPrefix();
-    midi.bindFloat(prefix + ".speed", layer->speedParamPtr(), 0.0f, 20.0f, false, 0.0f);
-    midi.bindBool(prefix + ".bpmSync", layer->bpmSyncParamPtr(), MidiRouter::BoolMode::Toggle);
-    midi.bindFloat(prefix + ".bpmMultiplier", layer->bpmMultiplierParamPtr(), 0.25f, 8.0f, false, 0.0f);
-    midi.bindBool(prefix + ".paused", layer->pausedParamPtr(), MidiRouter::BoolMode::Toggle);
-    midi.bindBool(prefix + ".wrap", layer->wrapParamPtr(), MidiRouter::BoolMode::Toggle);
-    midi.bindFloat(prefix + ".density", layer->densityParamPtr(), 0.0f, 1.0f, false, 0.0f);
-    midi.bindFloat(prefix + ".fadeFrames", layer->fadeFramesParamPtr(), 1.0f, 32.0f, true, 1.0f);
-    midi.bindFloat(prefix + ".preset", layer->presetParamPtr(), 0.0f, static_cast<float>(std::max(0, layer->presetCount() - 1)), true, 1.0f);
-    midi.bindFloat(prefix + ".alpha", layer->alphaParamPtr(), 0.0f, 1.0f, false, 0.0f);
-    midi.bindFloat(prefix + ".aliveAlpha", layer->aliveAlphaParamPtr(), 0.0f, 1.0f, false, 0.0f);
-    midi.bindFloat(prefix + ".deadAlpha", layer->deadAlphaParamPtr(), 0.0f, 1.0f, false, 0.0f);
-    midi.bindFloat(prefix + ".reseedQuantizeBeats", layer->reseedQuantizeBeatsParamPtr(), 0.0f, 16.0f, true, 1.0f);
-    midi.bindBool(prefix + ".autoReseed", layer->autoReseedParamPtr(), MidiRouter::BoolMode::Toggle);
-    midi.bindFloat(prefix + ".autoReseedEveryBeats", layer->autoReseedEveryBeatsParamPtr(), 1.0f, 64.0f, true, 1.0f);
-    midi.bindBool(prefix + ".reseed", layer->reseedParamPtr(), MidiRouter::BoolMode::Assign);
+void ofApp::registerGameOfLifeMidi(
+    const ConsoleSlotSnapshot& slot) {
+    if (!slot.hasElement ||
+        slot.typeId != "gameOfLife") {
+        return;
+    }
+    auto bindFloat = [&](const std::string& suffix,
+                         bool snapToInteger,
+                         float midiStep) {
+        auto* param = consoleFloatParam(slot, suffix);
+        if (!param || !param->value ||
+            !std::isfinite(param->meta.range.min) ||
+            !std::isfinite(param->meta.range.max)) {
+            return;
+        }
+        midi.bindFloat(
+            param->meta.id,
+            param->value,
+            param->meta.range.min,
+            param->meta.range.max,
+            snapToInteger,
+            midiStep);
+    };
+    auto bindBool = [&](const std::string& suffix,
+                        MidiRouter::BoolMode mode) {
+        auto* param = consoleBoolParam(slot, suffix);
+        if (!param || !param->value) {
+            return;
+        }
+        midi.bindBool(param->meta.id, param->value, mode);
+    };
+
+    bindFloat("speed", false, 0.0f);
+    bindBool("bpmSync", MidiRouter::BoolMode::Toggle);
+    bindFloat("bpmMultiplier", false, 0.0f);
+    bindBool("paused", MidiRouter::BoolMode::Toggle);
+    bindBool("wrap", MidiRouter::BoolMode::Toggle);
+    bindFloat("density", false, 0.0f);
+    bindFloat("fadeFrames", true, 1.0f);
+    bindFloat("preset", true, 1.0f);
+    bindFloat("alpha", false, 0.0f);
+    bindFloat("aliveAlpha", false, 0.0f);
+    bindFloat("deadAlpha", false, 0.0f);
+    bindFloat("reseedQuantizeBeats", true, 1.0f);
+    bindBool("autoReseed", MidiRouter::BoolMode::Toggle);
+    bindFloat("autoReseedEveryBeats", true, 1.0f);
+    bindBool("reseed", MidiRouter::BoolMode::Assign);
 }
 
 
@@ -6263,24 +6811,6 @@ void ofApp::syncActiveFxWithConsoleSlots(bool enablePresent) {
     disableIfMissing("fx.ascii_supersample", "effects.asciiSupersample.route");
     disableIfMissing("fx.crt", "effects.crt.route");
     disableIfMissing("fx.motion_extract", "effects.motion.route");
-}
-
-void ofApp::refreshLayerReferences() {
-    gridLayer = nullptr;
-    geodesicLayer = nullptr;
-    perlinLayer = nullptr;
-    gameOfLifeLayer = nullptr;
-
-    for (std::size_t i = 0;
-         i < runtime_.compositionLayerCount();
-         ++i) {
-        Layer* base = runtime_.legacyCompositionElementForHost(i);
-        if (!base) continue;
-        if (!gridLayer) gridLayer = dynamic_cast<GridLayer*>(base);
-        if (!geodesicLayer) geodesicLayer = dynamic_cast<GeodesicLayer*>(base);
-        if (!perlinLayer) perlinLayer = dynamic_cast<PerlinNoiseLayer*>(base);
-        if (!gameOfLifeLayer) gameOfLifeLayer = dynamic_cast<GameOfLifeLayer*>(base);
-    }
 }
 
 std::string ofApp::canonicalScenePath(const std::string& path) const {
@@ -6919,10 +7449,6 @@ bool ofApp::applyScenePlan(SceneApplyPlan& plan) {
             return false;
         }
     }
-    if (consoleApplied) {
-        refreshLayerReferences();
-    }
-
     for (const auto& entry : paramRegistry.floats()) {
         paramRegistry.clearFloatModifiers(entry.meta.id);
     }
@@ -7007,10 +7533,6 @@ bool ofApp::applyScenePlan(SceneApplyPlan& plan) {
             }
         }
     }
-
-
-    refreshLayerReferences();
-
     auto applyValue = [&](const std::string& id, const ofJson& value) {
         applyParameterNode(id, value);
     };
@@ -7266,7 +7788,6 @@ bool ofApp::rollbackSceneLoad(const SceneLoadRollbackSnapshot& snapshot,
     }
     syncActiveFxWithConsoleSlots();
     handleControllerFocusParamChange();
-    refreshLayerReferences();
     return restored;
 }
 

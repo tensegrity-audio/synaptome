@@ -49,6 +49,10 @@ int main() {
         { "midi_namespace_cleanup", browser_flow::RunMidiNamespaceCleanupScenario },
         { "parameter_registry_storage_invalidation",
           browser_flow::RunParameterRegistryStorageInvalidationScenario },
+        { "element_parameter_registry_contract",
+          browser_flow::RunElementParameterRegistryContractScenario },
+        { "element_parameter_midi_rebind",
+          browser_flow::RunElementParameterMidiRebindScenario },
         { "slot_dropdown_focus", browser_flow::RunSlotDropdownFocusScenario },
         { "slot_binding_refresh", browser_flow::RunSlotBindingRefreshScenario },
         { "webcam_replay_flow", [] {

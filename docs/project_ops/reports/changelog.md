@@ -2,6 +2,39 @@
 
 This changelog records Project Ops and administrative workflow changes. Product release versioning remains governed by `docs/release_policy.md`.
 
+## 2026-07-27 - architecture - seac3_snapshot_registry_parameter_views
+
+- Request ID: `spine_element_architecture_convergence`
+- Phase / Milestone: SEAC-3 in progress
+- Host boundary: Removed all cached derived Grid, Geodesic, Perlin, and Game of
+  Life pointers plus `refreshLayerReferences()`. Slot selection now reads copied
+  composition snapshots and carries the selected stable registry prefix.
+- Parameter views: Grid/Geodesic HUD summaries, Perlin/Game of Life HUD
+  metadata, core Grid/Geodesic OSC routes, Perlin/Game of Life MIDI bindings,
+  Grid density cycling, and Game of Life pause now resolve live
+  `ParameterRegistry` storage.
+- Control compatibility: MIDI domains come from registered descriptor ranges.
+  The established per-target snap/step and bool-mode policies remain explicit
+  and unchanged.
+- Remaining element seams: Geodesic subdivision status uses const
+  `compositionElementForHost` inspection. Mutable
+  `legacyCompositionElementForHost` access is allowed only inside
+  `adjustGeodesicSubdivisionAtSlot()` and
+  `randomizeGameOfLifeAtSlot()`, after slot snapshot/type validation.
+- Compatibility: Public element IDs, parameter addresses, scene and mapping
+  formats, keyboard controls, MIDI/OSC target behavior, rendering, and Element
+  SDK headers remain unchanged.
+- Validation: Runtime boundary validation now uses brace-balanced function
+  extraction and semantic action allowlisting rather than a global call count.
+  It rejects derived caches, concrete pointer-taking MIDI adapters, mutable
+  access outside the two action bodies, and loss of registry range or
+  snap/step semantics. Scene rollback validation no longer requires a retired
+  pointer-cache refresh. BrowserFlow passes all 35 scenarios, including the new
+  registry-view and MIDI-rebind contracts.
+- Remaining gate: Replace the two mutable compatibility adapters with a
+  declared action contract, then migrate Geodesic/video status off const
+  element inspection and reduce the render-target seam.
+
 ## 2026-07-27 - architecture - seac3_slot_addressed_element_replacement
 
 - Request ID: `spine_element_architecture_convergence`
