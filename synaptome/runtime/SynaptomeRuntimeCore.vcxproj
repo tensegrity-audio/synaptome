@@ -62,6 +62,7 @@
     <ClInclude Include="$(SynaptomeAppRoot)\src\visuals\LayerFactory.h" />
     <ClInclude Include="$(SynaptomeElementSdkIncludeRoot)\synaptome\element\Action.h" />
     <ClInclude Include="$(SynaptomeElementSdkIncludeRoot)\synaptome\element\ElementDescriptor.h" />
+    <ClInclude Include="$(SynaptomeElementSdkIncludeRoot)\synaptome\element\Parameter.h" />
     <ClInclude Include="$(SynaptomeElementSdkIncludeRoot)\synaptome\element\Telemetry.h" />
     <ClInclude Include="$(SynaptomeElementSdkIncludeRoot)\synaptome\element\compat\Layer.h" />
   </ItemGroup>

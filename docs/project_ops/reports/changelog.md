@@ -2,6 +2,56 @@
 
 This changelog records Project Ops and administrative workflow changes. Product release versioning remains governed by `docs/release_policy.md`.
 
+## 2026-07-27 - architecture - seac4b1_static_parameter_declaration_fixture
+
+- Request ID: `spine_element_architecture_convergence`
+- Phase / Milestone: SEAC-4B1 complete inside SEAC-4B; 3 of 12 roadmap
+  steps remain complete and SEAC-4/SEAC-4B remain In Progress.
+- Public SDK: Added the pure-value, pointer-free `Parameter.h` DTOs for the
+  closed float/bool/string kinds and values, range/step metadata, ordered
+  groups, inline options, option-source selectors, optional quick-access order,
+  aliases, and deprecation metadata. `ElementTypeContract` pairs this
+  parameter set with the minimal `ElementDescriptor`; the descriptor itself
+  remains type, kind, and ordered actions.
+- Registry boundary: `LayerFactory` atomically stores either a `Declared`
+  type contract plus creator or an explicit `LegacySetupDiscovery` minimal
+  descriptor plus creator. It validates pure data and provides construction-free
+  state/contract lookup and copied enumeration. Invalid or duplicate
+  registration leaves the prior record intact.
+- First declared fixture: Signal Bloom now declares five ordered groups and 18
+  ordered parameters in package order. The declaration includes explicit
+  visibility, the three scale options, the transport BPM-multiplier option
+  source and fields, no quick-access entries, and the exact `alpha` to
+  `opacity` deprecation.
+- Parity boundary: Focused validation compares the public and shipping
+  registrar bodies and checks the declaration against the reviewed package
+  metadata plus current live `setup()` registration. The existing setup path
+  remains live and still repeats parameter metadata; this checkpoint has not
+  retired current setup metadata.
+- Focused confidence: ElementSdkCompileContract clean-builds and passes with
+  zero errors and the six pre-existing Signal Bloom C4244 warnings.
+  LayerPackageBench clean-builds and reports PASS after construction-free
+  declaration inspection, exact package/static parity, compatible live
+  ID/kind/range registration for all 18 parameters, 240 updates, and its
+  existing stub-backed draw call.
+- Compatibility: No persisted format or public ID changed. The other 22
+  shipping registrations remain legacy setup discovery.
+- Not complete: Live bind-only parameter storage, runtime metadata/default
+  authority and precedence, Browser/catalog/manifest/documentation generation,
+  the remaining 22 declared registrations, package serialization, and
+  scene/preset/mapping migration remain later gates. The runtime declaration
+  is not serialized into the Signal Bloom package.
+- Deferred validation: BrowserFlow execution and live dual-screen hardware
+  rehearsal remain explicitly deferred; this checkpoint does not add live
+  display evidence.
+- Documentation validation: The Project Ops repository audit, the
+  `spine_element_architecture_convergence` request-parity audit, and the scoped
+  five-document `git diff --check` pass with no errors or warnings.
+- Next gate: Continue SEAC-4B with live binding and explicit metadata/default
+  authority, then migrate the remaining registrations and generate catalog
+  views. Package serialization, generated registration, and persisted mappings
+  remain SEAC-7, SEAC-8, and SEAC-9.
+
 ## 2026-07-27 - architecture - seac4a_static_element_descriptor_actions
 
 - Request ID: `spine_element_architecture_convergence`

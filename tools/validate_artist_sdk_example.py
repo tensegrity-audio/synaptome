@@ -188,10 +188,19 @@ def collect_errors(
         if sdk.get("noHeavySetupSideEffects") is not True:
             errors.append("catalog sdk.noHeavySetupSideEffects must be true")
 
-    if not re.search(
+    has_inline_descriptor_registration = re.search(
         rf'registerType\(\s*(?:[\w:]+)?\s*\{{\s*"{re.escape(EXPECTED_TYPE)}"',
         registration_text,
-    ):
+    )
+    has_declared_contract_registration = (
+        f'"{EXPECTED_TYPE}"' in registration_text
+        and "ElementTypeContract" in registration_text
+        and re.search(
+            r"registerType\(\s*signalBloomTypeContract\(\)",
+            registration_text,
+        )
+    )
+    if not has_inline_descriptor_registration and not has_declared_contract_registration:
         errors.append("registration snippet must register the catalog type")
     if "std::make_unique<SignalBloomLayer>" not in registration_text:
         errors.append("registration snippet must create SignalBloomLayer")

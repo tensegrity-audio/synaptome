@@ -143,6 +143,9 @@ def main() -> int:
     descriptor_header = (
         ROOT / "synaptome/sdk/include/synaptome/element/ElementDescriptor.h"
     ).read_text(encoding="utf-8")
+    parameter_header = (
+        ROOT / "synaptome/sdk/include/synaptome/element/Parameter.h"
+    ).read_text(encoding="utf-8")
     telemetry_header = (
         ROOT / "synaptome/sdk/include/synaptome/element/Telemetry.h"
     ).read_text(encoding="utf-8")
@@ -451,6 +454,84 @@ def main() -> int:
             errors.append(
                 "public element descriptor exposes forbidden ownership: "
                 + forbidden
+            )
+    for token in (
+        "enum class ParameterKind",
+        "using ParameterValue = std::variant<float, bool, std::string>",
+        "struct ParameterRange",
+        "std::optional<float> step;",
+        "struct ParameterOption",
+        "struct ParameterOptionSource",
+        "std::string valueField;",
+        "std::string labelField;",
+        "struct ParameterGroupDeclaration",
+        "struct ParameterDeprecation",
+        "struct ParameterDeclaration",
+        "std::string groupId;",
+        "ParameterValue defaultValue",
+        "std::optional<ParameterRange> range;",
+        "std::vector<ParameterOption> options;",
+        "std::optional<ParameterOptionSource> optionSource;",
+        "std::optional<int> quickAccessOrder;",
+        "std::vector<std::string> aliases;",
+        "std::optional<ParameterDeprecation> deprecation;",
+        "struct ParameterDeclarationSet",
+        "std::vector<ParameterGroupDeclaration> groups;",
+        "std::vector<ParameterDeclaration> parameters;",
+        "struct ElementTypeContract",
+        "ElementDescriptor element;",
+        "ParameterDeclarationSet parameters;",
+    ):
+        if token not in parameter_header:
+            errors.append(f"public parameter declaration DTO is missing {token}")
+    for forbidden in (
+        "*",
+        "&",
+        "std::function",
+        "ParameterBinder",
+        "ParameterRegistry",
+        "ActionHandler",
+        "Creator",
+        "Layer",
+        "Runtime",
+        "ofFbo",
+        "ofJson",
+        "unique_ptr",
+        "shared_ptr",
+    ):
+        if forbidden in parameter_header:
+            errors.append(
+                "public parameter declaration DTO exposes forbidden "
+                "binding/ownership: " + forbidden
+            )
+    for token in (
+        "enum class ParameterDeclarationState",
+        "LegacySetupDiscovery",
+        "Declared",
+        "struct ElementTypeContractRecord",
+        "ParameterDeclarationState state",
+        "synaptome::element::ElementTypeContract contract;",
+        "synaptome::element::ElementTypeContract contract,",
+        "const ElementTypeContractRecord* typeContract(",
+        "std::vector<ElementTypeContractRecord> typeContracts() const;",
+    ):
+        if token not in layer_factory_header:
+            errors.append(
+                "scoped element registry is missing parameter declaration "
+                "migration/inspection API: " + token
+            )
+    for token in (
+        "ParameterDeclarationState::LegacySetupDiscovery",
+        "ParameterDeclarationState::Declared",
+        "parameterContractError(record.contract.parameters)",
+        "registerTypeRecord(std::move(record), std::move(creator))",
+        "entry.typeContract.contract.element",
+        "result.push_back(entry.typeContract)",
+    ):
+        if token not in layer_factory_source:
+            errors.append(
+                "scoped element registry is missing atomic parameter "
+                "contract behavior: " + token
             )
     if "registerActions(" not in layer_header:
         errors.append("compatibility Layer is missing optional action registration")
@@ -1882,6 +1963,9 @@ def main() -> int:
         "tests.stable-opacity-mapping",
         "RunElementDescriptorRegistryScenario",
         "invalid or duplicate descriptors mutated the registry",
+        "construction-free parameter contract lookup lost declared or legacy state",
+        "mutating copied parameter contracts changed stable factory storage",
+        "invalid parameter declaration was not rejected atomically",
         "RunCompositionActionScenario",
         "InvalidActionMode::UnknownBinding",
         "InvalidActionMode::DuplicateBinding",
@@ -1913,6 +1997,24 @@ def main() -> int:
         if token not in runtime_test:
             errors.append(f"RuntimeCore test is missing control-plane coverage: {token}")
 
+    for token in (
+        "factory.typeContract(\"example.signalBloom\")",
+        "LayerFactory::ParameterDeclarationState::Declared",
+        "typeContract->contract.parameters.groups.size() == 5",
+        "typeContract->contract.parameters.parameters.size() == 18",
+        "simplePackageLabel(",
+        "option-source selectors drifted",
+        "static option metadata drifted",
+        "deprecation metadata drifted",
+        "legacy discovery and declared-empty parameter states collapsed",
+        "mutating copied Signal Bloom contracts changed factory state",
+    ):
+        if token not in package_bench:
+            errors.append(
+                "package bench is missing static parameter declaration "
+                "coverage: " + token
+            )
+
     try:
         telemetry_test_body = function_body(
             runtime_test,
@@ -1940,10 +2042,10 @@ def main() -> int:
         return 1
     print(
         "[runtime-core-boundary] PASS linked RuntimeCore lifecycle and "
-        "immutable composition query/control/replacement plus static action "
-        "declaration, bind-only live action, and on-demand typed telemetry "
-        "planes, with host-only composition rendering and its stub-backed "
-        "renderer contract"
+        "immutable composition query/control/replacement plus static "
+        "action/parameter declarations, explicit legacy/declared inspection, "
+        "bind-only live action, and on-demand typed telemetry planes, with "
+        "host-only composition rendering and its stub-backed renderer contract"
     )
     return 0
 

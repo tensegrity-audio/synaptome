@@ -41,6 +41,10 @@ def main() -> int:
         / "ElementDescriptor.h",
         errors,
     )
+    parameter_header = read(
+        APP / "sdk" / "include" / "synaptome" / "element" / "Parameter.h",
+        errors,
+    )
     action_contract = descriptor_header + "\n" + action_header
     telemetry_header = read(
         APP / "sdk" / "include" / "synaptome" / "element" / "Telemetry.h",
@@ -169,6 +173,60 @@ def main() -> int:
             errors.append(
                 "public element descriptor exposes forbidden ownership: "
                 + token
+            )
+    for token in (
+        "enum class ParameterKind",
+        "Float",
+        "Bool",
+        "String",
+        "using ParameterValue = std::variant<float, bool, std::string>",
+        "struct ParameterRange",
+        "std::optional<float> step;",
+        "struct ParameterOption",
+        "ParameterValue value;",
+        "struct ParameterOptionSource",
+        "std::string valueField;",
+        "std::string labelField;",
+        "struct ParameterGroupDeclaration",
+        "struct ParameterDeprecation",
+        "std::string replacementId;",
+        "struct ParameterDeclaration",
+        "std::string groupId;",
+        "ParameterValue defaultValue",
+        "std::optional<ParameterRange> range;",
+        "std::vector<ParameterOption> options;",
+        "std::optional<ParameterOptionSource> optionSource;",
+        "std::optional<int> quickAccessOrder;",
+        "std::vector<std::string> aliases;",
+        "std::optional<ParameterDeprecation> deprecation;",
+        "struct ParameterDeclarationSet",
+        "std::vector<ParameterGroupDeclaration> groups;",
+        "std::vector<ParameterDeclaration> parameters;",
+        "struct ElementTypeContract",
+        "ElementDescriptor element;",
+        "ParameterDeclarationSet parameters;",
+    ):
+        if token not in parameter_header:
+            errors.append(f"public parameter declaration contract is missing {token}")
+    for token in (
+        "*",
+        "&",
+        "std::function",
+        "ParameterBinder",
+        "ParameterRegistry",
+        "ActionHandler",
+        "Creator",
+        "Layer",
+        "Runtime",
+        "ofJson",
+        "ofFbo",
+        "unique_ptr",
+        "shared_ptr",
+    ):
+        if token in parameter_header:
+            errors.append(
+                "public parameter declaration contract exposes forbidden "
+                "binding/ownership: " + token
             )
     for token in (
         "using TelemetryValue =",
@@ -321,6 +379,14 @@ def main() -> int:
         errors.append(
             "compile-contract must include the public ElementDescriptor header directly"
         )
+    if "<synaptome/element/parameter.h>" not in compile_contract_source:
+        errors.append(
+            "compile-contract must include the public Parameter header directly"
+        )
+    if r"\synaptome\element\parameter.h" not in contract_lower:
+        errors.append(
+            "compile-contract project must list the public Parameter header"
+        )
     forbidden_contract_roots = (
         r"$(synaptomeapproot)\src;",
         r"$(synaptomeapproot)\src\core",
@@ -447,12 +513,22 @@ def main() -> int:
         )
     if "registerSignalBloomElement(elementTypes)" not in builtin_source:
         errors.append("built-in registration unit must compose the Signal Bloom bridge")
-    if not re.search(
-        r'registerType\(\s*\{\s*"example\.signalBloom"\s*,\s*'
-        r'synaptome::element::ElementKind::Visual',
-        signal_registration_source,
+    for token in (
+        "ElementTypeContract signalBloomTypeContract()",
+        '\"example.signalBloom\"',
+        "contract.parameters.groups =",
+        "contract.parameters.parameters =",
+        "ParameterOptionSource{",
+        '\"transport.bpmMultipliers\"',
+        "ParameterDeprecation{",
+        '\"opacity\"',
+        "elementTypes.registerType(",
+        "signalBloomTypeContract()",
     ):
-        errors.append("Signal Bloom registration bridge must own its type binding")
+        if token not in signal_registration_source:
+            errors.append(
+                "Signal Bloom declared registration is missing " + token
+            )
     bench_project_lower = bench_project.lower()
     if r"\src\runtime\builtinelements.cpp" in bench_project_lower:
         errors.append("package bench must not compile the full host built-in registrar")
@@ -627,9 +703,10 @@ def main() -> int:
         return 1
     print(
         "[element-sdk-boundary] PASS public includes, shipping static library, "
-        "pointer-free static element/action descriptors, bind-only live actions, "
-        "typed telemetry, controlled registration, compile-contract roots, and "
-        "no Runtime/host-renderer composition leak"
+        "pointer-free static element/action/parameter declarations, explicit "
+        "legacy/declared registration, bind-only live actions, typed telemetry, "
+        "controlled registration, compile-contract roots, and no "
+        "Runtime/host-renderer composition leak"
     )
     return 0
 

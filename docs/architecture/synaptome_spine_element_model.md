@@ -179,8 +179,11 @@ Actions do not become parameter state, receive an expanded
 `console.layerN.actions.*` address, appear in scenes or presets, or enter
 MIDI/OSC mapping snapshots. Discovery is limited to a currently adopted live
 instance. SEAC-4A static type/kind/action declarations and live binding parity
-are complete. Authoritative static parameter declarations and catalog views
-remain SEAC-4B, package serialization remains SEAC-7, and persisted action
+are complete. SEAC-4B1 adds the public pointer-free parameter DTO and one
+construction-free Signal Bloom declaration with five groups and 18 ordered
+parameters. SEAC-4B remains In Progress: the remaining 22 registrations, live
+bind-only parameter storage, runtime metadata/default authority, and generated
+catalog views are not complete. Package serialization remains SEAC-7, and persisted action
 mappings remain SEAC-9. Geodesic subdivisions are durable parameter state, while video
 source and capture observations use the typed on-demand telemetry query. The
 read-only `compositionElementForHost` compatibility seam is removed.
@@ -273,12 +276,16 @@ parameters remain authoritative and are not duplicated as telemetry.
 The compatibility `LayerFactory` is an explicitly owned element type registry,
 not a singleton. Each Runtime receives one registry by reference; app, bench,
 and test registries are isolated, and a missing type never falls back to
-another Runtime's registrations. A registration atomically stores one minimal
-`ElementDescriptor` plus one creator. Descriptor lookup and copied enumeration
-do not construct an element. The implemented descriptor contains only type ID,
-kind, and ordered actions; display label, version/package ownership,
-capabilities/dependencies, parameters, resources, and persistence metadata are
-later contracts. The legacy class name may change only with a focused source
+another Runtime's registrations. A registration atomically stores a declared
+`ElementTypeContract` or a minimal descriptor marked for legacy setup
+discovery, plus one creator. Contract lookup and copied enumeration do not
+construct an element and preserve the declared-versus-legacy state. The
+minimal element descriptor still contains only type ID, kind, and ordered
+actions; the separate pointer-free parameter declaration set carries static
+groups and parameter metadata. Signal Bloom is the first and only declared
+shipping fixture. Display label, version/package ownership,
+capabilities/dependencies, resources, and persistence metadata remain later
+contracts. The legacy class name may change only with a focused source
 migration; the stable type IDs do not.
 
 During the current compiler-matched compatibility phase, `setup()` receives an
@@ -348,6 +355,15 @@ not generate package, type, or definition identity.
 
 Parameters are the common language between elements and spine services.
 
+SEAC-4B1 implements the first static declaration checkpoint. Public
+pointer-free DTOs cover parameter kind/value, range/step, group, static
+options, option-source references, quick-access order, aliases, and
+deprecation. Signal Bloom declares five ordered groups and 18 parameters in
+reviewed package order without construction. Its declaration includes the
+explicit legacy `visible` control, ordered continuous scale choices, the
+app-owned BPM-multiplier option source, and the `alpha` to layer-container
+`opacity` deprecation.
+
 Parameter declarations must be structured data with:
 
 - suffix ID,
@@ -390,6 +406,13 @@ Rules:
   to mappings.
 - Treat public IDs, kinds, units, and semantics as versioned API.
 - Preserve legacy aliases until scene and mapping migration evidence exists.
+
+The checkpoint is declaration and parity evidence only. Signal Bloom still
+uses `setup(ParameterRegistry&)` to bind live storage and currently repeats
+runtime descriptor metadata there. There is no live bind-only parameter API,
+declared-default precedence, runtime metadata authority, Browser/manifest
+generation, package serialization, or scene/preset/mapping migration yet. The
+other 22 shipping registrations remain explicit legacy setup discovery.
 
 ## Control And Mapping Model
 

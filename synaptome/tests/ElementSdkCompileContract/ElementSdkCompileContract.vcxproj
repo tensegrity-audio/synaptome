@@ -46,6 +46,7 @@
     <ClInclude Include="$(SynaptomeRepoRoot)\docs\examples\artist_sdk\SignalBloomLayer.h" />
     <ClInclude Include="$(SynaptomeElementSdkIncludeRoot)\synaptome\element\Action.h" />
     <ClInclude Include="$(SynaptomeElementSdkIncludeRoot)\synaptome\element\ElementDescriptor.h" />
+    <ClInclude Include="$(SynaptomeElementSdkIncludeRoot)\synaptome\element\Parameter.h" />
     <ClInclude Include="$(SynaptomeElementSdkIncludeRoot)\synaptome\element\Telemetry.h" />
     <ClInclude Include="$(SynaptomeElementSdkIncludeRoot)\synaptome\element\compat\Layer.h" />
     <ClInclude Include="$(SynaptomeElementSdkIncludeRoot)\synaptome\element\compat\LayerParameterBuilder.h" />

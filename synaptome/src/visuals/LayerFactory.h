@@ -1,6 +1,6 @@
 #pragma once
 
-#include <synaptome/element/ElementDescriptor.h>
+#include <synaptome/element/Parameter.h>
 
 #include "Layer.h"
 
@@ -15,6 +15,17 @@ class LayerFactory {
 public:
     using Creator = std::function<std::unique_ptr<Layer>()>;
 
+    enum class ParameterDeclarationState {
+        LegacySetupDiscovery,
+        Declared,
+    };
+
+    struct ElementTypeContractRecord {
+        ParameterDeclarationState state =
+            ParameterDeclarationState::LegacySetupDiscovery;
+        synaptome::element::ElementTypeContract contract;
+    };
+
     LayerFactory() = default;
     LayerFactory(const LayerFactory&) = delete;
     LayerFactory& operator=(const LayerFactory&) = delete;
@@ -24,21 +35,30 @@ public:
     void registerType(
         synaptome::element::ElementDescriptor descriptor,
         Creator creator);
+    void registerType(
+        synaptome::element::ElementTypeContract contract,
+        Creator creator);
     bool contains(std::string_view typeId) const noexcept;
     const synaptome::element::ElementDescriptor* descriptor(
         std::string_view typeId) const noexcept;
     std::vector<synaptome::element::ElementDescriptor>
         descriptors() const;
+    const ElementTypeContractRecord* typeContract(
+        std::string_view typeId) const noexcept;
+    std::vector<ElementTypeContractRecord> typeContracts() const;
     std::unique_ptr<Layer> create(std::string_view typeId) const;
 
 private:
     struct Registration {
-        synaptome::element::ElementDescriptor descriptor;
+        ElementTypeContractRecord typeContract;
         Creator creator;
     };
 
     const Registration* registration(
         std::string_view typeId) const noexcept;
+    void registerTypeRecord(
+        ElementTypeContractRecord record,
+        Creator creator);
 
     std::deque<Registration> registrations_;
 };

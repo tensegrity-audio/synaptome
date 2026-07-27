@@ -1,7 +1,9 @@
 #include <array>
 #include <cmath>
 #include <exception>
+#include <functional>
 #include <iostream>
+#include <limits>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -44,6 +46,75 @@ synaptome::element::ElementDescriptor effectDescriptor(
     descriptor.kind = synaptome::element::ElementKind::Effect;
     descriptor.actions = std::move(actions);
     return descriptor;
+}
+
+synaptome::element::ParameterDeclaration validFloatDeclaration(
+    std::string id = "amount",
+    std::string groupId = "controls") {
+    synaptome::element::ParameterDeclaration declaration;
+    declaration.id = std::move(id);
+    declaration.kind = synaptome::element::ParameterKind::Float;
+    declaration.groupId = std::move(groupId);
+    declaration.label = "Amount";
+    declaration.defaultValue = 0.5f;
+    declaration.range =
+        synaptome::element::ParameterRange{0.0f, 1.0f, 0.1f};
+    declaration.units = "multiplier";
+    declaration.description = "A valid declaration fixture.";
+    declaration.options = {
+        {0.25f, "Low", "Low fixture value."},
+        {0.75f, "High", "High fixture value."},
+    };
+    declaration.quickAccessOrder = 0;
+    declaration.aliases = {"legacyAmount"};
+    return declaration;
+}
+
+synaptome::element::ElementTypeContract validParameterContract(
+    std::string typeId) {
+    synaptome::element::ElementTypeContract contract;
+    contract.element = visualDescriptor(std::move(typeId));
+    contract.parameters.groups = {
+        {"controls", "Controls", "Primary controls."},
+        {"advanced", "Advanced", "Advanced controls."},
+    };
+    contract.parameters.parameters = {
+        validFloatDeclaration(),
+        {
+            "gate",
+            synaptome::element::ParameterKind::Bool,
+            "controls",
+            "Gate",
+            true,
+            std::nullopt,
+            {},
+            "A valid bool fixture.",
+            {},
+            std::nullopt,
+            1,
+            {},
+            synaptome::element::ParameterDeprecation{
+                "alternateGate",
+                "Use the replacement bool fixture.",
+            },
+        },
+        {
+            "alternateGate",
+            synaptome::element::ParameterKind::Bool,
+            "advanced",
+            "Alternate Gate",
+            false,
+            std::nullopt,
+            {},
+            "A valid replacement bool fixture.",
+            {},
+            std::nullopt,
+            std::nullopt,
+            {},
+            std::nullopt,
+        },
+    };
+    return contract;
 }
 
 std::vector<synaptome::element::ActionDescriptor>
@@ -807,6 +878,283 @@ void RunElementDescriptorRegistryScenario() {
             originalConstructions == 1 &&
             duplicateConstructions == 0,
         "duplicate registration replaced the original descriptor creator");
+
+    const auto* legacyContract =
+        factory.typeContract("tests.runtime.descriptor.valid");
+    int declaredConstructions = 0;
+    factory.registerType(
+        validParameterContract("tests.runtime.parameters.declared"),
+        [&] {
+            ++declaredConstructions;
+            return std::make_unique<EmptyElement>();
+        });
+    const auto* stableDeclaredContract =
+        factory.typeContract("tests.runtime.parameters.declared");
+    factory.registerType(
+        synaptome::element::ElementTypeContract{
+            visualDescriptor("tests.runtime.parameters.declaredEmpty"),
+            {},
+        },
+        [] {
+            return std::make_unique<EmptyElement>();
+        });
+    const auto* declaredEmptyContract =
+        factory.typeContract("tests.runtime.parameters.declaredEmpty");
+    auto typeContractCopies = factory.typeContracts();
+    require(
+        legacyContract &&
+            legacyContract->state ==
+                LayerFactory::ParameterDeclarationState::
+                    LegacySetupDiscovery &&
+            legacyContract->contract.parameters.groups.empty() &&
+            legacyContract->contract.parameters.parameters.empty() &&
+            stableDeclaredContract &&
+            stableDeclaredContract->state ==
+                LayerFactory::ParameterDeclarationState::Declared &&
+            stableDeclaredContract->contract.element.typeId ==
+                "tests.runtime.parameters.declared" &&
+            stableDeclaredContract->contract.parameters.groups.size() == 2 &&
+            stableDeclaredContract->contract.parameters.parameters.size() == 3 &&
+            stableDeclaredContract->contract.parameters.parameters[0].id ==
+                "amount" &&
+            declaredEmptyContract &&
+            declaredEmptyContract->state ==
+                LayerFactory::ParameterDeclarationState::Declared &&
+            declaredEmptyContract->contract.parameters.groups.empty() &&
+            declaredEmptyContract->contract.parameters.parameters.empty() &&
+            typeContractCopies.size() == 4 &&
+            declaredConstructions == 0,
+        "construction-free parameter contract lookup lost declared or legacy state");
+    typeContractCopies[2].state =
+        LayerFactory::ParameterDeclarationState::LegacySetupDiscovery;
+    typeContractCopies[2].contract.element.typeId = "copy.mutated";
+    typeContractCopies[2].contract.parameters.groups[0].id = "copyMutated";
+    typeContractCopies[2].contract.parameters.parameters[0].id = "copyMutated";
+    require(
+        factory.typeContract("tests.runtime.parameters.declared") ==
+                stableDeclaredContract &&
+            stableDeclaredContract->state ==
+                LayerFactory::ParameterDeclarationState::Declared &&
+            stableDeclaredContract->contract.element.typeId ==
+                "tests.runtime.parameters.declared" &&
+            stableDeclaredContract->contract.parameters.groups[0].id ==
+                "controls" &&
+            stableDeclaredContract->contract.parameters.parameters[0].id ==
+                "amount" &&
+            declaredConstructions == 0,
+        "mutating copied parameter contracts changed stable factory storage");
+
+    using ContractMutation =
+        std::function<void(synaptome::element::ElementTypeContract&)>;
+    const float quietNan = std::numeric_limits<float>::quiet_NaN();
+    const float infinity = std::numeric_limits<float>::infinity();
+    const std::vector<std::pair<std::string, ContractMutation>>
+        invalidDeclarations = {
+            {"empty parameter ID", [](auto& value) {
+                 value.parameters.parameters[0].id.clear();
+             }},
+            {"invalid parameter ID", [](auto& value) {
+                 value.parameters.parameters[0].id = "Invalid_id";
+             }},
+            {"reserved active parameter", [](auto& value) {
+                 value.parameters.parameters[0].id = "active";
+             }},
+            {"reserved opacity parameter", [](auto& value) {
+                 value.parameters.parameters[0].id = "opacity";
+             }},
+            {"duplicate parameter ID", [](auto& value) {
+                 value.parameters.parameters[1].id =
+                     value.parameters.parameters[0].id;
+             }},
+            {"invalid parameter kind", [](auto& value) {
+                 value.parameters.parameters[0].kind =
+                     static_cast<synaptome::element::ParameterKind>(255);
+             }},
+            {"empty parameter label", [](auto& value) {
+                 value.parameters.parameters[0].label.clear();
+             }},
+            {"invalid group ID", [](auto& value) {
+                 value.parameters.groups[0].id = "Invalid_group";
+             }},
+            {"empty group label", [](auto& value) {
+                 value.parameters.groups[0].label.clear();
+             }},
+            {"duplicate group ID", [](auto& value) {
+                 value.parameters.groups[1].id =
+                     value.parameters.groups[0].id;
+             }},
+            {"undeclared parameter group", [](auto& value) {
+                 value.parameters.parameters[0].groupId = "missing";
+             }},
+            {"default kind mismatch", [](auto& value) {
+                 value.parameters.parameters[0].defaultValue = true;
+             }},
+            {"non-finite default", [quietNan](auto& value) {
+                 value.parameters.parameters[0].defaultValue = quietNan;
+             }},
+            {"range on bool", [](auto& value) {
+                 value.parameters.parameters[1].range =
+                     synaptome::element::ParameterRange{0.0f, 1.0f, 1.0f};
+             }},
+            {"non-finite range minimum", [quietNan](auto& value) {
+                 value.parameters.parameters[0].range->min = quietNan;
+             }},
+            {"non-finite range maximum", [infinity](auto& value) {
+                 value.parameters.parameters[0].range->max = infinity;
+             }},
+            {"reversed range", [](auto& value) {
+                 value.parameters.parameters[0].range->min = 2.0f;
+             }},
+            {"non-finite range step", [quietNan](auto& value) {
+                 value.parameters.parameters[0].range->step = quietNan;
+             }},
+            {"zero range step", [](auto& value) {
+                 value.parameters.parameters[0].range->step = 0.0f;
+             }},
+            {"default outside range", [](auto& value) {
+                 value.parameters.parameters[0].defaultValue = 2.0f;
+             }},
+            {"options and source", [](auto& value) {
+                 value.parameters.parameters[0].optionSource =
+                     synaptome::element::ParameterOptionSource{
+                         "tests.options",
+                         "value",
+                         "label",
+                     };
+             }},
+            {"option kind mismatch", [](auto& value) {
+                 value.parameters.parameters[0].options[0].value = true;
+             }},
+            {"empty option label", [](auto& value) {
+                 value.parameters.parameters[0].options[0].label.clear();
+             }},
+            {"non-finite option", [infinity](auto& value) {
+                 value.parameters.parameters[0].options[0].value = infinity;
+             }},
+            {"option outside range", [](auto& value) {
+                 value.parameters.parameters[0].options[0].value = 2.0f;
+             }},
+            {"duplicate option value", [](auto& value) {
+                 value.parameters.parameters[0].options[1].value =
+                     value.parameters.parameters[0].options[0].value;
+             }},
+            {"invalid option source ID", [](auto& value) {
+                 auto& parameter = value.parameters.parameters[0];
+                 parameter.options.clear();
+                 parameter.optionSource =
+                     synaptome::element::ParameterOptionSource{
+                         "Invalid_source",
+                         "value",
+                         "label",
+                     };
+             }},
+            {"empty option value field", [](auto& value) {
+                 auto& parameter = value.parameters.parameters[0];
+                 parameter.options.clear();
+                 parameter.optionSource =
+                     synaptome::element::ParameterOptionSource{
+                         "tests.options",
+                         {},
+                         "label",
+                     };
+             }},
+            {"empty option label field", [](auto& value) {
+                 auto& parameter = value.parameters.parameters[0];
+                 parameter.options.clear();
+                 parameter.optionSource =
+                     synaptome::element::ParameterOptionSource{
+                         "tests.options",
+                         "value",
+                         {},
+                     };
+             }},
+            {"negative quick-access order", [](auto& value) {
+                 value.parameters.parameters[0].quickAccessOrder = -1;
+             }},
+            {"duplicate quick-access order", [](auto& value) {
+                 value.parameters.parameters[1].quickAccessOrder =
+                     value.parameters.parameters[0].quickAccessOrder;
+             }},
+            {"invalid alias", [](auto& value) {
+                 value.parameters.parameters[0].aliases = {"Invalid_alias"};
+             }},
+            {"reserved active alias", [](auto& value) {
+                 value.parameters.parameters[0].aliases = {"active"};
+             }},
+            {"reserved opacity alias", [](auto& value) {
+                 value.parameters.parameters[0].aliases = {"opacity"};
+             }},
+            {"colliding alias", [](auto& value) {
+                 value.parameters.parameters[0].aliases = {"gate"};
+             }},
+            {"duplicate alias", [](auto& value) {
+                 value.parameters.parameters[0].aliases = {
+                     "formerAmount",
+                     "formerAmount",
+                 };
+             }},
+            {"deprecation without reason", [](auto& value) {
+                 value.parameters.parameters[1].deprecation->reason.clear();
+             }},
+            {"invalid replacement ID", [](auto& value) {
+                 value.parameters.parameters[1].deprecation->replacementId =
+                     "Invalid_replacement";
+             }},
+            {"undeclared replacement", [](auto& value) {
+                 value.parameters.parameters[1].deprecation->replacementId =
+                     "missing";
+             }},
+            {"replacement kind mismatch", [](auto& value) {
+                 value.parameters.parameters[1].deprecation->replacementId =
+                     "amount";
+             }},
+            {"self replacement", [](auto& value) {
+                 value.parameters.parameters[1].deprecation->replacementId =
+                     "gate";
+             }},
+            {"reserved replacement", [](auto& value) {
+                 value.parameters.parameters[1].deprecation->replacementId =
+                     "opacity";
+             }},
+        };
+
+    const auto* stableLegacyContract =
+        factory.typeContract("tests.runtime.descriptor.valid");
+    const std::size_t stableContractCount =
+        factory.typeContracts().size();
+    int invalidCreatorCalls = 0;
+    for (std::size_t index = 0;
+         index < invalidDeclarations.size();
+         ++index) {
+        const std::string typeId =
+            "tests.runtime.parameters.invalid" +
+            std::to_string(index);
+        auto contract = validParameterContract(typeId);
+        invalidDeclarations[index].second(contract);
+        bool rejected = false;
+        try {
+            factory.registerType(
+                std::move(contract),
+                [&] {
+                    ++invalidCreatorCalls;
+                    return std::make_unique<EmptyElement>();
+                });
+        } catch (const std::invalid_argument&) {
+            rejected = true;
+        }
+        require(
+            rejected &&
+                !factory.contains(typeId) &&
+                factory.typeContract(typeId) == nullptr &&
+                factory.typeContracts().size() == stableContractCount &&
+                factory.typeContract("tests.runtime.descriptor.valid") ==
+                    stableLegacyContract &&
+                factory.typeContract("tests.runtime.parameters.declared") ==
+                    stableDeclaredContract &&
+                invalidCreatorCalls == 0,
+            "invalid parameter declaration was not rejected atomically: " +
+                invalidDeclarations[index].first);
+    }
 }
 
 void RunScopedElementTypeRegistryIsolationScenario() {

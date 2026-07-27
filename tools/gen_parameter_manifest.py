@@ -113,12 +113,35 @@ def add_unique(entries: dict[str, dict[str, Any]], entry: dict[str, Any]) -> Non
 
 def parse_factory_types(*sources: Path) -> dict[str, str]:
     text = "\n".join(source.read_text(encoding="utf-8") for source in sources)
-    pattern = re.compile(
+    inline_pattern = re.compile(
         r'registerType\(\s*(?:ElementDescriptor\s*)?\{\s*"([^"]+)".*?'
         r'std::make_unique<([^>]+)>',
         re.DOTALL,
     )
-    return {match.group(1): match.group(2) for match in pattern.finditer(text)}
+    factory_types = {
+        match.group(1): match.group(2)
+        for match in inline_pattern.finditer(text)
+    }
+    contract_types = {
+        match.group(1): match.group(2)
+        for match in re.finditer(
+            r'ElementTypeContract\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(\s*\)'
+            r'\s*\{.*?contract\.element\s*=\s*\{\s*"([^"]+)".*?'
+            r'return\s+contract\s*;',
+            text,
+            re.DOTALL,
+        )
+    }
+    for match in re.finditer(
+        r'registerType\(\s*([A-Za-z_][A-Za-z0-9_]*)\s*\(\s*\)\s*,'
+        r'.*?std::make_unique<([^>]+)>',
+        text,
+        re.DOTALL,
+    ):
+        layer_type = contract_types.get(match.group(1))
+        if layer_type:
+            factory_types[layer_type] = match.group(2)
+    return factory_types
 
 
 def parse_core_parameters(source_path: Path) -> list[dict[str, Any]]:

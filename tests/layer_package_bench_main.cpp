@@ -7,6 +7,8 @@
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
+#include <variant>
+#include <vector>
 #include "ofFbo.h"
 #include "stubs/SynaptomeTestPaths.h"
 
@@ -26,6 +28,44 @@ void require(bool condition, const std::string& message) {
     if (!condition) {
         throw std::runtime_error(message);
     }
+}
+
+std::string kindName(synaptome::element::ParameterKind kind) {
+    switch (kind) {
+    case synaptome::element::ParameterKind::Float:
+        return "float";
+    case synaptome::element::ParameterKind::Bool:
+        return "bool";
+    case synaptome::element::ParameterKind::String:
+        return "string";
+    default:
+        return {};
+    }
+}
+
+bool parameterValueMatchesJson(
+    const synaptome::element::ParameterValue& value,
+    const ofJson& json) {
+    if (const auto* number = std::get_if<float>(&value)) {
+        return json.is_number() &&
+            std::fabs(json.get<float>() - *number) < 0.0001f;
+    }
+    if (const auto* boolean = std::get_if<bool>(&value)) {
+        return json.is_boolean() && json.get<bool>() == *boolean;
+    }
+    if (const auto* text = std::get_if<std::string>(&value)) {
+        return json.is_string() && json.get<std::string>() == *text;
+    }
+    return false;
+}
+
+std::string simplePackageLabel(const std::string& label) {
+    const auto separator = label.find(':');
+    if (separator == std::string::npos) {
+        return label;
+    }
+    const auto first = label.find_first_not_of(' ', separator + 1);
+    return first == std::string::npos ? std::string() : label.substr(first);
 }
 }
 
@@ -52,6 +92,244 @@ int main() {
                 "example.signalBloom",
             "mutating the enumerated descriptor copy changed the factory");
 
+        const auto* typeContract =
+            factory.typeContract("example.signalBloom");
+        auto typeContractCopies = factory.typeContracts();
+        require(
+            typeContract &&
+                typeContract->state ==
+                    LayerFactory::ParameterDeclarationState::Declared &&
+                typeContract->contract.element.typeId ==
+                    "example.signalBloom" &&
+                typeContract->contract.parameters.groups.size() == 5 &&
+                typeContract->contract.parameters.parameters.size() == 18 &&
+                typeContractCopies.size() == 1,
+            "Signal Bloom static parameter contract was not inspectable before creation");
+
+        const std::vector<std::pair<std::string, std::string>>
+            expectedGroups = {
+                {"example", "Example"},
+                {"exampleMotion", "Example Motion"},
+                {"exampleTransform", "Example Transform"},
+                {"exampleColor", "Example Color"},
+                {"exampleModulation", "Example Modulation"},
+            };
+        for (std::size_t index = 0; index < expectedGroups.size(); ++index) {
+            const auto& actual =
+                typeContract->contract.parameters.groups[index];
+            require(
+                actual.id == expectedGroups[index].first &&
+                    actual.label == expectedGroups[index].second,
+                "Signal Bloom static parameter group order or metadata drifted");
+        }
+
+        const auto packagePath = synaptome_test_paths::appRoot().parent_path() /
+            "docs" / "examples" / "layer_packages" / "signal_bloom" / "layer.package.json";
+        std::ifstream packageStream(packagePath);
+        require(static_cast<bool>(packageStream), "could not read package declaration");
+        ofJson package;
+        packageStream >> package;
+        require(
+            package["asset"].value("type", std::string()) ==
+                descriptor->typeId,
+            "package asset type does not match the registered descriptor");
+        require(
+            package["parameters"].is_array() &&
+                package["parameters"].size() ==
+                    typeContract->contract.parameters.parameters.size(),
+            "package/static parameter counts drifted");
+
+        const std::vector<std::string> expectedParameterGroups = {
+            "example",
+            "exampleMotion",
+            "exampleMotion",
+            "exampleMotion",
+            "exampleTransform",
+            "exampleTransform",
+            "exampleColor",
+            "exampleModulation",
+            "exampleColor",
+            "exampleColor",
+            "exampleColor",
+            "exampleColor",
+            "exampleColor",
+            "exampleColor",
+            "exampleColor",
+            "exampleModulation",
+            "exampleModulation",
+            "exampleModulation",
+        };
+        for (std::size_t index = 0;
+             index < typeContract->contract.parameters.parameters.size();
+             ++index) {
+            const auto& declaration =
+                typeContract->contract.parameters.parameters[index];
+            const auto& packaged = package["parameters"][index];
+            const std::string context =
+                "Signal Bloom parameter " + declaration.id;
+            require(
+                declaration.id ==
+                        packaged.value("id", std::string()) &&
+                    kindName(declaration.kind) ==
+                        packaged.value("kind", std::string()) &&
+                    declaration.groupId == expectedParameterGroups[index] &&
+                    declaration.label ==
+                        simplePackageLabel(
+                            packaged.value("label", std::string())) &&
+                    parameterValueMatchesJson(
+                        declaration.defaultValue,
+                        packaged["default"]) &&
+                    declaration.units ==
+                        packaged.value("units", std::string()) &&
+                    declaration.description ==
+                        packaged.value("description", std::string()) &&
+                    !declaration.quickAccessOrder &&
+                    declaration.aliases.empty(),
+                context + " identity/default/metadata drifted");
+
+            const bool packageHasRange = packaged.contains("range");
+            require(
+                declaration.range.has_value() == packageHasRange,
+                context + " range presence drifted");
+            if (declaration.range) {
+                const auto& range = packaged["range"];
+                require(
+                    std::fabs(
+                        declaration.range->min -
+                        range.value("min", 0.0f)) < 0.0001f &&
+                        std::fabs(
+                            declaration.range->max -
+                            range.value("max", 0.0f)) < 0.0001f &&
+                        declaration.range->step.has_value() ==
+                            range.contains("step") &&
+                        (!declaration.range->step ||
+                         std::fabs(
+                             *declaration.range->step -
+                             range.value("step", 0.0f)) < 0.0001f),
+                    context + " range values drifted");
+            }
+
+            const auto packageOptions =
+                packaged.value("options", ofJson::array());
+            require(
+                packageOptions.is_array() &&
+                    declaration.options.size() ==
+                        packageOptions.size(),
+                context + " static option count drifted");
+            for (std::size_t optionIndex = 0;
+                 optionIndex < declaration.options.size();
+                 ++optionIndex) {
+                const auto& declaredOption =
+                    declaration.options[optionIndex];
+                const auto& packagedOption =
+                    packageOptions[optionIndex];
+                require(
+                    parameterValueMatchesJson(
+                        declaredOption.value,
+                        packagedOption["value"]) &&
+                        declaredOption.label ==
+                            packagedOption.value(
+                                "label",
+                                std::string()) &&
+                        declaredOption.description ==
+                            packagedOption.value(
+                                "description",
+                                std::string()),
+                    context + " static option metadata drifted");
+            }
+
+            const bool packageHasOptionSource =
+                packaged.contains("optionsSource");
+            require(
+                declaration.optionSource.has_value() ==
+                    packageHasOptionSource,
+                context + " option-source presence drifted");
+            if (declaration.optionSource) {
+                const auto& source = packaged["optionsSource"];
+                require(
+                    declaration.optionSource->id ==
+                            source.value("id", std::string()) &&
+                        declaration.optionSource->valueField ==
+                            source.value("value", std::string()) &&
+                        declaration.optionSource->labelField ==
+                            source.value("label", std::string()),
+                    context + " option-source selectors drifted");
+            }
+
+            const bool packageHasDeprecation =
+                packaged.contains("deprecated");
+            require(
+                declaration.deprecation.has_value() ==
+                    packageHasDeprecation,
+                context + " deprecation presence drifted");
+            if (declaration.deprecation) {
+                const auto& deprecated = packaged["deprecated"];
+                require(
+                    declaration.deprecation->replacementId ==
+                            deprecated.value(
+                                "replacement",
+                                std::string()) &&
+                        declaration.deprecation->reason ==
+                            deprecated.value(
+                                "reason",
+                                std::string()),
+                    context + " deprecation metadata drifted");
+            }
+        }
+
+        typeContractCopies[0].state =
+            LayerFactory::ParameterDeclarationState::LegacySetupDiscovery;
+        typeContractCopies[0].contract.parameters.groups[0].id =
+            "copyMutated";
+        typeContractCopies[0].contract.parameters.parameters[0].id =
+            "copyMutated";
+        require(
+            factory.typeContract("example.signalBloom") == typeContract &&
+                typeContract->state ==
+                    LayerFactory::ParameterDeclarationState::Declared &&
+                typeContract->contract.parameters.groups[0].id ==
+                    "example" &&
+                typeContract->contract.parameters.parameters[0].id ==
+                    "visible",
+            "mutating copied Signal Bloom contracts changed factory state");
+
+        LayerFactory migrationStateFactory;
+        migrationStateFactory.registerType(
+            synaptome::element::ElementDescriptor{
+                "tests.signalBloom.legacy",
+                synaptome::element::ElementKind::Visual,
+                {},
+            },
+            [] {
+                return std::make_unique<SignalBloomLayer>();
+            });
+        migrationStateFactory.registerType(
+            synaptome::element::ElementTypeContract{
+                {
+                    "tests.signalBloom.declaredEmpty",
+                    synaptome::element::ElementKind::Visual,
+                    {},
+                },
+                {},
+            },
+            [] {
+                return std::make_unique<SignalBloomLayer>();
+            });
+        require(
+            migrationStateFactory
+                    .typeContract("tests.signalBloom.legacy")
+                    ->state ==
+                LayerFactory::ParameterDeclarationState::
+                    LegacySetupDiscovery &&
+                migrationStateFactory
+                    .typeContract("tests.signalBloom.declaredEmpty")
+                    ->state ==
+                LayerFactory::ParameterDeclarationState::Declared &&
+                migrationStateFactory
+                    .typeContract("tests.signalBloom.declaredEmpty")
+                    ->contract.parameters.parameters.empty(),
+            "legacy discovery and declared-empty parameter states collapsed");
+
         auto layer = factory.create("example.signalBloom");
         require(layer != nullptr, "factory did not create Signal Bloom");
         layer->setRegistryPrefix("bench.signal_bloom");
@@ -77,16 +355,6 @@ int main() {
         require(registry.findFloat("bench.signal_bloom.bpmMultiplier") != nullptr,
                 "named BPM multiplier parameter missing");
 
-        const auto packagePath = synaptome_test_paths::appRoot().parent_path() /
-            "docs" / "examples" / "layer_packages" / "signal_bloom" / "layer.package.json";
-        std::ifstream packageStream(packagePath);
-        require(static_cast<bool>(packageStream), "could not read package declaration");
-        ofJson package;
-        packageStream >> package;
-        require(
-            package["asset"].value("type", std::string()) ==
-                descriptor->typeId,
-            "package asset type does not match the registered descriptor");
         std::unordered_map<std::string, ofJson> declared;
         for (const auto& parameter : package["parameters"]) {
             declared[parameter.value("id", std::string())] = parameter;
