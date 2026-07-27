@@ -20,6 +20,7 @@
 #include "core/ParameterRegistry.h"
 #include "core/BankRegistry.h"
 #include "core/OptionProviderRegistry.h"
+#include "runtime/Runtime.h"
 #include "visuals/GridLayer.h"
 #include "visuals/GeodesicLayer.h"
 #include "visuals/LayerFactory.h"
@@ -134,6 +135,7 @@ public:
     bool pendingBioAmpSeedDefined_ = false;
     std::shared_ptr<HudLayoutEditor> hudLayoutEditor;
     ParameterRegistry paramRegistry;
+    std::unique_ptr<synaptome::runtime::Runtime> runtime_;
     BankRegistry bankRegistry;
     OptionProviderRegistry optionProviderRegistry;
     std::string midiMapPath;

@@ -1,6 +1,6 @@
 # Synaptome Public Contract Index
 
-Status: public app/runtime contract coverage is locked for the first Synaptome extraction slice. The current `python tools\validate_configs.py --public-app` report covers 16 public contracts.
+Status: public app/runtime contract coverage is locked for the first Synaptome extraction slice. The current `python tools\validate_configs.py --public-app` report covers 17 public contracts.
 
 This index names the contracts that the standalone Synaptome runtime owns: app configuration, scenes, layer assets, parameter IDs, mappings, HUD/Console state, and the public artist SDK fixture.
 

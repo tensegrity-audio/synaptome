@@ -167,6 +167,7 @@ public:
     const std::vector<StringParam>& strings() const { return strings_; }
 
     std::vector<FloatParam*> orderedQuickFloat() const;
+    void removeById(const std::string& id);
     void removeByPrefix(const std::string& prefix);
 
 private:
@@ -306,7 +307,7 @@ inline ParameterRegistry::FloatParam& ParameterRegistry::addFloat(const std::str
         throw std::invalid_argument("ParameterRegistry::addFloat requires non-null value pointer");
     }
     Descriptor descriptor = mergeDescriptor(id, metaTemplate);
-    if (findFloat(descriptor.id)) {
+    if (findFloat(descriptor.id) || findBool(descriptor.id) || findString(descriptor.id)) {
         throw std::logic_error("ParameterRegistry::addFloat duplicate id: " + descriptor.id);
     }
     FloatParam param{ descriptor, valuePtr, defaultValue, defaultValue };
@@ -378,7 +379,7 @@ inline ParameterRegistry::BoolParam& ParameterRegistry::addBool(const std::strin
         throw std::invalid_argument("ParameterRegistry::addBool requires non-null value pointer");
     }
     Descriptor descriptor = mergeDescriptor(id, metaTemplate);
-    if (findBool(descriptor.id)) {
+    if (findFloat(descriptor.id) || findBool(descriptor.id) || findString(descriptor.id)) {
         throw std::logic_error("ParameterRegistry::addBool duplicate id: " + descriptor.id);
     }
     BoolParam param{ descriptor, valuePtr, defaultValue, defaultValue };
@@ -946,17 +947,34 @@ inline std::vector<ParameterRegistry::FloatParam*> ParameterRegistry::orderedQui
     return results;
 }
 
-inline void ParameterRegistry::removeByPrefix(const std::string& prefix) {
-    auto starts = [&](const std::string& id) {
-        return !prefix.empty() && id.compare(0, prefix.size(), prefix) == 0;
-    };
+inline void ParameterRegistry::removeById(const std::string& id) {
+    if (id.empty()) return;
     floats_.erase(std::remove_if(floats_.begin(), floats_.end(), [&](const FloatParam& entry) {
-        return starts(entry.meta.id);
+        return entry.meta.id == id;
     }), floats_.end());
     bools_.erase(std::remove_if(bools_.begin(), bools_.end(), [&](const BoolParam& entry) {
-        return starts(entry.meta.id);
+        return entry.meta.id == id;
     }), bools_.end());
     strings_.erase(std::remove_if(strings_.begin(), strings_.end(), [&](const StringParam& entry) {
-        return starts(entry.meta.id);
+        return entry.meta.id == id;
+    }), strings_.end());
+}
+
+inline void ParameterRegistry::removeByPrefix(const std::string& prefix) {
+    auto belongsToNamespace = [&](const std::string& id) {
+        return !prefix.empty() &&
+            (id == prefix ||
+             (id.size() > prefix.size() &&
+              id.compare(0, prefix.size(), prefix) == 0 &&
+              id[prefix.size()] == '.'));
+    };
+    floats_.erase(std::remove_if(floats_.begin(), floats_.end(), [&](const FloatParam& entry) {
+        return belongsToNamespace(entry.meta.id);
+    }), floats_.end());
+    bools_.erase(std::remove_if(bools_.begin(), bools_.end(), [&](const BoolParam& entry) {
+        return belongsToNamespace(entry.meta.id);
+    }), bools_.end());
+    strings_.erase(std::remove_if(strings_.begin(), strings_.end(), [&](const StringParam& entry) {
+        return belongsToNamespace(entry.meta.id);
     }), strings_.end());
 }

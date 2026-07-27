@@ -41,6 +41,21 @@ openFrameworks toolchain, builds the lifecycle bench against the shared
 registration entrypoint, and runs that bench. Add `--incremental-app` to prove
 the host links the shipping element target.
 
+The runtime lifecycle profile checks the first host/runtime ownership seam:
+
+```powershell
+python tools\validate_layer_authoring.py runtime-core --native
+```
+
+It builds a focused stubbed native target and verifies distinct definition and
+instance identity, lifecycle ordering, structured setup failures, exact
+parameter ownership, prefix reservation for zero-parameter elements,
+out-of-namespace registration rollback, and safe release. Add
+`--incremental-app` to prove the full host still compiles and links through the
+facade. This is an interim compatibility seam: composition ownership,
+update/render routing, explicit shutdown, and transactional replacement remain
+SEAC-3 work.
+
 Circuit Trace currently has an isolated eight-direction native contract:
 
 ```powershell

@@ -2019,6 +2019,7 @@ void ofApp::setup() {
     // example. It remains absent from the catalog unless package activation is
     // enabled in config/layer-packages.json.
     synaptome::runtime::registerBuiltinElements(factory);
+    runtime_ = std::make_unique<synaptome::runtime::Runtime>(factory, paramRegistry);
 
     std::string layersRoot = ofToDataPath("layers", true);
     layerLibrary.reload(layersRoot);
@@ -5225,30 +5226,37 @@ bool ofApp::addAssetToConsoleLayer(int layerIndex,
         return finish(true);
     }
 
-    std::string prefix = "console.layer" + std::to_string(layerIndex);
-    auto creator = [type = entry->type]() -> std::unique_ptr<Layer> {
-        return LayerFactory::instance().create(type);
-    };
-
-    std::unique_ptr<Layer> l = creator();
-    logSceneLoadInstallStep("create");
-    if (!l) {
-        ofLogWarning("ofApp") << "Failed to create layer for asset " << assetId;
+    const std::string prefix = "console.layer" + std::to_string(layerIndex);
+    if (!runtime_) {
+        ofLogError("ofApp") << "Runtime is unavailable while loading " << assetId;
         slot.assetId.clear();
         slot.type.clear();
         slot.paramPrefix.clear();
         slot.active = false;
         return false;
     }
-    l->configure(layerConfig);
-    logSceneLoadInstallStep("configure");
-    l->setRegistryPrefix(prefix);
-    l->setInstanceId(entry->id);
-    l->setup(paramRegistry);
-    logSceneLoadInstallStep("setup");
-    l->setExternalEnabled(activate);
-    logSceneLoadInstallStep("enable");
-    slot.layer = std::move(l);
+    synaptome::runtime::Runtime::ElementRequest request;
+    request.typeId = entry->type;
+    request.definitionId = entry->id;
+    request.instanceId = prefix;
+    request.registryPrefix = prefix;
+    request.config = layerConfig;
+    request.enabled = activate;
+    auto prepared = runtime_->prepareElement(
+        request,
+        [&](std::string_view step) {
+            logSceneLoadInstallStep(std::string(step));
+        });
+    if (!prepared) {
+        ofLogWarning("ofApp") << "Failed to prepare element for asset "
+                              << assetId << ": " << prepared.error;
+        slot.assetId.clear();
+        slot.type.clear();
+        slot.paramPrefix.clear();
+        slot.active = false;
+        return false;
+    }
+    slot.layer = std::move(prepared.element);
     slot.paramPrefix = prefix;
 
     if (slot.layer) {
@@ -5317,13 +5325,17 @@ void ofApp::clearConsoleSlot(int index) {
     if (slot.layer) {
         std::string oldPrefix = slot.layer->registryPrefix();
         midi.unbindByPrefix(oldPrefix);
-        paramRegistry.removeByPrefix(oldPrefix);
         Layer* ptr = slot.layer.get();
         if (ptr == gridLayer) gridLayer = nullptr;
         if (ptr == geodesicLayer) geodesicLayer = nullptr;
         if (ptr == perlinLayer) perlinLayer = nullptr;
         if (ptr == gameOfLifeLayer) gameOfLifeLayer = nullptr;
-        slot.layer.reset();
+        if (runtime_) {
+            runtime_->releaseElement(slot.layer);
+        } else {
+            paramRegistry.removeByPrefix(oldPrefix);
+            slot.layer.reset();
+        }
     } else if (!slot.assetId.empty()) {
         if (const auto* entry = layerLibrary.find(slot.assetId)) {
             if (isFxType(entry->type)) {

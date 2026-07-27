@@ -5,20 +5,20 @@ State Summary
 - Phase: EXECUTION
 - Status: In Progress
 - Steps Complete: 2 / 12
-- Progress: SEAC-3 is in progress. Signal Bloom compiles as a shipping static library and through a separate SDK-only stub contract, the host links rather than compiles it, and host plus bench use one controlled registration entrypoint. Runtime facade/core extraction remains.
-- Last Step Outcome: 2026-07-26 - Completed the first SEAC-3 vertical slice with public compatibility includes, shared build properties, focused element/contract targets, controlled registration, and restored public/golden factory scans.
-- Next Step: Introduce the no-output-change Runtime facade and move composition-layer ownership plus generic create/configure/setup/update/render/clear behavior behind it.
+- Progress: SEAC-3 is in progress. The host now delegates generic element creation, identity/configuration, setup, activation, exact parameter ownership, failure cleanup, and release to a focused Runtime facade. Composition-layer ownership, update/render routing, transactional replacement, and the independently linked runtime-core target remain.
+- Last Step Outcome: 2026-07-26 - Added and validated the first runtime-owned lifecycle seam with distinct definition/instance identity, structured failure context, namespace enforcement, zero-parameter prefix reservation, exact cleanup, and a focused native contract.
+- Next Step: Move the Console composition-layer model plus generic update/render/clear routing behind Runtime, then extract and link the first `SynaptomeRuntimeCore` static-library target without changing output.
 - Dependencies / Overlap: `show_readiness_operator_stability`, `layer_package_compatibility_bench_scaffolding`, `docs/architecture/synaptome_spine_element_model.md`, `docs/architecture/synaptome_layer_system_roadmap.md`, `docs/architecture/synaptome_artist_sdk.md`, parameter/scene/mapping contracts, and layer-authoring tests.
 - Primary Scope: runtime
 - Secondary Scopes: contracts, artist-sdk, tests, docs, release
-- Blocking Issues / Unknowns: Native binary modules remain an optional architecture decision rather than a promised deliverable; no blocker prevents the SEAC-3 build-boundary extraction.
+- Blocking Issues / Unknowns: Native binary modules remain an optional architecture decision rather than a promised deliverable. Transactional same-address replacement needs staged parameter ownership and remains an explicit SEAC-3 promotion gate, not a completed capability.
 - Impact / Priority Notes: This is the active architecture lane and precedes automatic discovery, broader package activation, or new content-family expansion.
 - Priority Score: N/A
 - Priority Lane: Fast-Track
 - Ready State: Ready
 - Ready Gate: The architecture direction, compatibility policy, ordered tasks, and stop conditions are explicit; the operator accepted residual show-validation risk and authorized execution.
-- Project Ops / Roadmap Updates (timestamped): 2026-07-26 - Added the canonical model and subordinated package/discovery work to its contract and build gates. 2026-07-26 - Promoted SEAC to execution after dual-screen validation was deferred. 2026-07-26 - Completed the dependency inventory and froze the Element SDK v1 source/static-link boundary. 2026-07-26 - Landed the first SEAC-3 build and registration slice.
-- Resume From: Phase EXECUTION, State In Progress, Next Action introduce the Runtime facade and composition-layer ownership seam.
+- Project Ops / Roadmap Updates (timestamped): 2026-07-26 - Added the canonical model and subordinated package/discovery work to its contract and build gates. 2026-07-26 - Promoted SEAC to execution after dual-screen validation was deferred. 2026-07-26 - Completed the dependency inventory and froze the Element SDK v1 source/static-link boundary. 2026-07-26 - Landed the first SEAC-3 build and registration slice. 2026-07-26 - Moved generic element preparation/release and exact registration ownership behind the first Runtime facade seam.
+- Resume From: Phase EXECUTION, State In Progress, Next Action move composition-layer ownership and update/render routing behind Runtime, then create the linked runtime-core target.
 
 ## Milestone Synthesis
 
@@ -304,6 +304,16 @@ source-code archaeology or private host knowledge.
   property sheets, Signal Bloom shipping and compile-contract targets, and one
   controlled host/bench registration entrypoint. The host now links Signal
   Bloom without compiling or including its concrete implementation.
+- 2026-07-26 - Added the first Runtime facade and delegated generic visual
+  element create/configure/setup/activate/release behavior from `ofApp`.
+  Runtime now distinguishes definition and instance identity, reserves empty
+  parameter namespaces, records structured lifecycle failures, rejects
+  out-of-namespace registrations, and removes only the exact parameters an
+  element registered.
+- 2026-07-26 - Added the focused `RuntimeCoreTest` build/profile and hardened
+  `ParameterRegistry` so parameter IDs are unique across value kinds and
+  namespace removal cannot confuse `console.layer1` with
+  `console.layer10`.
 
 ## Validation
 
@@ -320,6 +330,14 @@ source-code archaeology or private host knowledge.
   subtests), and BrowserFlow Release (32 tests).
 - Passed: Element boundary policy, public/shipping source parity, shared
   registration, generated manifest, and catalog golden checks.
+- Passed: `python tools/validate_layer_authoring.py runtime-core --native
+  --incremental-app`.
+- Passed: Runtime lifecycle identity, prefix reservation, exact ownership,
+  failed-setup rollback, foreign-registration rejection, abandoned-result
+  cleanup, and sibling-namespace preservation.
+- Open Gate: Same-address element replacement is not yet transactional because
+  `ofApp` still clears the live composition slot before preparing its
+  replacement.
 - Not Run: Live dual-screen hardware rehearsal remains explicitly deferred.
 - Manual Evidence: User approved the architecture direction and requested a prioritized Project Ops roadmap.
 

@@ -502,6 +502,7 @@
 
 		<ClCompile Include="src\ofApp.cpp" />
 		<ClCompile Include="src\runtime\BuiltinElements.cpp" />
+		<ClCompile Include="src\runtime\Runtime.cpp" />
 		<ClCompile Include="src\visuals\CircuitTraceLayer.cpp" />
 
 		<ClCompile Include="src\io\MidiRouter.cpp" />
@@ -692,6 +693,7 @@
 		<ClInclude Include="src\ofApp.h" />
 		<ClInclude Include="src\core\OptionProviderRegistry.h" />
 		<ClInclude Include="src\runtime\BuiltinElements.h" />
+		<ClInclude Include="src\runtime\Runtime.h" />
 		<ClInclude Include="src\visuals\CircuitTraceLayer.h" />
 		<ClInclude Include="src\visuals\EightDirectionMotion.h" />
 		<ClInclude Include="src\visuals\SignalBloomLayer.h" />

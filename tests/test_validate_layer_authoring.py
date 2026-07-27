@@ -80,6 +80,7 @@ class LayerAuthoringWorkflowTests(unittest.TestCase):
                 "circuit-lenia",
                 "circuit-trace",
                 "collective-motion",
+                "runtime-core",
                 "signal-bloom-sdk",
             },
         )

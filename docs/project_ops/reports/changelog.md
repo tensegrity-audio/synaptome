@@ -2,6 +2,25 @@
 
 This changelog records Project Ops and administrative workflow changes. Product release versioning remains governed by `docs/release_policy.md`.
 
+## 2026-07-26 - architecture - seac3_runtime_lifecycle_facade
+
+- Request ID: `spine_element_architecture_convergence`
+- Phase / Milestone: SEAC-3 in progress
+- Summary: Added the first Runtime facade and moved generic element creation,
+  configuration, setup, activation, exact registration ownership, failure
+  cleanup, and release out of `ofApp`.
+- Contract: Separated definition and instance identity, added structured error
+  code/stage/identity context, reserved prefixes for zero-parameter elements,
+  and rejected/rolled back out-of-namespace registrations.
+- Safety: Parameter IDs are now unique across value kinds, exact lifecycle
+  ownership prevents host parameters from being swept up, and namespace
+  removal cannot confuse `console.layer1` with `console.layer10`.
+- Validation: Added the focused RuntimeCore native test/profile and passed its
+  native lifecycle contract plus the full Release app link.
+- Remaining gate: Transactional replacement, composition ownership,
+  update/render routing, and the linked runtime-core library remain SEAC-3
+  work.
+
 ## 2026-07-26 - architecture - seac3_signal_bloom_build_boundary
 
 - Request ID: `spine_element_architecture_convergence`

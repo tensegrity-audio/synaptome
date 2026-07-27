@@ -1,0 +1,47 @@
+{
+  "name": "Runtime element lifecycle seam",
+  "stages": {
+    "fast": [
+      {
+        "label": "runtime ownership and delegation boundary",
+        "command": [
+          "{python}",
+          "tools/validate_runtime_core_boundary.py"
+        ]
+      }
+    ],
+    "native": [
+      {
+        "label": "runtime lifecycle contract build",
+        "command": [
+          "{msbuild}",
+          "synaptome/tests/RuntimeCoreTest/RuntimeCoreTest.vcxproj",
+          "/t:Rebuild",
+          "/p:Configuration=Release",
+          "/p:Platform=x64",
+          "/m",
+          "/v:minimal"
+        ]
+      },
+      {
+        "label": "runtime lifecycle contract",
+        "command": [
+          "synaptome/tests/RuntimeCoreTest/x64/Release/RuntimeCoreTest.exe"
+        ]
+      }
+    ],
+    "incrementalApp": [
+      {
+        "label": "incremental Synaptome app build",
+        "command": [
+          "{msbuild}",
+          "synaptome/Synaptome.vcxproj",
+          "/p:Configuration=Release",
+          "/p:Platform=x64",
+          "/m",
+          "/v:minimal"
+        ]
+      }
+    ]
+  }
+}
