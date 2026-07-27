@@ -19,30 +19,30 @@ bool Runtime::idBelongsToPrefix(
 }
 
 Runtime::ElementResult::~ElementResult() {
-    if (runtime_ && !runtimeLifetime_.expired() && element) {
-        runtime_->releaseElement(element);
+    if (runtime_ && !runtimeLifetime_.expired() && element_) {
+        runtime_->releaseElement(element_);
     }
 }
 
 Runtime::ElementResult::ElementResult(ElementResult&& other) noexcept
-    : element(std::move(other.element)),
-      errorCode(other.errorCode),
+    : errorCode(other.errorCode),
       stage(std::move(other.stage)),
       typeId(std::move(other.typeId)),
       definitionId(std::move(other.definitionId)),
       instanceId(std::move(other.instanceId)),
       registryPrefix(std::move(other.registryPrefix)),
       error(std::move(other.error)),
+      element_(std::move(other.element_)),
       runtime_(std::exchange(other.runtime_, nullptr)),
       runtimeLifetime_(std::move(other.runtimeLifetime_)) {}
 
 Runtime::ElementResult& Runtime::ElementResult::operator=(
     ElementResult&& other) noexcept {
     if (this == &other) return *this;
-    if (runtime_ && !runtimeLifetime_.expired() && element) {
-        runtime_->releaseElement(element);
+    if (runtime_ && !runtimeLifetime_.expired() && element_) {
+        runtime_->releaseElement(element_);
     }
-    element = std::move(other.element);
+    element_ = std::move(other.element_);
     errorCode = other.errorCode;
     stage = std::move(other.stage);
     typeId = std::move(other.typeId);
@@ -165,25 +165,25 @@ Runtime::ElementResult Runtime::prepareElement(
     bool setupStarted = false;
     try {
         result.stage = "create";
-        result.element = factory_.create(request.typeId);
+        result.element_ = factory_.create(request.typeId);
         if (progress) progress("create");
-        if (!result.element) {
+        if (!result.element_) {
             activePrefixes_.erase(request.registryPrefix);
             result.errorCode = ElementErrorCode::TypeNotRegistered;
             result.error = "element type is not registered: " + request.typeId;
             return result;
         }
 
-        result.element->setRegistryPrefix(request.registryPrefix);
-        result.element->setInstanceId(request.instanceId);
+        result.element_->setRegistryPrefix(request.registryPrefix);
+        result.element_->setInstanceId(request.instanceId);
         result.stage = "configure";
-        result.element->configure(request.config);
+        result.element_->configure(request.config);
         if (progress) progress("configure");
 
         parametersBeforeSetup = parameterSnapshot();
         setupStarted = true;
         result.stage = "setup";
-        result.element->setup(parameters_);
+        result.element_->setup(parameters_);
         registeredParameters = parameterDelta(
             parametersBeforeSetup,
             parameterSnapshot());
@@ -198,7 +198,7 @@ Runtime::ElementResult Runtime::prepareElement(
         if (foreignParameter != registeredParameters.end()) {
             removeParameters(registeredParameters);
             activePrefixes_.erase(request.registryPrefix);
-            result.element.reset();
+            result.element_.reset();
             result.errorCode = ElementErrorCode::ContractViolation;
             result.error = "element registered a parameter outside its namespace: " +
                 foreignParameter->id;
@@ -207,10 +207,10 @@ Runtime::ElementResult Runtime::prepareElement(
         if (progress) progress("setup");
 
         result.stage = "enable";
-        result.element->setExternalEnabled(request.enabled);
+        result.element_->setExternalEnabled(request.enabled);
         if (progress) progress("enable");
 
-        Layer* element = result.element.get();
+        Layer* element = result.element_.get();
         result.runtime_ = this;
         result.runtimeLifetime_ = lifetime_;
         result.stage = "ready";
@@ -226,7 +226,7 @@ Runtime::ElementResult Runtime::prepareElement(
         }
         removeParameters(registeredParameters);
         activePrefixes_.erase(request.registryPrefix);
-        result.element.reset();
+        result.element_.reset();
         result.errorCode = ElementErrorCode::LifecycleFailure;
         result.error = error.what();
         return result;
@@ -238,7 +238,7 @@ Runtime::ElementResult Runtime::prepareElement(
         }
         removeParameters(registeredParameters);
         activePrefixes_.erase(request.registryPrefix);
-        result.element.reset();
+        result.element_.reset();
         result.errorCode = ElementErrorCode::LifecycleFailure;
         result.error = "unknown element lifecycle failure";
         return result;
@@ -257,6 +257,80 @@ void Runtime::releaseElement(std::unique_ptr<Layer>& element) noexcept {
     if (!element) return;
     releaseTrackedElement(element.get());
     element.reset();
+}
+
+void Runtime::releasePreparedElement(ElementResult& prepared) noexcept {
+    if (prepared.runtime_ != this || prepared.runtimeLifetime_.expired()) return;
+    releaseElement(prepared.element_);
+}
+
+CompositionLayer* Runtime::compositionLayer(
+    std::size_t zeroBasedIndex) {
+    if (zeroBasedIndex >= compositionLayers_.size()) return nullptr;
+    return &compositionLayers_[zeroBasedIndex];
+}
+
+const CompositionLayer* Runtime::compositionLayer(
+    std::size_t zeroBasedIndex) const {
+    if (zeroBasedIndex >= compositionLayers_.size()) return nullptr;
+    return &compositionLayers_[zeroBasedIndex];
+}
+
+bool Runtime::adoptPreparedElement(
+    std::size_t zeroBasedIndex,
+    ElementResult&& prepared) {
+    auto* layer = compositionLayer(zeroBasedIndex);
+    if (!layer ||
+        layer->element_ ||
+        !prepared.element_ ||
+        prepared.runtime_ != this ||
+        prepared.runtimeLifetime_.expired() ||
+        ownership_.find(prepared.element_.get()) == ownership_.end() ||
+        prepared.registryPrefix !=
+            "console.layer" + std::to_string(zeroBasedIndex + 1)) {
+        return false;
+    }
+    layer->element_ = std::move(prepared.element_);
+    return true;
+}
+
+void Runtime::releaseCompositionElement(
+    std::size_t zeroBasedIndex) noexcept {
+    auto* layer = compositionLayer(zeroBasedIndex);
+    if (!layer) return;
+    releaseElement(layer->element_);
+}
+
+void Runtime::resizeCompositionElements(int width, int height) {
+    for (auto& layer : compositionLayers_) {
+        if (layer.element_) {
+            layer.element_->onWindowResized(width, height);
+        }
+    }
+}
+
+void Runtime::updateCompositionElements(const LayerUpdateParams& params) {
+    for (auto& layer : compositionLayers_) {
+        if (!layer.active || !layer.element_) continue;
+        layer.element_->update(params);
+    }
+}
+
+void Runtime::drawCompositionElement(
+    std::size_t zeroBasedIndex,
+    const LayerDrawParams& params) {
+    auto* layer = compositionLayer(zeroBasedIndex);
+    if (!layer || !layer->active || !layer->element_) return;
+    layer->element_->draw(params);
+}
+
+void Runtime::shutdownComposition() {
+    for (auto& layer : compositionLayers_) {
+        releaseElement(layer.element_);
+        layer.layerFbo.clear();
+        layer.upstreamFbo.clear();
+        layer.effectFbo.clear();
+    }
 }
 
 } // namespace synaptome::runtime

@@ -3,21 +3,25 @@
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|x64"><Configuration>Debug</Configuration><Platform>x64</Platform></ProjectConfiguration>
     <ProjectConfiguration Include="Release|x64"><Configuration>Release</Configuration><Platform>x64</Platform></ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|ARM64"><Configuration>Debug</Configuration><Platform>ARM64</Platform></ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64"><Configuration>Release</Configuration><Platform>ARM64</Platform></ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|ARM64EC"><Configuration>Debug</Configuration><Platform>ARM64EC</Platform></ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64EC"><Configuration>Release</Configuration><Platform>ARM64EC</Platform></ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{8B83B6D3-BAE0-4E92-A270-5D29DA0C7E94}</ProjectGuid>
+    <ProjectGuid>{9AE98481-C999-4438-A0CD-5FC3D230DE95}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>RuntimeCoreTest</RootNamespace>
+    <RootNamespace>SynaptomeRuntimeCore</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset Condition="'$(PlatformToolset)'=='' and Exists('$(VCTargetsPath)\Platforms\$(Platform)\PlatformToolsets\v145\Toolset.props')">v145</PlatformToolset>
     <PlatformToolset Condition="'$(PlatformToolset)'==''">v143</PlatformToolset>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+  <PropertyGroup Condition="'$(Configuration)'=='Release'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset Condition="'$(PlatformToolset)'=='' and Exists('$(VCTargetsPath)\Platforms\$(Platform)\PlatformToolsets\v145\Toolset.props')">v145</PlatformToolset>
     <PlatformToolset Condition="'$(PlatformToolset)'==''">v143</PlatformToolset>
@@ -36,27 +40,25 @@
     <Import Project="$(SynaptomeAppRoot)\build\Synaptome.ElementSdk.props" />
   </ImportGroup>
   <PropertyGroup>
-    <OutDir>$(MSBuildThisFileDirectory)$(Platform)\$(Configuration)\</OutDir>
+    <OutDir>$(MSBuildThisFileDirectory)bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(MSBuildThisFileDirectory)obj\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(SynaptomeThirdPartyRoot);$(SynaptomeTestRoot);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SynaptomeThirdPartyRoot);$(SynaptomeAppRoot)\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="$(SynaptomeTestRoot)\runtime_core_native_main.cpp" />
+    <ClCompile Include="$(SynaptomeAppRoot)\src\runtime\Runtime.cpp" />
+    <ClCompile Include="$(SynaptomeAppRoot)\src\visuals\LayerFactory.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="$(SynaptomeOpenFrameworksRoot)\libs\openFrameworksCompiled\project\vs\openframeworksLib.vcxproj">
-      <Project>{5837595D-ACA9-485C-8E76-729040CE4B0B}</Project>
-      <LinkLibraryDependencies>true</LinkLibraryDependencies>
-    </ProjectReference>
-    <ProjectReference Include="$(SynaptomeAppRoot)\runtime\SynaptomeRuntimeCore.vcxproj">
-      <Project>{9AE98481-C999-4438-A0CD-5FC3D230DE95}</Project>
-      <LinkLibraryDependencies>true</LinkLibraryDependencies>
-    </ProjectReference>
+    <ClInclude Include="$(SynaptomeAppRoot)\src\runtime\CompositionLayer.h" />
+    <ClInclude Include="$(SynaptomeAppRoot)\src\runtime\CompositionTypes.h" />
+    <ClInclude Include="$(SynaptomeAppRoot)\src\runtime\Runtime.h" />
+    <ClInclude Include="$(SynaptomeAppRoot)\src\visuals\LayerFactory.h" />
+    <ClInclude Include="$(SynaptomeElementSdkIncludeRoot)\synaptome\element\compat\Layer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

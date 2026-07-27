@@ -111,6 +111,11 @@ The Release executable is:
 synaptome\bin\Synaptome.exe
 ```
 
+`Synaptome.sln` includes the openFrameworks library using the standard
+`Documents\openFrameworks` layout above. For a custom installation, set
+`OPENFRAMEWORKS_ROOT` and build `synaptome\Synaptome.vcxproj` directly so the
+canonical build-root properties resolve that location.
+
 ## Validate
 
 From the repo root:
@@ -133,7 +138,7 @@ Expected current signals:
 - Public app contracts report `validated=17`.
 - App independence audit reports no firmware implementation references.
 - BrowserFlowTest builds with warnings tracked as cleanup, but 0 errors.
-- BrowserFlow reports all 32 scenarios passed.
+- BrowserFlow reports all 33 scenarios passed.
 - Generated test outputs and runtime logs remain ignored by Git.
 
 ## Docs

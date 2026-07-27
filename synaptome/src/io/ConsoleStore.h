@@ -3,17 +3,14 @@
 #include "ofMain.h"
 #include "ofFileUtils.h"
 #include "ofLog.h"
+#include "../runtime/CompositionTypes.h"
 #include <algorithm>
 #include <cstdint>
 #include <string>
 #include <utility>
 #include <vector>
 
-struct ConsoleLayerCoverageInfo {
-    bool defined = false;
-    std::string mode = "upstream";
-    int columns = 0;
-};
+using ConsoleLayerCoverageInfo = synaptome::runtime::CompositionCoverage;
 
 struct ConsoleLayerInfo {
     int index = 0; // 1-based

@@ -135,7 +135,7 @@ public:
     bool pendingBioAmpSeedDefined_ = false;
     std::shared_ptr<HudLayoutEditor> hudLayoutEditor;
     ParameterRegistry paramRegistry;
-    std::unique_ptr<synaptome::runtime::Runtime> runtime_;
+    synaptome::runtime::Runtime runtime_{LayerFactory::instance(), paramRegistry};
     BankRegistry bankRegistry;
     OptionProviderRegistry optionProviderRegistry;
     std::string midiMapPath;
@@ -326,21 +326,9 @@ public:
     LayerLibrary layerLibrary;
 
     // Console container: fixed-size 8 layers managed independently of legacy decks.
-    struct ConsoleSlot {
-        std::string assetId;
-        std::string label;
-        std::string type;
-        std::string paramPrefix;
-        bool active = false;
-        float opacity = 1.0f;
-        std::unique_ptr<Layer> layer;
-        ConsoleLayerCoverageInfo coverage;
-        float coverageParamValue = 0.0f;
-        ofFbo layerFbo;
-        ofFbo upstreamFbo;
-        ofFbo effectFbo;
-    };
-    std::vector<ConsoleSlot> consoleSlots;
+    using ConsoleSlot = synaptome::runtime::CompositionLayer;
+    synaptome::runtime::Runtime::CompositionLayers& consoleSlots =
+        runtime_.compositionLayersForHost();
     std::string consoleConfigPath;
     std::string activeScenePath_;
     std::string activeNamedScenePath_;

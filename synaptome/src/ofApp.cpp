@@ -2019,7 +2019,6 @@ void ofApp::setup() {
     // example. It remains absent from the catalog unless package activation is
     // enabled in config/layer-packages.json.
     synaptome::runtime::registerBuiltinElements(factory);
-    runtime_ = std::make_unique<synaptome::runtime::Runtime>(factory, paramRegistry);
 
     std::string layersRoot = ofToDataPath("layers", true);
     layerLibrary.reload(layersRoot);
@@ -2107,7 +2106,6 @@ void ofApp::setup() {
     registerHudToggle("hud.debug.terminal", "Debug Terminal", "Show compact runtime diagnostics and recent HUD feed activity", &hudShowDebugTerminal);
     registerHudWidgetsFromCatalog();
 
-    consoleSlots.resize(8);
     consoleConfigPath = ofToDataPath("config/console.json", true);
     consolePersistenceSuspended_ = true;
     bool consoleConfigNeedsUpgrade = false;
@@ -3386,8 +3384,8 @@ std::string ofApp::composeHudLayerDetails() const {
             label = entry ? entry->label : slot.assetId;
         }
         out << label << (slot.active ? " *" : " (off)");
-        if (slot.layer) {
-            const Layer* base = slot.layer.get();
+        if (slot.element()) {
+            const Layer* base = slot.element();
             if (auto* webcam = dynamic_cast<const VideoGrabberLayer*>(base)) {
                 out << "  [" << webcam->currentDeviceLabel() << "]";
                 out << " gain=" << ofToString(webcam->gain(), 2);
@@ -3527,7 +3525,7 @@ std::string ofApp::composeHudLayers() const {
         slotJson["opacity"] = slot.opacity;
         slotJson["type"] = slot.type;
         slotJson["empty"] = slot.assetId.empty();
-        slotJson["hasLayer"] = static_cast<bool>(slot.layer);
+        slotJson["hasLayer"] = slot.hasElement();
         if (slot.coverage.defined) {
             ofJson coverage = ofJson::object();
             if (!slot.coverage.mode.empty()) {
@@ -3536,8 +3534,8 @@ std::string ofApp::composeHudLayers() const {
             coverage["columns"] = std::max(0, slot.coverage.columns);
             slotJson["coverage"] = std::move(coverage);
         }
-        if (slot.layer) {
-            const Layer* base = slot.layer.get();
+        if (slot.element()) {
+            const Layer* base = slot.element();
             ofJson metadata;
             std::string module;
             if (auto* webcam = dynamic_cast<const VideoGrabberLayer*>(base)) {
@@ -3926,10 +3924,10 @@ std::string ofApp::composeHudSensors() const {
     bool sawCameraLayer = false;
     for (std::size_t i = 0; i < consoleSlots.size(); ++i) {
         const auto& slot = consoleSlots[i];
-        if (!slot.layer) {
+        if (!slot.element()) {
             continue;
         }
-        const auto* webcam = dynamic_cast<const VideoGrabberLayer*>(slot.layer.get());
+        const auto* webcam = dynamic_cast<const VideoGrabberLayer*>(slot.element());
         if (!webcam) {
             continue;
         }
@@ -4234,11 +4232,7 @@ void ofApp::ensureConsoleLayerViewports(glm::ivec2 viewport) {
         compositeWidth = viewport.x;
         compositeHeight = viewport.y;
 
-        for (auto& slot : consoleSlots) {
-            if (slot.layer) {
-                slot.layer->onWindowResized(viewport.x, viewport.y);
-            }
-        }
+        runtime_.resizeCompositionElements(viewport.x, viewport.y);
     }
 }
 
@@ -4381,7 +4375,7 @@ void ofApp::drawConsole(glm::ivec2 viewport, float beatPhase) {
                 }
                 slotVisible[i] = true;
             }
-        } else if (slot.layer) {
+        } else if (slot.element()) {
             ensureSlotFbo(slot.layerFbo, viewport);
             float slotOpacity = ofClamp(slot.opacity, 0.0f, 1.0f);
             slot.layerFbo.begin();
@@ -4394,7 +4388,7 @@ void ofApp::drawConsole(glm::ivec2 viewport, float beatPhase) {
                 beatPhase,
                 slotOpacity
             };
-            slot.layer->draw(params);
+            runtime_.drawCompositionElement(i, params);
             ofDisableBlendMode();
             slot.layerFbo.end();
             slotVisible[i] = true;
@@ -4427,10 +4421,7 @@ void ofApp::drawConsole(glm::ivec2 viewport, float beatPhase) {
 }
 
 void ofApp::updateConsoleLayers(const LayerUpdateParams& params) {
-    for (auto& slot : consoleSlots) {
-        if (!slot.layer || !slot.active) continue;
-        slot.layer->update(params);
-    }
+    runtime_.updateCompositionElements(params);
 }
 
 
@@ -4899,6 +4890,7 @@ void ofApp::exit() {
     ofLogNotice("ofApp") << "hotkeys saved";
     stopRouterUdpReceiver();
     midi.close();
+    runtime_.shutdownComposition();
     ofLogNotice("ofApp") << "exit done";
 }
 
@@ -5152,10 +5144,6 @@ bool ofApp::addAssetToConsoleLayer(int layerIndex,
         }
     }
     int idx = layerIndex - 1;
-    if (idx >= static_cast<int>(consoleSlots.size())) {
-        consoleSlots.resize(8);
-    }
-
     int duplicate = findConsoleSlotByAsset(assetId);
     if (duplicate >= 0 && duplicate != idx) {
         ofLogWarning("ofApp") << "Asset " << assetId << " is already assigned to console layer " << (duplicate + 1)
@@ -5192,8 +5180,8 @@ bool ofApp::addAssetToConsoleLayer(int layerIndex,
 
     if (slot.assetId == assetId) {
         slot.label = entryLabel;
-        if (slot.layer) {
-            slot.layer->setExternalEnabled(activate);
+        if (slot.element()) {
+            slot.element()->setExternalEnabled(activate);
         } else if (isFxType(slot.type)) {
             setFxRouteForType(slot.type, activate ? 1.0f : 0.0f);
             if (!slot.coverage.defined) {
@@ -5227,14 +5215,6 @@ bool ofApp::addAssetToConsoleLayer(int layerIndex,
     }
 
     const std::string prefix = "console.layer" + std::to_string(layerIndex);
-    if (!runtime_) {
-        ofLogError("ofApp") << "Runtime is unavailable while loading " << assetId;
-        slot.assetId.clear();
-        slot.type.clear();
-        slot.paramPrefix.clear();
-        slot.active = false;
-        return false;
-    }
     synaptome::runtime::Runtime::ElementRequest request;
     request.typeId = entry->type;
     request.definitionId = entry->id;
@@ -5242,7 +5222,7 @@ bool ofApp::addAssetToConsoleLayer(int layerIndex,
     request.registryPrefix = prefix;
     request.config = layerConfig;
     request.enabled = activate;
-    auto prepared = runtime_->prepareElement(
+    auto prepared = runtime_.prepareElement(
         request,
         [&](std::string_view step) {
             logSceneLoadInstallStep(std::string(step));
@@ -5256,11 +5236,21 @@ bool ofApp::addAssetToConsoleLayer(int layerIndex,
         slot.active = false;
         return false;
     }
-    slot.layer = std::move(prepared.element);
+    if (!runtime_.adoptPreparedElement(
+            static_cast<std::size_t>(idx),
+            std::move(prepared))) {
+        ofLogWarning("ofApp") << "Runtime rejected prepared element adoption for "
+                              << assetId;
+        slot.assetId.clear();
+        slot.type.clear();
+        slot.paramPrefix.clear();
+        slot.active = false;
+        return false;
+    }
     slot.paramPrefix = prefix;
 
-    if (slot.layer) {
-        Layer* layerPtr = slot.layer.get();
+    if (slot.element()) {
+        Layer* layerPtr = slot.element();
         if (auto* grid = dynamic_cast<GridLayer*>(layerPtr)) {
             gridLayer = grid;
         } else if (auto* geo = dynamic_cast<GeodesicLayer*>(layerPtr)) {
@@ -5322,20 +5312,16 @@ void ofApp::clearConsoleSlot(int index) {
     ConsoleSlot& slot = consoleSlots[index];
     bool changedRouteTargets = !slot.paramPrefix.empty();
     unregisterConsoleLayerCoverageParam(index + 1);
-    if (slot.layer) {
-        std::string oldPrefix = slot.layer->registryPrefix();
+    if (slot.element()) {
+        std::string oldPrefix = slot.element()->registryPrefix();
         midi.unbindByPrefix(oldPrefix);
-        Layer* ptr = slot.layer.get();
+        paramRegistry.removeById(oldPrefix + ".opacity");
+        Layer* ptr = slot.element();
         if (ptr == gridLayer) gridLayer = nullptr;
         if (ptr == geodesicLayer) geodesicLayer = nullptr;
         if (ptr == perlinLayer) perlinLayer = nullptr;
         if (ptr == gameOfLifeLayer) gameOfLifeLayer = nullptr;
-        if (runtime_) {
-            runtime_->releaseElement(slot.layer);
-        } else {
-            paramRegistry.removeByPrefix(oldPrefix);
-            slot.layer.reset();
-        }
+        runtime_.releaseCompositionElement(static_cast<std::size_t>(index));
     } else if (!slot.assetId.empty()) {
         if (const auto* entry = layerLibrary.find(slot.assetId)) {
             if (isFxType(entry->type)) {
@@ -5642,8 +5628,8 @@ std::string ofApp::consoleSlotPrefix(int layerIndex) const {
     if (!slot->paramPrefix.empty()) {
         return slot->paramPrefix;
     }
-    if (slot->layer) {
-        return slot->layer->registryPrefix();
+    if (slot->element()) {
+        return slot->element()->registryPrefix();
     }
     if (!slot->assetId.empty()) {
         if (const auto* entry = layerLibrary.find(slot->assetId)) {
@@ -6030,8 +6016,8 @@ void ofApp::refreshLayerReferences() {
     gameOfLifeLayer = nullptr;
 
     for (auto& slot : consoleSlots) {
-        if (!slot.layer) continue;
-        Layer* base = slot.layer.get();
+        if (!slot.element()) continue;
+        Layer* base = slot.element();
         if (!gridLayer) gridLayer = dynamic_cast<GridLayer*>(base);
         if (!geodesicLayer) geodesicLayer = dynamic_cast<GeodesicLayer*>(base);
         if (!perlinLayer) perlinLayer = dynamic_cast<PerlinNoiseLayer*>(base);

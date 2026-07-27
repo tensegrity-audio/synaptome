@@ -60,6 +60,26 @@
       "required": true
     },
     {
+      "pattern": "synaptome/build/**",
+      "reason": "Shared compiler and Element SDK property sheets required by app, runtime-core, and element projects.",
+      "required": true
+    },
+    {
+      "pattern": "synaptome/sdk/**",
+      "reason": "Public Element SDK compatibility headers consumed by runtime and element projects.",
+      "required": true
+    },
+    {
+      "pattern": "synaptome/elements/signal_bloom/Element_SignalBloom.vcxproj",
+      "reason": "Reference element static-library project linked by the app.",
+      "required": true
+    },
+    {
+      "pattern": "synaptome/runtime/SynaptomeRuntimeCore.vcxproj",
+      "reason": "Independently linked runtime-core static-library project.",
+      "required": true
+    },
+    {
       "pattern": "synaptome/addons.make",
       "reason": "openFrameworks addon list.",
       "required": true

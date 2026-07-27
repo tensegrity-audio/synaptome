@@ -19,10 +19,21 @@ public:
         descriptor.label = "Contract Value";
         registry.addFloat(registryPrefix() + ".value", &value_, 0.25f, descriptor);
     }
-    void update(const LayerUpdateParams&) override {}
-    void draw(const LayerDrawParams&) override {}
+    void update(const LayerUpdateParams&) override { ++updateCount; }
+    void draw(const LayerDrawParams&) override { ++drawCount; }
+    void onWindowResized(int width, int height) override {
+        ++resizeCount;
+        lastWidth = width;
+        lastHeight = height;
+    }
     void setExternalEnabled(bool enabled) override { enabled_ = enabled; }
     bool isEnabled() const override { return enabled_; }
+
+    int updateCount = 0;
+    int drawCount = 0;
+    int resizeCount = 0;
+    int lastWidth = 0;
+    int lastHeight = 0;
 
 private:
     float value_ = 0.25f;
@@ -117,13 +128,21 @@ int main() {
             request,
             [&](std::string_view step) { progress.emplace_back(step); });
         require(static_cast<bool>(prepared), prepared.error);
-        require(prepared.element->instanceId() == request.instanceId,
+        require(prepared.element()->instanceId() == request.instanceId,
                 "instance identity was not assigned");
-        require(prepared.element->registryPrefix() == request.registryPrefix,
+        require(prepared.element()->registryPrefix() == request.registryPrefix,
                 "registry prefix was not assigned");
-        require(!prepared.element->isEnabled(), "requested enable state was not applied");
+        require(!prepared.element()->isEnabled(), "requested enable state was not applied");
         require(parameters.findFloat("console.layer1.value") != nullptr,
                 "setup parameter was not registered");
+        float hostOpacity = 0.8f;
+        ParameterRegistry::Descriptor hostDescriptor;
+        hostDescriptor.label = "Host Opacity";
+        parameters.addFloat(
+            "console.layer1.opacity",
+            &hostOpacity,
+            hostOpacity,
+            hostDescriptor);
         require(
             progress == std::vector<std::string>({"create", "configure", "setup", "enable"}),
             "lifecycle progress order drifted");
@@ -133,10 +152,19 @@ int main() {
         require(parameters.findFloat("console.layer1.value") != nullptr,
                 "prefix collision damaged the live registration");
 
-        runtime.releaseElement(prepared.element);
-        require(!prepared.element, "release did not destroy the element");
+        runtime.releasePreparedElement(prepared);
+        require(!prepared, "release did not destroy the element");
         require(parameters.findFloat("console.layer1.value") == nullptr,
                 "release did not remove instance parameters");
+        require(parameters.findFloat("console.layer1.opacity") != nullptr,
+                "release removed a host-owned layer parameter");
+        parameters.removeById("console.layer1.opacity");
+        request.definitionId = "tests.definition.reloaded";
+        request.instanceId = "tests.instance.reloaded";
+        auto reloaded = runtime.prepareElement(request);
+        require(static_cast<bool>(reloaded),
+                "slot prefix could not be reused after host-owned cleanup");
+        runtime.releasePreparedElement(reloaded);
         require(parameters.findFloat("console.layer10.float") != nullptr,
                 "release removed a sibling float namespace");
         require(parameters.findBool("console.layer10.bool") != nullptr,
@@ -182,7 +210,7 @@ int main() {
         require(static_cast<bool>(empty), "zero-parameter element failed to prepare");
         auto emptyCollision = runtime.prepareElement(request);
         require(!emptyCollision, "zero-parameter element did not reserve its prefix");
-        runtime.releaseElement(empty.element);
+        runtime.releasePreparedElement(empty);
 
         request.typeId = "tests.runtime.good";
         request.definitionId = "tests.definition.abandoned";
@@ -197,7 +225,93 @@ int main() {
         require(parameters.findFloat("console.layer4.value") == nullptr,
                 "abandoned result did not release owned parameters");
 
-        std::cout << "[runtime_core] PASS lifecycle, identity, ownership, cleanup\n";
+        request.typeId = "tests.runtime.good";
+        request.definitionId = "tests.definition.composition";
+        request.instanceId = "tests.instance.composition";
+        request.registryPrefix = "console.layer5";
+        {
+            auto mismatched = runtime.prepareElement(request);
+            require(static_cast<bool>(mismatched),
+                    "mismatched composition candidate did not prepare");
+            require(
+                !runtime.adoptPreparedElement(0, std::move(mismatched)),
+                "runtime accepted a candidate for the wrong composition address");
+        }
+        require(parameters.findFloat("console.layer5.value") == nullptr,
+                "rejected composition candidate leaked parameters");
+
+        ParameterRegistry foreignParameters;
+        synaptome::runtime::Runtime foreignRuntime(factory, foreignParameters);
+        request.definitionId = "tests.definition.foreign-runtime";
+        request.instanceId = "tests.instance.foreign-runtime";
+        request.registryPrefix = "console.layer1";
+        {
+            auto foreignRuntimeCandidate = foreignRuntime.prepareElement(request);
+            require(static_cast<bool>(foreignRuntimeCandidate),
+                    "foreign-runtime composition candidate did not prepare");
+            require(
+                !runtime.adoptPreparedElement(
+                    0,
+                    std::move(foreignRuntimeCandidate)),
+                "runtime adopted an element owned by another runtime");
+            require(
+                foreignParameters.findFloat("console.layer1.value") != nullptr,
+                "cross-runtime rejection damaged source ownership");
+        }
+        require(
+            foreignParameters.findFloat("console.layer1.value") == nullptr,
+            "rejected cross-runtime candidate leaked source parameters");
+
+        request.definitionId = "tests.definition.composition";
+        request.instanceId = "tests.instance.composition";
+        request.registryPrefix = "console.layer1";
+        auto compositionPrepared = runtime.prepareElement(request);
+        require(
+            runtime.adoptPreparedElement(0, std::move(compositionPrepared)),
+            "runtime did not adopt the prepared composition element");
+        auto* compositionLayer = runtime.compositionLayer(0);
+        require(compositionLayer != nullptr && compositionLayer->hasElement(),
+                "runtime did not retain composition element ownership");
+        compositionLayer->active = true;
+        auto* compositionElement =
+            dynamic_cast<ContractElement*>(compositionLayer->element());
+        require(compositionElement != nullptr,
+                "composition element type was not preserved");
+        runtime.updateCompositionElements(LayerUpdateParams{});
+        runtime.resizeCompositionElements(1280, 720);
+        ofCamera camera;
+        runtime.drawCompositionElement(
+            0,
+            LayerDrawParams{camera, {1280, 720}, 0.0f, 0.0f, 1.0f});
+        require(compositionElement->updateCount == 1,
+                "runtime did not route composition update");
+        require(compositionElement->drawCount == 1,
+                "runtime did not route composition draw");
+        require(
+            compositionElement->resizeCount == 1 &&
+                compositionElement->lastWidth == 1280 &&
+                compositionElement->lastHeight == 720,
+            "runtime did not route composition resize");
+        runtime.releaseCompositionElement(0);
+        require(!compositionLayer->hasElement(),
+                "runtime did not release its composition element");
+        require(parameters.findFloat("console.layer1.value") == nullptr,
+                "composition release leaked element parameters");
+
+        request.definitionId = "tests.definition.shutdown";
+        request.instanceId = "tests.instance.shutdown";
+        auto shutdownPrepared = runtime.prepareElement(request);
+        require(
+            runtime.adoptPreparedElement(0, std::move(shutdownPrepared)),
+            "runtime did not adopt the shutdown contract element");
+        runtime.shutdownComposition();
+        require(!compositionLayer->hasElement(),
+                "composition shutdown retained an element");
+        require(parameters.findFloat("console.layer1.value") == nullptr,
+                "composition shutdown leaked element parameters");
+        runtime.shutdownComposition();
+
+        std::cout << "[runtime_core] PASS lifecycle, ownership, composition routing\n";
         return 0;
     } catch (const std::exception& error) {
         std::cerr << "[runtime_core] FAIL " << error.what() << "\n";

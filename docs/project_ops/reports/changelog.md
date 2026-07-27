@@ -2,6 +2,28 @@
 
 This changelog records Project Ops and administrative workflow changes. Product release versioning remains governed by `docs/release_policy.md`.
 
+## 2026-07-26 - architecture - seac3_runtime_core_composition_ownership
+
+- Request ID: `spine_element_architecture_convergence`
+- Phase / Milestone: SEAC-3 in progress
+- Build: Added `SynaptomeRuntimeCore` as a first-class static-library solution
+  target. The app now links Runtime and LayerFactory instead of compiling those
+  sources directly.
+- Ownership: Runtime now owns the fixed eight composition records, creative
+  element pointers, and their three per-layer FBOs. Generic adoption, release,
+  resize, update, and draw dispatch moved behind Runtime while the existing
+  effect/compositing algorithm remains unchanged in the host.
+- ABI: RuntimeCoreTest now links the shipping core against the same real
+  openFrameworks surface instead of mixing real and stub type definitions.
+- Safety: Restored exact cleanup of host-owned slot opacity and made MIDI
+  namespace unbinding preserve layer 10 and textual siblings when clearing
+  layer 1. Prepared ownership is opaque, composition adoption validates runtime
+  provenance and canonical slot address, and explicit shutdown releases
+  element/FBO resources before the graphics context closes.
+- Remaining gate: Staged parameter registration and transactional
+  same-address replacement are next; the global factory/catalog boundary also
+  remains.
+
 ## 2026-07-26 - architecture - seac3_runtime_lifecycle_facade
 
 - Request ID: `spine_element_architecture_convergence`

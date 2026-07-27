@@ -126,20 +126,20 @@ State Summary
 - Phase: EXECUTION
 - Status: In Progress
 - Steps Complete: 2 / 12
-- Progress: SEAC-3 is in progress. The host now delegates generic element creation, identity/configuration, setup, activation, exact parameter ownership, failure cleanup, and release to a focused Runtime facade. Composition-layer ownership, update/render routing, transactional replacement, and the independently linked runtime-core target remain.
-- Last Step Outcome: 2026-07-26 - Added and validated the first runtime-owned lifecycle seam with distinct definition/instance identity, structured failure context, namespace enforcement, zero-parameter prefix reservation, exact cleanup, and a focused native contract.
-- Next Step: Move the Console composition-layer model plus generic update/render/clear routing behind Runtime, then extract and link the first `SynaptomeRuntimeCore` static-library target without changing output.
+- Progress: SEAC-3 is in progress. `SynaptomeRuntimeCore` is now an independently linked static library and owns the fixed eight composition records, element pointers, FBO state, exact parameter ownership, and generic prepare/release/resize/update/draw routing. The host still adapts effect rendering, persistence, MIDI, and compatibility inspection; transactional replacement and isolated registry/catalog ownership remain.
+- Last Step Outcome: 2026-07-26 - Linked the host and real-openFrameworks native contract through the new runtime-core target, moved composition storage and generic lifecycle routing behind Runtime, and closed slot-opacity plus MIDI sibling-prefix cleanup regressions.
+- Next Step: Implement staged parameter registration and transactional same-address element replacement so a failed candidate preserves the current live layer, then remove the process-global factory dependency.
 - Dependencies / Overlap: `show_readiness_operator_stability`, `layer_package_compatibility_bench_scaffolding`, `docs/architecture/synaptome_spine_element_model.md`, `docs/architecture/synaptome_layer_system_roadmap.md`, `docs/architecture/synaptome_artist_sdk.md`, parameter/scene/mapping contracts, and layer-authoring tests.
 - Primary Scope: runtime
 - Secondary Scopes: contracts, artist-sdk, tests, docs, release
-- Blocking Issues / Unknowns: Native binary modules remain an optional architecture decision rather than a promised deliverable. Transactional same-address replacement needs staged parameter ownership and remains an explicit SEAC-3 promotion gate, not a completed capability.
+- Blocking Issues / Unknowns: Native binary modules remain an optional architecture decision rather than a promised deliverable. Transactional same-address replacement and a non-global runtime registry remain explicit SEAC-3 promotion gates.
 - Impact / Priority Notes: This is the active architecture lane and precedes automatic discovery, broader package activation, or new content-family expansion.
 - Priority Score: N/A
 - Priority Lane: Fast-Track
 - Ready State: Ready
 - Ready Gate: The architecture direction, compatibility policy, ordered tasks, and stop conditions are explicit; the operator accepted residual show-validation risk and authorized execution.
-- Project Ops / Roadmap Updates (timestamped): 2026-07-26 - Added the canonical model and subordinated package/discovery work to its contract and build gates. 2026-07-26 - Promoted SEAC to execution after dual-screen validation was deferred. 2026-07-26 - Completed the dependency inventory and froze the Element SDK v1 source/static-link boundary. 2026-07-26 - Landed the first SEAC-3 build and registration slice. 2026-07-26 - Moved generic element preparation/release and exact registration ownership behind the first Runtime facade seam.
-- Resume From: Phase EXECUTION, State In Progress, Next Action move composition-layer ownership and update/render routing behind Runtime, then create the linked runtime-core target.
+- Project Ops / Roadmap Updates (timestamped): 2026-07-26 - Added the canonical model and subordinated package/discovery work to its contract and build gates. 2026-07-26 - Promoted SEAC to execution after dual-screen validation was deferred. 2026-07-26 - Completed the dependency inventory and froze the Element SDK v1 source/static-link boundary. 2026-07-26 - Landed the first SEAC-3 build and registration slice. 2026-07-26 - Moved generic element preparation/release and exact registration ownership behind the first Runtime facade seam. 2026-07-26 - Linked the first runtime-core library and moved fixed composition storage plus generic update/draw/resize ownership behind it.
+- Resume From: Phase EXECUTION, State In Progress, Next Action implement staged parameter registration and transactional visual-element replacement.
 Request Doc: docs/project_ops/in_progress/spine_element_architecture_convergence.md
 
 Current Direction

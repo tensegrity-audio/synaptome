@@ -813,6 +813,35 @@ bool RunMidiMappingFlowScenario(const std::filesystem::path& artifactPath) {
     return true;
 }
 
+bool RunMidiNamespaceCleanupScenario() {
+    MidiRouter router;
+    router.setOrUpdateCc("console.layer1.opacity", 11);
+    router.setOrUpdateCc("console.layer10.opacity", 12);
+    router.setOrUpdateCc("console.layer1extra.opacity", 13);
+
+    router.unbindByPrefix("console.layer1");
+
+    const auto& mappings = router.getCcMaps();
+    auto hasTarget = [&](const std::string& target) {
+        return std::any_of(
+            mappings.begin(),
+            mappings.end(),
+            [&](const MidiRouter::CcMap& mapping) {
+                return mapping.target == target;
+            });
+    };
+    if (hasTarget("console.layer1.opacity")) {
+        throw std::runtime_error("MIDI namespace cleanup retained the target layer");
+    }
+    if (!hasTarget("console.layer10.opacity")) {
+        throw std::runtime_error("MIDI namespace cleanup removed layer10");
+    }
+    if (!hasTarget("console.layer1extra.opacity")) {
+        throw std::runtime_error("MIDI namespace cleanup removed a textual sibling");
+    }
+    return true;
+}
+
 bool RunSlotDropdownFocusScenario() {
     ControlMappingHubState hub;
     ParameterRegistry registry;

@@ -47,14 +47,16 @@ The runtime lifecycle profile checks the first host/runtime ownership seam:
 python tools\validate_layer_authoring.py runtime-core --native
 ```
 
-It builds a focused stubbed native target and verifies distinct definition and
-instance identity, lifecycle ordering, structured setup failures, exact
-parameter ownership, prefix reservation for zero-parameter elements,
-out-of-namespace registration rollback, and safe release. Add
+It builds a focused target against the same real openFrameworks header and ABI
+surface as the shipping `SynaptomeRuntimeCore` library. The contract verifies
+distinct definition and instance identity, lifecycle ordering, structured
+setup failures, exact parameter ownership, prefix reservation for
+zero-parameter elements, out-of-namespace registration rollback, composition
+ownership/provenance, canonical slot addressing, generic update/draw/resize
+routing, idempotent shutdown, and safe release. Add
 `--incremental-app` to prove the full host still compiles and links through the
-facade. This is an interim compatibility seam: composition ownership,
-update/render routing, explicit shutdown, and transactional replacement remain
-SEAC-3 work.
+library. This remains an interim compatibility seam: transactional replacement,
+explicit shutdown, and full effect/compositing ownership remain SEAC-3 work.
 
 Circuit Trace currently has an isolated eight-direction native contract:
 
@@ -81,10 +83,9 @@ build:
 python tools\validate_layer_authoring.py circuit-trace --incremental-app
 ```
 
-The profile sets `BuildProjectReferences=false`, so this tier compiles and
-links Synaptome without rebuilding `openframeworksLib`. The existing
-openFrameworks library must already be current; rebuild the solution separately
-after changing openFrameworks itself or when its library output is missing.
+The profile builds required project references, including the element and
+runtime-core libraries. MSBuild reuses current outputs, so openFrameworks is
+not rebuilt unless its inputs changed or its library output is missing.
 
 Use both flags for the complete authoring handoff. `--dry-run` prints the exact
 commands, `--keep-going` is available for audits, and `--list` shows profiles.

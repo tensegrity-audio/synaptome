@@ -1,7 +1,10 @@
 #pragma once
 
+#include "CompositionLayer.h"
+
 #include <synaptome/element/compat/Layer.h>
 
+#include <array>
 #include <functional>
 #include <memory>
 #include <string>
@@ -36,7 +39,6 @@ public:
     };
 
     struct ElementResult {
-        std::unique_ptr<Layer> element;
         ElementErrorCode errorCode = ElementErrorCode::None;
         std::string stage;
         std::string typeId;
@@ -52,10 +54,13 @@ public:
         ElementResult(ElementResult&& other) noexcept;
         ElementResult& operator=(ElementResult&& other) noexcept;
 
-        explicit operator bool() const { return element != nullptr; }
+        Layer* element() { return element_.get(); }
+        const Layer* element() const { return element_.get(); }
+        explicit operator bool() const { return element_ != nullptr; }
 
     private:
         friend class Runtime;
+        std::unique_ptr<Layer> element_;
         Runtime* runtime_ = nullptr;
         std::weak_ptr<void> runtimeLifetime_;
     };
@@ -74,7 +79,28 @@ public:
         const ElementRequest& request,
         const ProgressCallback& progress = {});
 
-    void releaseElement(std::unique_ptr<Layer>& element) noexcept;
+    void releasePreparedElement(ElementResult& prepared) noexcept;
+
+    using CompositionLayers =
+        std::array<CompositionLayer, kCompositionLayerCount>;
+
+    CompositionLayers& compositionLayersForHost() { return compositionLayers_; }
+    const CompositionLayers& compositionLayersForHost() const {
+        return compositionLayers_;
+    }
+    CompositionLayer* compositionLayer(std::size_t zeroBasedIndex);
+    const CompositionLayer* compositionLayer(std::size_t zeroBasedIndex) const;
+
+    bool adoptPreparedElement(
+        std::size_t zeroBasedIndex,
+        ElementResult&& prepared);
+    void releaseCompositionElement(std::size_t zeroBasedIndex) noexcept;
+    void resizeCompositionElements(int width, int height);
+    void updateCompositionElements(const LayerUpdateParams& params);
+    void drawCompositionElement(
+        std::size_t zeroBasedIndex,
+        const LayerDrawParams& params);
+    void shutdownComposition();
 
 private:
     enum class ParameterKind {
@@ -103,12 +129,14 @@ private:
         const std::string& prefix);
     void removeParameters(const std::vector<ParameterKey>& parameters) noexcept;
     void releaseTrackedElement(Layer* element) noexcept;
+    void releaseElement(std::unique_ptr<Layer>& element) noexcept;
 
     LayerFactory& factory_;
     ParameterRegistry& parameters_;
     std::unordered_map<Layer*, ElementOwnership> ownership_;
     std::unordered_set<std::string> activePrefixes_;
     std::shared_ptr<void> lifetime_ = std::make_shared<int>(0);
+    CompositionLayers compositionLayers_;
 };
 
 } // namespace synaptome::runtime

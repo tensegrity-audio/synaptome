@@ -16,7 +16,7 @@
         "command": [
           "{msbuild}",
           "synaptome/tests/RuntimeCoreTest/RuntimeCoreTest.vcxproj",
-          "/t:Rebuild",
+          "/t:Build",
           "/p:Configuration=Release",
           "/p:Platform=x64",
           "/m",

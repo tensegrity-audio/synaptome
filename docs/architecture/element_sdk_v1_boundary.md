@@ -7,9 +7,16 @@ static-library target, a separate stub compile-contract target, public
 compatibility include paths, and a controlled built-in registration entrypoint.
 The first Runtime facade now owns compatibility element preparation/release,
 distinct instance identity, prefix reservation, exact parameter registration
-cleanup, namespace enforcement, and structured failure context. Console
-composition ownership, update/render routing, transactional replacement, and
-the independently linked runtime-core target are not yet extracted.
+cleanup, namespace enforcement, and structured failure context.
+`SynaptomeRuntimeCore` is now an independently linked static library and owns
+the fixed composition records, element pointers, per-layer FBOs, and generic
+resize/update/draw dispatch. Prepared ownership cannot escape the facade,
+adoption validates its source runtime and canonical `console.layerN` address,
+and explicit shutdown releases elements and FBO resources while the graphics
+context is live. The host still adapts effect compositing,
+persistence, mappings, and compatibility inspection through a temporary
+internal view. Transactional replacement and isolated registry/catalog
+ownership are not yet complete.
 
 This document records the dependency inventory and the minimum Element SDK v1
 contract that must exist before Synaptome moves code into new build targets.

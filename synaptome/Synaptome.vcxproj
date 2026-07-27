@@ -502,7 +502,6 @@
 
 		<ClCompile Include="src\ofApp.cpp" />
 		<ClCompile Include="src\runtime\BuiltinElements.cpp" />
-		<ClCompile Include="src\runtime\Runtime.cpp" />
 		<ClCompile Include="src\visuals\CircuitTraceLayer.cpp" />
 
 		<ClCompile Include="src\io\MidiRouter.cpp" />
@@ -519,7 +518,6 @@
 		<ClCompile Include="src\visuals\OscilloscopeLayer.cpp" />
 
 		<ClCompile Include="src\visuals\GeodesicLayer.cpp" />
-		<ClCompile Include="src\visuals\LayerFactory.cpp" />
 		<ClCompile Include="src\visuals\LayerLibrary.cpp" />
 		<ClCompile Include="src\visuals\PerlinNoiseLayer.cpp" />
 		<ClCompile Include="src\visuals\StlModelLayer.cpp" />
@@ -693,7 +691,6 @@
 		<ClInclude Include="src\ofApp.h" />
 		<ClInclude Include="src\core\OptionProviderRegistry.h" />
 		<ClInclude Include="src\runtime\BuiltinElements.h" />
-		<ClInclude Include="src\runtime\Runtime.h" />
 		<ClInclude Include="src\visuals\CircuitTraceLayer.h" />
 		<ClInclude Include="src\visuals\EightDirectionMotion.h" />
 		<ClInclude Include="src\visuals\SignalBloomLayer.h" />
@@ -2800,6 +2797,10 @@
 		</ProjectReference>
 		<ProjectReference Include="elements\signal_bloom\Element_SignalBloom.vcxproj">
 			<Project>{d9f5486b-17a6-4ebe-8b51-443948e223c4}</Project>
+			<LinkLibraryDependencies>true</LinkLibraryDependencies>
+		</ProjectReference>
+		<ProjectReference Include="runtime\SynaptomeRuntimeCore.vcxproj">
+			<Project>{9ae98481-c999-4438-a0cd-5fc3d230de95}</Project>
 			<LinkLibraryDependencies>true</LinkLibraryDependencies>
 		</ProjectReference>
 

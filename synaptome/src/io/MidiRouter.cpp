@@ -1585,19 +1585,23 @@ void MidiRouter::setOrUpdateBtn(const std::string& target,
 }
 
 void MidiRouter::unbindByPrefix(const std::string& prefix) {
-    auto starts = [&](const std::string& id) {
-        return !prefix.empty() && id.compare(0, prefix.size(), prefix) == 0;
+    auto belongsToNamespace = [&](const std::string& id) {
+        return !prefix.empty() &&
+            (id == prefix ||
+             (id.size() > prefix.size() &&
+              id.compare(0, prefix.size(), prefix) == 0 &&
+              id[prefix.size()] == '.'));
     };
 
     for (auto it = floatTargets.begin(); it != floatTargets.end();) {
-        if (starts(it->first)) {
+        if (belongsToNamespace(it->first)) {
             it = floatTargets.erase(it);
         } else {
             ++it;
         }
     }
     for (auto it = boolTargets.begin(); it != boolTargets.end();) {
-        if (starts(it->first)) {
+        if (belongsToNamespace(it->first)) {
             it = boolTargets.erase(it);
         } else {
             ++it;
@@ -1605,13 +1609,13 @@ void MidiRouter::unbindByPrefix(const std::string& prefix) {
     }
 
     ccMaps.erase(std::remove_if(ccMaps.begin(), ccMaps.end(), [&](const CcMap& map) {
-        return starts(map.target);
+        return belongsToNamespace(map.target);
     }), ccMaps.end());
     btnMaps.erase(std::remove_if(btnMaps.begin(), btnMaps.end(), [&](const BtnMap& map) {
-        return starts(map.target);
+        return belongsToNamespace(map.target);
     }), btnMaps.end());
     oscMaps.erase(std::remove_if(oscMaps.begin(), oscMaps.end(), [&](const OscMap& map) {
-        return starts(map.target);
+        return belongsToNamespace(map.target);
     }), oscMaps.end());
 }
 
