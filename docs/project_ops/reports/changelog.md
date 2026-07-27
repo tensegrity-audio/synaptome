@@ -2,6 +2,42 @@
 
 This changelog records Project Ops and administrative workflow changes. Product release versioning remains governed by `docs/release_policy.md`.
 
+## 2026-07-27 - architecture - seac3_on_demand_element_telemetry
+
+- Request ID: `spine_element_architecture_convergence`
+- Phase / Milestone: SEAC-3 in progress
+- Public SDK: Added `Telemetry.h` with the closed
+  `bool`/`int64_t`/`double`/`string` `TelemetryValue`, pointer-free
+  `TelemetryEntry`, `TelemetrySink`, and optional const
+  `Layer::collectTelemetry()` hook.
+- Runtime boundary: Added the separate on-demand
+  `Runtime::compositionElementTelemetry()` query and structured bounds, empty,
+  kind, contract, and collection errors. Results provide ID lookup and typed
+  value access without exposing live elements. Telemetry is deliberately not
+  appended to frequent `CompositionSnapshot` reads.
+- State ownership: Geodesic subdivisions are now a registered range/step
+  parameter and remain the durable authority used by actions, presets, and
+  scenes. Webcam and clip source labels use `media.sourceLabel`; webcam capture
+  readiness uses `media.captureInitialized`.
+- Collection rules: Live collection is const, synchronous on Runtime's owner
+  thread, non-reentrant, bounded, side-effect-free, and available for an adopted
+  inactive element. Runtime contains exceptions and does not publish partial
+  entries after collection or contract failure.
+- Terminology: Element telemetry is a volatile typed observation, not durable
+  state or normalized lifecycle health. It is separate from `HudFeedRegistry`
+  JSON, HUD widget telemetry feed names, and static package capabilities.
+- Compatibility boundary: Telemetry does not enter parameters, scenes,
+  presets, mappings, packages, catalogs, manifests, routers, schemas, or
+  ordinary composition snapshots. The host may adapt copied telemetry to HUD
+  presentation.
+- Host migration: Media status and Geodesic display reads no longer use
+  concrete element casts. The retired `compositionElementForHost` declaration,
+  definition, call sites, and read-only seam were removed.
+- Validation: Element SDK and RuntimeCore boundary checks pin the public typed
+  DTO, const hook, on-demand structured query, contract validation, exact media
+  IDs, durable Geodesic parameter, inactive query semantics, leakage bans, and
+  complete removal of the concrete read-only element seam.
+
 ## 2026-07-27 - architecture - seac3_live_instance_action_contract
 
 - Request ID: `spine_element_architecture_convergence`

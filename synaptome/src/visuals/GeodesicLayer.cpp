@@ -77,6 +77,19 @@ void GeodesicLayer::setup(ParameterRegistry& registry) {
     radiusMeta.range.step = 1.0f;
     registry.addFloat(prefix + ".radius", &paramRadius_, paramRadius_, radiusMeta);
 
+    ParameterRegistry::Descriptor subdivisionsMeta;
+    subdivisionsMeta.label = "Sphere Subdivisions";
+    subdivisionsMeta.group = "Sphere";
+    subdivisionsMeta.description = "Geodesic mesh subdivision level.";
+    subdivisionsMeta.range.min = 1.0f;
+    subdivisionsMeta.range.max = 4.0f;
+    subdivisionsMeta.range.step = 1.0f;
+    registry.addFloat(
+        prefix + ".subdivisions",
+        &paramSubdivisions_,
+        paramSubdivisions_,
+        subdivisionsMeta);
+
     ParameterRegistry::Descriptor deformMeta;
     deformMeta.label = "Sphere Deform";
     deformMeta.group = "Sphere";
@@ -194,6 +207,14 @@ void GeodesicLayer::update(const LayerUpdateParams& params) {
         rebuildGeodesic();
     }
 
+    const int resolvedSubdivisions =
+        ofClamp(static_cast<int>(std::round(paramSubdivisions_)), 1, 4);
+    paramSubdivisions_ = static_cast<float>(resolvedSubdivisions);
+    if (resolvedSubdivisions != subdivisions_) {
+        subdivisions_ = resolvedSubdivisions;
+        rebuildGeodesic();
+    }
+
     deform_ = paramDeform_;
 
     float clampedDeformAmount = ofClamp(paramDeformAmount_, 0.0f, 160.0f);
@@ -269,14 +290,26 @@ void GeodesicLayer::draw(const LayerDrawParams& params) {
 }
 
 void GeodesicLayer::incrementSubdivision() {
-    if (subdivisions_ >= 4) return;
-    subdivisions_ += 1;
+    const int resolved =
+        ofClamp(static_cast<int>(std::round(paramSubdivisions_)), 1, 4);
+    const int target = std::min(4, resolved + 1);
+    paramSubdivisions_ = static_cast<float>(target);
+    if (target == subdivisions_) {
+        return;
+    }
+    subdivisions_ = target;
     rebuildGeodesic();
 }
 
 void GeodesicLayer::decrementSubdivision() {
-    if (subdivisions_ <= 1) return;
-    subdivisions_ -= 1;
+    const int resolved =
+        ofClamp(static_cast<int>(std::round(paramSubdivisions_)), 1, 4);
+    const int target = std::max(1, resolved - 1);
+    paramSubdivisions_ = static_cast<float>(target);
+    if (target == subdivisions_) {
+        return;
+    }
+    subdivisions_ = target;
     rebuildGeodesic();
 }
 

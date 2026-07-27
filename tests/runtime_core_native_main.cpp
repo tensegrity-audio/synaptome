@@ -26,6 +26,27 @@ void require(
     }
 }
 
+template <typename T>
+T telemetryValue(
+    const synaptome::runtime::Runtime& runtime,
+    std::size_t zeroBasedIndex,
+    std::string_view id) {
+    const auto result =
+        runtime.compositionElementTelemetry(zeroBasedIndex);
+    if (!result) {
+        throw std::runtime_error(
+            "telemetry query failed for " + std::string(id) +
+            (result.error.empty() ? "" : ": " + result.error));
+    }
+    const auto* value = result.valueAs<T>(id);
+    if (!value) {
+        throw std::runtime_error(
+            "telemetry value missing or wrong type: " +
+            std::string(id));
+    }
+    return *value;
+}
+
 synaptome::runtime::CompositionAssignment assignmentFor(
     const synaptome::runtime::Runtime::ElementRequest& request,
     const std::string& label = "RuntimeCore Element",
@@ -56,6 +77,51 @@ public:
         ++resizeCount;
         lastWidth = width;
         lastHeight = height;
+    }
+    void collectTelemetry(
+        synaptome::element::TelemetrySink& sink) const override {
+        sink.add({
+            "tests.updateCount",
+            "Update Count",
+            "tests",
+            "Number of routed updates.",
+            static_cast<std::int64_t>(updateCount),
+        });
+        sink.add({
+            "tests.drawCount",
+            "Draw Count",
+            "tests",
+            "Number of routed draws.",
+            static_cast<std::int64_t>(drawCount),
+        });
+        sink.add({
+            "tests.resizeCount",
+            "Resize Count",
+            "tests",
+            "Number of routed resizes.",
+            static_cast<std::int64_t>(resizeCount),
+        });
+        sink.add({
+            "tests.lastWidth",
+            "Last Width",
+            "tests",
+            "Last routed width.",
+            static_cast<std::int64_t>(lastWidth),
+        });
+        sink.add({
+            "tests.lastHeight",
+            "Last Height",
+            "tests",
+            "Last routed height.",
+            static_cast<std::int64_t>(lastHeight),
+        });
+        sink.add({
+            "tests.enabled",
+            "Enabled",
+            "tests",
+            "Current external enabled state.",
+            enabled_,
+        });
     }
     void setExternalEnabled(bool enabled) override { enabled_ = enabled; }
     bool isEnabled() const override { return enabled_; }
@@ -125,6 +191,16 @@ public:
     }
     void update(const LayerUpdateParams&) override {}
     void draw(const LayerDrawParams&) override {}
+    void collectTelemetry(
+        synaptome::element::TelemetrySink& sink) const override {
+        sink.add({
+            "tests.serial",
+            "Serial",
+            "tests",
+            "Fixture construction serial.",
+            static_cast<std::int64_t>(serial_),
+        });
+    }
 
     int serial() const noexcept { return serial_; }
 
@@ -193,6 +269,31 @@ public:
                 registryPrefix() + ".value") != nullptr;
     }
     void draw(const LayerDrawParams&) override {}
+    void collectTelemetry(
+        synaptome::element::TelemetrySink& sink) const override {
+        sink.add({
+            "tests.commitCount",
+            "Commit Count",
+            "tests",
+            "Number of live registry commit callbacks.",
+            static_cast<std::int64_t>(commitCount),
+        });
+        sink.add({
+            "tests.committedToLiveRegistry",
+            "Committed To Live Registry",
+            "tests",
+            "Whether the committed registry differs from setup staging.",
+            committedRegistry &&
+                committedRegistry != setupRegistry,
+        });
+        sink.add({
+            "tests.sawLiveRegistry",
+            "Saw Live Registry",
+            "tests",
+            "Whether update observed committed live storage.",
+            sawLiveRegistry,
+        });
+    }
 
     ParameterRegistry* setupRegistry = nullptr;
     ParameterRegistry* committedRegistry = nullptr;
@@ -487,6 +588,101 @@ public:
 private:
     InvalidActionMode mode_;
     float value_ = 0.5f;
+};
+
+struct TelemetryInstanceState {
+    std::int64_t serial = 0;
+    bool ready = false;
+    double load = 0.0;
+    std::string source;
+    int collectionCount = 0;
+};
+
+enum class TelemetryFixtureMode {
+    Valid,
+    InvalidId,
+    DuplicateId,
+    EmptyLabel,
+    InvalidGroupId,
+    Throw,
+};
+
+class TelemetryContractElement final : public Layer {
+public:
+    TelemetryContractElement(
+        std::shared_ptr<TelemetryInstanceState> state,
+        TelemetryFixtureMode mode)
+        : state_(std::move(state)),
+          mode_(mode) {}
+
+    void setup(ParameterRegistry&) override {}
+    void update(const LayerUpdateParams&) override {}
+    void draw(const LayerDrawParams&) override {}
+
+    void collectTelemetry(
+        synaptome::element::TelemetrySink& sink) const override {
+        ++state_->collectionCount;
+        if (mode_ == TelemetryFixtureMode::Throw) {
+            throw std::runtime_error(
+                "intentional telemetry collection failure");
+        }
+
+        std::string id = "tests.ready";
+        std::string label = "Ready";
+        std::string groupId = "tests";
+        if (mode_ == TelemetryFixtureMode::InvalidId) {
+            id = "tests_invalid";
+        } else if (mode_ == TelemetryFixtureMode::EmptyLabel) {
+            label.clear();
+        } else if (mode_ == TelemetryFixtureMode::InvalidGroupId) {
+            groupId = "Invalid Group";
+        }
+        sink.add({
+            id,
+            label,
+            groupId,
+            "Fixture readiness.",
+            state_->ready,
+        });
+        if (mode_ == TelemetryFixtureMode::DuplicateId) {
+            sink.add({
+                id,
+                "Duplicate Ready",
+                "tests",
+                "Duplicate fixture field.",
+                false,
+            });
+            return;
+        }
+        if (mode_ != TelemetryFixtureMode::Valid) {
+            return;
+        }
+        sink.add({
+            "tests.serial",
+            "Serial",
+            "tests",
+            "Fixture serial.",
+            state_->serial,
+        });
+        sink.add({
+            "tests.load",
+            "Load",
+            "tests",
+            "Fixture load.",
+            state_->load,
+        });
+        sink.add({
+            "tests.source",
+            "Source",
+            "tests",
+            "Fixture source.",
+            state_->source,
+        });
+    }
+
+private:
+    std::shared_ptr<TelemetryInstanceState> state_;
+    TelemetryFixtureMode mode_ = TelemetryFixtureMode::Valid;
 };
 
 void RunScopedElementTypeRegistryIsolationScenario() {
@@ -897,8 +1093,12 @@ void RunCompositionSlotReplacementScenario() {
             std::move(initial),
             assignmentFor(request, "Slot Initial", 0.41f)),
         "slot replacement scenario did not adopt its initial element");
-    const Layer* const initialLive =
-        runtime.compositionElementForHost(0);
+    require(
+        telemetryValue<std::int64_t>(
+            runtime,
+            0,
+            "tests.serial") == 0,
+        "initial slot telemetry did not identify the live element");
     const auto* initialParam =
         parameters.findFloat("console.layer1.value");
     require(
@@ -919,7 +1119,10 @@ void RunCompositionSlotReplacementScenario() {
                 synaptome::runtime::Runtime::ElementErrorCode::
                     InvalidRequest &&
             lifetime.constructionCount == 1 &&
-            runtime.compositionElementForHost(0) == initialLive,
+            telemetryValue<std::int64_t>(
+                runtime,
+                0,
+                "tests.serial") == 0,
         "slot replacement accepted a mismatched prefix or changed the live element");
 
     {
@@ -928,13 +1131,19 @@ void RunCompositionSlotReplacementScenario() {
         require(
             abandoned &&
                 lifetime.constructionCount == 2 &&
-                runtime.compositionElementForHost(0) == initialLive,
+                telemetryValue<std::int64_t>(
+                    runtime,
+                    0,
+                    "tests.serial") == 0,
             "slot replacement preparation changed the live element");
     }
     require(
         lifetime.destroyed[1] &&
             !lifetime.destroyed[0] &&
-            runtime.compositionElementForHost(0) == initialLive,
+            telemetryValue<std::int64_t>(
+                runtime,
+                0,
+                "tests.serial") == 0,
         "aborting slot replacement damaged the live element or leaked its candidate");
 
     request.definitionId = "tests.definition.slot-replacement";
@@ -951,7 +1160,10 @@ void RunCompositionSlotReplacementScenario() {
         require(
             prepared &&
                 lifetime.constructionCount == 3 &&
-                runtime.compositionElementForHost(0) == initialLive &&
+                telemetryValue<std::int64_t>(
+                    runtime,
+                    0,
+                    "tests.serial") == 0 &&
                 parameters.findFloat("console.layer1.value") != nullptr,
             "slot replacement preparation published candidate state");
         const auto wrongSlotAdoption = runtime.adoptPreparedElement(
@@ -961,7 +1173,10 @@ void RunCompositionSlotReplacementScenario() {
         require(
             !wrongSlotAdoption &&
                 prepared &&
-                runtime.compositionElementForHost(0) == initialLive,
+                telemetryValue<std::int64_t>(
+                    runtime,
+                    0,
+                    "tests.serial") == 0,
             "cross-slot adoption consumed or replaced the prepared candidate");
         require(
             runtime.adoptPreparedElement(
@@ -969,17 +1184,16 @@ void RunCompositionSlotReplacementScenario() {
                 std::move(prepared),
                 assignmentFor(request, "Slot Replacement", 0.67f)),
             "slot-based replacement did not commit");
-        const auto* replacementLive =
-            dynamic_cast<const SlotReplacementLifetimeElement*>(
-                runtime.compositionElementForHost(0));
         const auto* retired =
             dynamic_cast<const SlotReplacementLifetimeElement*>(
                 prepared.element());
         const auto* replacementParam =
             parameters.findFloat("console.layer1.value");
         require(
-            replacementLive &&
-                replacementLive->serial() == 2 &&
+            telemetryValue<std::int64_t>(
+                runtime,
+                0,
+                "tests.serial") == 2 &&
                 retired &&
                 retired->serial() == 0 &&
                 !lifetime.destroyed[0] &&
@@ -1020,8 +1234,12 @@ void RunCompositionSlotReplacementScenario() {
                 std::move(winner),
                 assignmentFor(request, "Slot Winner", 0.79f)),
             "winning slot replacement did not commit");
-        const Layer* const winnerLive =
-            runtime.compositionElementForHost(0);
+        require(
+            telemetryValue<std::int64_t>(
+                runtime,
+                0,
+                "tests.serial") == 4,
+            "winning replacement telemetry was not published");
         const auto staleCommit = runtime.adoptPreparedElement(
             0,
             std::move(stale),
@@ -1036,7 +1254,10 @@ void RunCompositionSlotReplacementScenario() {
                         ElementMismatch &&
                 staleCommit.error ==
                     "prepared replacement generation is stale" &&
-                runtime.compositionElementForHost(0) == winnerLive &&
+                telemetryValue<std::int64_t>(
+                    runtime,
+                    0,
+                    "tests.serial") == 4 &&
                 !lifetime.destroyed[2],
             "stale slot replacement changed the winning live element");
         runtime.releasePreparedElement(stale);
@@ -1558,6 +1779,312 @@ void RunCompositionActionScenario() {
                 "console.layer1.value") == nullptr,
         "Runtime destructor retained actions, element, or parameters");
 }
+
+void RunCompositionTelemetryScenario() {
+    LayerFactory factory;
+    std::vector<std::shared_ptr<TelemetryInstanceState>> instances;
+    std::int64_t nextSerial = 0;
+    auto registerTelemetryType = [&](
+        const std::string& typeId,
+        TelemetryFixtureMode mode) {
+        factory.registerType(typeId, [&, mode] {
+            auto state = std::make_shared<TelemetryInstanceState>();
+            state->serial = nextSerial++;
+            state->ready = (state->serial % 2) == 0;
+            state->load = 0.25 + static_cast<double>(state->serial);
+            state->source =
+                "source-" + std::to_string(state->serial);
+            instances.push_back(state);
+            return std::make_unique<TelemetryContractElement>(
+                state,
+                mode);
+        });
+    };
+    registerTelemetryType(
+        "tests.runtime.telemetry.valid",
+        TelemetryFixtureMode::Valid);
+    registerTelemetryType(
+        "tests.runtime.telemetry.invalid-id",
+        TelemetryFixtureMode::InvalidId);
+    registerTelemetryType(
+        "tests.runtime.telemetry.duplicate-id",
+        TelemetryFixtureMode::DuplicateId);
+    registerTelemetryType(
+        "tests.runtime.telemetry.empty-label",
+        TelemetryFixtureMode::EmptyLabel);
+    registerTelemetryType(
+        "tests.runtime.telemetry.invalid-group",
+        TelemetryFixtureMode::InvalidGroupId);
+    registerTelemetryType(
+        "tests.runtime.telemetry.throw",
+        TelemetryFixtureMode::Throw);
+    factory.registerType("tests.runtime.telemetry.empty", [] {
+        return std::make_unique<EmptyElement>();
+    });
+
+    ParameterRegistry parameters;
+    synaptome::runtime::Runtime runtime(factory, parameters);
+
+    const auto outOfRange = runtime.compositionElementTelemetry(
+        synaptome::runtime::kCompositionLayerCount);
+    const auto empty = runtime.compositionElementTelemetry(0);
+    require(
+        !outOfRange &&
+            outOfRange.errorCode ==
+                synaptome::runtime::CompositionTelemetryError::
+                    IndexOutOfRange &&
+            !empty &&
+            empty.errorCode ==
+                synaptome::runtime::CompositionTelemetryError::SlotEmpty,
+        "telemetry bounds or empty-slot errors drifted");
+
+    synaptome::runtime::CompositionAssignment nonElement;
+    nonElement.kind = synaptome::runtime::CompositionKind::Effect;
+    nonElement.definitionId = "tests.effect.telemetry";
+    nonElement.label = "Telemetry Effect";
+    nonElement.typeId = "fx.telemetry";
+    nonElement.registryPrefix = "effects.telemetry";
+    nonElement.active = true;
+    require(runtime.assignCompositionEntry(4, nonElement),
+            "telemetry scenario could not assign its effect");
+    require(
+        runtime.compositionElementTelemetry(4).errorCode ==
+            synaptome::runtime::CompositionTelemetryError::KindMismatch,
+        "effect assignment exposed Element telemetry");
+    require(runtime.clearCompositionLayer(4),
+            "telemetry scenario could not clear its effect");
+    nonElement.kind = synaptome::runtime::CompositionKind::Overlay;
+    nonElement.definitionId = "tests.overlay.telemetry";
+    nonElement.typeId = "ui.telemetry";
+    nonElement.registryPrefix = "ui.telemetry";
+    require(runtime.assignCompositionEntry(4, nonElement),
+            "telemetry scenario could not assign its overlay");
+    require(
+        runtime.compositionElementTelemetry(4).errorCode ==
+            synaptome::runtime::CompositionTelemetryError::KindMismatch,
+        "overlay assignment exposed Element telemetry");
+    require(runtime.clearCompositionLayer(4),
+            "telemetry scenario could not clear its overlay");
+
+    synaptome::runtime::Runtime::ElementRequest request;
+    request.typeId = "tests.runtime.telemetry.empty";
+    request.definitionId = "tests.definition.telemetry.empty";
+    request.instanceId = "tests.instance.telemetry.empty";
+    request.registryPrefix = "console.layer5";
+    request.enabled = true;
+    auto emptyPrepared = runtime.prepareElement(request);
+    require(
+        runtime.adoptPreparedElement(
+            4,
+            std::move(emptyPrepared),
+            assignmentFor(request, "No Telemetry")) &&
+            runtime.compositionElementTelemetry(4) &&
+            runtime.compositionElementTelemetry(4).entries.empty(),
+        "element with no telemetry did not return an empty success");
+    require(runtime.clearCompositionLayer(4),
+            "telemetry scenario could not clear empty telemetry");
+
+    request.typeId = "tests.runtime.telemetry.valid";
+    request.definitionId = "tests.definition.telemetry.first";
+    request.instanceId = "tests.instance.telemetry.first";
+    request.registryPrefix = "console.layer1";
+    request.enabled = false;
+    auto firstPrepared = runtime.prepareElement(request);
+    require(
+        firstPrepared &&
+            instances.size() == 1 &&
+            instances[0]->collectionCount == 0,
+        "telemetry collection ran during candidate preparation");
+    require(
+        runtime.adoptPreparedElement(
+            0,
+            std::move(firstPrepared),
+            assignmentFor(request, "Telemetry First")) &&
+            instances[0]->collectionCount == 0,
+        "telemetry collection ran during adoption");
+    runtime.compositionSnapshot();
+    require(
+        instances[0]->collectionCount == 0,
+        "ordinary composition snapshot collected volatile telemetry");
+
+    const auto firstTelemetry =
+        runtime.compositionElementTelemetry(0);
+    const auto inactiveTelemetrySnapshot =
+        runtime.compositionLayerSnapshot(0);
+    require(
+        inactiveTelemetrySnapshot &&
+            !inactiveTelemetrySnapshot->active &&
+            firstTelemetry &&
+            instances[0]->collectionCount == 1 &&
+            firstTelemetry.entries.size() == 4 &&
+            firstTelemetry.entries[0].id == "tests.ready" &&
+            firstTelemetry.entries[0].label == "Ready" &&
+            firstTelemetry.entries[0].groupId == "tests" &&
+            firstTelemetry.entries[0].description ==
+                "Fixture readiness." &&
+            firstTelemetry.valueAs<bool>("tests.ready") &&
+            *firstTelemetry.valueAs<bool>("tests.ready") &&
+            firstTelemetry.valueAs<std::int64_t>("tests.serial") &&
+            *firstTelemetry.valueAs<std::int64_t>("tests.serial") == 0 &&
+            firstTelemetry.valueAs<double>("tests.load") &&
+            std::fabs(*firstTelemetry.valueAs<double>("tests.load") - 0.25) <
+                0.0001 &&
+            firstTelemetry.valueAs<std::string>("tests.source") &&
+            *firstTelemetry.valueAs<std::string>("tests.source") ==
+                "source-0" &&
+            firstTelemetry.valueAs<double>("tests.ready") == nullptr &&
+            firstTelemetry.find("tests.missing") == nullptr,
+        "adopted inactive element telemetry or typed value projection drifted");
+
+    auto mutatedCopy = firstTelemetry;
+    mutatedCopy.entries.front().id = "copy.mutated";
+    std::get<bool>(mutatedCopy.entries.front().value) = false;
+    instances[0]->source = "source-live";
+    instances[0]->ready = false;
+    const auto refreshed = runtime.compositionElementTelemetry(0);
+    require(
+        refreshed &&
+            instances[0]->collectionCount == 2 &&
+            refreshed.entries.front().id == "tests.ready" &&
+            refreshed.valueAs<bool>("tests.ready") &&
+            !*refreshed.valueAs<bool>("tests.ready") &&
+            refreshed.valueAs<std::string>("tests.source") &&
+            *refreshed.valueAs<std::string>("tests.source") ==
+                "source-live",
+        "telemetry copy isolation or on-demand freshness drifted");
+
+    auto siblingRequest = request;
+    siblingRequest.definitionId =
+        "tests.definition.telemetry.sibling";
+    siblingRequest.instanceId =
+        "tests.instance.telemetry.sibling";
+    siblingRequest.registryPrefix = "console.layer2";
+    auto siblingPrepared = runtime.prepareElement(siblingRequest);
+    require(
+        runtime.adoptPreparedElement(
+            1,
+            std::move(siblingPrepared),
+            assignmentFor(siblingRequest, "Telemetry Sibling")) &&
+            telemetryValue<std::int64_t>(
+                runtime,
+                0,
+                "tests.serial") == 0 &&
+            telemetryValue<std::int64_t>(
+                runtime,
+                1,
+                "tests.serial") == 1,
+        "same telemetry IDs leaked across composition slots");
+
+    for (const auto& [typeId, expectedError] :
+         std::vector<std::pair<
+             std::string,
+             synaptome::runtime::CompositionTelemetryError>>{
+             {
+                 "tests.runtime.telemetry.invalid-id",
+                 synaptome::runtime::CompositionTelemetryError::
+                     ContractViolation,
+             },
+             {
+                 "tests.runtime.telemetry.duplicate-id",
+                 synaptome::runtime::CompositionTelemetryError::
+                     ContractViolation,
+             },
+             {
+                 "tests.runtime.telemetry.empty-label",
+                 synaptome::runtime::CompositionTelemetryError::
+                     ContractViolation,
+             },
+             {
+                 "tests.runtime.telemetry.invalid-group",
+                 synaptome::runtime::CompositionTelemetryError::
+                     ContractViolation,
+             },
+             {
+                 "tests.runtime.telemetry.throw",
+                 synaptome::runtime::CompositionTelemetryError::
+                     CollectionFailure,
+             },
+         }) {
+        auto invalidRequest = request;
+        invalidRequest.typeId = typeId;
+        invalidRequest.definitionId =
+            "tests.definition.telemetry.invalid";
+        invalidRequest.instanceId =
+            "tests.instance.telemetry.invalid";
+        invalidRequest.registryPrefix = "console.layer3";
+        auto invalidPrepared = runtime.prepareElement(invalidRequest);
+        require(
+            runtime.adoptPreparedElement(
+                2,
+                std::move(invalidPrepared),
+                assignmentFor(
+                    invalidRequest,
+                    "Telemetry Invalid")),
+            "telemetry invalid fixture could not be adopted");
+        const auto invalidTelemetry =
+            runtime.compositionElementTelemetry(2);
+        require(
+            !invalidTelemetry &&
+                invalidTelemetry.errorCode == expectedError &&
+                runtime.compositionElementTelemetry(0),
+            "invalid telemetry was accepted or left Runtime unusable");
+        require(runtime.clearCompositionLayer(2),
+                "telemetry invalid fixture could not be cleared");
+    }
+
+    auto replacementRequest = request;
+    replacementRequest.definitionId =
+        "tests.definition.telemetry.replacement";
+    replacementRequest.instanceId =
+        "tests.instance.telemetry.replacement";
+    {
+        auto aborted =
+            runtime.prepareCompositionElementReplacement(
+                0,
+                replacementRequest);
+        require(
+            aborted &&
+                telemetryValue<std::int64_t>(
+                    runtime,
+                    0,
+                    "tests.serial") == 0,
+            "prepared telemetry candidate became visible before adoption");
+        runtime.releasePreparedElement(aborted);
+        require(
+            telemetryValue<std::int64_t>(
+                runtime,
+                0,
+                "tests.serial") == 0,
+            "aborted telemetry candidate changed the live query");
+    }
+    auto replacement =
+        runtime.prepareCompositionElementReplacement(
+            0,
+            replacementRequest);
+    require(
+        runtime.adoptPreparedElement(
+            0,
+            std::move(replacement),
+            assignmentFor(
+                replacementRequest,
+                "Telemetry Replacement")) &&
+            telemetryValue<std::int64_t>(
+                runtime,
+                0,
+                "tests.serial") > 1,
+        "telemetry replacement did not publish the adopted instance");
+
+    require(
+        runtime.clearCompositionLayer(0) &&
+            runtime.compositionElementTelemetry(0).errorCode ==
+                synaptome::runtime::CompositionTelemetryError::SlotEmpty,
+        "clear retained live telemetry");
+    runtime.shutdownComposition();
+    require(
+        runtime.compositionElementTelemetry(1).errorCode ==
+            synaptome::runtime::CompositionTelemetryError::SlotEmpty,
+        "shutdown retained live telemetry");
+}
 }
 
 int main() {
@@ -1566,6 +2093,7 @@ int main() {
         RunCompositionSnapshotScenario();
         RunCompositionSlotReplacementScenario();
         RunCompositionActionScenario();
+        RunCompositionTelemetryScenario();
 
         LayerFactory factory;
         factory.registerType("tests.runtime.good", [] {
@@ -1848,18 +2376,22 @@ int main() {
                 std::move(compositionPrepared),
                 assignmentFor(request, "Composition Element", 0.72f)),
             "runtime did not adopt the prepared composition element");
+        const auto initialCompositionSnapshot =
+            runtime.compositionLayerSnapshot(0);
         require(
-            runtime.compositionElementForHost(0) != nullptr &&
-                runtime.compositionElementForHost(
-                    synaptome::runtime::kCompositionLayerCount) == nullptr,
+            initialCompositionSnapshot &&
+                initialCompositionSnapshot->hasElement &&
+                initialCompositionSnapshot->definitionId ==
+                    "tests.definition.composition" &&
+                !runtime.compositionLayerSnapshot(
+                    synaptome::runtime::kCompositionLayerCount) &&
+                telemetryValue<std::int64_t>(
+                    runtime,
+                    0,
+                    "tests.updateCount") == 0,
                 "runtime did not retain composition element ownership");
         require(runtime.setCompositionLayerActive(0, true),
                 "runtime did not activate the composition element");
-        auto* compositionElement =
-            dynamic_cast<const ContractElement*>(
-                runtime.compositionElementForHost(0));
-        require(compositionElement != nullptr,
-                "composition element type was not preserved");
 
         float liveHostValue = 0.65f;
         ParameterRegistry::Descriptor liveHostDescriptor;
@@ -1876,8 +2408,14 @@ int main() {
             runtime.prepareCompositionElementReplacement(0, request);
         require(!failedReplacement,
                 "throwing replacement was reported as prepared");
-        require(runtime.compositionElementForHost(0) == compositionElement,
-                "failed replacement destroyed the live element");
+        require(
+            runtime.compositionLayerSnapshot(0)->definitionId ==
+                    "tests.definition.composition" &&
+                telemetryValue<std::int64_t>(
+                    runtime,
+                    0,
+                    "tests.updateCount") == 0,
+            "failed replacement destroyed the live element");
         require(parameters.findFloat("console.layer1.value") != nullptr,
                 "failed replacement removed the live element parameter");
         require(parameters.findFloat("console.layer1.partial") == nullptr,
@@ -1896,7 +2434,12 @@ int main() {
                     abandonedReplacement.error);
         }
         require(
-            runtime.compositionElementForHost(0) == compositionElement &&
+            runtime.compositionLayerSnapshot(0)->definitionId ==
+                    "tests.definition.composition" &&
+                telemetryValue<std::int64_t>(
+                    runtime,
+                    0,
+                    "tests.updateCount") == 0 &&
                 parameters.findFloat("console.layer1.value") != nullptr,
             "abandoned replacement disturbed the live slot");
 
@@ -1939,8 +2482,14 @@ int main() {
                     std::move(conflictingReplacement),
                     assignmentFor(request, "Conflicting Element", 0.2f)),
                 "replacement overwrote a host-owned parameter");
-            require(runtime.compositionElementForHost(0) == compositionElement,
-                    "failed commit replaced the live element");
+            require(
+                runtime.compositionLayerSnapshot(0)->definitionId ==
+                        "tests.definition.composition" &&
+                    telemetryValue<std::int64_t>(
+                        runtime,
+                        0,
+                        "tests.updateCount") == 0,
+                "failed commit replaced the live element");
             require(
                     parameters.findFloat("console.layer1.value") != nullptr &&
                     parameters.findFloat("console.layer1.opacity") != nullptr &&
@@ -1959,21 +2508,28 @@ int main() {
         auto replacement =
             runtime.prepareCompositionElementReplacement(0, request);
         require(static_cast<bool>(replacement), replacement.error);
-        require(runtime.compositionElementForHost(0) == compositionElement,
-                "preparation replaced the live element before commit");
+        require(
+            runtime.compositionLayerSnapshot(0)->definitionId ==
+                    "tests.definition.composition" &&
+                telemetryValue<std::int64_t>(
+                    runtime,
+                    0,
+                    "tests.updateCount") == 0,
+            "preparation replaced the live element before commit");
         require(
             runtime.adoptPreparedElement(
                 0,
                 std::move(replacement),
                 assignmentFor(request, "Replacement Element", 0.72f)),
                 "same-address replacement did not commit");
-        auto* replacementElement =
-            dynamic_cast<const ContractElement*>(
-                runtime.compositionElementForHost(0));
-        require(replacementElement != nullptr &&
-                    replacementElement != compositionElement,
-                "replacement did not swap the live element");
-        compositionElement = replacementElement;
+        require(
+            runtime.compositionLayerSnapshot(0)->definitionId ==
+                    "tests.definition.replacement" &&
+                telemetryValue<std::int64_t>(
+                    runtime,
+                    0,
+                    "tests.updateCount") == 0,
+            "replacement did not publish fresh live element state");
         require(parameters.findFloat("console.layer1.value") != nullptr,
                 "replacement did not install candidate parameters");
         const auto* replacementModifiers =
@@ -2007,14 +2563,31 @@ int main() {
         runtime.drawCompositionElement(
             0,
             LayerDrawParams{camera, {1280, 720}, 0.0f, 0.0f, 1.0f});
-        require(compositionElement->updateCount == 1,
+        require(
+                telemetryValue<std::int64_t>(
+                    runtime,
+                    0,
+                    "tests.updateCount") == 1,
                 "runtime did not route composition update");
-        require(compositionElement->drawCount == 1,
+        require(
+                telemetryValue<std::int64_t>(
+                    runtime,
+                    0,
+                    "tests.drawCount") == 1,
                 "runtime did not route composition draw");
         require(
-            compositionElement->resizeCount == 1 &&
-                compositionElement->lastWidth == 1280 &&
-                compositionElement->lastHeight == 720,
+            telemetryValue<std::int64_t>(
+                runtime,
+                0,
+                "tests.resizeCount") == 1 &&
+                telemetryValue<std::int64_t>(
+                    runtime,
+                    0,
+                    "tests.lastWidth") == 1280 &&
+                telemetryValue<std::int64_t>(
+                    runtime,
+                    0,
+                    "tests.lastHeight") == 720,
             "runtime did not route composition resize");
         const auto compositionClear = runtime.clearCompositionLayer(0);
         const auto compositionClearedSnapshot =
@@ -2041,19 +2614,24 @@ int main() {
                 std::move(registryAwarePrepared),
                 assignmentFor(request, "Registry Aware")),
             "runtime did not adopt the registry-aware element");
-        auto* registryAware =
-            dynamic_cast<const RegistryAwareElement*>(
-                runtime.compositionElementForHost(1));
         require(
-            registryAware &&
-                registryAware->commitCount == 1 &&
-                registryAware->committedRegistry == &parameters &&
-                registryAware->setupRegistry != &parameters,
+            telemetryValue<std::int64_t>(
+                runtime,
+                1,
+                "tests.commitCount") == 1 &&
+                telemetryValue<bool>(
+                    runtime,
+                    1,
+                    "tests.committedToLiveRegistry"),
             "runtime did not rebind the staged registry after commit");
         require(runtime.setCompositionLayerActive(1, true),
                 "runtime did not activate the registry-aware element");
         runtime.updateCompositionElements(LayerUpdateParams{});
-        require(registryAware->sawLiveRegistry,
+        require(
+                telemetryValue<bool>(
+                    runtime,
+                    1,
+                    "tests.sawLiveRegistry"),
                 "registry-aware update did not observe the live registry");
         require(runtime.clearCompositionLayer(1),
                 "runtime did not clear the registry-aware element");
@@ -2154,8 +2732,6 @@ int main() {
             runtime.prepareCompositionElementReplacement(2, request);
         auto mismatchedAssignment = replacementAssignment;
         mismatchedAssignment.definitionId = "tests.definition.wrong";
-        const Layer* const elementBeforeRejectedCommit =
-            runtime.compositionElementForHost(2);
         const auto rejectedCommit = runtime.adoptPreparedElement(
             2,
             std::move(mismatchedPrepared),
@@ -2167,11 +2743,13 @@ int main() {
                 rejectedCommit.errorCode ==
                     synaptome::runtime::CompositionMutationError::
                         ElementMismatch &&
-                runtime.compositionElementForHost(2) ==
-                    elementBeforeRejectedCommit &&
                 rejectedCommitSnapshot &&
                 rejectedCommitSnapshot->definitionId ==
                     replacementAssignment.definitionId &&
+                telemetryValue<std::int64_t>(
+                    runtime,
+                    2,
+                    "tests.updateCount") == 0 &&
                 parameters.findFloat("console.layer3.opacity")->value ==
                     stableOpacityAddress,
             "rejected assignment changed live control-plane state");
@@ -2191,8 +2769,10 @@ int main() {
         require(
             activatedSnapshot &&
                 activatedSnapshot->active &&
-                runtime.compositionElementForHost(2) &&
-                runtime.compositionElementForHost(2)->isEnabled(),
+                telemetryValue<bool>(
+                    runtime,
+                    2,
+                    "tests.enabled"),
             "Runtime active command did not update element state");
 
         float siblingState = 0.25f;

@@ -44,13 +44,17 @@ exposes no element, FBO, registry, creator, handler, or host pointers.
 `Runtime::invokeCompositionAction()` invokes one no-argument action by
 zero-based composition-layer index and local action ID, with structured bounds,
 kind, support, rejection, and execution failures. Read-only element inspection
-and mutable FBO access remain separate named host seams. The host no longer
-caches derived Grid, Geodesic, Perlin, or Game of Life pointers: ordinary HUD
-reads, MIDI/OSC binding, Grid density cycling, and Game of Life pause resolve
-snapshot prefixes through `ParameterRegistry`. Geodesic subdivision status and
-video-specific status still use read-only inspection. The live aggregate and
-public `CompositionLayer` accessors are gone. Typed descriptor/catalog
-ownership is not yet complete.
+has been replaced by the separate on-demand
+`Runtime::compositionElementTelemetry()` query. Telemetry collection is not
+part of the ordinary composition snapshot because it reads volatile live
+values. Mutable FBO access remains a separate named host seam. The host no
+longer caches derived Grid, Geodesic, Perlin, or Game of Life pointers:
+ordinary HUD reads, MIDI/OSC binding, Grid density cycling, and Game of Life
+pause resolve snapshot prefixes through `ParameterRegistry`. Geodesic
+subdivisions are durable parameter state; video source label and capture
+readiness are pointer-free live telemetry. The live aggregate, public
+`CompositionLayer` accessors, and `compositionElementForHost` seam are gone.
+Typed descriptor/catalog ownership is not yet complete.
 
 This document records the dependency inventory and the minimum Element SDK v1
 contract that must exist before Synaptome moves code into new build targets.
@@ -168,6 +172,11 @@ active state, opacity, coverage, and copied pointer-free live action
 descriptors. `Runtime::compositionSnapshot()` returns the fixed eight-layer aggregate by value;
 `Runtime::compositionLayerSnapshot()` returns a bounds-checked optional copy.
 Neither DTO carries executable or render-resource ownership.
+
+Volatile element telemetry uses a separate on-demand query rather than adding
+collection work to either composition snapshot. The query returns a
+pointer-free `CompositionTelemetryResult`; it does not expose the live element
+or turn telemetry into composition state.
 
 ### `SynaptomeHost`
 
@@ -470,6 +479,58 @@ snapshots, package manifests, or parameter manifests. MIDI/OSC action targets,
 trigger/edge semantics, offline inspection, static `ElementDescriptor`
 declarations, and declaration/registration parity remain later gated work.
 
+### Live Telemetry Compatibility Contract
+
+The first element telemetry contract is a separate, on-demand Runtime query for
+volatile observations:
+
+- the public `Telemetry.h` defines
+  `TelemetryValue = std::variant<bool, std::int64_t, double, std::string>`;
+- `TelemetryEntry` contains only local `id`, display `label`, stable `groupId`,
+  `description`, and one copied `TelemetryValue`;
+- `TelemetrySink::add(TelemetryEntry)` receives entries from the optional const
+  `Layer::collectTelemetry(TelemetrySink&) const` hook;
+- telemetry IDs use unique lower-camel dotted segments, labels are nonempty,
+  and group IDs use the same required single-segment lower-camel alphanumeric
+  rule as live actions;
+- `Runtime::compositionElementTelemetry(zeroBasedIndex)` returns
+  `CompositionTelemetryResult`, whose structured errors distinguish
+  `IndexOutOfRange`, `SlotEmpty`, `KindMismatch`, `ContractViolation`, and
+  `CollectionFailure`;
+- collection is synchronous on Runtime's owner thread, const, non-reentrant,
+  bounded, and side-effect-free. It copies cached observations only and does
+  not perform device I/O, graphics work, logging, composition mutation, or
+  another action or telemetry query;
+- Runtime contains collection exceptions and publishes no partial entries after
+  a contract or collection failure;
+- an adopted element remains queryable while its layer is inactive. Inactive
+  gates update and draw behavior, not read-only telemetry;
+- entries and results carry no callbacks, handlers, element pointers, device
+  pointers, graphics resources, registries, or host/UI objects.
+
+This is element-local runtime telemetry, not durable state and not normalized
+health. Health is the lifecycle-level ready/degraded/failure assessment with
+structured diagnostics; this telemetry slice only reports typed observations.
+It is also distinct from `HudFeedRegistry` JSON payloads and HUD widget
+`telemetry` feed names. The host may adapt a copied result into `hud.status` or
+`hud.sensors`, but an element never publishes a HUD feed or names a widget.
+
+Geodesic `subdivisions` is registered parameter state because actions change it
+and scenes or presets may need to reproduce it. It is not telemetry.
+`media.sourceLabel` is a string telemetry entry for webcam and video-clip
+elements; webcam additionally reports the boolean
+`media.captureInitialized`. Gain, mirror, loop, selected source, and other
+declared controls remain parameter-authoritative and are not duplicated as
+telemetry.
+
+Telemetry has no expanded parameter address, is not a mapping target, and is
+never written into scenes, presets, mapping snapshots, package manifests,
+package capabilities, catalogs, parameter manifests, or ordinary composition
+snapshots in this checkpoint. A static package capability declares a
+requirement or service contract, such as camera access; a live telemetry value
+reports the current observation and never satisfies or replaces that
+capability.
+
 ### Packages And Offline Inspection
 
 `layer.package.json` evolves into the canonical typed package declaration.
@@ -515,9 +576,8 @@ Host metadata reads now use `Runtime::compositionSnapshot()` or
 adoption, assignment, active, label, coverage, and clear commands. No live
 composition aggregate or public `CompositionLayer` accessor crosses the
 boundary. Per-layer render FBOs remain available through
-`CompositionRenderTargets`; read-only element inspection still uses
-`compositionElementForHost`. Mutable Geodesic subdivision and Game of Life
-randomization now register live actions and are invoked through
+`CompositionRenderTargets`. Mutable Geodesic subdivision and Game of Life
+randomization register live actions and are invoked through
 `Runtime::invokeCompositionAction()`, replacing the retired
 `legacyCompositionElementForHost` seam. Their descriptors are copied into the
 immutable layer snapshot for live discovery. Generic replacement continues to
@@ -527,11 +587,11 @@ path. `firstConsoleElementOfType()` selects the first matching copied slot in
 composition order; its registry prefix drives live parameter reads and writes,
 HUD projection, and MIDI/OSC binding. Perlin and Game of Life MIDI ranges come
 from registered descriptors while their established snap/step behavior remains
-unchanged. `geodesicSubdivisionAtSlot()` uses the read-only inspection seam for
-unregistered subdivision status; video status is the other remaining concrete
-read-only consumer. Render-target and read-only element inspection remain
-host-only SEAC-3 migration debt. Static/offline action descriptors remain
-SEAC-4 debt.
+unchanged. Geodesic subdivisions resolve through the registered parameter;
+media source labels and webcam capture readiness use the separate typed
+telemetry query. `compositionElementForHost` and all host concrete status casts
+are removed. The render-target seam remains host-only SEAC-3 migration debt.
+Static/offline action descriptors remain SEAC-4 debt.
 
 ## SEAC-3 Extraction Sequence
 
@@ -574,6 +634,10 @@ No-output-change extraction is accepted only when:
 - live action snapshots expose descriptors but no handlers or element pointers;
 - invalid action registration rejects preparation, and action invocation
   returns structured errors without concrete RuntimeCore element dependencies;
+- on-demand telemetry returns typed pointer-free copies, contains collection
+  and contract failures, and does not change or burden ordinary composition
+  snapshots;
+- no host read-only element pointer or concrete status cast remains;
 - failed replacement preserves the prior live layer;
 - setup/update/offscreen render/shutdown/reload pass through the real SDK seam;
 - graphics-state containment and declaration parity pass;

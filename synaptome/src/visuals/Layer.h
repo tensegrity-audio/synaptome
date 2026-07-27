@@ -1,6 +1,7 @@
 #pragma once
 
 #include <synaptome/element/Action.h>
+#include <synaptome/element/Telemetry.h>
 
 #include "ofMain.h"
 #include "../core/ParameterRegistry.h"
@@ -42,6 +43,10 @@ public:
     virtual void registerActions(
         synaptome::element::ActionRegistrar& registrar) {
         (void)registrar;
+    }
+    virtual void collectTelemetry(
+        synaptome::element::TelemetrySink& sink) const {
+        (void)sink;
     }
     virtual void update(const LayerUpdateParams& params) = 0;
     virtual void draw(const LayerDrawParams& params) = 0;

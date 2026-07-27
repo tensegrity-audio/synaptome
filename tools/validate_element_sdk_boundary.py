@@ -31,6 +31,10 @@ def main() -> int:
         APP / "sdk" / "include" / "synaptome" / "element" / "Action.h",
         errors,
     )
+    telemetry_header = read(
+        APP / "sdk" / "include" / "synaptome" / "element" / "Telemetry.h",
+        errors,
+    )
     layer_forwarder = read(SDK / "Layer.h", errors)
     builder_forwarder = read(SDK / "LayerParameterBuilder.h", errors)
     example_header = read(EXAMPLE / "SignalBloomLayer.h", errors)
@@ -91,6 +95,47 @@ def main() -> int:
             "public action descriptor must expose stable groupId, not ambiguous group"
         )
     for token in (
+        "using TelemetryValue =",
+        "std::variant<bool, std::int64_t, double, std::string>",
+        "struct TelemetryEntry",
+        "std::string id;",
+        "std::string label;",
+        "std::string groupId;",
+        "std::string description;",
+        "TelemetryValue value;",
+        "class TelemetrySink",
+        "virtual void add(TelemetryEntry entry) = 0;",
+    ):
+        if token not in telemetry_header:
+            errors.append(f"public telemetry contract is missing {token}")
+    telemetry_entry_start = telemetry_header.find("struct TelemetryEntry")
+    telemetry_entry_end = telemetry_header.find(
+        "class TelemetrySink",
+        telemetry_entry_start,
+    )
+    if telemetry_entry_start < 0 or telemetry_entry_end < 0:
+        errors.append("could not inspect the public telemetry entry DTO")
+        telemetry_entry_surface = ""
+    else:
+        telemetry_entry_surface = telemetry_header[
+            telemetry_entry_start:telemetry_entry_end
+        ]
+    for token in (
+        "*",
+        "&",
+        "std::function",
+        "Layer",
+        "Runtime",
+        "ParameterRegistry",
+        "ofJson",
+        "HudFeedRegistry",
+    ):
+        if token in telemetry_entry_surface:
+            errors.append(
+                "public telemetry entry exposes forbidden ownership: "
+                f"{token}"
+            )
+    for token in (
         "Composition",
         "Runtime",
         "LayerFactory",
@@ -100,12 +145,26 @@ def main() -> int:
         "MidiRouter",
         "OscParameterRouter",
     ):
-        if token in action_header:
+        if token in action_header or token in telemetry_header:
             errors.append(
-                f"public action contract imports forbidden host/runtime ownership: {token}"
+                "public action/telemetry contract imports forbidden "
+                f"host/runtime ownership: {token}"
             )
-    if "registerActions(" not in read(APP / "src" / "visuals" / "Layer.h", errors):
+    compatibility_layer = read(APP / "src" / "visuals" / "Layer.h", errors)
+    if "registerActions(" not in compatibility_layer:
         errors.append("compatibility Layer must expose optional live action registration")
+    if not re.search(
+        r"virtual\s+void\s+collectTelemetry\s*\(\s*"
+        r"synaptome::element::TelemetrySink&\s+sink\s*\)\s*const",
+        compatibility_layer,
+    ):
+        errors.append(
+            "compatibility Layer must expose optional const telemetry collection"
+        )
+    if "<synaptome/element/Telemetry.h>" not in compatibility_layer:
+        errors.append(
+            "compatibility Layer must consume the public telemetry contract"
+        )
 
     for header in public_sdk_surfaces:
         text = read(header, errors)
@@ -210,7 +269,7 @@ def main() -> int:
         return 1
     print(
         "[element-sdk-boundary] PASS public includes, shipping static library, "
-        "pointer-free live action contract, controlled registration, "
+        "pointer-free live action and typed telemetry contracts, controlled registration, "
         "compile-contract roots, and no Runtime composition leak"
     )
     return 0

@@ -50,6 +50,7 @@ private:
     float paramRotateYDeg_ = 0.0f;
     float paramRotateZDeg_ = 0.0f;
     float paramRadius_ = 140.0f;
+    float paramSubdivisions_ = 2.0f;
     bool paramDeform_ = false;
     float paramDeformAmount_ = 28.0f;
     float paramDeformScale_ = 1.6f;

@@ -140,8 +140,14 @@ def main() -> int:
     action_header = (
         ROOT / "synaptome/sdk/include/synaptome/element/Action.h"
     ).read_text(encoding="utf-8")
+    telemetry_header = (
+        ROOT / "synaptome/sdk/include/synaptome/element/Telemetry.h"
+    ).read_text(encoding="utf-8")
     action_table = (
         ROOT / "synaptome/src/runtime/ElementActionTable.h"
+    ).read_text(encoding="utf-8")
+    telemetry_buffer = (
+        ROOT / "synaptome/src/runtime/ElementTelemetryBuffer.h"
     ).read_text(encoding="utf-8")
     geodesic_header = (
         ROOT / "synaptome/src/visuals/GeodesicLayer.h"
@@ -154,6 +160,18 @@ def main() -> int:
     ).read_text(encoding="utf-8")
     game_of_life_source = (
         ROOT / "synaptome/src/visuals/GameOfLifeLayer.cpp"
+    ).read_text(encoding="utf-8")
+    video_grabber_header = (
+        ROOT / "synaptome/src/visuals/VideoGrabberLayer.h"
+    ).read_text(encoding="utf-8")
+    video_grabber_source = (
+        ROOT / "synaptome/src/visuals/VideoGrabberLayer.cpp"
+    ).read_text(encoding="utf-8")
+    video_clip_header = (
+        ROOT / "synaptome/src/visuals/VideoClipLayer.h"
+    ).read_text(encoding="utf-8")
+    video_clip_source = (
+        ROOT / "synaptome/src/visuals/VideoClipLayer.cpp"
     ).read_text(encoding="utf-8")
     midi_router = (
         ROOT / "synaptome/src/io/MidiRouter.h"
@@ -229,6 +247,7 @@ def main() -> int:
         "compositionSnapshot",
         "compositionLayerSnapshot",
         "invokeCompositionAction",
+        "compositionElementTelemetry",
         "adoptPreparedElement",
         "releasePreparedElement",
         "updateCompositionElements",
@@ -241,7 +260,6 @@ def main() -> int:
         "setCompositionLayerCoverage",
         "clearCompositionLayer",
         "compositionRenderTargetsForHost",
-        "compositionElementForHost",
     ):
         if token not in runtime_source and token not in runtime_header:
             errors.append(f"runtime lifecycle seam is missing {token}")
@@ -254,6 +272,8 @@ def main() -> int:
         "struct CompositionMutationResult",
         "enum class CompositionActionError",
         "struct CompositionActionResult",
+        "enum class CompositionTelemetryError",
+        "struct CompositionTelemetryResult",
     ):
         if token not in composition_types:
             errors.append(f"runtime composition control plane is missing {token}")
@@ -326,6 +346,7 @@ def main() -> int:
         "ofApp",
         "unique_ptr",
         "shared_ptr",
+        "Telemetry",
     ):
         if token in snapshot_surface:
             errors.append(f"composition snapshot DTOs expose forbidden ownership: {token}")
@@ -431,6 +452,197 @@ def main() -> int:
                 "live action groupId must remain a single alphanumeric "
                 f"lowerCamel segment: {forbidden}"
             )
+
+    telemetry_entry_start = telemetry_header.find("struct TelemetryEntry")
+    telemetry_entry_end = telemetry_header.find(
+        "class TelemetrySink",
+        telemetry_entry_start,
+    )
+    if telemetry_entry_start < 0 or telemetry_entry_end < 0:
+        errors.append("could not inspect the public telemetry entry DTO")
+        telemetry_entry_surface = ""
+    else:
+        telemetry_entry_surface = telemetry_header[
+            telemetry_entry_start:telemetry_entry_end
+        ]
+    for token in (
+        "using TelemetryValue =",
+        "std::variant<bool, std::int64_t, double, std::string>",
+        "std::string id;",
+        "std::string label;",
+        "std::string groupId;",
+        "std::string description;",
+        "TelemetryValue value;",
+        "class TelemetrySink",
+        "virtual void add(TelemetryEntry entry) = 0;",
+    ):
+        if token not in telemetry_header:
+            errors.append(f"public element telemetry contract is missing {token}")
+    for token in (
+        "*",
+        "&",
+        "std::function",
+        "Layer",
+        "Runtime",
+        "ParameterRegistry",
+        "ofJson",
+        "HudFeedRegistry",
+    ):
+        if token in telemetry_entry_surface:
+            errors.append(
+                f"public telemetry entry exposes forbidden ownership: {token}"
+            )
+    if not re.search(
+        r"virtual\s+void\s+collectTelemetry\s*\(\s*"
+        r"synaptome::element::TelemetrySink&\s+sink\s*\)\s*const",
+        layer_header,
+    ):
+        errors.append(
+            "compatibility Layer must expose optional const telemetry collection"
+        )
+    for token in (
+        "class ElementTelemetryBuffer final : public element::TelemetrySink",
+        "void add(element::TelemetryEntry entry) override",
+        "contractError() const",
+        "isValidId(",
+        "entry.id",
+        "entry.label.empty()",
+        "isValidGroupId(entry.groupId)",
+        "invalid telemetry group ID",
+        "duplicate telemetry ID",
+        "takeEntries() noexcept",
+    ):
+        if token not in telemetry_buffer:
+            errors.append(f"runtime telemetry buffer is missing {token}")
+    telemetry_group_start = telemetry_buffer.find(
+        "static bool isValidGroupId("
+    )
+    telemetry_group_end = telemetry_buffer.find(
+        "std::vector<element::TelemetryEntry> entries_",
+        telemetry_group_start,
+    )
+    if telemetry_group_start < 0 or telemetry_group_end < 0:
+        errors.append("could not inspect telemetry groupId validation")
+        telemetry_group_surface = ""
+    else:
+        telemetry_group_surface = telemetry_buffer[
+            telemetry_group_start:telemetry_group_end
+        ]
+    for forbidden in ("character == '.'", "character == '_'", "character == '-'"):
+        if forbidden in telemetry_group_surface:
+            errors.append(
+                "telemetry groupId must remain a single alphanumeric "
+                f"lowerCamel segment: {forbidden}"
+            )
+    for token in (
+        "enum class CompositionTelemetryError",
+        "None",
+        "IndexOutOfRange",
+        "SlotEmpty",
+        "KindMismatch",
+        "ContractViolation",
+        "CollectionFailure",
+        "struct CompositionTelemetryResult",
+        "std::vector<element::TelemetryEntry> entries",
+        "const element::TelemetryEntry* find(",
+        "const T* valueAs(",
+        "std::get_if<T>",
+    ):
+        if token not in composition_types:
+            errors.append(f"Runtime telemetry result DTO is missing {token}")
+    for token in (
+        "CompositionTelemetryResult Runtime::compositionElementTelemetry(",
+        "CompositionTelemetryError::IndexOutOfRange",
+        "CompositionTelemetryError::SlotEmpty",
+        "CompositionTelemetryError::KindMismatch",
+        "CompositionTelemetryError::ContractViolation",
+        "CompositionTelemetryError::CollectionFailure",
+        "layer.element_->collectTelemetry(buffer)",
+        "buffer.contractError()",
+        "buffer.takeEntries()",
+        "catch (const std::exception& error)",
+        "catch (...)",
+    ):
+        if token not in runtime_source:
+            errors.append(f"Runtime on-demand telemetry query is missing {token}")
+    for token in ("VideoGrabberLayer", "VideoClipLayer", "GeodesicLayer"):
+        if token in runtime_header or token in runtime_source:
+            errors.append(
+                "generic Runtime telemetry query depends on a concrete "
+                f"element: {token}"
+            )
+    for header, label in (
+        (video_grabber_header, "webcam"),
+        (video_clip_header, "video clip"),
+    ):
+        if not re.search(r"\bcollectTelemetry\s*\(", strip_cpp_comments(header)):
+            errors.append(f"{label} element is missing telemetry collection")
+    try:
+        webcam_telemetry_body = function_body(
+            strip_cpp_comments(video_grabber_source),
+            "void VideoGrabberLayer::collectTelemetry",
+        )
+        clip_telemetry_body = function_body(
+            strip_cpp_comments(video_clip_source),
+            "void VideoClipLayer::collectTelemetry",
+        )
+    except ValueError as exc:
+        errors.append(str(exc))
+        webcam_telemetry_body = ""
+        clip_telemetry_body = ""
+    concrete_telemetry_contracts = (
+        (
+            webcam_telemetry_body,
+            "media.sourceLabel",
+            '"media"',
+            "currentDeviceLabel()",
+            "webcam source label",
+        ),
+        (
+            webcam_telemetry_body,
+            "media.captureInitialized",
+            '"media"',
+            "isCaptureInitialized()",
+            "webcam capture readiness",
+        ),
+        (
+            clip_telemetry_body,
+            "media.sourceLabel",
+            '"media"',
+            "currentClipLabel()",
+            "video clip source label",
+        ),
+    )
+    for body, telemetry_id, group_literal, value_expression, label in (
+        concrete_telemetry_contracts
+    ):
+        if body.count(f'"{telemetry_id}"') != 1:
+            errors.append(
+                f"{label} must publish exact telemetry ID {telemetry_id} once"
+            )
+        if group_literal not in body:
+            errors.append(f"{label} must retain stable media groupId")
+        if value_expression not in body:
+            errors.append(
+                f"{label} must collect the cached typed value via "
+                f"{value_expression}"
+            )
+    for token in (
+        "prefix + \".subdivisions\"",
+        "&paramSubdivisions_",
+        "subdivisionsMeta.range.min = 1.0f",
+        "subdivisionsMeta.range.max = 4.0f",
+        "subdivisionsMeta.range.step = 1.0f",
+    ):
+        if token not in geodesic_source:
+            errors.append(
+                "Geodesic durable subdivision parameter contract is missing "
+                f"{token}"
+            )
+    if "float paramSubdivisions_ = 2.0f" not in geodesic_header:
+        errors.append(
+            "Geodesic subdivisions must retain a durable registered parameter"
+        )
     for token in (
         "GeodesicLayer",
         "GameOfLifeLayer",
@@ -608,7 +820,7 @@ def main() -> int:
         "CompositionSnapshot compositionSnapshot() const",
         "std::optional<CompositionLayerSnapshot> compositionLayerSnapshot(",
         "CompositionActionResult invokeCompositionAction(",
-        "const Layer* compositionElementForHost(",
+        "CompositionTelemetryResult compositionElementTelemetry(",
         "CompositionRenderTargets compositionRenderTargetsForHost(",
     ):
         if token not in runtime_header:
@@ -617,6 +829,17 @@ def main() -> int:
         errors.append(
             "the zero-caller mutable composition-element seam must remain retired"
         )
+    for surface_name, surface in (
+        ("Runtime header", runtime_header),
+        ("Runtime source", runtime_source),
+        ("host", app_header + app),
+        ("RuntimeCore test", runtime_test),
+    ):
+        if "compositionElementForHost" in surface:
+            errors.append(
+                "the read-only concrete composition-element seam must remain "
+                f"retired from {surface_name}"
+            )
     if re.search(
         r"\bprepareElementReplacement\s*\(",
         runtime_header + runtime_source + app + runtime_test,
@@ -697,6 +920,7 @@ def main() -> int:
         "runtime_.compositionSnapshot",
         "runtime_.compositionLayerSnapshot",
         "runtime_.invokeCompositionAction",
+        "runtime_.compositionElementTelemetry",
         "runtime_.compositionRenderTargetsForHost",
         "runtime_.resizeCompositionElements",
         "runtime_.updateCompositionElements",
@@ -706,11 +930,29 @@ def main() -> int:
     ):
         if token not in app:
             errors.append(f"ofApp must delegate generic composition behavior: {token}")
-    if "runtime_.compositionElementForHost" not in app:
-        errors.append(
-            "remaining read-only element inspection must use the named "
-            "composition-element seam"
-        )
+    for token in (
+        'telemetry.valueAs<std::string>(',
+        '"media.sourceLabel"',
+        "telemetry.valueAs<bool>(",
+        '"media.captureInitialized"',
+    ):
+        if token not in app:
+            errors.append(
+                "host media status must consume exact typed Runtime telemetry: "
+                f"{token}"
+            )
+    for token in (
+        "currentDeviceLabel()",
+        "isCaptureInitialized()",
+        "currentClipLabel()",
+        "dynamic_cast<const VideoGrabberLayer*>",
+        "dynamic_cast<const VideoClipLayer*>",
+    ):
+        if token in app:
+            errors.append(
+                "host media status still inspects a concrete element: "
+                f"{token}"
+            )
     for token in (
         "GridLayer* gridLayer",
         "GeodesicLayer* geodesicLayer",
@@ -898,20 +1140,24 @@ def main() -> int:
         for token in (
             "runtime_.compositionLayerSnapshot",
             'slot->typeId != "geodesic"',
-            "runtime_.compositionElementForHost",
-            "dynamic_cast<const GeodesicLayer*>",
-            "geodesic->subdivisions()",
+            'consoleFloatValue(*slot, "subdivisions")',
+            "std::round(*subdivisions)",
         ):
             if token not in geodesic_query_body:
                 errors.append(
-                    "read-only Geodesic subdivision query is missing "
+                    "durable Geodesic subdivision parameter query is missing "
                     f"semantic guard: {token}"
                 )
-        if "legacyCompositionElementForHost" in geodesic_query_body:
-            errors.append(
-                "read-only Geodesic subdivision query must not use mutable "
-                "legacy access"
-            )
+        for forbidden in (
+            "compositionElementForHost",
+            "dynamic_cast<",
+            "geodesic->subdivisions()",
+        ):
+            if forbidden in geodesic_query_body:
+                errors.append(
+                    "Geodesic subdivision query still inspects a concrete "
+                    f"element instead of durable parameter state: {forbidden}"
+                )
 
         for token in (
             "runtime_.compositionLayerSnapshot",
@@ -996,6 +1242,9 @@ def main() -> int:
             "dynamic_cast<PerlinNoiseLayer*>",
             "dynamic_cast<const PerlinNoiseLayer*>",
             "dynamic_cast<const GameOfLifeLayer*>",
+            "dynamic_cast<const GeodesicLayer*>",
+            "dynamic_cast<const VideoGrabberLayer*>",
+            "dynamic_cast<const VideoClipLayer*>",
         ):
             if token in app:
                 errors.append(
@@ -1108,6 +1357,10 @@ def main() -> int:
         "subdivision.decrement",
         "simulation.randomize",
     )
+    persisted_telemetry_ids = (
+        "media.sourceLabel",
+        "media.captureInitialized",
+    )
     for persisted_root in persisted_roots:
         for json_path in persisted_root.rglob("*.json"):
             text = json_path.read_text(encoding="utf-8", errors="replace")
@@ -1116,6 +1369,12 @@ def main() -> int:
                     errors.append(
                         "live-only action leaked into persisted JSON: "
                         f"{json_path.relative_to(ROOT)} ({action_id})"
+                    )
+            for telemetry_id in persisted_telemetry_ids:
+                if telemetry_id in text:
+                    errors.append(
+                        "live-only telemetry leaked into persisted JSON: "
+                        f"{json_path.relative_to(ROOT)} ({telemetry_id})"
                     )
     deferred_mapping_surface = midi_router + osc_parameter_router
     deferred_schema_paths = (
@@ -1137,11 +1396,15 @@ def main() -> int:
         "ActionDescriptor",
         "ActionHandler",
         ".actions.",
+        "compositionElementTelemetry",
+        "TelemetryEntry",
+        "media.sourceLabel",
+        "media.captureInitialized",
     ):
         if token in deferred_mapping_surface:
             errors.append(
                 "MIDI/OSC mapping router must not persist or invoke live "
-                f"actions in this checkpoint: {token}"
+                f"actions/telemetry in this checkpoint: {token}"
             )
     for token in (
         '"actions"',
@@ -1149,11 +1412,15 @@ def main() -> int:
         '"actionId"',
         '"targetKind"',
         ".actions.",
+        '"telemetry"',
+        '"telemetryId"',
+        "media.sourceLabel",
+        "media.captureInitialized",
     ):
         if token in deferred_schema_surface:
             errors.append(
                 "persisted package/scene/mapping schemas must not declare "
-                f"action targets in this checkpoint: {token}"
+                f"live action/telemetry surfaces in this checkpoint: {token}"
             )
 
     direct_metadata_write = re.compile(
@@ -1293,9 +1560,40 @@ def main() -> int:
         "retired action handlers did not precede matching element destruction",
         "clear retained action discovery, invocation, or handler lifetime",
         "shutdown retained a live action table or destroyed it out of order",
+        "RunCompositionTelemetryScenario",
+        "element with no telemetry did not return an empty success",
+        "ordinary composition snapshot collected volatile telemetry",
+        "adopted inactive element telemetry or typed value projection drifted",
+        "telemetry copy isolation or on-demand freshness drifted",
+        "same telemetry IDs leaked across composition slots",
+        "invalid telemetry was accepted or left Runtime unusable",
+        "prepared telemetry candidate became visible before adoption",
+        "telemetry replacement did not publish the adopted instance",
+        "clear retained live telemetry",
+        "shutdown retained live telemetry",
     ):
         if token not in runtime_test:
             errors.append(f"RuntimeCore test is missing control-plane coverage: {token}")
+
+    try:
+        telemetry_test_body = function_body(
+            runtime_test,
+            "void RunCompositionTelemetryScenario",
+        )
+    except ValueError as exc:
+        errors.append(str(exc))
+    else:
+        for token in (
+            "runtime.compositionElementTelemetry(",
+            "runtime.compositionSnapshot()",
+            "request.enabled = false",
+            "!inactiveTelemetrySnapshot->active",
+        ):
+            if token not in telemetry_test_body:
+                errors.append(
+                    "RuntimeCore telemetry scenario is missing on-demand/"
+                    f"inactive semantics: {token}"
+                )
 
     if errors:
         print("[runtime-core-boundary] FAIL")
@@ -1304,7 +1602,8 @@ def main() -> int:
         return 1
     print(
         "[runtime-core-boundary] PASS linked RuntimeCore lifecycle and "
-        "immutable composition query/control/replacement plus live action plane"
+        "immutable composition query/control/replacement plus live action and "
+        "on-demand typed telemetry planes"
     )
     return 0
 

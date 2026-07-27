@@ -14,9 +14,9 @@
     "synaptome/bin/data/layers/**/*.json"
   ],
   "counts": {
-    "parameters": 1394,
-    "layerTemplates": 755,
-    "consoleTemplates": 520,
+    "parameters": 1395,
+    "layerTemplates": 756,
+    "consoleTemplates": 521,
     "catalogAssetsWithoutLayerParameters": 12,
     "unresolvedAssets": 5
   },
@@ -14076,6 +14076,20 @@
       }
     },
     {
+      "id": "geometry.geodesic.subdivisions",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "geometry",
+      "units": "",
+      "assetId": "geometry.geodesic",
+      "layerType": "geodesic",
+      "template": "{registryPrefix}.subdivisions",
+      "source": {
+        "path": "synaptome/bin/data/layers/geometry/geodesic.json",
+        "line": 1
+      }
+    },
+    {
       "id": "geometry.geodesic.visible",
       "kind": "bool",
       "scope": "layer_asset",
@@ -25483,7 +25497,7 @@
       "suffix": "deform",
       "source": {
         "path": "synaptome/src/visuals/GeodesicLayer.cpp",
-        "line": 84
+        "line": 97
       },
       "sourceClass": "GeodesicLayer"
     },
@@ -25494,7 +25508,7 @@
       "suffix": "deformAmount",
       "source": {
         "path": "synaptome/src/visuals/GeodesicLayer.cpp",
-        "line": 92
+        "line": 105
       },
       "sourceClass": "GeodesicLayer"
     },
@@ -25505,7 +25519,7 @@
       "suffix": "deformScale",
       "source": {
         "path": "synaptome/src/visuals/GeodesicLayer.cpp",
-        "line": 100
+        "line": 113
       },
       "sourceClass": "GeodesicLayer"
     },
@@ -25516,7 +25530,7 @@
       "suffix": "deformSpeed",
       "source": {
         "path": "synaptome/src/visuals/GeodesicLayer.cpp",
-        "line": 108
+        "line": 121
       },
       "sourceClass": "GeodesicLayer"
     },
@@ -25527,7 +25541,7 @@
       "suffix": "faceOpacity",
       "source": {
         "path": "synaptome/src/visuals/GeodesicLayer.cpp",
-        "line": 124
+        "line": 137
       },
       "sourceClass": "GeodesicLayer"
     },
@@ -25549,7 +25563,7 @@
       "suffix": "lineOpacity",
       "source": {
         "path": "synaptome/src/visuals/GeodesicLayer.cpp",
-        "line": 116
+        "line": 129
       },
       "sourceClass": "GeodesicLayer"
     },
@@ -25627,6 +25641,17 @@
       "source": {
         "path": "synaptome/src/visuals/GeodesicLayer.cpp",
         "line": 26
+      },
+      "sourceClass": "GeodesicLayer"
+    },
+    {
+      "layerType": "geodesic",
+      "idPattern": "{registryPrefix}.subdivisions",
+      "kind": "float",
+      "suffix": "subdivisions",
+      "source": {
+        "path": "synaptome/src/visuals/GeodesicLayer.cpp",
+        "line": 87
       },
       "sourceClass": "GeodesicLayer"
     },
@@ -35211,6 +35236,18 @@
       "sourceLayerTypes": [
         "agentField",
         "flowField"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.subdivisions",
+      "kind": "float",
+      "suffix": "subdivisions",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "geodesic"
       ]
     },
     {

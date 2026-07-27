@@ -131,6 +131,26 @@ struct ControlHubEvent {
     uint64_t timestampMs = 0;
 };
 
+struct CapturingTelemetrySink final
+    : synaptome::element::TelemetrySink {
+    void add(
+        synaptome::element::TelemetryEntry entry) override {
+        entries.push_back(std::move(entry));
+    }
+
+    const synaptome::element::TelemetryEntry* find(
+        const std::string& id) const {
+        for (const auto& entry : entries) {
+            if (entry.id == id) {
+                return &entry;
+            }
+        }
+        return nullptr;
+    }
+
+    std::vector<synaptome::element::TelemetryEntry> entries;
+};
+
 struct FakeVideoGrabber : VideoGrabberLayer::Grabber {
     struct SetupEvent {
         int deviceId = -1;
@@ -1680,6 +1700,25 @@ bool RunWebcamReplayScenario(const std::filesystem::path& artifactPath) {
     if (grabber->setupEvents.empty() || !grabber->setupEvents.back().success) {
         throw std::runtime_error("Webcam layer did not attempt initial setup");
     }
+    {
+        CapturingTelemetrySink telemetry;
+        layer.collectTelemetry(telemetry);
+        const auto* labelEntry =
+            telemetry.find("media.sourceLabel");
+        const auto* initializedEntry =
+            telemetry.find("media.captureInitialized");
+        const auto* label = labelEntry
+            ? std::get_if<std::string>(&labelEntry->value)
+            : nullptr;
+        const auto* initialized = initializedEntry
+            ? std::get_if<bool>(&initializedEntry->value)
+            : nullptr;
+        if (!label || *label != "Integrated Webcam" ||
+            !initialized || !*initialized) {
+            throw std::runtime_error(
+                "Webcam telemetry did not expose the live source and capture state");
+        }
+    }
 
     auto lazyGrabber = std::make_shared<FakeVideoGrabber>();
     lazyGrabber->devices = {integrated, deckCam};
@@ -1744,11 +1783,49 @@ bool RunWebcamReplayScenario(const std::filesystem::path& artifactPath) {
     if (!failureLogged) {
         throw std::runtime_error("Webcam refresh failure was not detected");
     }
+    {
+        CapturingTelemetrySink telemetry;
+        layer.collectTelemetry(telemetry);
+        const auto* labelEntry =
+            telemetry.find("media.sourceLabel");
+        const auto* initializedEntry =
+            telemetry.find("media.captureInitialized");
+        const auto* label = labelEntry
+            ? std::get_if<std::string>(&labelEntry->value)
+            : nullptr;
+        const auto* initialized = initializedEntry
+            ? std::get_if<bool>(&initializedEntry->value)
+            : nullptr;
+        if (!label || *label != "(none)" ||
+            !initialized || *initialized) {
+            throw std::runtime_error(
+                "Webcam telemetry did not refresh after capture failure");
+        }
+    }
 
     grabber->setupShouldSucceed = true;
     layer.forceDeviceRefresh();
     if (!grabber->setupEvents.back().success) {
         throw std::runtime_error("Webcam did not recover after failure");
+    }
+    {
+        CapturingTelemetrySink telemetry;
+        layer.collectTelemetry(telemetry);
+        const auto* labelEntry =
+            telemetry.find("media.sourceLabel");
+        const auto* initializedEntry =
+            telemetry.find("media.captureInitialized");
+        const auto* label = labelEntry
+            ? std::get_if<std::string>(&labelEntry->value)
+            : nullptr;
+        const auto* initialized = initializedEntry
+            ? std::get_if<bool>(&initializedEntry->value)
+            : nullptr;
+        if (!label || *label != "Integrated Webcam" ||
+            !initialized || !*initialized) {
+            throw std::runtime_error(
+                "Webcam telemetry did not refresh after capture recovery");
+        }
     }
 
     grabber->queueFrame(true);

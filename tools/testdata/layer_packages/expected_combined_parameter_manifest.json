@@ -10,17 +10,18 @@
   ],
   "sources": [
     "synaptome/src/ofApp.cpp",
+    "synaptome/src/runtime/BuiltinElements.cpp",
     "synaptome/src/visuals/**/*.cpp",
     "synaptome/bin/data/layers/**/*.json",
     "docs/examples/layer_packages",
     "tools/layer_package_parameter_manifest.py"
   ],
   "counts": {
-    "parameters": 1365,
-    "layerTemplates": 749,
-    "consoleTemplates": 517,
+    "parameters": 1413,
+    "layerTemplates": 756,
+    "consoleTemplates": 521,
     "catalogAssetsWithoutLayerParameters": 12,
-    "unresolvedAssets": 0,
+    "unresolvedAssets": 5,
     "packageParameters": 18,
     "packageParameterConflicts": 0
   },
@@ -33,7 +34,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1577
+        "line": 1845
       }
     },
     {
@@ -44,7 +45,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1608
+        "line": 1876
       }
     },
     {
@@ -55,7 +56,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1614
+        "line": 1882
       }
     },
     {
@@ -66,7 +67,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1620
+        "line": 1888
       }
     },
     {
@@ -77,7 +78,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1632
+        "line": 1900
       }
     },
     {
@@ -88,7 +89,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1644
+        "line": 1912
       }
     },
     {
@@ -99,7 +100,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1638
+        "line": 1906
       }
     },
     {
@@ -110,7 +111,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1626
+        "line": 1894
       }
     },
     {
@@ -121,7 +122,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2100
+        "line": 2105
       }
     },
     {
@@ -132,7 +133,7 @@
       "units": "px",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2132
+        "line": 2137
       }
     },
     {
@@ -143,7 +144,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2089
+        "line": 2094
       }
     },
     {
@@ -154,7 +155,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2122
+        "line": 2127
       }
     },
     {
@@ -165,7 +166,7 @@
       "units": "normalized",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2075
+        "line": 2080
       }
     },
     {
@@ -176,7 +177,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2078
+        "line": 2083
       }
     },
     {
@@ -187,7 +188,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2143
+        "line": 2148
       }
     },
     {
@@ -198,7 +199,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2154
+        "line": 2159
       }
     },
     {
@@ -209,7 +210,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2111
+        "line": 2116
       }
     },
     {
@@ -220,7 +221,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2072
+        "line": 2077
       }
     },
     {
@@ -231,7 +232,7 @@
       "units": "px",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2192
+        "line": 2197
       }
     },
     {
@@ -242,7 +243,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2171
+        "line": 2176
       }
     },
     {
@@ -253,7 +254,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2187
+        "line": 2192
       }
     },
     {
@@ -264,7 +265,7 @@
       "units": "normalized",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2161
+        "line": 2166
       }
     },
     {
@@ -275,7 +276,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2164
+        "line": 2169
       }
     },
     {
@@ -286,7 +287,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2211
+        "line": 2216
       }
     },
     {
@@ -297,7 +298,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2182
+        "line": 2187
       }
     },
     {
@@ -308,7 +309,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2197
+        "line": 2202
       }
     },
     {
@@ -319,7 +320,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2202
+        "line": 2207
       }
     },
     {
@@ -330,7 +331,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2158
+        "line": 2163
       }
     },
     {
@@ -341,7 +342,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2241
+        "line": 2246
       }
     },
     {
@@ -352,7 +353,7 @@
       "units": "normalized",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2218
+        "line": 2223
       }
     },
     {
@@ -363,7 +364,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2221
+        "line": 2226
       }
     },
     {
@@ -374,7 +375,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2252
+        "line": 2257
       }
     },
     {
@@ -385,7 +386,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2308
+        "line": 2313
       }
     },
     {
@@ -396,7 +397,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2303
+        "line": 2308
       }
     },
     {
@@ -407,7 +408,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2257
+        "line": 2262
       }
     },
     {
@@ -418,7 +419,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2288
+        "line": 2293
       }
     },
     {
@@ -429,7 +430,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2215
+        "line": 2220
       }
     },
     {
@@ -440,7 +441,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2232
+        "line": 2237
       }
     },
     {
@@ -451,7 +452,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2262
+        "line": 2267
       }
     },
     {
@@ -462,7 +463,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2247
+        "line": 2252
       }
     },
     {
@@ -473,7 +474,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2276
+        "line": 2281
       }
     },
     {
@@ -484,7 +485,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2269
+        "line": 2274
       }
     },
     {
@@ -495,7 +496,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2283
+        "line": 2288
       }
     },
     {
@@ -506,7 +507,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2293
+        "line": 2298
       }
     },
     {
@@ -517,7 +518,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2298
+        "line": 2303
       }
     },
     {
@@ -528,7 +529,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2236
+        "line": 2241
       }
     },
     {
@@ -539,7 +540,7 @@
       "units": "px",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2057
+        "line": 2062
       }
     },
     {
@@ -550,7 +551,7 @@
       "units": "normalized",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2044
+        "line": 2049
       }
     },
     {
@@ -561,7 +562,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2047
+        "line": 2052
       }
     },
     {
@@ -572,7 +573,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2068
+        "line": 2073
       }
     },
     {
@@ -583,7 +584,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2041
+        "line": 2046
       }
     },
     {
@@ -594,7 +595,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2000
+        "line": 2005
       }
     },
     {
@@ -605,7 +606,7 @@
       "units": "normalized",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 1967
+        "line": 1972
       }
     },
     {
@@ -616,7 +617,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 1970
+        "line": 1975
       }
     },
     {
@@ -627,7 +628,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2037
+        "line": 2042
       }
     },
     {
@@ -638,7 +639,7 @@
       "units": "normalized",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2031
+        "line": 2036
       }
     },
     {
@@ -649,7 +650,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 1981
+        "line": 1986
       }
     },
     {
@@ -660,7 +661,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2009
+        "line": 2014
       }
     },
     {
@@ -671,7 +672,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2013
+        "line": 2018
       }
     },
     {
@@ -682,7 +683,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 1964
+        "line": 1969
       }
     },
     {
@@ -693,7 +694,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 1990
+        "line": 1995
       }
     },
     {
@@ -704,7 +705,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2022
+        "line": 2027
       }
     },
     {
@@ -715,7 +716,7 @@
       "units": "normalized",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2371
+        "line": 2376
       }
     },
     {
@@ -726,7 +727,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2363
+        "line": 2368
       }
     },
     {
@@ -737,7 +738,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2334
+        "line": 2339
       }
     },
     {
@@ -748,7 +749,7 @@
       "units": "normalized",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2315
+        "line": 2320
       }
     },
     {
@@ -759,7 +760,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2318
+        "line": 2323
       }
     },
     {
@@ -770,7 +771,7 @@
       "units": "beats",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2356
+        "line": 2361
       }
     },
     {
@@ -781,7 +782,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2386
+        "line": 2391
       }
     },
     {
@@ -792,7 +793,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2383
+        "line": 2388
       }
     },
     {
@@ -803,7 +804,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2380
+        "line": 2385
       }
     },
     {
@@ -814,7 +815,7 @@
       "units": "normalized",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2339
+        "line": 2344
       }
     },
     {
@@ -825,7 +826,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2312
+        "line": 2317
       }
     },
     {
@@ -836,7 +837,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2346
+        "line": 2351
       }
     },
     {
@@ -847,7 +848,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2398
+        "line": 2403
       }
     },
     {
@@ -858,7 +859,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2395
+        "line": 2400
       }
     },
     {
@@ -869,7 +870,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2392
+        "line": 2397
       }
     },
     {
@@ -880,7 +881,7 @@
       "units": "normalized",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2408
+        "line": 2413
       }
     },
     {
@@ -891,7 +892,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/visuals/effects/PostEffectChain.cpp",
-        "line": 2328
+        "line": 2333
       }
     },
     {
@@ -1332,7 +1333,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1576
+        "line": 1844
       }
     },
     {
@@ -1427,7 +1428,9 @@
       "source": {
         "path": "synaptome/bin/data/layers/generative/ant_tunnels.json",
         "line": 1
-      }
+      },
+      "default": 0.02,
+      "defaultKind": "float"
     },
     {
       "id": "generative.antTunnels.bgG",
@@ -1441,7 +1444,9 @@
       "source": {
         "path": "synaptome/bin/data/layers/generative/ant_tunnels.json",
         "line": 1
-      }
+      },
+      "default": 0.05,
+      "defaultKind": "float"
     },
     {
       "id": "generative.antTunnels.bgR",
@@ -1455,7 +1460,9 @@
       "source": {
         "path": "synaptome/bin/data/layers/generative/ant_tunnels.json",
         "line": 1
-      }
+      },
+      "default": 0.1,
+      "defaultKind": "float"
     },
     {
       "id": "generative.antTunnels.bpmMultiplier",
@@ -1581,7 +1588,9 @@
       "source": {
         "path": "synaptome/bin/data/layers/generative/ant_tunnels.json",
         "line": 1
-      }
+      },
+      "default": false,
+      "defaultKind": "bool"
     },
     {
       "id": "generative.antTunnels.resetCoverage",
@@ -1597,6 +1606,22 @@
         "line": 1
       },
       "default": 0.42,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.antTunnels.seed",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.antTunnels",
+      "layerType": "agentField",
+      "template": "{registryPrefix}.seed",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/ant_tunnels.json",
+        "line": 1
+      },
+      "default": 1101,
       "defaultKind": "float"
     },
     {
@@ -1771,7 +1796,9 @@
       "source": {
         "path": "synaptome/bin/data/layers/generative/ant_tunnels.json",
         "line": 1
-      }
+      },
+      "default": true,
+      "defaultKind": "bool"
     },
     {
       "id": "generative.arcticAuroraScene.alpha",
@@ -2812,6 +2839,614 @@
       },
       "default": 4200.0,
       "defaultKind": "float"
+    },
+    {
+      "id": "generative.circuitLenia.alpha",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "normalized",
+      "assetId": "generative.circuitLenia",
+      "layerType": "lenia",
+      "template": "{registryPrefix}.alpha",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/circuit_lenia.json",
+        "line": 1
+      },
+      "default": 1.0,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.circuitLenia.autoReseed",
+      "kind": "bool",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.circuitLenia",
+      "layerType": "lenia",
+      "template": "{registryPrefix}.autoReseed",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/circuit_lenia.json",
+        "line": 1
+      },
+      "default": false,
+      "defaultKind": "bool"
+    },
+    {
+      "id": "generative.circuitLenia.autoReseedEveryBeats",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "beats",
+      "assetId": "generative.circuitLenia",
+      "layerType": "lenia",
+      "template": "{registryPrefix}.autoReseedEveryBeats",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/circuit_lenia.json",
+        "line": 1
+      },
+      "default": 48.0,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.circuitLenia.backgroundAlpha",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "normalized",
+      "assetId": "generative.circuitLenia",
+      "layerType": "lenia",
+      "template": "{registryPrefix}.backgroundAlpha",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/circuit_lenia.json",
+        "line": 1
+      },
+      "default": 0.0,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.circuitLenia.bgB",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.circuitLenia",
+      "layerType": "lenia",
+      "template": "{registryPrefix}.bgB",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/circuit_lenia.json",
+        "line": 1
+      },
+      "default": 0.006,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.circuitLenia.bgG",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.circuitLenia",
+      "layerType": "lenia",
+      "template": "{registryPrefix}.bgG",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/circuit_lenia.json",
+        "line": 1
+      },
+      "default": 0.008,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.circuitLenia.bgR",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.circuitLenia",
+      "layerType": "lenia",
+      "template": "{registryPrefix}.bgR",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/circuit_lenia.json",
+        "line": 1
+      },
+      "default": 0.004,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.circuitLenia.bpmMultiplier",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.circuitLenia",
+      "layerType": "lenia",
+      "template": "{registryPrefix}.bpmMultiplier",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/circuit_lenia.json",
+        "line": 1
+      },
+      "default": 4.0,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.circuitLenia.bpmSync",
+      "kind": "bool",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.circuitLenia",
+      "layerType": "lenia",
+      "template": "{registryPrefix}.bpmSync",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/circuit_lenia.json",
+        "line": 1
+      },
+      "default": true,
+      "defaultKind": "bool"
+    },
+    {
+      "id": "generative.circuitLenia.circuitLevels",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.circuitLenia",
+      "layerType": "lenia",
+      "template": "{registryPrefix}.circuitLevels",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/circuit_lenia.json",
+        "line": 1
+      },
+      "default": 4,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.circuitLenia.circuitThreshold",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.circuitLenia",
+      "layerType": "lenia",
+      "template": "{registryPrefix}.circuitThreshold",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/circuit_lenia.json",
+        "line": 1
+      },
+      "default": 0.12,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.circuitLenia.circuitTraceWidth",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.circuitLenia",
+      "layerType": "lenia",
+      "template": "{registryPrefix}.circuitTraceWidth",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/circuit_lenia.json",
+        "line": 1
+      },
+      "default": 1,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.circuitLenia.decayRate",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.circuitLenia",
+      "layerType": "lenia",
+      "template": "{registryPrefix}.decayRate",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/circuit_lenia.json",
+        "line": 1
+      },
+      "default": 0.006,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.circuitLenia.edgeB",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.circuitLenia",
+      "layerType": "lenia",
+      "template": "{registryPrefix}.edgeB",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/circuit_lenia.json",
+        "line": 1
+      },
+      "default": 0.22,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.circuitLenia.edgeG",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.circuitLenia",
+      "layerType": "lenia",
+      "template": "{registryPrefix}.edgeG",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/circuit_lenia.json",
+        "line": 1
+      },
+      "default": 1.0,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.circuitLenia.edgeGlow",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.circuitLenia",
+      "layerType": "lenia",
+      "template": "{registryPrefix}.edgeGlow",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/circuit_lenia.json",
+        "line": 1
+      },
+      "default": 1.0,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.circuitLenia.edgeOpacity",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "normalized",
+      "assetId": "generative.circuitLenia",
+      "layerType": "lenia",
+      "template": "{registryPrefix}.edgeOpacity",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/circuit_lenia.json",
+        "line": 1
+      },
+      "default": 1.0,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.circuitLenia.edgeR",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.circuitLenia",
+      "layerType": "lenia",
+      "template": "{registryPrefix}.edgeR",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/circuit_lenia.json",
+        "line": 1
+      },
+      "default": 0.74,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.circuitLenia.fieldAlpha",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "normalized",
+      "assetId": "generative.circuitLenia",
+      "layerType": "lenia",
+      "template": "{registryPrefix}.fieldAlpha",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/circuit_lenia.json",
+        "line": 1
+      },
+      "default": 0.45,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.circuitLenia.fieldB",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.circuitLenia",
+      "layerType": "lenia",
+      "template": "{registryPrefix}.fieldB",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/circuit_lenia.json",
+        "line": 1
+      },
+      "default": 0.1,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.circuitLenia.fieldG",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.circuitLenia",
+      "layerType": "lenia",
+      "template": "{registryPrefix}.fieldG",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/circuit_lenia.json",
+        "line": 1
+      },
+      "default": 0.18,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.circuitLenia.fieldR",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.circuitLenia",
+      "layerType": "lenia",
+      "template": "{registryPrefix}.fieldR",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/circuit_lenia.json",
+        "line": 1
+      },
+      "default": 0.08,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.circuitLenia.fieldScale",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.circuitLenia",
+      "layerType": "lenia",
+      "template": "{registryPrefix}.fieldScale",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/circuit_lenia.json",
+        "line": 1
+      },
+      "default": 1.8,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.circuitLenia.growthAmplitude",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.circuitLenia",
+      "layerType": "lenia",
+      "template": "{registryPrefix}.growthAmplitude",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/circuit_lenia.json",
+        "line": 1
+      },
+      "default": 0.105,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.circuitLenia.growthCenter",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.circuitLenia",
+      "layerType": "lenia",
+      "template": "{registryPrefix}.growthCenter",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/circuit_lenia.json",
+        "line": 1
+      },
+      "default": 0.34,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.circuitLenia.growthWidth",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.circuitLenia",
+      "layerType": "lenia",
+      "template": "{registryPrefix}.growthWidth",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/circuit_lenia.json",
+        "line": 1
+      },
+      "default": 0.065,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.circuitLenia.injectionAmount",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.circuitLenia",
+      "layerType": "lenia",
+      "template": "{registryPrefix}.injectionAmount",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/circuit_lenia.json",
+        "line": 1
+      },
+      "default": 0.78,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.circuitLenia.injectionRadius",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.circuitLenia",
+      "layerType": "lenia",
+      "template": "{registryPrefix}.injectionRadius",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/circuit_lenia.json",
+        "line": 1
+      },
+      "default": 8.0,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.circuitLenia.injectionRate",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.circuitLenia",
+      "layerType": "lenia",
+      "template": "{registryPrefix}.injectionRate",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/circuit_lenia.json",
+        "line": 1
+      },
+      "default": 0.018,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.circuitLenia.kernelRadius",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.circuitLenia",
+      "layerType": "lenia",
+      "template": "{registryPrefix}.kernelRadius",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/circuit_lenia.json",
+        "line": 1
+      },
+      "default": 8.0,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.circuitLenia.mutationAmount",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.circuitLenia",
+      "layerType": "lenia",
+      "template": "{registryPrefix}.mutationAmount",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/circuit_lenia.json",
+        "line": 1
+      },
+      "default": 0.002,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.circuitLenia.opacity",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "normalized",
+      "assetId": "generative.circuitLenia",
+      "layerType": "lenia",
+      "template": "{registryPrefix}.opacity",
+      "default": 1.0,
+      "defaultKind": "float",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/circuit_lenia.json",
+        "line": 1
+      }
+    },
+    {
+      "id": "generative.circuitLenia.paused",
+      "kind": "bool",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.circuitLenia",
+      "layerType": "lenia",
+      "template": "{registryPrefix}.paused",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/circuit_lenia.json",
+        "line": 1
+      },
+      "default": false,
+      "defaultKind": "bool"
+    },
+    {
+      "id": "generative.circuitLenia.reseed",
+      "kind": "bool",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.circuitLenia",
+      "layerType": "lenia",
+      "template": "{registryPrefix}.reseed",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/circuit_lenia.json",
+        "line": 1
+      },
+      "default": false,
+      "defaultKind": "bool"
+    },
+    {
+      "id": "generative.circuitLenia.seed",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.circuitLenia",
+      "layerType": "lenia",
+      "template": "{registryPrefix}.seed",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/circuit_lenia.json",
+        "line": 1
+      },
+      "default": 2112.0,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.circuitLenia.seedDensity",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.circuitLenia",
+      "layerType": "lenia",
+      "template": "{registryPrefix}.seedDensity",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/circuit_lenia.json",
+        "line": 1
+      },
+      "default": 0.22,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.circuitLenia.speed",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.circuitLenia",
+      "layerType": "lenia",
+      "template": "{registryPrefix}.speed",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/circuit_lenia.json",
+        "line": 1
+      },
+      "default": 18.0,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.circuitLenia.visible",
+      "kind": "bool",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.circuitLenia",
+      "layerType": "lenia",
+      "template": "{registryPrefix}.visible",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/circuit_lenia.json",
+        "line": 1
+      },
+      "default": true,
+      "defaultKind": "bool"
     },
     {
       "id": "generative.cosmosFormation.alpha",
@@ -4089,7 +4724,9 @@
       "source": {
         "path": "synaptome/bin/data/layers/generative/excitable_media.json",
         "line": 1
-      }
+      },
+      "default": 0.026,
+      "defaultKind": "float"
     },
     {
       "id": "generative.excitableMedia.bgG",
@@ -4103,7 +4740,9 @@
       "source": {
         "path": "synaptome/bin/data/layers/generative/excitable_media.json",
         "line": 1
-      }
+      },
+      "default": 0.012,
+      "defaultKind": "float"
     },
     {
       "id": "generative.excitableMedia.bgR",
@@ -4117,7 +4756,9 @@
       "source": {
         "path": "synaptome/bin/data/layers/generative/excitable_media.json",
         "line": 1
-      }
+      },
+      "default": 0.006,
+      "defaultKind": "float"
     },
     {
       "id": "generative.excitableMedia.bpmMultiplier",
@@ -4211,7 +4852,9 @@
       "source": {
         "path": "synaptome/bin/data/layers/generative/excitable_media.json",
         "line": 1
-      }
+      },
+      "default": 1.0,
+      "defaultKind": "float"
     },
     {
       "id": "generative.excitableMedia.exciteG",
@@ -4225,7 +4868,9 @@
       "source": {
         "path": "synaptome/bin/data/layers/generative/excitable_media.json",
         "line": 1
-      }
+      },
+      "default": 0.78,
+      "defaultKind": "float"
     },
     {
       "id": "generative.excitableMedia.exciteR",
@@ -4239,7 +4884,9 @@
       "source": {
         "path": "synaptome/bin/data/layers/generative/excitable_media.json",
         "line": 1
-      }
+      },
+      "default": 0.18,
+      "defaultKind": "float"
     },
     {
       "id": "generative.excitableMedia.fieldDiffusion",
@@ -4365,7 +5012,9 @@
       "source": {
         "path": "synaptome/bin/data/layers/generative/excitable_media.json",
         "line": 1
-      }
+      },
+      "default": 0.46,
+      "defaultKind": "float"
     },
     {
       "id": "generative.excitableMedia.refractoryG",
@@ -4379,7 +5028,9 @@
       "source": {
         "path": "synaptome/bin/data/layers/generative/excitable_media.json",
         "line": 1
-      }
+      },
+      "default": 0.16,
+      "defaultKind": "float"
     },
     {
       "id": "generative.excitableMedia.refractoryR",
@@ -4393,7 +5044,9 @@
       "source": {
         "path": "synaptome/bin/data/layers/generative/excitable_media.json",
         "line": 1
-      }
+      },
+      "default": 0.22,
+      "defaultKind": "float"
     },
     {
       "id": "generative.excitableMedia.refractoryTime",
@@ -4423,7 +5076,9 @@
       "source": {
         "path": "synaptome/bin/data/layers/generative/excitable_media.json",
         "line": 1
-      }
+      },
+      "default": false,
+      "defaultKind": "bool"
     },
     {
       "id": "generative.excitableMedia.seed",
@@ -4517,7 +5172,9 @@
       "source": {
         "path": "synaptome/bin/data/layers/generative/excitable_media.json",
         "line": 1
-      }
+      },
+      "default": true,
+      "defaultKind": "bool"
     },
     {
       "id": "generative.excitableMedia.waveB",
@@ -4531,7 +5188,9 @@
       "source": {
         "path": "synaptome/bin/data/layers/generative/excitable_media.json",
         "line": 1
-      }
+      },
+      "default": 0.62,
+      "defaultKind": "float"
     },
     {
       "id": "generative.excitableMedia.waveG",
@@ -4545,7 +5204,9 @@
       "source": {
         "path": "synaptome/bin/data/layers/generative/excitable_media.json",
         "line": 1
-      }
+      },
+      "default": 0.94,
+      "defaultKind": "float"
     },
     {
       "id": "generative.excitableMedia.waveR",
@@ -4559,7 +5220,9 @@
       "source": {
         "path": "synaptome/bin/data/layers/generative/excitable_media.json",
         "line": 1
-      }
+      },
+      "default": 1.0,
+      "defaultKind": "float"
     },
     {
       "id": "generative.excitableMedia.wavefrontOpacity",
@@ -5561,7 +6224,9 @@
       "source": {
         "path": "synaptome/bin/data/layers/generative/game_of_life.json",
         "line": 1
-      }
+      },
+      "default": 0.4,
+      "defaultKind": "float"
     },
     {
       "id": "generative.gameOfLife.fadeFrames",
@@ -5639,7 +6304,9 @@
       "source": {
         "path": "synaptome/bin/data/layers/generative/game_of_life.json",
         "line": 1
-      }
+      },
+      "default": false,
+      "defaultKind": "bool"
     },
     {
       "id": "generative.gameOfLife.reseedQuantizeBeats",
@@ -5655,6 +6322,22 @@
         "line": 1
       },
       "default": 4.0,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.gameOfLife.seed",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.gameOfLife",
+      "layerType": "gameOfLife",
+      "template": "{registryPrefix}.seed",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/game_of_life.json",
+        "line": 1
+      },
+      "default": 1618.0,
       "defaultKind": "float"
     },
     {
@@ -5685,7 +6368,9 @@
       "source": {
         "path": "synaptome/bin/data/layers/generative/game_of_life.json",
         "line": 1
-      }
+      },
+      "default": true,
+      "defaultKind": "bool"
     },
     {
       "id": "generative.gameOfLife.wrap",
@@ -5840,6 +6525,48 @@
       },
       "default": true,
       "defaultKind": "bool"
+    },
+    {
+      "id": "generative.lenia.circuitLevels",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.lenia",
+      "layerType": "lenia",
+      "template": "{registryPrefix}.circuitLevels",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/lenia.json",
+        "line": 1
+      }
+    },
+    {
+      "id": "generative.lenia.circuitThreshold",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.lenia",
+      "layerType": "lenia",
+      "template": "{registryPrefix}.circuitThreshold",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/lenia.json",
+        "line": 1
+      }
+    },
+    {
+      "id": "generative.lenia.circuitTraceWidth",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.lenia",
+      "layerType": "lenia",
+      "template": "{registryPrefix}.circuitTraceWidth",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/lenia.json",
+        "line": 1
+      }
     },
     {
       "id": "generative.lenia.decayRate",
@@ -8285,7 +9012,25 @@
       "source": {
         "path": "synaptome/bin/data/layers/generative/murmuration.json",
         "line": 1
-      }
+      },
+      "default": false,
+      "defaultKind": "bool"
+    },
+    {
+      "id": "generative.murmuration.seed",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.murmuration",
+      "layerType": "flocking",
+      "template": "{registryPrefix}.seed",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/murmuration.json",
+        "line": 1
+      },
+      "default": 9191,
+      "defaultKind": "float"
     },
     {
       "id": "generative.murmuration.separation",
@@ -8427,7 +9172,9 @@
       "source": {
         "path": "synaptome/bin/data/layers/generative/murmuration.json",
         "line": 1
-      }
+      },
+      "default": true,
+      "defaultKind": "bool"
     },
     {
       "id": "generative.oscilloscope.alpha",
@@ -9589,7 +10336,9 @@
       "source": {
         "path": "synaptome/bin/data/layers/generative/physarum.json",
         "line": 1
-      }
+      },
+      "default": 0.02,
+      "defaultKind": "float"
     },
     {
       "id": "generative.physarum.bgG",
@@ -9603,7 +10352,9 @@
       "source": {
         "path": "synaptome/bin/data/layers/generative/physarum.json",
         "line": 1
-      }
+      },
+      "default": 0.03,
+      "defaultKind": "float"
     },
     {
       "id": "generative.physarum.bgR",
@@ -9617,7 +10368,9 @@
       "source": {
         "path": "synaptome/bin/data/layers/generative/physarum.json",
         "line": 1
-      }
+      },
+      "default": 0.01,
+      "defaultKind": "float"
     },
     {
       "id": "generative.physarum.bpmMultiplier",
@@ -9743,7 +10496,9 @@
       "source": {
         "path": "synaptome/bin/data/layers/generative/physarum.json",
         "line": 1
-      }
+      },
+      "default": false,
+      "defaultKind": "bool"
     },
     {
       "id": "generative.physarum.resetCoverage",
@@ -9759,6 +10514,22 @@
         "line": 1
       },
       "default": 0.62,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.physarum.seed",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.physarum",
+      "layerType": "agentField",
+      "template": "{registryPrefix}.seed",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/physarum.json",
+        "line": 1
+      },
+      "default": 3303,
       "defaultKind": "float"
     },
     {
@@ -9933,7 +10704,9 @@
       "source": {
         "path": "synaptome/bin/data/layers/generative/physarum.json",
         "line": 1
-      }
+      },
+      "default": true,
+      "defaultKind": "bool"
     },
     {
       "id": "generative.reactionDiffusion.alpha",
@@ -11685,7 +12458,25 @@
       "source": {
         "path": "synaptome/bin/data/layers/generative/schooling.json",
         "line": 1
-      }
+      },
+      "default": false,
+      "defaultKind": "bool"
+    },
+    {
+      "id": "generative.schooling.seed",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.schooling",
+      "layerType": "flocking",
+      "template": "{registryPrefix}.seed",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/schooling.json",
+        "line": 1
+      },
+      "default": 8181,
+      "defaultKind": "float"
     },
     {
       "id": "generative.schooling.separation",
@@ -11827,7 +12618,9 @@
       "source": {
         "path": "synaptome/bin/data/layers/generative/schooling.json",
         "line": 1
-      }
+      },
+      "default": true,
+      "defaultKind": "bool"
     },
     {
       "id": "generative.slimeMold.agentCount",
@@ -11921,7 +12714,9 @@
       "source": {
         "path": "synaptome/bin/data/layers/generative/slime_mold.json",
         "line": 1
-      }
+      },
+      "default": 0.01,
+      "defaultKind": "float"
     },
     {
       "id": "generative.slimeMold.bgG",
@@ -11935,7 +12730,9 @@
       "source": {
         "path": "synaptome/bin/data/layers/generative/slime_mold.json",
         "line": 1
-      }
+      },
+      "default": 0.04,
+      "defaultKind": "float"
     },
     {
       "id": "generative.slimeMold.bgR",
@@ -11949,7 +12746,9 @@
       "source": {
         "path": "synaptome/bin/data/layers/generative/slime_mold.json",
         "line": 1
-      }
+      },
+      "default": 0.01,
+      "defaultKind": "float"
     },
     {
       "id": "generative.slimeMold.bpmMultiplier",
@@ -12075,7 +12874,9 @@
       "source": {
         "path": "synaptome/bin/data/layers/generative/slime_mold.json",
         "line": 1
-      }
+      },
+      "default": false,
+      "defaultKind": "bool"
     },
     {
       "id": "generative.slimeMold.resetCoverage",
@@ -12091,6 +12892,22 @@
         "line": 1
       },
       "default": 0.58,
+      "defaultKind": "float"
+    },
+    {
+      "id": "generative.slimeMold.seed",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "generative",
+      "units": "",
+      "assetId": "generative.slimeMold",
+      "layerType": "agentField",
+      "template": "{registryPrefix}.seed",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/slime_mold.json",
+        "line": 1
+      },
+      "default": 2202,
       "defaultKind": "float"
     },
     {
@@ -12265,7 +13082,9 @@
       "source": {
         "path": "synaptome/bin/data/layers/generative/slime_mold.json",
         "line": 1
-      }
+      },
+      "default": true,
+      "defaultKind": "bool"
     },
     {
       "id": "generative.solarSystem.alpha",
@@ -13686,6 +14505,20 @@
       "assetId": "geometry.geodesic",
       "layerType": "geodesic",
       "template": "{registryPrefix}.spin",
+      "source": {
+        "path": "synaptome/bin/data/layers/geometry/geodesic.json",
+        "line": 1
+      }
+    },
+    {
+      "id": "geometry.geodesic.subdivisions",
+      "kind": "float",
+      "scope": "layer_asset",
+      "family": "geometry",
+      "units": "",
+      "assetId": "geometry.geodesic",
+      "layerType": "geodesic",
+      "template": "{registryPrefix}.subdivisions",
       "source": {
         "path": "synaptome/bin/data/layers/geometry/geodesic.json",
         "line": 1
@@ -20417,7 +21250,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1575
+        "line": 1843
       }
     },
     {
@@ -20428,7 +21261,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1852
+        "line": 2110
       }
     },
     {
@@ -20439,7 +21272,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1850
+        "line": 2108
       }
     },
     {
@@ -20450,7 +21283,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1854
+        "line": 2112
       }
     },
     {
@@ -20461,7 +21294,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1853
+        "line": 2111
       }
     },
     {
@@ -20472,7 +21305,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1851
+        "line": 2109
       }
     },
     {
@@ -20679,7 +21512,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1672
+        "line": 1940
       }
     },
     {
@@ -20690,7 +21523,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1678
+        "line": 1946
       }
     },
     {
@@ -20701,7 +21534,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1733
+        "line": 2001
       }
     },
     {
@@ -20712,7 +21545,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1727
+        "line": 1995
       }
     },
     {
@@ -20723,7 +21556,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1721
+        "line": 1989
       }
     },
     {
@@ -20734,7 +21567,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1654
+        "line": 1922
       }
     },
     {
@@ -20745,7 +21578,7 @@
       "units": "px",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1711
+        "line": 1979
       }
     },
     {
@@ -20756,7 +21589,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1684
+        "line": 1952
       }
     },
     {
@@ -20767,7 +21600,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1691
+        "line": 1959
       }
     },
     {
@@ -20778,7 +21611,7 @@
       "units": "px",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1701
+        "line": 1969
       }
     },
     {
@@ -20789,7 +21622,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1660
+        "line": 1928
       }
     },
     {
@@ -20800,7 +21633,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1666
+        "line": 1934
       }
     },
     {
@@ -21083,7 +21916,7 @@
       "units": "Hz",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1751
+        "line": 2019
       }
     },
     {
@@ -21094,7 +21927,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1749
+        "line": 2017
       }
     },
     {
@@ -21105,7 +21938,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1747
+        "line": 2015
       }
     },
     {
@@ -21116,7 +21949,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1750
+        "line": 2018
       }
     },
     {
@@ -21127,7 +21960,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1752
+        "line": 2020
       }
     },
     {
@@ -21138,7 +21971,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1748
+        "line": 2016
       }
     },
     {
@@ -21149,7 +21982,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1753
+        "line": 2021
       }
     },
     {
@@ -21160,7 +21993,7 @@
       "units": "bpm",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1574
+        "line": 1842
       }
     },
     {
@@ -21171,7 +22004,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1580
+        "line": 1848
       }
     },
     {
@@ -21182,7 +22015,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1586
+        "line": 1854
       }
     },
     {
@@ -21193,7 +22026,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1579
+        "line": 1847
       }
     },
     {
@@ -21204,7 +22037,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1592
+        "line": 1860
       }
     },
     {
@@ -21215,7 +22048,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1598
+        "line": 1866
       }
     }
   ],
@@ -21227,7 +22060,7 @@
       "suffix": "agentCount",
       "source": {
         "path": "synaptome/src/visuals/AgentFieldLayer.cpp",
-        "line": 156
+        "line": 171
       },
       "sourceClass": "AgentFieldLayer"
     },
@@ -21238,7 +22071,7 @@
       "suffix": "alpha",
       "source": {
         "path": "synaptome/src/visuals/AgentFieldLayer.cpp",
-        "line": 125
+        "line": 126
       },
       "sourceClass": "AgentFieldLayer"
     },
@@ -21249,7 +22082,7 @@
       "suffix": "autoReseed",
       "source": {
         "path": "synaptome/src/visuals/AgentFieldLayer.cpp",
-        "line": 130
+        "line": 141
       },
       "sourceClass": "AgentFieldLayer"
     },
@@ -21260,7 +22093,7 @@
       "suffix": "autoReseedEveryBeats",
       "source": {
         "path": "synaptome/src/visuals/AgentFieldLayer.cpp",
-        "line": 136
+        "line": 147
       },
       "sourceClass": "AgentFieldLayer"
     },
@@ -21271,7 +22104,7 @@
       "suffix": "backgroundAlpha",
       "source": {
         "path": "synaptome/src/visuals/AgentFieldLayer.cpp",
-        "line": 217
+        "line": 232
       },
       "sourceClass": "AgentFieldLayer"
     },
@@ -21282,7 +22115,7 @@
       "suffix": "bgB",
       "source": {
         "path": "synaptome/src/visuals/AgentFieldLayer.cpp",
-        "line": 235
+        "line": 250
       },
       "sourceClass": "AgentFieldLayer"
     },
@@ -21293,7 +22126,7 @@
       "suffix": "bgG",
       "source": {
         "path": "synaptome/src/visuals/AgentFieldLayer.cpp",
-        "line": 233
+        "line": 248
       },
       "sourceClass": "AgentFieldLayer"
     },
@@ -21304,7 +22137,7 @@
       "suffix": "bgR",
       "source": {
         "path": "synaptome/src/visuals/AgentFieldLayer.cpp",
-        "line": 231
+        "line": 246
       },
       "sourceClass": "AgentFieldLayer"
     },
@@ -21315,7 +22148,7 @@
       "suffix": "bpmMultiplier",
       "source": {
         "path": "synaptome/src/visuals/AgentFieldLayer.cpp",
-        "line": 117
+        "line": 124
       },
       "sourceClass": "AgentFieldLayer"
     },
@@ -21326,7 +22159,7 @@
       "suffix": "bpmSync",
       "source": {
         "path": "synaptome/src/visuals/AgentFieldLayer.cpp",
-        "line": 111
+        "line": 118
       },
       "sourceClass": "AgentFieldLayer"
     },
@@ -21337,7 +22170,7 @@
       "suffix": "decay",
       "source": {
         "path": "synaptome/src/visuals/AgentFieldLayer.cpp",
-        "line": 192
+        "line": 207
       },
       "sourceClass": "AgentFieldLayer"
     },
@@ -21348,7 +22181,7 @@
       "suffix": "deposit",
       "source": {
         "path": "synaptome/src/visuals/AgentFieldLayer.cpp",
-        "line": 186
+        "line": 201
       },
       "sourceClass": "AgentFieldLayer"
     },
@@ -21359,7 +22192,7 @@
       "suffix": "diffuse",
       "source": {
         "path": "synaptome/src/visuals/AgentFieldLayer.cpp",
-        "line": 198
+        "line": 213
       },
       "sourceClass": "AgentFieldLayer"
     },
@@ -21370,7 +22203,7 @@
       "suffix": "mode",
       "source": {
         "path": "synaptome/src/visuals/AgentFieldLayer.cpp",
-        "line": 150
+        "line": 163
       },
       "sourceClass": "AgentFieldLayer"
     },
@@ -21381,7 +22214,7 @@
       "suffix": "reseed",
       "source": {
         "path": "synaptome/src/visuals/AgentFieldLayer.cpp",
-        "line": 141
+        "line": 149
       },
       "sourceClass": "AgentFieldLayer"
     },
@@ -21392,7 +22225,18 @@
       "suffix": "resetCoverage",
       "source": {
         "path": "synaptome/src/visuals/AgentFieldLayer.cpp",
-        "line": 211
+        "line": 226
+      },
+      "sourceClass": "AgentFieldLayer"
+    },
+    {
+      "layerType": "agentField",
+      "idPattern": "{registryPrefix}.seed",
+      "kind": "float",
+      "suffix": "seed",
+      "source": {
+        "path": "synaptome/src/visuals/AgentFieldLayer.cpp",
+        "line": 131
       },
       "sourceClass": "AgentFieldLayer"
     },
@@ -21403,7 +22247,7 @@
       "suffix": "sensorAngle",
       "source": {
         "path": "synaptome/src/visuals/AgentFieldLayer.cpp",
-        "line": 174
+        "line": 189
       },
       "sourceClass": "AgentFieldLayer"
     },
@@ -21414,7 +22258,7 @@
       "suffix": "sensorDistance",
       "source": {
         "path": "synaptome/src/visuals/AgentFieldLayer.cpp",
-        "line": 180
+        "line": 195
       },
       "sourceClass": "AgentFieldLayer"
     },
@@ -21425,7 +22269,7 @@
       "suffix": "speed",
       "source": {
         "path": "synaptome/src/visuals/AgentFieldLayer.cpp",
-        "line": 106
+        "line": 110
       },
       "sourceClass": "AgentFieldLayer"
     },
@@ -21436,7 +22280,7 @@
       "suffix": "stepSize",
       "source": {
         "path": "synaptome/src/visuals/AgentFieldLayer.cpp",
-        "line": 162
+        "line": 177
       },
       "sourceClass": "AgentFieldLayer"
     },
@@ -21447,7 +22291,7 @@
       "suffix": "trailAlpha",
       "source": {
         "path": "synaptome/src/visuals/AgentFieldLayer.cpp",
-        "line": 223
+        "line": 238
       },
       "sourceClass": "AgentFieldLayer"
     },
@@ -21458,7 +22302,7 @@
       "suffix": "trailB",
       "source": {
         "path": "synaptome/src/visuals/AgentFieldLayer.cpp",
-        "line": 241
+        "line": 256
       },
       "sourceClass": "AgentFieldLayer"
     },
@@ -21469,7 +22313,7 @@
       "suffix": "trailBoost",
       "source": {
         "path": "synaptome/src/visuals/AgentFieldLayer.cpp",
-        "line": 204
+        "line": 219
       },
       "sourceClass": "AgentFieldLayer"
     },
@@ -21480,7 +22324,7 @@
       "suffix": "trailG",
       "source": {
         "path": "synaptome/src/visuals/AgentFieldLayer.cpp",
-        "line": 239
+        "line": 254
       },
       "sourceClass": "AgentFieldLayer"
     },
@@ -21491,7 +22335,7 @@
       "suffix": "trailR",
       "source": {
         "path": "synaptome/src/visuals/AgentFieldLayer.cpp",
-        "line": 237
+        "line": 252
       },
       "sourceClass": "AgentFieldLayer"
     },
@@ -21502,7 +22346,7 @@
       "suffix": "turnRate",
       "source": {
         "path": "synaptome/src/visuals/AgentFieldLayer.cpp",
-        "line": 168
+        "line": 183
       },
       "sourceClass": "AgentFieldLayer"
     },
@@ -21513,7 +22357,7 @@
       "suffix": "visible",
       "source": {
         "path": "synaptome/src/visuals/AgentFieldLayer.cpp",
-        "line": 100
+        "line": 108
       },
       "sourceClass": "AgentFieldLayer"
     },
@@ -23218,7 +24062,7 @@
       "suffix": "alpha",
       "source": {
         "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
-        "line": 103
+        "line": 97
       },
       "sourceClass": "SignalBloomLayer"
     },
@@ -23229,7 +24073,7 @@
       "suffix": "bgColorB",
       "source": {
         "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
-        "line": 138
+        "line": 135
       },
       "sourceClass": "SignalBloomLayer"
     },
@@ -23240,7 +24084,7 @@
       "suffix": "bgColorG",
       "source": {
         "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
-        "line": 136
+        "line": 133
       },
       "sourceClass": "SignalBloomLayer"
     },
@@ -23251,7 +24095,7 @@
       "suffix": "bgColorR",
       "source": {
         "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
-        "line": 134
+        "line": 131
       },
       "sourceClass": "SignalBloomLayer"
     },
@@ -23284,7 +24128,7 @@
       "suffix": "colorB",
       "source": {
         "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
-        "line": 131
+        "line": 128
       },
       "sourceClass": "SignalBloomLayer"
     },
@@ -23295,7 +24139,7 @@
       "suffix": "colorG",
       "source": {
         "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
-        "line": 129
+        "line": 126
       },
       "sourceClass": "SignalBloomLayer"
     },
@@ -23306,7 +24150,7 @@
       "suffix": "colorR",
       "source": {
         "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
-        "line": 127
+        "line": 124
       },
       "sourceClass": "SignalBloomLayer"
     },
@@ -23317,7 +24161,7 @@
       "suffix": "gain",
       "source": {
         "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
-        "line": 111
+        "line": 108
       },
       "sourceClass": "SignalBloomLayer"
     },
@@ -23328,7 +24172,7 @@
       "suffix": "lineOpacity",
       "source": {
         "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
-        "line": 119
+        "line": 116
       },
       "sourceClass": "SignalBloomLayer"
     },
@@ -23361,7 +24205,7 @@
       "suffix": "speed",
       "source": {
         "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
-        "line": 65
+        "line": 62
       },
       "sourceClass": "SignalBloomLayer"
     },
@@ -23372,7 +24216,7 @@
       "suffix": "speedInput",
       "source": {
         "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
-        "line": 150
+        "line": 147
       },
       "sourceClass": "SignalBloomLayer"
     },
@@ -23383,7 +24227,7 @@
       "suffix": "visible",
       "source": {
         "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
-        "line": 57
+        "line": 59
       },
       "sourceClass": "SignalBloomLayer"
     },
@@ -23394,7 +24238,7 @@
       "suffix": "xInput",
       "source": {
         "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
-        "line": 146
+        "line": 143
       },
       "sourceClass": "SignalBloomLayer"
     },
@@ -23405,7 +24249,7 @@
       "suffix": "yInput",
       "source": {
         "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
-        "line": 148
+        "line": 145
       },
       "sourceClass": "SignalBloomLayer"
     },
@@ -23416,7 +24260,7 @@
       "suffix": "alpha",
       "source": {
         "path": "synaptome/src/visuals/ExcitableMediaLayer.cpp",
-        "line": 87
+        "line": 93
       },
       "sourceClass": "ExcitableMediaLayer"
     },
@@ -23427,7 +24271,7 @@
       "suffix": "autoReseed",
       "source": {
         "path": "synaptome/src/visuals/ExcitableMediaLayer.cpp",
-        "line": 100
+        "line": 111
       },
       "sourceClass": "ExcitableMediaLayer"
     },
@@ -23438,7 +24282,7 @@
       "suffix": "autoReseedEveryBeats",
       "source": {
         "path": "synaptome/src/visuals/ExcitableMediaLayer.cpp",
-        "line": 102
+        "line": 113
       },
       "sourceClass": "ExcitableMediaLayer"
     },
@@ -23449,7 +24293,7 @@
       "suffix": "backgroundAlpha",
       "source": {
         "path": "synaptome/src/visuals/ExcitableMediaLayer.cpp",
-        "line": 115
+        "line": 133
       },
       "sourceClass": "ExcitableMediaLayer"
     },
@@ -23460,7 +24304,7 @@
       "suffix": "bgB",
       "source": {
         "path": "synaptome/src/visuals/ExcitableMediaLayer.cpp",
-        "line": 121
+        "line": 139
       },
       "sourceClass": "ExcitableMediaLayer"
     },
@@ -23471,7 +24315,7 @@
       "suffix": "bgG",
       "source": {
         "path": "synaptome/src/visuals/ExcitableMediaLayer.cpp",
-        "line": 120
+        "line": 138
       },
       "sourceClass": "ExcitableMediaLayer"
     },
@@ -23482,7 +24326,7 @@
       "suffix": "bgR",
       "source": {
         "path": "synaptome/src/visuals/ExcitableMediaLayer.cpp",
-        "line": 119
+        "line": 137
       },
       "sourceClass": "ExcitableMediaLayer"
     },
@@ -23493,7 +24337,7 @@
       "suffix": "bpmMultiplier",
       "source": {
         "path": "synaptome/src/visuals/ExcitableMediaLayer.cpp",
-        "line": 86
+        "line": 92
       },
       "sourceClass": "ExcitableMediaLayer"
     },
@@ -23504,7 +24348,7 @@
       "suffix": "bpmSync",
       "source": {
         "path": "synaptome/src/visuals/ExcitableMediaLayer.cpp",
-        "line": 84
+        "line": 90
       },
       "sourceClass": "ExcitableMediaLayer"
     },
@@ -23515,7 +24359,7 @@
       "suffix": "decayRate",
       "source": {
         "path": "synaptome/src/visuals/ExcitableMediaLayer.cpp",
-        "line": 112
+        "line": 130
       },
       "sourceClass": "ExcitableMediaLayer"
     },
@@ -23526,7 +24370,7 @@
       "suffix": "excitationAlpha",
       "source": {
         "path": "synaptome/src/visuals/ExcitableMediaLayer.cpp",
-        "line": 116
+        "line": 134
       },
       "sourceClass": "ExcitableMediaLayer"
     },
@@ -23537,7 +24381,7 @@
       "suffix": "excitationThreshold",
       "source": {
         "path": "synaptome/src/visuals/ExcitableMediaLayer.cpp",
-        "line": 106
+        "line": 124
       },
       "sourceClass": "ExcitableMediaLayer"
     },
@@ -23548,7 +24392,7 @@
       "suffix": "exciteB",
       "source": {
         "path": "synaptome/src/visuals/ExcitableMediaLayer.cpp",
-        "line": 124
+        "line": 142
       },
       "sourceClass": "ExcitableMediaLayer"
     },
@@ -23559,7 +24403,7 @@
       "suffix": "exciteG",
       "source": {
         "path": "synaptome/src/visuals/ExcitableMediaLayer.cpp",
-        "line": 123
+        "line": 141
       },
       "sourceClass": "ExcitableMediaLayer"
     },
@@ -23570,7 +24414,7 @@
       "suffix": "exciteR",
       "source": {
         "path": "synaptome/src/visuals/ExcitableMediaLayer.cpp",
-        "line": 122
+        "line": 140
       },
       "sourceClass": "ExcitableMediaLayer"
     },
@@ -23581,7 +24425,7 @@
       "suffix": "fieldDiffusion",
       "source": {
         "path": "synaptome/src/visuals/ExcitableMediaLayer.cpp",
-        "line": 111
+        "line": 129
       },
       "sourceClass": "ExcitableMediaLayer"
     },
@@ -23592,7 +24436,7 @@
       "suffix": "fieldScale",
       "source": {
         "path": "synaptome/src/visuals/ExcitableMediaLayer.cpp",
-        "line": 114
+        "line": 132
       },
       "sourceClass": "ExcitableMediaLayer"
     },
@@ -23603,7 +24447,7 @@
       "suffix": "injectionRadius",
       "source": {
         "path": "synaptome/src/visuals/ExcitableMediaLayer.cpp",
-        "line": 113
+        "line": 131
       },
       "sourceClass": "ExcitableMediaLayer"
     },
@@ -23614,7 +24458,7 @@
       "suffix": "paused",
       "source": {
         "path": "synaptome/src/visuals/ExcitableMediaLayer.cpp",
-        "line": 92
+        "line": 101
       },
       "sourceClass": "ExcitableMediaLayer"
     },
@@ -23625,7 +24469,7 @@
       "suffix": "propagationRate",
       "source": {
         "path": "synaptome/src/visuals/ExcitableMediaLayer.cpp",
-        "line": 105
+        "line": 119
       },
       "sourceClass": "ExcitableMediaLayer"
     },
@@ -23636,7 +24480,7 @@
       "suffix": "refractoryAlpha",
       "source": {
         "path": "synaptome/src/visuals/ExcitableMediaLayer.cpp",
-        "line": 117
+        "line": 135
       },
       "sourceClass": "ExcitableMediaLayer"
     },
@@ -23647,7 +24491,7 @@
       "suffix": "refractoryB",
       "source": {
         "path": "synaptome/src/visuals/ExcitableMediaLayer.cpp",
-        "line": 127
+        "line": 145
       },
       "sourceClass": "ExcitableMediaLayer"
     },
@@ -23658,7 +24502,7 @@
       "suffix": "refractoryG",
       "source": {
         "path": "synaptome/src/visuals/ExcitableMediaLayer.cpp",
-        "line": 126
+        "line": 144
       },
       "sourceClass": "ExcitableMediaLayer"
     },
@@ -23669,7 +24513,7 @@
       "suffix": "refractoryR",
       "source": {
         "path": "synaptome/src/visuals/ExcitableMediaLayer.cpp",
-        "line": 125
+        "line": 143
       },
       "sourceClass": "ExcitableMediaLayer"
     },
@@ -23680,7 +24524,7 @@
       "suffix": "refractoryTime",
       "source": {
         "path": "synaptome/src/visuals/ExcitableMediaLayer.cpp",
-        "line": 107
+        "line": 125
       },
       "sourceClass": "ExcitableMediaLayer"
     },
@@ -23691,7 +24535,7 @@
       "suffix": "reseed",
       "source": {
         "path": "synaptome/src/visuals/ExcitableMediaLayer.cpp",
-        "line": 96
+        "line": 103
       },
       "sourceClass": "ExcitableMediaLayer"
     },
@@ -23702,7 +24546,7 @@
       "suffix": "seed",
       "source": {
         "path": "synaptome/src/visuals/ExcitableMediaLayer.cpp",
-        "line": 103
+        "line": 114
       },
       "sourceClass": "ExcitableMediaLayer"
     },
@@ -23713,7 +24557,7 @@
       "suffix": "seedDensity",
       "source": {
         "path": "synaptome/src/visuals/ExcitableMediaLayer.cpp",
-        "line": 104
+        "line": 118
       },
       "sourceClass": "ExcitableMediaLayer"
     },
@@ -23724,7 +24568,7 @@
       "suffix": "seedRate",
       "source": {
         "path": "synaptome/src/visuals/ExcitableMediaLayer.cpp",
-        "line": 108
+        "line": 126
       },
       "sourceClass": "ExcitableMediaLayer"
     },
@@ -23735,7 +24579,7 @@
       "suffix": "sparkleAmount",
       "source": {
         "path": "synaptome/src/visuals/ExcitableMediaLayer.cpp",
-        "line": 110
+        "line": 128
       },
       "sourceClass": "ExcitableMediaLayer"
     },
@@ -23746,7 +24590,7 @@
       "suffix": "speed",
       "source": {
         "path": "synaptome/src/visuals/ExcitableMediaLayer.cpp",
-        "line": 78
+        "line": 80
       },
       "sourceClass": "ExcitableMediaLayer"
     },
@@ -23757,7 +24601,7 @@
       "suffix": "visible",
       "source": {
         "path": "synaptome/src/visuals/ExcitableMediaLayer.cpp",
-        "line": 76
+        "line": 77
       },
       "sourceClass": "ExcitableMediaLayer"
     },
@@ -23768,7 +24612,7 @@
       "suffix": "waveB",
       "source": {
         "path": "synaptome/src/visuals/ExcitableMediaLayer.cpp",
-        "line": 130
+        "line": 148
       },
       "sourceClass": "ExcitableMediaLayer"
     },
@@ -23779,7 +24623,7 @@
       "suffix": "waveG",
       "source": {
         "path": "synaptome/src/visuals/ExcitableMediaLayer.cpp",
-        "line": 129
+        "line": 147
       },
       "sourceClass": "ExcitableMediaLayer"
     },
@@ -23790,7 +24634,7 @@
       "suffix": "waveR",
       "source": {
         "path": "synaptome/src/visuals/ExcitableMediaLayer.cpp",
-        "line": 128
+        "line": 146
       },
       "sourceClass": "ExcitableMediaLayer"
     },
@@ -23801,7 +24645,7 @@
       "suffix": "wavefrontOpacity",
       "source": {
         "path": "synaptome/src/visuals/ExcitableMediaLayer.cpp",
-        "line": 118
+        "line": 136
       },
       "sourceClass": "ExcitableMediaLayer"
     },
@@ -23812,7 +24656,7 @@
       "suffix": "wavefrontWidth",
       "source": {
         "path": "synaptome/src/visuals/ExcitableMediaLayer.cpp",
-        "line": 109
+        "line": 127
       },
       "sourceClass": "ExcitableMediaLayer"
     },
@@ -23823,7 +24667,7 @@
       "suffix": "alignment",
       "source": {
         "path": "synaptome/src/visuals/FlockingLayer.cpp",
-        "line": 230
+        "line": 239
       },
       "sourceClass": "FlockingLayer"
     },
@@ -23834,7 +24678,7 @@
       "suffix": "alpha",
       "source": {
         "path": "synaptome/src/visuals/FlockingLayer.cpp",
-        "line": 135
+        "line": 130
       },
       "sourceClass": "FlockingLayer"
     },
@@ -23845,7 +24689,7 @@
       "suffix": "backgroundAlpha",
       "source": {
         "path": "synaptome/src/visuals/FlockingLayer.cpp",
-        "line": 284
+        "line": 293
       },
       "sourceClass": "FlockingLayer"
     },
@@ -23856,7 +24700,7 @@
       "suffix": "bgB",
       "source": {
         "path": "synaptome/src/visuals/FlockingLayer.cpp",
-        "line": 305
+        "line": 314
       },
       "sourceClass": "FlockingLayer"
     },
@@ -23867,7 +24711,7 @@
       "suffix": "bgG",
       "source": {
         "path": "synaptome/src/visuals/FlockingLayer.cpp",
-        "line": 303
+        "line": 312
       },
       "sourceClass": "FlockingLayer"
     },
@@ -23878,7 +24722,7 @@
       "suffix": "bgR",
       "source": {
         "path": "synaptome/src/visuals/FlockingLayer.cpp",
-        "line": 301
+        "line": 310
       },
       "sourceClass": "FlockingLayer"
     },
@@ -23889,7 +24733,7 @@
       "suffix": "boidCount",
       "source": {
         "path": "synaptome/src/visuals/FlockingLayer.cpp",
-        "line": 155
+        "line": 164
       },
       "sourceClass": "FlockingLayer"
     },
@@ -23900,7 +24744,7 @@
       "suffix": "bpmMultiplier",
       "source": {
         "path": "synaptome/src/visuals/FlockingLayer.cpp",
-        "line": 127
+        "line": 128
       },
       "sourceClass": "FlockingLayer"
     },
@@ -23911,7 +24755,7 @@
       "suffix": "bpmSync",
       "source": {
         "path": "synaptome/src/visuals/FlockingLayer.cpp",
-        "line": 121
+        "line": 122
       },
       "sourceClass": "FlockingLayer"
     },
@@ -23922,7 +24766,7 @@
       "suffix": "chase",
       "source": {
         "path": "synaptome/src/visuals/FlockingLayer.cpp",
-        "line": 248
+        "line": 257
       },
       "sourceClass": "FlockingLayer"
     },
@@ -23933,7 +24777,7 @@
       "suffix": "cohesion",
       "source": {
         "path": "synaptome/src/visuals/FlockingLayer.cpp",
-        "line": 224
+        "line": 233
       },
       "sourceClass": "FlockingLayer"
     },
@@ -23944,7 +24788,7 @@
       "suffix": "evade",
       "source": {
         "path": "synaptome/src/visuals/FlockingLayer.cpp",
-        "line": 254
+        "line": 263
       },
       "sourceClass": "FlockingLayer"
     },
@@ -23955,7 +24799,7 @@
       "suffix": "fearDecay",
       "source": {
         "path": "synaptome/src/visuals/FlockingLayer.cpp",
-        "line": 190
+        "line": 199
       },
       "sourceClass": "FlockingLayer"
     },
@@ -23966,7 +24810,7 @@
       "suffix": "fearForce",
       "source": {
         "path": "synaptome/src/visuals/FlockingLayer.cpp",
-        "line": 203
+        "line": 212
       },
       "sourceClass": "FlockingLayer"
     },
@@ -23977,7 +24821,7 @@
       "suffix": "fearPropagation",
       "source": {
         "path": "synaptome/src/visuals/FlockingLayer.cpp",
-        "line": 184
+        "line": 193
       },
       "sourceClass": "FlockingLayer"
     },
@@ -23988,7 +24832,7 @@
       "suffix": "fearRadius",
       "source": {
         "path": "synaptome/src/visuals/FlockingLayer.cpp",
-        "line": 197
+        "line": 206
       },
       "sourceClass": "FlockingLayer"
     },
@@ -23999,7 +24843,7 @@
       "suffix": "fearTrailAlpha",
       "source": {
         "path": "synaptome/src/visuals/FlockingLayer.cpp",
-        "line": 209
+        "line": 218
       },
       "sourceClass": "FlockingLayer"
     },
@@ -24010,7 +24854,7 @@
       "suffix": "fearWaveEnabled",
       "source": {
         "path": "synaptome/src/visuals/FlockingLayer.cpp",
-        "line": 178
+        "line": 187
       },
       "sourceClass": "FlockingLayer"
     },
@@ -24021,7 +24865,7 @@
       "suffix": "mode",
       "source": {
         "path": "synaptome/src/visuals/FlockingLayer.cpp",
-        "line": 149
+        "line": 156
       },
       "sourceClass": "FlockingLayer"
     },
@@ -24032,7 +24876,7 @@
       "suffix": "neighborCount",
       "source": {
         "path": "synaptome/src/visuals/FlockingLayer.cpp",
-        "line": 218
+        "line": 227
       },
       "sourceClass": "FlockingLayer"
     },
@@ -24043,7 +24887,7 @@
       "suffix": "noise",
       "source": {
         "path": "synaptome/src/visuals/FlockingLayer.cpp",
-        "line": 260
+        "line": 269
       },
       "sourceClass": "FlockingLayer"
     },
@@ -24054,7 +24898,7 @@
       "suffix": "pointSize",
       "source": {
         "path": "synaptome/src/visuals/FlockingLayer.cpp",
-        "line": 278
+        "line": 287
       },
       "sourceClass": "FlockingLayer"
     },
@@ -24065,7 +24909,7 @@
       "suffix": "predAlpha",
       "source": {
         "path": "synaptome/src/visuals/FlockingLayer.cpp",
-        "line": 293
+        "line": 302
       },
       "sourceClass": "FlockingLayer"
     },
@@ -24076,7 +24920,7 @@
       "suffix": "predatorB",
       "source": {
         "path": "synaptome/src/visuals/FlockingLayer.cpp",
-        "line": 323
+        "line": 332
       },
       "sourceClass": "FlockingLayer"
     },
@@ -24087,7 +24931,7 @@
       "suffix": "predatorCount",
       "source": {
         "path": "synaptome/src/visuals/FlockingLayer.cpp",
-        "line": 166
+        "line": 175
       },
       "sourceClass": "FlockingLayer"
     },
@@ -24098,7 +24942,7 @@
       "suffix": "predatorEnabled",
       "source": {
         "path": "synaptome/src/visuals/FlockingLayer.cpp",
-        "line": 160
+        "line": 169
       },
       "sourceClass": "FlockingLayer"
     },
@@ -24109,7 +24953,7 @@
       "suffix": "predatorG",
       "source": {
         "path": "synaptome/src/visuals/FlockingLayer.cpp",
-        "line": 321
+        "line": 330
       },
       "sourceClass": "FlockingLayer"
     },
@@ -24120,7 +24964,7 @@
       "suffix": "predatorPressure",
       "source": {
         "path": "synaptome/src/visuals/FlockingLayer.cpp",
-        "line": 172
+        "line": 181
       },
       "sourceClass": "FlockingLayer"
     },
@@ -24131,7 +24975,7 @@
       "suffix": "predatorR",
       "source": {
         "path": "synaptome/src/visuals/FlockingLayer.cpp",
-        "line": 319
+        "line": 328
       },
       "sourceClass": "FlockingLayer"
     },
@@ -24142,7 +24986,7 @@
       "suffix": "predatorSeparation",
       "source": {
         "path": "synaptome/src/visuals/FlockingLayer.cpp",
-        "line": 242
+        "line": 251
       },
       "sourceClass": "FlockingLayer"
     },
@@ -24153,7 +24997,7 @@
       "suffix": "preyAlpha",
       "source": {
         "path": "synaptome/src/visuals/FlockingLayer.cpp",
-        "line": 290
+        "line": 299
       },
       "sourceClass": "FlockingLayer"
     },
@@ -24164,7 +25008,7 @@
       "suffix": "preyB",
       "source": {
         "path": "synaptome/src/visuals/FlockingLayer.cpp",
-        "line": 317
+        "line": 326
       },
       "sourceClass": "FlockingLayer"
     },
@@ -24175,7 +25019,7 @@
       "suffix": "preyG",
       "source": {
         "path": "synaptome/src/visuals/FlockingLayer.cpp",
-        "line": 315
+        "line": 324
       },
       "sourceClass": "FlockingLayer"
     },
@@ -24186,7 +25030,7 @@
       "suffix": "preyR",
       "source": {
         "path": "synaptome/src/visuals/FlockingLayer.cpp",
-        "line": 313
+        "line": 322
       },
       "sourceClass": "FlockingLayer"
     },
@@ -24197,7 +25041,18 @@
       "suffix": "reseed",
       "source": {
         "path": "synaptome/src/visuals/FlockingLayer.cpp",
-        "line": 140
+        "line": 142
+      },
+      "sourceClass": "FlockingLayer"
+    },
+    {
+      "layerType": "flocking",
+      "idPattern": "{registryPrefix}.seed",
+      "kind": "float",
+      "suffix": "seed",
+      "source": {
+        "path": "synaptome/src/visuals/FlockingLayer.cpp",
+        "line": 135
       },
       "sourceClass": "FlockingLayer"
     },
@@ -24208,7 +25063,7 @@
       "suffix": "separation",
       "source": {
         "path": "synaptome/src/visuals/FlockingLayer.cpp",
-        "line": 236
+        "line": 245
       },
       "sourceClass": "FlockingLayer"
     },
@@ -24219,7 +25074,7 @@
       "suffix": "speed",
       "source": {
         "path": "synaptome/src/visuals/FlockingLayer.cpp",
-        "line": 116
+        "line": 114
       },
       "sourceClass": "FlockingLayer"
     },
@@ -24230,7 +25085,7 @@
       "suffix": "trailAlpha",
       "source": {
         "path": "synaptome/src/visuals/FlockingLayer.cpp",
-        "line": 287
+        "line": 296
       },
       "sourceClass": "FlockingLayer"
     },
@@ -24241,7 +25096,7 @@
       "suffix": "trailB",
       "source": {
         "path": "synaptome/src/visuals/FlockingLayer.cpp",
-        "line": 311
+        "line": 320
       },
       "sourceClass": "FlockingLayer"
     },
@@ -24252,7 +25107,7 @@
       "suffix": "trailDeposit",
       "source": {
         "path": "synaptome/src/visuals/FlockingLayer.cpp",
-        "line": 272
+        "line": 281
       },
       "sourceClass": "FlockingLayer"
     },
@@ -24263,7 +25118,7 @@
       "suffix": "trailFade",
       "source": {
         "path": "synaptome/src/visuals/FlockingLayer.cpp",
-        "line": 266
+        "line": 275
       },
       "sourceClass": "FlockingLayer"
     },
@@ -24274,7 +25129,7 @@
       "suffix": "trailG",
       "source": {
         "path": "synaptome/src/visuals/FlockingLayer.cpp",
-        "line": 309
+        "line": 318
       },
       "sourceClass": "FlockingLayer"
     },
@@ -24285,7 +25140,7 @@
       "suffix": "trailR",
       "source": {
         "path": "synaptome/src/visuals/FlockingLayer.cpp",
-        "line": 307
+        "line": 316
       },
       "sourceClass": "FlockingLayer"
     },
@@ -24296,7 +25151,7 @@
       "suffix": "visible",
       "source": {
         "path": "synaptome/src/visuals/FlockingLayer.cpp",
-        "line": 110
+        "line": 112
       },
       "sourceClass": "FlockingLayer"
     },
@@ -24813,7 +25668,7 @@
       "suffix": "aliveAlpha",
       "source": {
         "path": "synaptome/src/visuals/GameOfLifeLayer.cpp",
-        "line": 165
+        "line": 176
       },
       "sourceClass": "GameOfLifeLayer"
     },
@@ -24824,7 +25679,7 @@
       "suffix": "aliveB",
       "source": {
         "path": "synaptome/src/visuals/GameOfLifeLayer.cpp",
-        "line": 147
+        "line": 162
       },
       "sourceClass": "GameOfLifeLayer"
     },
@@ -24835,7 +25690,7 @@
       "suffix": "aliveG",
       "source": {
         "path": "synaptome/src/visuals/GameOfLifeLayer.cpp",
-        "line": 145
+        "line": 160
       },
       "sourceClass": "GameOfLifeLayer"
     },
@@ -24846,7 +25701,7 @@
       "suffix": "aliveR",
       "source": {
         "path": "synaptome/src/visuals/GameOfLifeLayer.cpp",
-        "line": 143
+        "line": 158
       },
       "sourceClass": "GameOfLifeLayer"
     },
@@ -24857,7 +25712,7 @@
       "suffix": "alpha",
       "source": {
         "path": "synaptome/src/visuals/GameOfLifeLayer.cpp",
-        "line": 161
+        "line": 172
       },
       "sourceClass": "GameOfLifeLayer"
     },
@@ -24868,7 +25723,7 @@
       "suffix": "autoReseed",
       "source": {
         "path": "synaptome/src/visuals/GameOfLifeLayer.cpp",
-        "line": 184
+        "line": 195
       },
       "sourceClass": "GameOfLifeLayer"
     },
@@ -24879,7 +25734,7 @@
       "suffix": "autoReseedEveryBeats",
       "source": {
         "path": "synaptome/src/visuals/GameOfLifeLayer.cpp",
-        "line": 193
+        "line": 204
       },
       "sourceClass": "GameOfLifeLayer"
     },
@@ -24890,7 +25745,7 @@
       "suffix": "bpmMultiplier",
       "source": {
         "path": "synaptome/src/visuals/GameOfLifeLayer.cpp",
-        "line": 92
+        "line": 98
       },
       "sourceClass": "GameOfLifeLayer"
     },
@@ -24901,7 +25756,7 @@
       "suffix": "bpmSync",
       "source": {
         "path": "synaptome/src/visuals/GameOfLifeLayer.cpp",
-        "line": 83
+        "line": 89
       },
       "sourceClass": "GameOfLifeLayer"
     },
@@ -24912,7 +25767,7 @@
       "suffix": "deadAlpha",
       "source": {
         "path": "synaptome/src/visuals/GameOfLifeLayer.cpp",
-        "line": 169
+        "line": 180
       },
       "sourceClass": "GameOfLifeLayer"
     },
@@ -24923,7 +25778,7 @@
       "suffix": "deadB",
       "source": {
         "path": "synaptome/src/visuals/GameOfLifeLayer.cpp",
-        "line": 153
+        "line": 168
       },
       "sourceClass": "GameOfLifeLayer"
     },
@@ -24934,7 +25789,7 @@
       "suffix": "deadG",
       "source": {
         "path": "synaptome/src/visuals/GameOfLifeLayer.cpp",
-        "line": 151
+        "line": 166
       },
       "sourceClass": "GameOfLifeLayer"
     },
@@ -24945,7 +25800,7 @@
       "suffix": "deadR",
       "source": {
         "path": "synaptome/src/visuals/GameOfLifeLayer.cpp",
-        "line": 149
+        "line": 164
       },
       "sourceClass": "GameOfLifeLayer"
     },
@@ -24956,7 +25811,7 @@
       "suffix": "density",
       "source": {
         "path": "synaptome/src/visuals/GameOfLifeLayer.cpp",
-        "line": 111
+        "line": 124
       },
       "sourceClass": "GameOfLifeLayer"
     },
@@ -24967,7 +25822,7 @@
       "suffix": "fadeFrames",
       "source": {
         "path": "synaptome/src/visuals/GameOfLifeLayer.cpp",
-        "line": 120
+        "line": 133
       },
       "sourceClass": "GameOfLifeLayer"
     },
@@ -24978,7 +25833,7 @@
       "suffix": "paused",
       "source": {
         "path": "synaptome/src/visuals/GameOfLifeLayer.cpp",
-        "line": 97
+        "line": 103
       },
       "sourceClass": "GameOfLifeLayer"
     },
@@ -24989,7 +25844,7 @@
       "suffix": "preset",
       "source": {
         "path": "synaptome/src/visuals/GameOfLifeLayer.cpp",
-        "line": 134
+        "line": 149
       },
       "sourceClass": "GameOfLifeLayer"
     },
@@ -25000,7 +25855,7 @@
       "suffix": "reseed",
       "source": {
         "path": "synaptome/src/visuals/GameOfLifeLayer.cpp",
-        "line": 103
+        "line": 105
       },
       "sourceClass": "GameOfLifeLayer"
     },
@@ -25011,7 +25866,18 @@
       "suffix": "reseedQuantizeBeats",
       "source": {
         "path": "synaptome/src/visuals/GameOfLifeLayer.cpp",
-        "line": 178
+        "line": 189
+      },
+      "sourceClass": "GameOfLifeLayer"
+    },
+    {
+      "layerType": "gameOfLife",
+      "idPattern": "{registryPrefix}.seed",
+      "kind": "float",
+      "suffix": "seed",
+      "source": {
+        "path": "synaptome/src/visuals/GameOfLifeLayer.cpp",
+        "line": 111
       },
       "sourceClass": "GameOfLifeLayer"
     },
@@ -25022,7 +25888,7 @@
       "suffix": "speed",
       "source": {
         "path": "synaptome/src/visuals/GameOfLifeLayer.cpp",
-        "line": 77
+        "line": 80
       },
       "sourceClass": "GameOfLifeLayer"
     },
@@ -25033,7 +25899,7 @@
       "suffix": "visible",
       "source": {
         "path": "synaptome/src/visuals/GameOfLifeLayer.cpp",
-        "line": 69
+        "line": 77
       },
       "sourceClass": "GameOfLifeLayer"
     },
@@ -25044,7 +25910,7 @@
       "suffix": "wrap",
       "source": {
         "path": "synaptome/src/visuals/GameOfLifeLayer.cpp",
-        "line": 125
+        "line": 138
       },
       "sourceClass": "GameOfLifeLayer"
     },
@@ -25066,7 +25932,7 @@
       "suffix": "deform",
       "source": {
         "path": "synaptome/src/visuals/GeodesicLayer.cpp",
-        "line": 84
+        "line": 97
       },
       "sourceClass": "GeodesicLayer"
     },
@@ -25077,7 +25943,7 @@
       "suffix": "deformAmount",
       "source": {
         "path": "synaptome/src/visuals/GeodesicLayer.cpp",
-        "line": 92
+        "line": 105
       },
       "sourceClass": "GeodesicLayer"
     },
@@ -25088,7 +25954,7 @@
       "suffix": "deformScale",
       "source": {
         "path": "synaptome/src/visuals/GeodesicLayer.cpp",
-        "line": 100
+        "line": 113
       },
       "sourceClass": "GeodesicLayer"
     },
@@ -25099,7 +25965,7 @@
       "suffix": "deformSpeed",
       "source": {
         "path": "synaptome/src/visuals/GeodesicLayer.cpp",
-        "line": 108
+        "line": 121
       },
       "sourceClass": "GeodesicLayer"
     },
@@ -25110,7 +25976,7 @@
       "suffix": "faceOpacity",
       "source": {
         "path": "synaptome/src/visuals/GeodesicLayer.cpp",
-        "line": 124
+        "line": 137
       },
       "sourceClass": "GeodesicLayer"
     },
@@ -25132,7 +25998,7 @@
       "suffix": "lineOpacity",
       "source": {
         "path": "synaptome/src/visuals/GeodesicLayer.cpp",
-        "line": 116
+        "line": 129
       },
       "sourceClass": "GeodesicLayer"
     },
@@ -25210,6 +26076,17 @@
       "source": {
         "path": "synaptome/src/visuals/GeodesicLayer.cpp",
         "line": 26
+      },
+      "sourceClass": "GeodesicLayer"
+    },
+    {
+      "layerType": "geodesic",
+      "idPattern": "{registryPrefix}.subdivisions",
+      "kind": "float",
+      "suffix": "subdivisions",
+      "source": {
+        "path": "synaptome/src/visuals/GeodesicLayer.cpp",
+        "line": 87
       },
       "sourceClass": "GeodesicLayer"
     },
@@ -25473,7 +26350,7 @@
       "suffix": "alpha",
       "source": {
         "path": "synaptome/src/visuals/LeniaLayer.cpp",
-        "line": 83
+        "line": 94
       },
       "sourceClass": "LeniaLayer"
     },
@@ -25484,7 +26361,7 @@
       "suffix": "autoReseed",
       "source": {
         "path": "synaptome/src/visuals/LeniaLayer.cpp",
-        "line": 96
+        "line": 107
       },
       "sourceClass": "LeniaLayer"
     },
@@ -25495,7 +26372,7 @@
       "suffix": "autoReseedEveryBeats",
       "source": {
         "path": "synaptome/src/visuals/LeniaLayer.cpp",
-        "line": 98
+        "line": 109
       },
       "sourceClass": "LeniaLayer"
     },
@@ -25506,7 +26383,7 @@
       "suffix": "backgroundAlpha",
       "source": {
         "path": "synaptome/src/visuals/LeniaLayer.cpp",
-        "line": 112
+        "line": 123
       },
       "sourceClass": "LeniaLayer"
     },
@@ -25517,7 +26394,7 @@
       "suffix": "bgB",
       "source": {
         "path": "synaptome/src/visuals/LeniaLayer.cpp",
-        "line": 117
+        "line": 128
       },
       "sourceClass": "LeniaLayer"
     },
@@ -25528,7 +26405,7 @@
       "suffix": "bgG",
       "source": {
         "path": "synaptome/src/visuals/LeniaLayer.cpp",
-        "line": 116
+        "line": 127
       },
       "sourceClass": "LeniaLayer"
     },
@@ -25539,7 +26416,7 @@
       "suffix": "bgR",
       "source": {
         "path": "synaptome/src/visuals/LeniaLayer.cpp",
-        "line": 115
+        "line": 126
       },
       "sourceClass": "LeniaLayer"
     },
@@ -25550,7 +26427,7 @@
       "suffix": "bpmMultiplier",
       "source": {
         "path": "synaptome/src/visuals/LeniaLayer.cpp",
-        "line": 82
+        "line": 93
       },
       "sourceClass": "LeniaLayer"
     },
@@ -25561,7 +26438,40 @@
       "suffix": "bpmSync",
       "source": {
         "path": "synaptome/src/visuals/LeniaLayer.cpp",
-        "line": 80
+        "line": 91
+      },
+      "sourceClass": "LeniaLayer"
+    },
+    {
+      "layerType": "lenia",
+      "idPattern": "{registryPrefix}.circuitLevels",
+      "kind": "float",
+      "suffix": "circuitLevels",
+      "source": {
+        "path": "synaptome/src/visuals/LeniaLayer.cpp",
+        "line": 143
+      },
+      "sourceClass": "LeniaLayer"
+    },
+    {
+      "layerType": "lenia",
+      "idPattern": "{registryPrefix}.circuitThreshold",
+      "kind": "float",
+      "suffix": "circuitThreshold",
+      "source": {
+        "path": "synaptome/src/visuals/LeniaLayer.cpp",
+        "line": 137
+      },
+      "sourceClass": "LeniaLayer"
+    },
+    {
+      "layerType": "lenia",
+      "idPattern": "{registryPrefix}.circuitTraceWidth",
+      "kind": "float",
+      "suffix": "circuitTraceWidth",
+      "source": {
+        "path": "synaptome/src/visuals/LeniaLayer.cpp",
+        "line": 149
       },
       "sourceClass": "LeniaLayer"
     },
@@ -25572,7 +26482,7 @@
       "suffix": "decayRate",
       "source": {
         "path": "synaptome/src/visuals/LeniaLayer.cpp",
-        "line": 109
+        "line": 120
       },
       "sourceClass": "LeniaLayer"
     },
@@ -25583,7 +26493,7 @@
       "suffix": "edgeB",
       "source": {
         "path": "synaptome/src/visuals/LeniaLayer.cpp",
-        "line": 123
+        "line": 134
       },
       "sourceClass": "LeniaLayer"
     },
@@ -25594,7 +26504,7 @@
       "suffix": "edgeG",
       "source": {
         "path": "synaptome/src/visuals/LeniaLayer.cpp",
-        "line": 122
+        "line": 133
       },
       "sourceClass": "LeniaLayer"
     },
@@ -25605,7 +26515,7 @@
       "suffix": "edgeGlow",
       "source": {
         "path": "synaptome/src/visuals/LeniaLayer.cpp",
-        "line": 111
+        "line": 122
       },
       "sourceClass": "LeniaLayer"
     },
@@ -25616,7 +26526,7 @@
       "suffix": "edgeOpacity",
       "source": {
         "path": "synaptome/src/visuals/LeniaLayer.cpp",
-        "line": 114
+        "line": 125
       },
       "sourceClass": "LeniaLayer"
     },
@@ -25627,7 +26537,7 @@
       "suffix": "edgeR",
       "source": {
         "path": "synaptome/src/visuals/LeniaLayer.cpp",
-        "line": 121
+        "line": 132
       },
       "sourceClass": "LeniaLayer"
     },
@@ -25638,7 +26548,7 @@
       "suffix": "fieldAlpha",
       "source": {
         "path": "synaptome/src/visuals/LeniaLayer.cpp",
-        "line": 113
+        "line": 124
       },
       "sourceClass": "LeniaLayer"
     },
@@ -25649,7 +26559,7 @@
       "suffix": "fieldB",
       "source": {
         "path": "synaptome/src/visuals/LeniaLayer.cpp",
-        "line": 120
+        "line": 131
       },
       "sourceClass": "LeniaLayer"
     },
@@ -25660,7 +26570,7 @@
       "suffix": "fieldG",
       "source": {
         "path": "synaptome/src/visuals/LeniaLayer.cpp",
-        "line": 119
+        "line": 130
       },
       "sourceClass": "LeniaLayer"
     },
@@ -25671,7 +26581,7 @@
       "suffix": "fieldR",
       "source": {
         "path": "synaptome/src/visuals/LeniaLayer.cpp",
-        "line": 118
+        "line": 129
       },
       "sourceClass": "LeniaLayer"
     },
@@ -25682,7 +26592,7 @@
       "suffix": "fieldScale",
       "source": {
         "path": "synaptome/src/visuals/LeniaLayer.cpp",
-        "line": 110
+        "line": 121
       },
       "sourceClass": "LeniaLayer"
     },
@@ -25693,7 +26603,7 @@
       "suffix": "growthAmplitude",
       "source": {
         "path": "synaptome/src/visuals/LeniaLayer.cpp",
-        "line": 104
+        "line": 115
       },
       "sourceClass": "LeniaLayer"
     },
@@ -25704,7 +26614,7 @@
       "suffix": "growthCenter",
       "source": {
         "path": "synaptome/src/visuals/LeniaLayer.cpp",
-        "line": 102
+        "line": 113
       },
       "sourceClass": "LeniaLayer"
     },
@@ -25715,7 +26625,7 @@
       "suffix": "growthWidth",
       "source": {
         "path": "synaptome/src/visuals/LeniaLayer.cpp",
-        "line": 103
+        "line": 114
       },
       "sourceClass": "LeniaLayer"
     },
@@ -25726,7 +26636,7 @@
       "suffix": "injectionAmount",
       "source": {
         "path": "synaptome/src/visuals/LeniaLayer.cpp",
-        "line": 107
+        "line": 118
       },
       "sourceClass": "LeniaLayer"
     },
@@ -25737,7 +26647,7 @@
       "suffix": "injectionRadius",
       "source": {
         "path": "synaptome/src/visuals/LeniaLayer.cpp",
-        "line": 108
+        "line": 119
       },
       "sourceClass": "LeniaLayer"
     },
@@ -25748,7 +26658,7 @@
       "suffix": "injectionRate",
       "source": {
         "path": "synaptome/src/visuals/LeniaLayer.cpp",
-        "line": 106
+        "line": 117
       },
       "sourceClass": "LeniaLayer"
     },
@@ -25759,7 +26669,7 @@
       "suffix": "kernelRadius",
       "source": {
         "path": "synaptome/src/visuals/LeniaLayer.cpp",
-        "line": 101
+        "line": 112
       },
       "sourceClass": "LeniaLayer"
     },
@@ -25770,7 +26680,7 @@
       "suffix": "mutationAmount",
       "source": {
         "path": "synaptome/src/visuals/LeniaLayer.cpp",
-        "line": 105
+        "line": 116
       },
       "sourceClass": "LeniaLayer"
     },
@@ -25781,7 +26691,7 @@
       "suffix": "paused",
       "source": {
         "path": "synaptome/src/visuals/LeniaLayer.cpp",
-        "line": 88
+        "line": 99
       },
       "sourceClass": "LeniaLayer"
     },
@@ -25792,7 +26702,7 @@
       "suffix": "reseed",
       "source": {
         "path": "synaptome/src/visuals/LeniaLayer.cpp",
-        "line": 92
+        "line": 103
       },
       "sourceClass": "LeniaLayer"
     },
@@ -25803,7 +26713,7 @@
       "suffix": "seed",
       "source": {
         "path": "synaptome/src/visuals/LeniaLayer.cpp",
-        "line": 99
+        "line": 110
       },
       "sourceClass": "LeniaLayer"
     },
@@ -25814,7 +26724,7 @@
       "suffix": "seedDensity",
       "source": {
         "path": "synaptome/src/visuals/LeniaLayer.cpp",
-        "line": 100
+        "line": 111
       },
       "sourceClass": "LeniaLayer"
     },
@@ -25825,7 +26735,7 @@
       "suffix": "speed",
       "source": {
         "path": "synaptome/src/visuals/LeniaLayer.cpp",
-        "line": 74
+        "line": 85
       },
       "sourceClass": "LeniaLayer"
     },
@@ -25836,7 +26746,7 @@
       "suffix": "visible",
       "source": {
         "path": "synaptome/src/visuals/LeniaLayer.cpp",
-        "line": 72
+        "line": 83
       },
       "sourceClass": "LeniaLayer"
     },
@@ -30560,6 +31470,42 @@
       ]
     },
     {
+      "idPattern": "console.layer{slot}.circuitLevels",
+      "kind": "float",
+      "suffix": "circuitLevels",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "lenia"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.circuitThreshold",
+      "kind": "float",
+      "suffix": "circuitThreshold",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "lenia"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.circuitTraceWidth",
+      "kind": "float",
+      "suffix": "circuitTraceWidth",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "lenia"
+      ]
+    },
+    {
       "idPattern": "console.layer{slot}.civilizationGrowth",
       "kind": "float",
       "suffix": "civilizationGrowth",
@@ -33964,9 +34910,12 @@
         8
       ],
       "sourceLayerTypes": [
+        "agentField",
         "arcticAuroraScene",
         "cosmosFormation",
         "excitableMedia",
+        "flocking",
+        "gameOfLife",
         "lenia",
         "mountainIsland",
         "reactionDiffusion",
@@ -34767,6 +35716,18 @@
       "sourceLayerTypes": [
         "agentField",
         "flowField"
+      ]
+    },
+    {
+      "idPattern": "console.layer{slot}.subdivisions",
+      "kind": "float",
+      "suffix": "subdivisions",
+      "slotRange": [
+        1,
+        8
+      ],
+      "sourceLayerTypes": [
+        "geodesic"
       ]
     },
     {
@@ -35956,11 +36917,11 @@
   "commonSuffixes": [
     {
       "suffix": "visible",
-      "count": 51
+      "count": 52
     },
     {
       "suffix": "opacity",
-      "count": 47
+      "count": 48
     },
     {
       "suffix": "colorB",
@@ -36020,47 +36981,51 @@
     },
     {
       "suffix": "alpha",
-      "count": 19
+      "count": 20
     },
     {
       "suffix": "reseed",
-      "count": 15
+      "count": 16
     },
     {
       "suffix": "speed",
+      "count": 16
+    },
+    {
+      "suffix": "seed",
       "count": 15
     },
     {
       "suffix": "bpmMultiplier",
-      "count": 12
+      "count": 13
     },
     {
       "suffix": "bpmSync",
-      "count": 12
+      "count": 13
     },
     {
       "suffix": "bgB",
-      "count": 11
+      "count": 12
     },
     {
       "suffix": "bgG",
-      "count": 11
+      "count": 12
     },
     {
       "suffix": "bgR",
-      "count": 11
+      "count": 12
     },
     {
       "suffix": "autoReseed",
-      "count": 9
+      "count": 10
     },
     {
       "suffix": "autoReseedEveryBeats",
-      "count": 9
+      "count": 10
     },
     {
       "suffix": "backgroundAlpha",
-      "count": 9
+      "count": 10
     },
     {
       "suffix": "trailAlpha",
@@ -36068,10 +37033,6 @@
     },
     {
       "suffix": "mode",
-      "count": 8
-    },
-    {
-      "suffix": "seed",
       "count": 8
     },
     {
@@ -36099,6 +37060,14 @@
       "count": 6
     },
     {
+      "suffix": "fieldScale",
+      "count": 5
+    },
+    {
+      "suffix": "paused",
+      "count": 5
+    },
+    {
       "suffix": "trailBoost",
       "count": 5
     },
@@ -36115,19 +37084,19 @@
       "count": 4
     },
     {
-      "suffix": "fieldScale",
-      "count": 4
-    },
-    {
       "suffix": "gain",
       "count": 4
     },
     {
-      "suffix": "paused",
+      "suffix": "injectionRadius",
       "count": 4
     },
     {
       "suffix": "pointSize",
+      "count": 4
+    },
+    {
+      "suffix": "seedDensity",
       "count": 4
     },
     {
@@ -36155,6 +37124,10 @@
       "count": 3
     },
     {
+      "suffix": "decayRate",
+      "count": 3
+    },
+    {
       "suffix": "deposit",
       "count": 3
     },
@@ -36163,15 +37136,31 @@
       "count": 3
     },
     {
-      "suffix": "injectionRadius",
+      "suffix": "fieldAlpha",
+      "count": 3
+    },
+    {
+      "suffix": "fieldB",
+      "count": 3
+    },
+    {
+      "suffix": "fieldG",
+      "count": 3
+    },
+    {
+      "suffix": "fieldR",
+      "count": 3
+    },
+    {
+      "suffix": "injectionAmount",
+      "count": 3
+    },
+    {
+      "suffix": "injectionRate",
       "count": 3
     },
     {
       "suffix": "resetCoverage",
-      "count": 3
-    },
-    {
-      "suffix": "seedDensity",
       "count": 3
     },
     {
@@ -36305,7 +37294,53 @@
       }
     }
   ],
-  "unresolvedAssets": [],
+  "unresolvedAssets": [
+    {
+      "assetId": "generative.circuitAntTunnels",
+      "type": "circuitTrace",
+      "reason": "no static parameter templates found for layer type",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/circuit_ant_tunnels.json",
+        "line": 1
+      }
+    },
+    {
+      "assetId": "generative.circuitFlowField",
+      "type": "circuitTrace",
+      "reason": "no static parameter templates found for layer type",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/circuit_flow_field.json",
+        "line": 1
+      }
+    },
+    {
+      "assetId": "generative.circuitMycelium",
+      "type": "circuitTrace",
+      "reason": "no static parameter templates found for layer type",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/circuit_mycelium.json",
+        "line": 1
+      }
+    },
+    {
+      "assetId": "generative.circuitRiver",
+      "type": "circuitTrace",
+      "reason": "no static parameter templates found for layer type",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/circuit_river.json",
+        "line": 1
+      }
+    },
+    {
+      "assetId": "generative.circuitSlime",
+      "type": "circuitTrace",
+      "reason": "no static parameter templates found for layer type",
+      "source": {
+        "path": "synaptome/bin/data/layers/generative/circuit_slime.json",
+        "line": 1
+      }
+    }
+  ],
   "packageDiscovery": {
     "schemaVersion": 1,
     "manifestName": "layer.package.json",

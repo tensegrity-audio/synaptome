@@ -110,6 +110,8 @@ public:
     CompositionActionResult invokeCompositionAction(
         std::size_t zeroBasedIndex,
         std::string_view actionId);
+    CompositionTelemetryResult compositionElementTelemetry(
+        std::size_t zeroBasedIndex) const;
 
     struct CompositionRenderTargets {
         ofFbo* layer = nullptr;
@@ -123,8 +125,6 @@ public:
 
     CompositionRenderTargets compositionRenderTargetsForHost(
         std::size_t zeroBasedIndex) noexcept;
-    const Layer* compositionElementForHost(
-        std::size_t zeroBasedIndex) const noexcept;
     CompositionCoverageWindow resolveEffectCoverage(
         std::size_t effectLayerIndex,
         float coverage) const noexcept;

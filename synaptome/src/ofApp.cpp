@@ -3541,19 +3541,27 @@ std::string ofApp::composeHudLayerDetails() const {
         } else if (slot.hasElement &&
                    (slot.typeId == "media.webcam" ||
                     slot.typeId == "media.clip")) {
-            const Layer* base =
-                runtime_.compositionElementForHost(i);
-            if (auto* webcam =
-                    dynamic_cast<const VideoGrabberLayer*>(base)) {
-                out << "  [" << webcam->currentDeviceLabel() << "]";
-                out << " gain=" << ofToString(webcam->gain(), 2);
-                if (webcam->mirror()) out << " mirror";
-            } else if (auto* clip =
-                           dynamic_cast<const VideoClipLayer*>(base)) {
-                out << "  [" << clip->currentClipLabel() << "]";
-                out << " gain=" << ofToString(clip->gain(), 2);
-                if (clip->mirror()) out << " mirror";
-                if (!clip->loop()) out << " loop=off";
+            const auto telemetry =
+                runtime_.compositionElementTelemetry(i);
+            const auto* sourceLabel =
+                telemetry.valueAs<std::string>(
+                    "media.sourceLabel");
+            out << "  ["
+                << (sourceLabel ? *sourceLabel : "(none)")
+                << "]";
+            out << " gain="
+                << ofToString(
+                    consoleFloatValue(slot, "gain")
+                        .value_or(1.0f),
+                    2);
+            if (consoleBoolValue(slot, "mirror")
+                    .value_or(false)) {
+                out << " mirror";
+            }
+            if (slot.typeId == "media.clip" &&
+                !consoleBoolValue(slot, "loop")
+                     .value_or(true)) {
+                out << " loop=off";
             }
         }
         if (slot.hasElement) {
@@ -3828,28 +3836,42 @@ std::string ofApp::composeHudLayers() const {
                     consoleFloatValue(slot, "deadAlpha")
                         .value_or(0.0f);
             } else if (slot.typeId == "media.webcam") {
-                const Layer* base =
-                    runtime_.compositionElementForHost(i);
-                if (auto* webcam =
-                        dynamic_cast<const VideoGrabberLayer*>(base)) {
-                    module = "video.grabber";
-                    metadata["deviceLabel"] =
-                        webcam->currentDeviceLabel();
-                    metadata["gain"] = webcam->gain();
-                    metadata["mirror"] = webcam->mirror();
+                module = "video.grabber";
+                const auto telemetry =
+                    runtime_.compositionElementTelemetry(i);
+                if (const auto* sourceLabel =
+                        telemetry.valueAs<std::string>(
+                            "media.sourceLabel")) {
+                    metadata["deviceLabel"] = *sourceLabel;
+                } else {
+                    metadata["deviceLabel"] = "(none)";
                 }
+                metadata["gain"] =
+                    consoleFloatValue(slot, "gain")
+                        .value_or(1.0f);
+                metadata["mirror"] =
+                    consoleBoolValue(slot, "mirror")
+                        .value_or(false);
             } else if (slot.typeId == "media.clip") {
-                const Layer* base =
-                    runtime_.compositionElementForHost(i);
-                if (auto* clip =
-                        dynamic_cast<const VideoClipLayer*>(base)) {
-                    module = "video.clip";
-                    metadata["clipLabel"] =
-                        clip->currentClipLabel();
-                    metadata["gain"] = clip->gain();
-                    metadata["mirror"] = clip->mirror();
-                    metadata["loop"] = clip->loop();
+                module = "video.clip";
+                const auto telemetry =
+                    runtime_.compositionElementTelemetry(i);
+                if (const auto* sourceLabel =
+                        telemetry.valueAs<std::string>(
+                            "media.sourceLabel")) {
+                    metadata["clipLabel"] = *sourceLabel;
+                } else {
+                    metadata["clipLabel"] = "(none)";
                 }
+                metadata["gain"] =
+                    consoleFloatValue(slot, "gain")
+                        .value_or(1.0f);
+                metadata["mirror"] =
+                    consoleBoolValue(slot, "mirror")
+                        .value_or(false);
+                metadata["loop"] =
+                    consoleBoolValue(slot, "loop")
+                        .value_or(true);
             }
             if (!module.empty()) {
                 slotJson["module"] = module;
@@ -4207,31 +4229,41 @@ std::string ofApp::composeHudSensors() const {
 
     bool sawCameraLayer = false;
     for (const auto& slot : composition.layers) {
-        if (!slot.hasElement) {
-            continue;
-        }
-        const auto* webcam =
-            dynamic_cast<const VideoGrabberLayer*>(
-                runtime_.compositionElementForHost(
-                    slot.zeroBasedIndex));
-        if (!webcam) {
+        if (!slot.hasElement ||
+            slot.typeId != "media.webcam") {
             continue;
         }
         sawCameraLayer = true;
-        std::string label = webcam->currentDeviceLabel();
+        const auto telemetry =
+            runtime_.compositionElementTelemetry(
+                slot.zeroBasedIndex);
+        const auto* sourceLabel =
+            telemetry.valueAs<std::string>(
+                "media.sourceLabel");
+        const auto* captureInitialized =
+            telemetry.valueAs<bool>(
+                "media.captureInitialized");
+        std::string label =
+            sourceLabel ? *sourceLabel : "(none)";
         if (label.empty()) {
             label = "Camera";
         }
+        const bool captureActive =
+            captureInitialized && *captureInitialized;
         std::ostringstream detail;
         detail << "slot " << (slot.zeroBasedIndex + 1);
         if (!slot.active) {
             detail << ", layer off";
-        } else if (webcam->isCaptureInitialized()) {
+        } else if (captureActive) {
             detail << ", capture active";
         } else {
             detail << ", waiting";
         }
-        appendDevice("Camera", label, slot.active && webcam->isCaptureInitialized(), detail.str());
+        appendDevice(
+            "Camera",
+            label,
+            slot.active && captureActive,
+            detail.str());
     }
     if (!sawCameraLayer) {
         appendDevice("Camera", "No camera layer loaded", false, "add a webcam layer");
@@ -6238,14 +6270,16 @@ std::optional<int> ofApp::geodesicSubdivisionAtSlot(
         return std::nullopt;
     }
 
-    const Layer* base =
-        runtime_.compositionElementForHost(zeroBasedIndex);
-    const auto* geodesic =
-        dynamic_cast<const GeodesicLayer*>(base);
-    if (!geodesic) {
+    const auto subdivisions =
+        consoleFloatValue(*slot, "subdivisions");
+    if (!subdivisions) {
         return std::nullopt;
     }
-    return geodesic->subdivisions();
+    return std::max(
+        1,
+        std::min(
+            4,
+            static_cast<int>(std::round(*subdivisions))));
 }
 
 bool ofApp::adjustGeodesicSubdivisionAtSlot(

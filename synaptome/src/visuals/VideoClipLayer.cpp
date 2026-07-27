@@ -168,6 +168,17 @@ std::string VideoClipLayer::currentClipLabel() const {
     return clip->label;
 }
 
+void VideoClipLayer::collectTelemetry(
+    synaptome::element::TelemetrySink& sink) const {
+    sink.add({
+        "media.sourceLabel",
+        "Source Label",
+        "media",
+        "Currently selected video clip source.",
+        currentClipLabel(),
+    });
+}
+
 void VideoClipLayer::adjustGain(float delta) {
     paramGain_ = ofClamp(paramGain_ + delta, kGainMin, kGainMax);
 }

@@ -12,6 +12,8 @@ public:
     void update(const LayerUpdateParams& params) override;
     void draw(const LayerDrawParams& params) override;
     void onWindowResized(int width, int height) override;
+    void collectTelemetry(
+        synaptome::element::TelemetrySink& sink) const override;
 
     bool isEnabled() const override { return enabled_; }
     void setExternalEnabled(bool enabled) override;

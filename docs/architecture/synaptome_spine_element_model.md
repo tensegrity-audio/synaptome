@@ -141,6 +141,11 @@ element, FBO, parameter-registry, creator, or host pointers, and changing a copy
 cannot mutate Runtime. One bounds-checked optional layer query supports focused
 consumers without exposing the live aggregate.
 
+Volatile element telemetry is collected only through the separate on-demand
+`Runtime::compositionElementTelemetry()` query. It is not appended to either
+ordinary composition snapshot, whose frequent metadata reads must not call
+element code or collect changing observations.
+
 Generic same-address element replacement is also layer-addressed. The host
 passes a zero-based composition-layer index to
 `prepareCompositionElementReplacement`; Runtime resolves the current element,
@@ -168,8 +173,9 @@ Actions do not become parameter state, receive an expanded
 MIDI/OSC mapping snapshots. Discovery is limited to a currently adopted live
 instance. Static `ElementDescriptor` action declarations, package/catalog
 inspection, declaration/registration parity, and persisted action mappings are
-SEAC-4 work. The Geodesic subdivision status query and current video status
-inspection remain read-only compatibility debt.
+SEAC-4 work. Geodesic subdivisions are durable parameter state, while video
+source and capture observations use the typed on-demand telemetry query. The
+read-only `compositionElementForHost` compatibility seam is removed.
 
 The spine does not:
 
@@ -233,6 +239,26 @@ inactive gates update/draw behavior, not commands. `Succeeded` means the
 command completed, `Rejected` means it was declined in the current state, and
 `Failed` or an exception means execution failed after it may have begun.
 Runtime neither retries nor rolls back handler-side mutation.
+
+An element may also expose no live telemetry. When requested, the optional
+const `collectTelemetry()` hook copies typed `TelemetryEntry` values into a
+Runtime-owned sink. Collection is synchronous on Runtime's owner thread,
+non-reentrant, bounded, side-effect-free, and valid for an adopted inactive
+element. Runtime returns structured bounds, kind, contract, and collection
+failures without publishing partial values or exposing an element pointer.
+
+This telemetry is element-local, volatile, and on demand. It is not durable
+state, normalized health, a parameter or mapping target, or a static package
+capability. It does not enter ordinary composition snapshots, scenes, presets,
+mapping snapshots, package/catalog metadata, or parameter manifests. It is
+also not a `HudFeedRegistry` JSON feed: the host may adapt copied telemetry to
+HUD presentation, but elements do not know HUD widget or feed IDs.
+
+Geodesic subdivision is therefore a registered parameter rather than
+telemetry. Webcam and video-clip elements expose the string
+`media.sourceLabel`; webcam also exposes the boolean
+`media.captureInitialized`. Existing gain, mirror, loop, and selected-source
+parameters remain authoritative and are not duplicated as telemetry.
 
 The compatibility `LayerFactory` is an explicitly owned element type registry,
 not a singleton. Each Runtime receives one registry by reference; app, bench,
@@ -424,6 +450,12 @@ An element package should eventually declare:
 
 Unknown capabilities, unresolved dependencies, duplicate IDs, unsafe paths, or
 contract drift fail inspection before activation.
+
+Capabilities are static requirements or service contracts. They do not contain
+live telemetry values, and a generic `telemetry` capability must not be used to
+mean that an element supports the universal on-demand telemetry hook. Camera or
+media capability validation answers whether the dependency may be used;
+`media.captureInitialized` answers whether one adopted instance is ready now.
 
 ## Build And Test Boundary
 

@@ -1,5 +1,6 @@
 #include "Runtime.h"
 
+#include "ElementTelemetryBuffer.h"
 #include "../core/ParameterRegistry.h"
 #include "../visuals/LayerFactory.h"
 
@@ -501,6 +502,75 @@ CompositionActionResult Runtime::invokeCompositionAction(
     }
 }
 
+CompositionTelemetryResult Runtime::compositionElementTelemetry(
+    std::size_t zeroBasedIndex) const {
+    auto fail = [](
+        CompositionTelemetryError code,
+        std::string error) {
+        CompositionTelemetryResult result;
+        result.errorCode = code;
+        result.error = std::move(error);
+        return result;
+    };
+
+    if (zeroBasedIndex >= compositionLayers_.size()) {
+        return fail(
+            CompositionTelemetryError::IndexOutOfRange,
+            "composition layer index is out of range");
+    }
+    const auto& layer = compositionLayers_[zeroBasedIndex];
+    if (layer.assetId.empty()) {
+        return fail(
+            CompositionTelemetryError::SlotEmpty,
+            "composition layer is empty");
+    }
+    if (layer.kind != CompositionKind::Element) {
+        return fail(
+            CompositionTelemetryError::KindMismatch,
+            "composition telemetry requires an Element composition entry");
+    }
+    if (!layer.element_) {
+        return fail(
+            CompositionTelemetryError::SlotEmpty,
+            "composition layer does not contain an element");
+    }
+
+    ElementTelemetryBuffer buffer;
+    try {
+        layer.element_->collectTelemetry(buffer);
+    } catch (const std::exception& error) {
+        return fail(
+            CompositionTelemetryError::CollectionFailure,
+            std::string("element telemetry collection threw an exception: ") +
+                error.what());
+    } catch (...) {
+        return fail(
+            CompositionTelemetryError::CollectionFailure,
+            "element telemetry collection threw an unknown exception");
+    }
+
+    try {
+        const auto contractError = buffer.contractError();
+        if (!contractError.empty()) {
+            return fail(
+                CompositionTelemetryError::ContractViolation,
+                contractError);
+        }
+        CompositionTelemetryResult result;
+        result.entries = buffer.takeEntries();
+        return result;
+    } catch (const std::exception& error) {
+        return fail(
+            CompositionTelemetryError::CollectionFailure,
+            std::string("element telemetry validation failed: ") +
+                error.what());
+    } catch (...) {
+        return fail(
+            CompositionTelemetryError::CollectionFailure,
+            "element telemetry validation failed with an unknown exception");
+    }
+}
+
 Runtime::CompositionRenderTargets Runtime::compositionRenderTargetsForHost(
     std::size_t zeroBasedIndex) noexcept {
     auto* layer = mutableCompositionLayer(zeroBasedIndex);
@@ -510,12 +580,6 @@ Runtime::CompositionRenderTargets Runtime::compositionRenderTargetsForHost(
         &layer->upstreamFbo,
         &layer->effectFbo,
     };
-}
-
-const Layer* Runtime::compositionElementForHost(
-    std::size_t zeroBasedIndex) const noexcept {
-    if (zeroBasedIndex >= compositionLayers_.size()) return nullptr;
-    return compositionLayers_[zeroBasedIndex].element_.get();
 }
 
 float Runtime::normalizeOpacity(float opacity) noexcept {

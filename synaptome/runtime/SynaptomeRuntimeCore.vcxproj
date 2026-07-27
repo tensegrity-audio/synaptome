@@ -57,9 +57,11 @@
     <ClInclude Include="$(SynaptomeAppRoot)\src\runtime\CompositionLayer.h" />
     <ClInclude Include="$(SynaptomeAppRoot)\src\runtime\CompositionTypes.h" />
     <ClInclude Include="$(SynaptomeAppRoot)\src\runtime\ElementActionTable.h" />
+    <ClInclude Include="$(SynaptomeAppRoot)\src\runtime\ElementTelemetryBuffer.h" />
     <ClInclude Include="$(SynaptomeAppRoot)\src\runtime\Runtime.h" />
     <ClInclude Include="$(SynaptomeAppRoot)\src\visuals\LayerFactory.h" />
     <ClInclude Include="$(SynaptomeElementSdkIncludeRoot)\synaptome\element\Action.h" />
+    <ClInclude Include="$(SynaptomeElementSdkIncludeRoot)\synaptome\element\Telemetry.h" />
     <ClInclude Include="$(SynaptomeElementSdkIncludeRoot)\synaptome\element\compat\Layer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -620,6 +620,24 @@ std::string VideoGrabberLayer::currentDeviceLabel() const {
     return deviceLabel(selectedDeviceIndex_);
 }
 
+void VideoGrabberLayer::collectTelemetry(
+    synaptome::element::TelemetrySink& sink) const {
+    sink.add({
+        "media.sourceLabel",
+        "Source Label",
+        "media",
+        "Currently selected webcam source.",
+        currentDeviceLabel(),
+    });
+    sink.add({
+        "media.captureInitialized",
+        "Capture Initialized",
+        "media",
+        "Whether the webcam capture backend is initialized.",
+        isCaptureInitialized(),
+    });
+}
+
 void VideoGrabberLayer::adjustGain(float delta) {
     paramGain_ = ofClamp(paramGain_ + delta, kGainMin, kGainMax);
 }

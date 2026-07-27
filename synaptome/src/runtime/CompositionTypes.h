@@ -1,10 +1,12 @@
 #pragma once
 
 #include <synaptome/element/Action.h>
+#include <synaptome/element/Telemetry.h>
 
 #include <array>
 #include <cstddef>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace synaptome::runtime {
@@ -90,6 +92,44 @@ struct CompositionActionResult {
 
     explicit operator bool() const noexcept {
         return errorCode == CompositionActionError::None;
+    }
+};
+
+enum class CompositionTelemetryError {
+    None,
+    IndexOutOfRange,
+    SlotEmpty,
+    KindMismatch,
+    ContractViolation,
+    CollectionFailure,
+};
+
+struct CompositionTelemetryResult {
+    CompositionTelemetryError errorCode =
+        CompositionTelemetryError::None;
+    std::vector<element::TelemetryEntry> entries;
+    std::string error;
+
+    explicit operator bool() const noexcept {
+        return errorCode == CompositionTelemetryError::None;
+    }
+
+    const element::TelemetryEntry* find(
+        std::string_view id) const noexcept {
+        for (const auto& entry : entries) {
+            if (entry.id == id) {
+                return &entry;
+            }
+        }
+        return nullptr;
+    }
+
+    template <typename T>
+    const T* valueAs(std::string_view id) const noexcept {
+        const auto* entry = find(id);
+        return entry
+            ? std::get_if<T>(&entry->value)
+            : nullptr;
     }
 };
 
