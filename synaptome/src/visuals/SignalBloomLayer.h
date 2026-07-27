@@ -1,11 +1,16 @@
 #pragma once
 
+#include <synaptome/element/ParameterBinding.h>
 #include <synaptome/element/compat/Layer.h>
 #include <vector>
 
-class SignalBloomLayer : public Layer {
+class SignalBloomLayer final
+    : public Layer,
+      public synaptome::element::ParameterBindable {
 public:
     void configure(const ofJson& config) override;
+    void bindParameters(
+        synaptome::element::ParameterBinder& binder) override;
     void setup(ParameterRegistry& registry) override;
     void update(const LayerUpdateParams& params) override;
     void draw(const LayerDrawParams& params) override;

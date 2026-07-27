@@ -2,6 +2,34 @@
 
 This changelog records Project Ops and administrative workflow changes. Product release versioning remains governed by `docs/release_policy.md`.
 
+## 2026-07-27 - architecture - seac4b2_live_parameter_binding
+
+- Request ID: `spine_element_architecture_convergence`
+- Phase / Milestone: SEAC-4B2 complete inside SEAC-4B; 3 of 12 roadmap
+  steps remain complete and SEAC-4/SEAC-4B remain In Progress.
+- Public SDK: Added the bind-only `ParameterBinder` and `ParameterBindable`
+  capability for float, bool, and string instance storage. Declarations retain
+  all metadata/default authority; the binder exposes no Runtime, registry,
+  host, graphics, creator, or ownership surface.
+- Runtime boundary: `ElementParameterTable` validates exact declared/live ID
+  and kind parity, missing and duplicate bindings, undeclared IDs, and storage
+  aliasing. Runtime applies declaration defaults before element configuration,
+  preserves configured values as registry base/live state, rejects declared
+  elements that register metadata during `setup()`, and cleans up failed
+  preparation transactionally.
+- First migration: Public and shipping Signal Bloom sources remain identical
+  and now bind all 18 live values without building metadata in `setup()`.
+- Focused confidence: Element SDK and Runtime boundary validators pass.
+  ElementSdkCompileContract, RuntimeCoreTest, and LayerPackageBench build in
+  Release/x64. RuntimeCoreTest and LayerPackageBench execute successfully; the
+  latter reports 18 parameters, 240 updates, and a stub-backed draw call.
+- Live evidence: The operator reports the Release app and dual-screen mode
+  working well. Physical MIDI remains explicitly untested.
+- Compatibility: No public parameter IDs or persisted formats changed. The
+  other 22 shipping registrations remain on legacy `setup()` discovery.
+- Next gate: Continue SEAC-4B with the remaining declared registrations and
+  declaration-generated Browser, catalog, manifest, and documentation views.
+
 ## 2026-07-27 - architecture - seac4b1_static_parameter_declaration_fixture
 
 - Request ID: `spine_element_architecture_convergence`

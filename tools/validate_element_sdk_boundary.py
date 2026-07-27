@@ -45,6 +45,15 @@ def main() -> int:
         APP / "sdk" / "include" / "synaptome" / "element" / "Parameter.h",
         errors,
     )
+    parameter_binding_header = read(
+        APP
+        / "sdk"
+        / "include"
+        / "synaptome"
+        / "element"
+        / "ParameterBinding.h",
+        errors,
+    )
     action_contract = descriptor_header + "\n" + action_header
     telemetry_header = read(
         APP / "sdk" / "include" / "synaptome" / "element" / "Telemetry.h",
@@ -229,6 +238,31 @@ def main() -> int:
                 "binding/ownership: " + token
             )
     for token in (
+        "class ParameterBinder",
+        "virtual void bind(std::string parameterId, float& storage) = 0;",
+        "virtual void bind(std::string parameterId, bool& storage) = 0;",
+        "virtual void bind(std::string parameterId, std::string& storage) = 0;",
+        "class ParameterBindable",
+        "virtual void bindParameters(ParameterBinder& binder) = 0;",
+    ):
+        if token not in parameter_binding_header:
+            errors.append(f"public parameter binding contract is missing {token}")
+    for token in (
+        "ParameterRegistry",
+        "LayerFactory",
+        "Runtime",
+        "ofJson",
+        "ofFbo",
+        "std::function",
+        "unique_ptr",
+        "shared_ptr",
+    ):
+        if token in parameter_binding_header:
+            errors.append(
+                "public parameter binding contract imports forbidden "
+                "host/runtime ownership: " + token
+            )
+    for token in (
         "using TelemetryValue =",
         "std::variant<bool, std::int64_t, double, std::string>",
         "struct TelemetryEntry",
@@ -349,8 +383,10 @@ def main() -> int:
 
     if "<synaptome/element/compat/Layer.h>" not in example_header:
         errors.append("Signal Bloom header must use the public compatibility Layer include")
-    if "<synaptome/element/compat/LayerParameterBuilder.h>" not in example_source:
-        errors.append("Signal Bloom source must use the public compatibility builder include")
+    if "<synaptome/element/ParameterBinding.h>" not in example_header:
+        errors.append("Signal Bloom header must use the public parameter binding contract")
+    if "<synaptome/element/compat/LayerParameterBuilder.h>" in example_source:
+        errors.append("declared Signal Bloom must not retain legacy metadata registration")
     if "__has_include" in example_header:
         errors.append("Signal Bloom header must not use include-order-dependent fallback logic")
     if example_header != runtime_header or example_source != runtime_source:
@@ -383,9 +419,17 @@ def main() -> int:
         errors.append(
             "compile-contract must include the public Parameter header directly"
         )
+    if "<synaptome/element/parameterbinding.h>" not in compile_contract_source:
+        errors.append(
+            "compile-contract must include the public ParameterBinding header directly"
+        )
     if r"\synaptome\element\parameter.h" not in contract_lower:
         errors.append(
             "compile-contract project must list the public Parameter header"
+        )
+    if r"\synaptome\element\parameterbinding.h" not in contract_lower:
+        errors.append(
+            "compile-contract project must list the public ParameterBinding header"
         )
     forbidden_contract_roots = (
         r"$(synaptomeapproot)\src;",
@@ -404,6 +448,7 @@ def main() -> int:
         "synaptome.elementsdk.props",
         "openframeworksrelease.props",
         r"src\visuals\signalbloomlayer.cpp",
+        r"\synaptome\element\parameterbinding.h",
     ):
         if token not in element_lower:
             errors.append(f"shipping Signal Bloom project missing {token}")

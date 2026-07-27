@@ -1,4 +1,6 @@
 #pragma once
+#ifndef SYNAPTOME_VISUALS_LAYER_H_INCLUDED
+#define SYNAPTOME_VISUALS_LAYER_H_INCLUDED
 
 #include <synaptome/element/Action.h>
 #include <synaptome/element/Telemetry.h>
@@ -59,3 +61,5 @@ protected:
     std::string registryPrefix_ = "layer";
     std::string instanceId_;
 };
+
+#endif // SYNAPTOME_VISUALS_LAYER_H_INCLUDED

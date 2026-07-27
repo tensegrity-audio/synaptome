@@ -146,11 +146,17 @@ def main() -> int:
     parameter_header = (
         ROOT / "synaptome/sdk/include/synaptome/element/Parameter.h"
     ).read_text(encoding="utf-8")
+    parameter_binding_header = (
+        ROOT / "synaptome/sdk/include/synaptome/element/ParameterBinding.h"
+    ).read_text(encoding="utf-8")
     telemetry_header = (
         ROOT / "synaptome/sdk/include/synaptome/element/Telemetry.h"
     ).read_text(encoding="utf-8")
     action_table = (
         ROOT / "synaptome/src/runtime/ElementActionTable.h"
+    ).read_text(encoding="utf-8")
+    parameter_table = (
+        ROOT / "synaptome/src/runtime/ElementParameterTable.h"
     ).read_text(encoding="utf-8")
     telemetry_buffer = (
         ROOT / "synaptome/src/runtime/ElementTelemetryBuffer.h"
@@ -505,6 +511,29 @@ def main() -> int:
                 "binding/ownership: " + forbidden
             )
     for token in (
+        "class ParameterBinder",
+        "virtual void bind(std::string parameterId, float& storage) = 0;",
+        "virtual void bind(std::string parameterId, bool& storage) = 0;",
+        "virtual void bind(std::string parameterId, std::string& storage) = 0;",
+        "class ParameterBindable",
+        "virtual void bindParameters(ParameterBinder& binder) = 0;",
+    ):
+        if token not in parameter_binding_header:
+            errors.append(f"public parameter binding seam is missing {token}")
+    for token in (
+        "class ElementParameterTable final : public element::ParameterBinder",
+        "contractError() const",
+        "applyDeclarationDefaults() const",
+        "void populate(",
+        "element registered an undeclared parameter binding",
+        "element registered a duplicate parameter binding",
+        "element registered a parameter binding with the wrong",
+        "element did not bind declared parameter",
+        "element bound one storage address to multiple",
+    ):
+        if token not in parameter_table:
+            errors.append(f"runtime parameter binding table is missing {token}")
+    for token in (
         "enum class ParameterDeclarationState",
         "LegacySetupDiscovery",
         "Declared",
@@ -741,12 +770,18 @@ def main() -> int:
     for token in (
         "GeodesicLayer",
         "GameOfLifeLayer",
-        "dynamic_cast<",
     ):
         if token in runtime_header or token in runtime_source:
             errors.append(
                 f"generic Runtime action dispatch depends on a concrete element: {token}"
             )
+    if "dynamic_cast<element::ParameterBindable*>" not in re.sub(
+        r"\s+", "", runtime_source
+    ):
+        errors.append(
+            "declared Runtime parameter setup must query the public "
+            "ParameterBindable capability"
+        )
     for header, label in (
         (geodesic_header, "Geodesic"),
         (game_of_life_header, "Game of Life"),
@@ -1750,7 +1785,9 @@ def main() -> int:
         "Synaptome.ElementSdk.props",
         "openframeworksRelease.props",
         r"src\runtime\Runtime.cpp",
+        r"src\runtime\ElementParameterTable.h",
         r"src\visuals\LayerFactory.cpp",
+        r"\synaptome\element\ParameterBinding.h",
     ):
         if token.lower() not in core_project.lower():
             errors.append(f"runtime-core library is missing {token}")
@@ -1966,6 +2003,12 @@ def main() -> int:
         "construction-free parameter contract lookup lost declared or legacy state",
         "mutating copied parameter contracts changed stable factory storage",
         "invalid parameter declaration was not rejected atomically",
+        "RunDeclaredParameterBindingScenario",
+        "declared parameter metadata/default/base/live authority drifted",
+        "declared parameter bindings did not reach live element storage",
+        "declared binding failure leaked state or lost diagnostics",
+        "declared binding failure did not release its prefix",
+        "explicit declared-empty binding did not prepare",
         "RunCompositionActionScenario",
         "InvalidActionMode::UnknownBinding",
         "InvalidActionMode::DuplicateBinding",

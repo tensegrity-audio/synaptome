@@ -1,5 +1,6 @@
 #include "Runtime.h"
 
+#include "ElementParameterTable.h"
 #include "ElementTelemetryBuffer.h"
 #include "../core/ParameterRegistry.h"
 #include "../visuals/LayerFactory.h"
@@ -253,6 +254,15 @@ Runtime::ElementResult Runtime::prepareElementImpl(
             request.typeId;
         return result;
     }
+    const auto* typeContract =
+        elementTypes_.typeContract(request.typeId);
+    if (!typeContract) {
+        result.errorCode = ElementErrorCode::ContractViolation;
+        result.error =
+            "registered element type has no type-contract record: " +
+            request.typeId;
+        return result;
+    }
 
     if (!replacing) {
         activePrefixes_.insert(request.registryPrefix);
@@ -272,13 +282,79 @@ Runtime::ElementResult Runtime::prepareElementImpl(
 
         result.element_->setRegistryPrefix(request.registryPrefix);
         result.element_->setInstanceId(request.instanceId);
-        result.stage = "configure";
-        result.element_->configure(request.config);
-        if (progress) progress("configure");
-
         result.stagedParameters_ = std::make_unique<ParameterRegistry>();
-        result.stage = "setup";
-        result.element_->setup(*result.stagedParameters_);
+        if (typeContract->state ==
+            LayerFactory::ParameterDeclarationState::Declared) {
+            result.stage = "bind";
+            auto* bindable =
+                dynamic_cast<element::ParameterBindable*>(
+                    result.element_.get());
+            if (!bindable) {
+                if (result.ownsPrefixReservation_) {
+                    activePrefixes_.erase(request.registryPrefix);
+                    result.ownsPrefixReservation_ = false;
+                }
+                result.element_.reset();
+                result.stagedParameters_.reset();
+                result.errorCode = ElementErrorCode::ContractViolation;
+                result.error =
+                    "declared element does not implement parameter binding: " +
+                    request.typeId;
+                return result;
+            }
+
+            ElementParameterTable parameterTable(
+                typeContract->contract.parameters);
+            bindable->bindParameters(parameterTable);
+            const auto parameterContractError =
+                parameterTable.contractError();
+            if (!parameterContractError.empty()) {
+                if (result.ownsPrefixReservation_) {
+                    activePrefixes_.erase(request.registryPrefix);
+                    result.ownsPrefixReservation_ = false;
+                }
+                result.element_.reset();
+                result.stagedParameters_.reset();
+                result.errorCode = ElementErrorCode::ContractViolation;
+                result.error = parameterContractError;
+                return result;
+            }
+            parameterTable.applyDeclarationDefaults();
+
+            result.stage = "configure";
+            result.element_->configure(request.config);
+            if (progress) progress("configure");
+
+            // setup remains a transitional resource-initialization hook.
+            // Declared elements must leave all parameter metadata to their
+            // static contract and bind only instance storage above.
+            result.stage = "setup";
+            result.element_->setup(*result.stagedParameters_);
+            if (!parameterSnapshot(*result.stagedParameters_).empty()) {
+                if (result.ownsPrefixReservation_) {
+                    activePrefixes_.erase(request.registryPrefix);
+                    result.ownsPrefixReservation_ = false;
+                }
+                result.element_.reset();
+                result.stagedParameters_.reset();
+                result.errorCode = ElementErrorCode::ContractViolation;
+                result.error =
+                    "declared element registered parameter metadata during "
+                    "setup: " + request.typeId;
+                return result;
+            }
+            parameterTable.populate(
+                request.registryPrefix,
+                *result.stagedParameters_);
+        } else {
+            result.stage = "configure";
+            result.element_->configure(request.config);
+            if (progress) progress("configure");
+
+            result.stage = "setup";
+            result.element_->setup(*result.stagedParameters_);
+        }
+
         const auto registeredParameters =
             parameterSnapshot(*result.stagedParameters_);
         const auto invalidParameter = std::find_if(

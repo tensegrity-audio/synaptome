@@ -11,6 +11,8 @@
 #include <utility>
 #include <vector>
 
+#include <synaptome/element/ParameterBinding.h>
+
 #include "../synaptome/src/runtime/Runtime.h"
 #include "../synaptome/src/visuals/LayerFactory.h"
 
@@ -114,6 +116,81 @@ synaptome::element::ElementTypeContract validParameterContract(
             std::nullopt,
         },
     };
+    return contract;
+}
+
+synaptome::element::ElementTypeContract bindingParameterContract(
+    std::string typeId,
+    bool includeOther = false) {
+    synaptome::element::ElementTypeContract contract;
+    contract.element = visualDescriptor(std::move(typeId));
+    contract.parameters.groups = {
+        {"controls", "Controls", "Declared binding controls."},
+    };
+    contract.parameters.parameters = {
+        {
+            "amount",
+            synaptome::element::ParameterKind::Float,
+            "controls",
+            "Amount",
+            0.5f,
+            synaptome::element::ParameterRange{0.0f, 1.0f, 0.1f},
+            "multiplier",
+            "Declared amount metadata.",
+            {},
+            std::nullopt,
+            3,
+            {},
+            std::nullopt,
+        },
+        {
+            "gate",
+            synaptome::element::ParameterKind::Bool,
+            "controls",
+            "Gate",
+            true,
+            std::nullopt,
+            {},
+            "Declared gate metadata.",
+            {},
+            std::nullopt,
+            std::nullopt,
+            {},
+            std::nullopt,
+        },
+        {
+            "name",
+            synaptome::element::ParameterKind::String,
+            "controls",
+            "Name",
+            std::string("static"),
+            std::nullopt,
+            {},
+            "Declared name metadata.",
+            {},
+            std::nullopt,
+            std::nullopt,
+            {},
+            std::nullopt,
+        },
+    };
+    if (includeOther) {
+        contract.parameters.parameters.push_back({
+            "other",
+            synaptome::element::ParameterKind::Float,
+            "controls",
+            "Other",
+            0.0f,
+            synaptome::element::ParameterRange{0.0f, 1.0f, 0.1f},
+            {},
+            "Duplicate storage fixture.",
+            {},
+            std::nullopt,
+            std::nullopt,
+            {},
+            std::nullopt,
+        });
+    }
     return contract;
 }
 
@@ -291,6 +368,90 @@ private:
 
 class EmptyElement final : public Layer {
 public:
+    void setup(ParameterRegistry&) override {}
+    void update(const LayerUpdateParams&) override {}
+    void draw(const LayerDrawParams&) override {}
+};
+
+enum class DeclaredBindingMode {
+    Valid,
+    Missing,
+    Undeclared,
+    Duplicate,
+    WrongKind,
+    DuplicateStorage,
+    SetupMetadata,
+};
+
+class DeclaredBindingElement final
+    : public Layer,
+      public synaptome::element::ParameterBindable {
+public:
+    explicit DeclaredBindingElement(
+        DeclaredBindingMode mode = DeclaredBindingMode::Valid)
+        : mode_(mode) {}
+
+    void configure(const ofJson& config) override {
+        if (!config.contains("defaults") ||
+            !config["defaults"].is_object()) {
+            return;
+        }
+        const auto& defaults = config["defaults"];
+        amount_ = defaults.value("amount", amount_);
+        gate_ = defaults.value("gate", gate_);
+        name_ = defaults.value("name", name_);
+    }
+
+    void bindParameters(
+        synaptome::element::ParameterBinder& binder) override {
+        binder.bind("amount", amount_);
+        if (mode_ == DeclaredBindingMode::WrongKind) {
+            binder.bind("gate", amount_);
+            return;
+        }
+        binder.bind("gate", gate_);
+        if (mode_ != DeclaredBindingMode::Missing) {
+            binder.bind("name", name_);
+        }
+        if (mode_ == DeclaredBindingMode::Undeclared) {
+            binder.bind("unknown", extra_);
+        } else if (mode_ == DeclaredBindingMode::Duplicate) {
+            binder.bind("amount", amount_);
+        } else if (mode_ == DeclaredBindingMode::DuplicateStorage) {
+            binder.bind("other", amount_);
+        }
+    }
+
+    void setup(ParameterRegistry& registry) override {
+        if (mode_ != DeclaredBindingMode::SetupMetadata) {
+            return;
+        }
+        ParameterRegistry::Descriptor descriptor;
+        descriptor.label = "Setup Must Not Own Metadata";
+        registry.addFloat(
+            registryPrefix() + ".legacy",
+            &extra_,
+            extra_,
+            descriptor);
+    }
+
+    void update(const LayerUpdateParams&) override {}
+    void draw(const LayerDrawParams&) override {}
+
+private:
+    DeclaredBindingMode mode_ = DeclaredBindingMode::Valid;
+    float amount_ = 9.0f;
+    bool gate_ = false;
+    std::string name_ = "member drift";
+    float extra_ = 0.0f;
+};
+
+class DeclaredEmptyElement final
+    : public Layer,
+      public synaptome::element::ParameterBindable {
+public:
+    void bindParameters(
+        synaptome::element::ParameterBinder&) override {}
     void setup(ParameterRegistry&) override {}
     void update(const LayerUpdateParams&) override {}
     void draw(const LayerDrawParams&) override {}
@@ -2730,6 +2891,193 @@ void RunCompositionTelemetryScenario() {
             synaptome::runtime::CompositionTelemetryError::SlotEmpty,
         "shutdown retained live telemetry");
 }
+
+void RunDeclaredParameterBindingScenario() {
+    LayerFactory factory;
+    auto registerMode = [&](
+        const std::string& typeId,
+        DeclaredBindingMode mode,
+        bool includeOther = false) {
+        factory.registerType(
+            bindingParameterContract(typeId, includeOther),
+            [mode] {
+                return std::make_unique<DeclaredBindingElement>(mode);
+            });
+    };
+    registerMode(
+        "tests.runtime.binding.valid",
+        DeclaredBindingMode::Valid);
+    registerMode(
+        "tests.runtime.binding.missing",
+        DeclaredBindingMode::Missing);
+    registerMode(
+        "tests.runtime.binding.undeclared",
+        DeclaredBindingMode::Undeclared);
+    registerMode(
+        "tests.runtime.binding.duplicate",
+        DeclaredBindingMode::Duplicate);
+    registerMode(
+        "tests.runtime.binding.wrongKind",
+        DeclaredBindingMode::WrongKind);
+    registerMode(
+        "tests.runtime.binding.duplicateStorage",
+        DeclaredBindingMode::DuplicateStorage,
+        true);
+    registerMode(
+        "tests.runtime.binding.setupMetadata",
+        DeclaredBindingMode::SetupMetadata);
+    factory.registerType(
+        synaptome::element::ElementTypeContract{
+            visualDescriptor("tests.runtime.binding.empty"),
+            {},
+        },
+        [] {
+            return std::make_unique<DeclaredEmptyElement>();
+        });
+    factory.registerType(
+        synaptome::element::ElementTypeContract{
+            visualDescriptor("tests.runtime.binding.emptyMissingCapability"),
+            {},
+        },
+        [] {
+            return std::make_unique<EmptyElement>();
+        });
+
+    ParameterRegistry parameters;
+    synaptome::runtime::Runtime runtime(factory, parameters);
+    synaptome::runtime::Runtime::ElementRequest request;
+    request.typeId = "tests.runtime.binding.valid";
+    request.definitionId = "tests.definition.binding";
+    request.instanceId = "tests.instance.binding";
+    request.registryPrefix = "console.layer1";
+    request.config["defaults"] = {
+        {"amount", 0.75f},
+        {"gate", false},
+        {"name", "configured"},
+    };
+
+    auto prepared = runtime.prepareElement(request);
+    require(
+        prepared && prepared.stage == "ready",
+        "valid declared parameter binding did not prepare");
+    require(
+        runtime.adoptPreparedElement(
+            0,
+            std::move(prepared),
+            assignmentFor(request, "Declared Binding")),
+        "valid declared parameter binding did not adopt");
+
+    auto* amount = parameters.findFloat("console.layer1.amount");
+    auto* gate = parameters.findBool("console.layer1.gate");
+    auto* name = parameters.findString("console.layer1.name");
+    require(
+        amount &&
+            amount->meta.label == "Amount" &&
+            amount->meta.group == "Controls" &&
+            amount->meta.units == "multiplier" &&
+            amount->meta.description == "Declared amount metadata." &&
+            amount->meta.range.min == 0.0f &&
+            amount->meta.range.max == 1.0f &&
+            amount->meta.range.step == 0.1f &&
+            amount->meta.quickAccess &&
+            amount->meta.quickAccessOrder == 3 &&
+            amount->defaultValue == 0.5f &&
+            amount->baseValue == 0.75f &&
+            amount->value &&
+            *amount->value == 0.75f &&
+            gate &&
+            gate->meta.label == "Gate" &&
+            gate->defaultValue &&
+            !gate->baseValue &&
+            gate->value &&
+            !*gate->value &&
+            name &&
+            name->meta.label == "Name" &&
+            name->defaultValue == "static" &&
+            name->baseValue == "configured" &&
+            name->value &&
+            *name->value == "configured",
+        "declared parameter metadata/default/base/live authority drifted");
+
+    parameters.setFloatBase(
+        "console.layer1.amount",
+        0.25f,
+        true);
+    parameters.setBoolBase(
+        "console.layer1.gate",
+        true,
+        true);
+    parameters.setStringBase(
+        "console.layer1.name",
+        "operator",
+        true);
+    require(
+        *amount->value == 0.25f &&
+            *gate->value &&
+            *name->value == "operator",
+        "declared parameter bindings did not reach live element storage");
+
+    require(
+        runtime.clearCompositionLayer(0) &&
+            parameters.findFloat("console.layer1.amount") == nullptr &&
+            parameters.findBool("console.layer1.gate") == nullptr &&
+            parameters.findString("console.layer1.name") == nullptr,
+        "clearing a declared element leaked bound parameters");
+
+    auto requireBindingFailure = [&](
+        const std::string& typeId,
+        const std::string& errorFragment,
+        const std::string& expectedStage = "bind") {
+        request.typeId = typeId;
+        auto failed = runtime.prepareElement(request);
+        require(
+            !failed &&
+                failed.errorCode ==
+                    synaptome::runtime::Runtime::ElementErrorCode::
+                        ContractViolation &&
+                failed.stage == expectedStage &&
+                failed.error.find(errorFragment) != std::string::npos &&
+                parameters.findFloat("console.layer1.amount") == nullptr,
+            "declared binding failure leaked state or lost diagnostics: " +
+                typeId);
+
+        request.typeId = "tests.runtime.binding.valid";
+        auto reusable = runtime.prepareElement(request);
+        require(
+            static_cast<bool>(reusable),
+            "declared binding failure did not release its prefix: " +
+                typeId);
+    };
+
+    requireBindingFailure(
+        "tests.runtime.binding.missing",
+        "did not bind declared parameter");
+    requireBindingFailure(
+        "tests.runtime.binding.undeclared",
+        "undeclared parameter binding");
+    requireBindingFailure(
+        "tests.runtime.binding.duplicate",
+        "duplicate parameter binding");
+    requireBindingFailure(
+        "tests.runtime.binding.wrongKind",
+        "wrong kind");
+    requireBindingFailure(
+        "tests.runtime.binding.duplicateStorage",
+        "one storage address");
+    requireBindingFailure(
+        "tests.runtime.binding.setupMetadata",
+        "registered parameter metadata during setup",
+        "setup");
+    requireBindingFailure(
+        "tests.runtime.binding.emptyMissingCapability",
+        "does not implement parameter binding");
+
+    request.typeId = "tests.runtime.binding.empty";
+    auto empty = runtime.prepareElement(request);
+    require(
+        empty && empty.stage == "ready",
+        "explicit declared-empty binding did not prepare");
+}
 }
 
 int main() {
@@ -2740,6 +3088,7 @@ int main() {
         RunCompositionSlotReplacementScenario();
         RunCompositionActionScenario();
         RunCompositionTelemetryScenario();
+        RunDeclaredParameterBindingScenario();
 
         LayerFactory factory;
         factory.registerType(visualDescriptor("tests.runtime.good"), [] {

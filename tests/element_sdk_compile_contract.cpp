@@ -1,6 +1,7 @@
 #include <synaptome/element/Action.h>
 #include <synaptome/element/ElementDescriptor.h>
 #include <synaptome/element/Parameter.h>
+#include <synaptome/element/ParameterBinding.h>
 #include <synaptome/element/Telemetry.h>
 #include <synaptome/element/compat/Layer.h>
 #include <synaptome/element/compat/LayerParameterBuilder.h>
@@ -86,6 +87,38 @@ static_assert(std::is_move_constructible_v<
               synaptome::element::ActionExecutionResult>);
 static_assert(std::has_virtual_destructor_v<
               synaptome::element::ActionRegistrar>);
+static_assert(std::has_virtual_destructor_v<
+              synaptome::element::ParameterBinder>);
+static_assert(std::is_abstract_v<
+              synaptome::element::ParameterBinder>);
+static_assert(std::has_virtual_destructor_v<
+              synaptome::element::ParameterBindable>);
+static_assert(std::is_abstract_v<
+              synaptome::element::ParameterBindable>);
+using FloatParameterBinding =
+    void (synaptome::element::ParameterBinder::*)(
+        std::string,
+        float&);
+using BoolParameterBinding =
+    void (synaptome::element::ParameterBinder::*)(
+        std::string,
+        bool&);
+using StringParameterBinding =
+    void (synaptome::element::ParameterBinder::*)(
+        std::string,
+        std::string&);
+static_assert(std::is_same_v<
+              decltype(static_cast<FloatParameterBinding>(
+                  &synaptome::element::ParameterBinder::bind)),
+              FloatParameterBinding>);
+static_assert(std::is_same_v<
+              decltype(static_cast<BoolParameterBinding>(
+                  &synaptome::element::ParameterBinder::bind)),
+              BoolParameterBinding>);
+static_assert(std::is_same_v<
+              decltype(static_cast<StringParameterBinding>(
+                  &synaptome::element::ParameterBinder::bind)),
+              StringParameterBinding>);
 static_assert(std::is_aggregate_v<
               synaptome::element::ElementDescriptor>);
 static_assert(std::is_copy_constructible_v<

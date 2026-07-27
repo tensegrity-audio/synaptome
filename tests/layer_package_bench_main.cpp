@@ -20,6 +20,7 @@ inline float ofDegToRad(float degrees) { return degrees * 0.01745329251994329577
 #define private public
 #include "../synaptome/src/visuals/SignalBloomLayer.h"
 #undef private
+#include "../synaptome/src/runtime/ElementParameterTable.h"
 #include "../synaptome/src/runtime/SignalBloomRegistration.h"
 #include "../synaptome/src/visuals/LayerFactory.h"
 
@@ -346,10 +347,27 @@ int main() {
                 {"backgroundColor", {0.01, 0.02, 0.06}}
             }}
         };
-        layer->configure(config);
-
         ParameterRegistry registry;
+        auto* bindable =
+            dynamic_cast<synaptome::element::ParameterBindable*>(
+                layer.get());
+        require(
+            bindable != nullptr,
+            "declared Signal Bloom did not expose bind-only storage");
+        synaptome::runtime::ElementParameterTable parameterTable(
+            typeContract->contract.parameters);
+        bindable->bindParameters(parameterTable);
+        require(
+            parameterTable.contractError().empty(),
+            "Signal Bloom live bindings diverged from its declaration");
+        parameterTable.applyDeclarationDefaults();
+        layer->configure(config);
         layer->setup(registry);
+        require(
+            registry.floats().empty() && registry.bools().empty() &&
+                registry.strings().empty(),
+            "declared Signal Bloom setup retained metadata authority");
+        parameterTable.populate("bench.signal_bloom", registry);
         require(registry.floats().size() == 16, "unexpected float parameter count");
         require(registry.bools().size() == 2, "unexpected bool parameter count");
         require(registry.findFloat("bench.signal_bloom.bpmMultiplier") != nullptr,
@@ -361,6 +379,38 @@ int main() {
         }
         require(declared.size() == registry.floats().size() + registry.bools().size(),
                 "package/runtime parameter counts drifted");
+        const auto* speed =
+            registry.findFloat("bench.signal_bloom.speed");
+        const auto* bpmMultiplier =
+            registry.findFloat("bench.signal_bloom.bpmMultiplier");
+        const auto* colorR =
+            registry.findFloat("bench.signal_bloom.colorR");
+        const auto* backgroundB =
+            registry.findFloat("bench.signal_bloom.bgColorB");
+        require(
+            speed &&
+                speed->meta.label == "Speed" &&
+                speed->meta.group == "Example Motion" &&
+                speed->meta.units == "multiplier" &&
+                std::fabs(speed->defaultValue - 0.65f) < 0.0001f &&
+                std::fabs(speed->baseValue - 0.9f) < 0.0001f &&
+                speed->value &&
+                std::fabs(*speed->value - 0.9f) < 0.0001f &&
+                bpmMultiplier &&
+                std::fabs(bpmMultiplier->defaultValue - 1.0f) <
+                    0.0001f &&
+                std::fabs(bpmMultiplier->baseValue - 2.0f) <
+                    0.0001f &&
+                colorR &&
+                std::fabs(colorR->defaultValue - 0.12f) < 0.0001f &&
+                std::fabs(colorR->baseValue - 0.2f) < 0.0001f &&
+                backgroundB &&
+                std::fabs(backgroundB->defaultValue - 0.08f) <
+                    0.0001f &&
+                std::fabs(backgroundB->baseValue - 0.06f) <
+                    0.0001f,
+            "static defaults, configured base values, or declaration "
+            "metadata lost authority");
         const std::string prefix = "bench.signal_bloom.";
         for (const auto& parameter : registry.floats()) {
             require(parameter.meta.id.rfind(prefix, 0) == 0,

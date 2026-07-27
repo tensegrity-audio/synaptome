@@ -1,5 +1,4 @@
 #include "SignalBloomLayer.h"
-#include <synaptome/element/compat/LayerParameterBuilder.h>
 #include "ofGraphics.h"
 #include "ofMath.h"
 #include <algorithm>
@@ -52,100 +51,30 @@ void SignalBloomLayer::configure(const ofJson& config) {
     readColor(defaults, "backgroundColor", bgColorR_, bgColorG_, bgColorB_);
 }
 
+void SignalBloomLayer::bindParameters(
+    synaptome::element::ParameterBinder& binder) {
+    binder.bind("visible", visible_);
+    binder.bind("speed", speed_);
+    binder.bind("bpmSync", bpmSync_);
+    binder.bind("bpmMultiplier", bpmMultiplier_);
+    binder.bind("scale", scale_);
+    binder.bind("rotationDeg", rotationDeg_);
+    binder.bind("alpha", alpha_);
+    binder.bind("gain", gain_);
+    binder.bind("lineOpacity", lineOpacity_);
+    binder.bind("colorR", colorR_);
+    binder.bind("colorG", colorG_);
+    binder.bind("colorB", colorB_);
+    binder.bind("bgColorR", bgColorR_);
+    binder.bind("bgColorG", bgColorG_);
+    binder.bind("bgColorB", bgColorB_);
+    binder.bind("xInput", xInput_);
+    binder.bind("yInput", yInput_);
+    binder.bind("speedInput", speedInput_);
+}
+
 void SignalBloomLayer::setup(ParameterRegistry& registry) {
-    const std::string prefix = registryPrefix().empty() ? "examples.signal_bloom" : registryPrefix();
-
-    LayerParameterBuilder common(registry, prefix);
-    registry.addBool(
-        prefix + ".visible", &visible_, visible_,
-        common.boolDescriptor({ "Signal Bloom Visible", "Example", {} }));
-    registry.addFloat(
-        prefix + ".speed", &speed_, speed_,
-        common.floatDescriptor(
-            { "Signal Speed", "Example Motion", { 0.0f, 4.0f, 0.01f } }));
-
-    ParameterRegistry::Descriptor bpmSyncMeta;
-    bpmSyncMeta.label = "BPM Sync";
-    bpmSyncMeta.group = "Example Motion";
-    registry.addBool(prefix + ".bpmSync", &bpmSync_, bpmSync_, bpmSyncMeta);
-
-    ParameterRegistry::Descriptor bpmMultiplierMeta;
-    bpmMultiplierMeta.label = "BPM Multiplier";
-    bpmMultiplierMeta.group = "Example Motion";
-    bpmMultiplierMeta.range.min = 0.25f;
-    bpmMultiplierMeta.range.max = 8.0f;
-    bpmMultiplierMeta.range.step = 0.25f;
-    registry.addFloat(prefix + ".bpmMultiplier", &bpmMultiplier_, bpmMultiplier_, bpmMultiplierMeta);
-
-    ParameterRegistry::Descriptor scaleMeta;
-    scaleMeta.label = "Scale";
-    scaleMeta.group = "Example Transform";
-    scaleMeta.range.min = 0.1f;
-    scaleMeta.range.max = 2.0f;
-    scaleMeta.range.step = 0.01f;
-    registry.addFloat(prefix + ".scale", &scale_, scale_, scaleMeta);
-
-    ParameterRegistry::Descriptor rotationMeta;
-    rotationMeta.label = "Rotation";
-    rotationMeta.group = "Example Transform";
-    rotationMeta.units = "deg";
-    rotationMeta.range.min = -180.0f;
-    rotationMeta.range.max = 180.0f;
-    rotationMeta.range.step = 1.0f;
-    registry.addFloat(prefix + ".rotationDeg", &rotationDeg_, rotationDeg_, rotationMeta);
-
-    registry.addFloat(
-        prefix + ".alpha", &alpha_, alpha_,
-        common.floatDescriptor(
-            { "Alpha", "Example Color", { 0.0f, 1.0f, 0.01f } }));
-
-    ParameterRegistry::Descriptor gainMeta;
-    gainMeta.label = "Sensor Gain";
-    gainMeta.group = "Example Modulation";
-    gainMeta.range.min = 0.0f;
-    gainMeta.range.max = 2.0f;
-    gainMeta.range.step = 0.01f;
-    registry.addFloat(prefix + ".gain", &gain_, gain_, gainMeta);
-
-    ParameterRegistry::Descriptor lineMeta;
-    lineMeta.label = "Line Opacity";
-    lineMeta.group = "Example Color";
-    lineMeta.range.min = 0.0f;
-    lineMeta.range.max = 1.0f;
-    lineMeta.range.step = 0.01f;
-    registry.addFloat(prefix + ".lineOpacity", &lineOpacity_, lineOpacity_, lineMeta);
-
-    ParameterRegistry::Descriptor colorMeta;
-    colorMeta.group = "Example Color";
-    colorMeta.range.min = 0.0f;
-    colorMeta.range.max = 1.0f;
-    colorMeta.range.step = 0.01f;
-    colorMeta.label = "Red";
-    registry.addFloat(prefix + ".colorR", &colorR_, colorR_, colorMeta);
-    colorMeta.label = "Green";
-    registry.addFloat(prefix + ".colorG", &colorG_, colorG_, colorMeta);
-    colorMeta.label = "Blue";
-    registry.addFloat(prefix + ".colorB", &colorB_, colorB_, colorMeta);
-
-    colorMeta.label = "Background Red";
-    registry.addFloat(prefix + ".bgColorR", &bgColorR_, bgColorR_, colorMeta);
-    colorMeta.label = "Background Green";
-    registry.addFloat(prefix + ".bgColorG", &bgColorG_, bgColorG_, colorMeta);
-    colorMeta.label = "Background Blue";
-    registry.addFloat(prefix + ".bgColorB", &bgColorB_, bgColorB_, colorMeta);
-
-    ParameterRegistry::Descriptor inputMeta;
-    inputMeta.group = "Example Modulation";
-    inputMeta.range.min = 0.0f;
-    inputMeta.range.max = 1.0f;
-    inputMeta.range.step = 0.001f;
-    inputMeta.label = "X Input";
-    registry.addFloat(prefix + ".xInput", &xInput_, xInput_, inputMeta);
-    inputMeta.label = "Y Input";
-    registry.addFloat(prefix + ".yInput", &yInput_, yInput_, inputMeta);
-    inputMeta.label = "Speed Input";
-    registry.addFloat(prefix + ".speedInput", &speedInput_, speedInput_, inputMeta);
-
+    (void)registry;
     points_.assign(96, glm::vec2{ 0.0f, 0.0f });
 }
 
