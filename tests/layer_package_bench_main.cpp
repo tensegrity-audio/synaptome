@@ -31,7 +31,7 @@ void require(bool condition, const std::string& message) {
 
 int main() {
     try {
-        LayerFactory& factory = LayerFactory::instance();
+        LayerFactory factory;
         synaptome::runtime::registerBuiltinElements(factory);
 
         auto layer = factory.create("example.signalBloom");

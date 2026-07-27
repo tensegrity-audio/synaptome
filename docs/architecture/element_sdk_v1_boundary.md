@@ -17,8 +17,11 @@ context is live. Candidate setup now writes to an isolated parameter registry;
 same-address adoption commits the registry and element together, while failed
 setup or commit leaves the live layer unchanged. The host still adapts effect
 compositing, persistence, mappings, and compatibility inspection through a
-temporary internal view. Isolated factory/catalog ownership is not yet
-complete.
+temporary internal view. Element type registration is now scoped per Runtime:
+the legacy-named `LayerFactory` has no process-global singleton, the host and
+each bench own an independent registry, scene validation uses non-constructing
+type lookup, and Control & Mapping receives only a narrow offline creator.
+Typed descriptor/catalog ownership is not yet complete.
 
 This document records the dependency inventory and the minimum Element SDK v1
 contract that must exist before Synaptome moves code into new build targets.
@@ -52,7 +55,7 @@ architecture.
 | Type special cases | Element casts and element-specific bindings occur around `synaptome/src/ofApp.cpp:5254` and `synaptome/src/ofApp.cpp:5866`. | The generic factory contract is routinely bypassed. |
 | Lifecycle | `synaptome/src/visuals/Layer.h:23` has configure, setup, update, draw, resize, and enable methods, then relies on destruction. | There is no setup result, explicit teardown, health, or transactional replacement. |
 | Composition | `ConsoleSlot` at `synaptome/src/ofApp.h:326` owns assignment state, element ownership, coverage, and render targets; `drawConsole` starts at `synaptome/src/ofApp.cpp:4219`. | The reusable composition engine is embedded in the host. |
-| Registry | `LayerFactory` is a process-global type-to-creator map with no descriptor, owner, version, enumeration, unregister, or atomic package registration. | Identity, metadata, creator, and lifetime have no single authority. |
+| Registry | At the SEAC-2 freeze, `LayerFactory` was process-global. It is now a Runtime-scoped type-to-creator map, but still has no descriptor, owner, version, enumeration, unregister, or atomic package registration. | Type creation is isolated; identity and package metadata still lack one typed authority. |
 | Catalog | `LayerLibrary` owns legacy JSON loading, package activation, and preset merging; package tools generate a second legacy catalog representation. | The package manifest is not yet the runtime's typed source of truth. |
 | Parameters | Package JSON, C++ `setup()`, and generated adapters repeat parameter metadata; `ParameterRegistry::Descriptor` at `synaptome/src/core/ParameterRegistry.h:24` is incomplete for the target contract. | Runtime binding and declaration metadata can drift. |
 | Services | Elements reach global services such as audio analysis, video catalog, and text state directly. | Isolated tests can still depend on hidden process state. |
@@ -206,6 +209,8 @@ descriptor + creator + package/version owner
 
 Rules:
 
+- every Runtime receives one explicitly owned registry; there is no
+  process-global fallback;
 - empty and duplicate IDs fail before activation;
 - descriptor and creator registration cannot partially succeed;
 - registrations can be enumerated and attributed to their owner;

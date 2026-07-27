@@ -1107,7 +1107,37 @@ private:
     ofApp* host_ = nullptr;
 };
 
-ofApp::ofApp() = default;
+namespace {
+void registerHostElementTypes(LayerFactory& elementTypes) {
+    elementTypes.registerType("grid", []() { return std::make_unique<GridLayer>(); });
+    elementTypes.registerType("geodesic", []() { return std::make_unique<GeodesicLayer>(); });
+    elementTypes.registerType("audioWaveform", []() { return std::make_unique<AudioWaveformLayer>(); });
+    elementTypes.registerType("oscilloscope", []() { return std::make_unique<OscilloscopeLayer>(); });
+    elementTypes.registerType("perlin", []() { return std::make_unique<PerlinNoiseLayer>(); });
+    elementTypes.registerType("stlModel", []() { return std::make_unique<StlModelLayer>(); });
+    elementTypes.registerType("gameOfLife", []() { return std::make_unique<GameOfLifeLayer>(); });
+    elementTypes.registerType("reactionDiffusion", []() { return std::make_unique<ReactionDiffusionLayer>(); });
+    elementTypes.registerType("lenia", []() { return std::make_unique<LeniaLayer>(); });
+    elementTypes.registerType("excitableMedia", []() { return std::make_unique<ExcitableMediaLayer>(); });
+    elementTypes.registerType("agentField", []() { return std::make_unique<AgentFieldLayer>(); });
+    elementTypes.registerType("circuitTrace", []() { return std::make_unique<CircuitTraceLayer>(); });
+    elementTypes.registerType("flocking", []() { return std::make_unique<FlockingLayer>(); });
+    elementTypes.registerType("flowField", []() { return std::make_unique<FlowFieldLayer>(); });
+    elementTypes.registerType("riverFormation", []() { return std::make_unique<RiverFormationLayer>(); });
+    elementTypes.registerType("arcticAuroraScene", []() { return std::make_unique<ArcticAuroraSceneLayer>(); });
+    elementTypes.registerType("mountainIsland", []() { return std::make_unique<MountainIslandLayer>(); });
+    elementTypes.registerType("solarSystem", []() { return std::make_unique<SolarSystemLayer>(); });
+    elementTypes.registerType("cosmosFormation", []() { return std::make_unique<CosmosFormationLayer>(); });
+    elementTypes.registerType("media.webcam", []() { return std::make_unique<VideoGrabberLayer>(); });
+    elementTypes.registerType("media.clip", []() { return std::make_unique<VideoClipLayer>(); });
+    elementTypes.registerType("text", []() { return std::make_unique<TextLayer>(); });
+    synaptome::runtime::registerBuiltinElements(elementTypes);
+}
+}
+
+ofApp::ofApp() {
+    registerHostElementTypes(elementTypes_);
+}
 
 void ofApp::setLaunchArguments(int argc, char** argv) {
     for (int i = 1; i < argc; ++i) {
@@ -1992,34 +2022,6 @@ void ofApp::setup() {
 
     postEffects.setup(paramRegistry);
 
-    auto& factory = LayerFactory::instance();
-    factory.registerType("grid", []() { return std::make_unique<GridLayer>(); });
-    factory.registerType("geodesic", []() { return std::make_unique<GeodesicLayer>(); });
-    factory.registerType("audioWaveform", []() { return std::make_unique<AudioWaveformLayer>(); });
-    factory.registerType("oscilloscope", []() { return std::make_unique<OscilloscopeLayer>(); });
-    factory.registerType("perlin", []() { return std::make_unique<PerlinNoiseLayer>(); });
-    factory.registerType("stlModel", []() { return std::make_unique<StlModelLayer>(); });
-    factory.registerType("gameOfLife", []() { return std::make_unique<GameOfLifeLayer>(); });
-    factory.registerType("reactionDiffusion", []() { return std::make_unique<ReactionDiffusionLayer>(); });
-    factory.registerType("lenia", []() { return std::make_unique<LeniaLayer>(); });
-    factory.registerType("excitableMedia", []() { return std::make_unique<ExcitableMediaLayer>(); });
-    factory.registerType("agentField", []() { return std::make_unique<AgentFieldLayer>(); });
-    factory.registerType("circuitTrace", []() { return std::make_unique<CircuitTraceLayer>(); });
-    factory.registerType("flocking", []() { return std::make_unique<FlockingLayer>(); });
-    factory.registerType("flowField", []() { return std::make_unique<FlowFieldLayer>(); });
-    factory.registerType("riverFormation", []() { return std::make_unique<RiverFormationLayer>(); });
-    factory.registerType("arcticAuroraScene", []() { return std::make_unique<ArcticAuroraSceneLayer>(); });
-    factory.registerType("mountainIsland", []() { return std::make_unique<MountainIslandLayer>(); });
-    factory.registerType("solarSystem", []() { return std::make_unique<SolarSystemLayer>(); });
-    factory.registerType("cosmosFormation", []() { return std::make_unique<CosmosFormationLayer>(); });
-    factory.registerType("media.webcam", []() { return std::make_unique<VideoGrabberLayer>(); });
-    factory.registerType("media.clip", []() { return std::make_unique<VideoClipLayer>(); });
-    factory.registerType("text", []() { return std::make_unique<TextLayer>(); });
-    // The public SDK example is compiled as an explicit source-registration
-    // example. It remains absent from the catalog unless package activation is
-    // enabled in config/layer-packages.json.
-    synaptome::runtime::registerBuiltinElements(factory);
-
     std::string layersRoot = ofToDataPath("layers", true);
     layerLibrary.reload(layersRoot);
     packageActivationPath_ =
@@ -2409,6 +2411,10 @@ void ofApp::setup() {
         controlMappingHub->setOptionProviderRegistry(&optionProviderRegistry);
         controlMappingHub->setMidiRouter(&midi);
         controlMappingHub->setLayerLibrary(&layerLibrary);
+        controlMappingHub->setOfflineElementCreator(
+            [this](const std::string& type) {
+                return elementTypes_.create(type);
+            });
         controlMappingHub->setLayerPackageInspectionPath(
             ofToDataPath("config/layer-package-inspection.json", true));
         controlMappingHub->setPackagePresetSelectionProvider(
@@ -6434,8 +6440,7 @@ bool ofApp::validateSceneConsoleLayout(const ofJson& consoleNode,
             return false;
         }
         if (!isFxType(entry->type) && !isUiOverlayType(entry->type)) {
-            auto probe = LayerFactory::instance().create(entry->type);
-            if (!probe) {
+            if (!runtime_.hasElementType(entry->type)) {
                 error = "layer factory cannot create type '" + entry->type + "' for asset " + assetId;
                 return false;
             }

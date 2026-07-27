@@ -135,7 +135,8 @@ public:
     bool pendingBioAmpSeedDefined_ = false;
     std::shared_ptr<HudLayoutEditor> hudLayoutEditor;
     ParameterRegistry paramRegistry;
-    synaptome::runtime::Runtime runtime_{LayerFactory::instance(), paramRegistry};
+    LayerFactory elementTypes_;
+    synaptome::runtime::Runtime runtime_{elementTypes_, paramRegistry};
     BankRegistry bankRegistry;
     OptionProviderRegistry optionProviderRegistry;
     std::string midiMapPath;

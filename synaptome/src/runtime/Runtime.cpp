@@ -77,8 +77,10 @@ Runtime::ElementResult& Runtime::ElementResult::operator=(
     return *this;
 }
 
-Runtime::Runtime(LayerFactory& factory, ParameterRegistry& parameters)
-    : factory_(factory),
+Runtime::Runtime(
+    const LayerFactory& elementTypes,
+    ParameterRegistry& parameters)
+    : elementTypes_(elementTypes),
       parameters_(parameters) {}
 
 Runtime::~Runtime() noexcept {
@@ -143,6 +145,10 @@ Runtime::ElementResult Runtime::prepareElementReplacement(
     return prepareElementImpl(request, &replacing, progress);
 }
 
+bool Runtime::hasElementType(const std::string& typeId) const noexcept {
+    return elementTypes_.contains(typeId);
+}
+
 Runtime::ElementResult Runtime::prepareElementImpl(
     const ElementRequest& request,
     Layer* replacing,
@@ -196,7 +202,7 @@ Runtime::ElementResult Runtime::prepareElementImpl(
     }
     try {
         result.stage = "create";
-        result.element_ = factory_.create(request.typeId);
+        result.element_ = elementTypes_.create(request.typeId);
         if (progress) progress("create");
         if (!result.element_) {
             if (result.ownsPrefixReservation_) {

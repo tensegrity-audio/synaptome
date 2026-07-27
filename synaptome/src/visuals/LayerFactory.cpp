@@ -2,11 +2,6 @@
 #include <stdexcept>
 #include <utility>
 
-LayerFactory& LayerFactory::instance() {
-    static LayerFactory factory;
-    return factory;
-}
-
 void LayerFactory::registerType(const std::string& type, Creator creator) {
     if (type.empty()) {
         throw std::invalid_argument("LayerFactory::registerType requires non-empty type");
@@ -17,7 +12,11 @@ void LayerFactory::registerType(const std::string& type, Creator creator) {
     if (creators_.find(type) != creators_.end()) {
         throw std::logic_error("LayerFactory::registerType duplicate type: " + type);
     }
-    creators_[type] = std::move(creator);
+    creators_.emplace(type, std::move(creator));
+}
+
+bool LayerFactory::contains(const std::string& type) const noexcept {
+    return creators_.find(type) != creators_.end();
 }
 
 std::unique_ptr<Layer> LayerFactory::create(const std::string& type) const {

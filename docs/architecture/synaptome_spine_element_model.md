@@ -148,6 +148,12 @@ An element may have no public parameters and still be hostable. It does not
 become a fully controllable Synaptome instrument until it declares a stable
 parameter surface.
 
+The compatibility `LayerFactory` is an explicitly owned element type registry,
+not a singleton. Each Runtime receives one registry by reference; app, bench,
+and test registries are isolated, and a missing type never falls back to
+another Runtime's registrations. The legacy class name may change only with a
+focused source migration; the stable type IDs do not.
+
 During the current compiler-matched compatibility phase, `setup()` receives an
 isolated staging registry. It may register only the element instance namespace
 and must not retain that registry address. The concrete

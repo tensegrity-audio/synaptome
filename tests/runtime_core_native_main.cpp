@@ -199,11 +199,122 @@ private:
     ParameterRegistry* setupRegistry_ = nullptr;
     float value_ = 0.3f;
 };
+
+class ScopedRegistryElementA final : public Layer {
+public:
+    void setup(ParameterRegistry& registry) override {
+        ParameterRegistry::Descriptor descriptor;
+        descriptor.label = "Scoped Registry A";
+        registry.addFloat(
+            registryPrefix() + ".value",
+            &value_,
+            value_,
+            descriptor);
+    }
+    void update(const LayerUpdateParams&) override {}
+    void draw(const LayerDrawParams&) override {}
+
+private:
+    float value_ = 0.1f;
+};
+
+class ScopedRegistryElementB final : public Layer {
+public:
+    void setup(ParameterRegistry& registry) override {
+        ParameterRegistry::Descriptor descriptor;
+        descriptor.label = "Scoped Registry B";
+        registry.addFloat(
+            registryPrefix() + ".value",
+            &value_,
+            value_,
+            descriptor);
+    }
+    void update(const LayerUpdateParams&) override {}
+    void draw(const LayerDrawParams&) override {}
+
+private:
+    float value_ = 0.9f;
+};
+
+void RunScopedElementTypeRegistryIsolationScenario() {
+    // Runtime receives its type registry by reference, so independently
+    // constructed registries must never share or fall back to global state.
+    LayerFactory registryA;
+    LayerFactory registryB;
+    constexpr const char* kSharedType = "tests.runtime.scoped.shared";
+    constexpr const char* kOnlyInAType = "tests.runtime.scoped.only-a";
+
+    registryA.registerType(kSharedType, [] {
+        return std::make_unique<ScopedRegistryElementA>();
+    });
+    registryB.registerType(kSharedType, [] {
+        return std::make_unique<ScopedRegistryElementB>();
+    });
+    registryA.registerType(kOnlyInAType, [] {
+        return std::make_unique<ScopedRegistryElementA>();
+    });
+    int lookupConstructionCount = 0;
+    registryA.registerType("tests.runtime.scoped.lookup-only", [&] {
+        ++lookupConstructionCount;
+        return std::make_unique<ScopedRegistryElementA>();
+    });
+
+    ParameterRegistry parametersA;
+    ParameterRegistry parametersB;
+    synaptome::runtime::Runtime runtimeA(registryA, parametersA);
+    synaptome::runtime::Runtime runtimeB(registryB, parametersB);
+    require(
+        runtimeA.hasElementType("tests.runtime.scoped.lookup-only") &&
+            !runtimeB.hasElementType("tests.runtime.scoped.lookup-only") &&
+            lookupConstructionCount == 0,
+        "scoped type lookup constructed an element or leaked across runtimes");
+
+    synaptome::runtime::Runtime::ElementRequest request;
+    request.typeId = kSharedType;
+    request.definitionId = "tests.definition.scoped.shared";
+    request.instanceId = "tests.instance.scoped.a";
+    request.registryPrefix = "console.layer1";
+    auto preparedA = runtimeA.prepareElement(request);
+    require(
+        preparedA &&
+            dynamic_cast<ScopedRegistryElementA*>(preparedA.element()) !=
+                nullptr,
+        "runtime A did not resolve its scoped shared type");
+
+    request.instanceId = "tests.instance.scoped.b";
+    auto preparedB = runtimeB.prepareElement(request);
+    require(
+        preparedB &&
+            dynamic_cast<ScopedRegistryElementB*>(preparedB.element()) !=
+                nullptr,
+        "runtime B leaked runtime A's shared type registration");
+
+    request.typeId = kOnlyInAType;
+    request.definitionId = "tests.definition.scoped.only-a";
+    request.instanceId = "tests.instance.scoped.only-a";
+    request.registryPrefix = "console.layer2";
+    auto onlyInA = runtimeA.prepareElement(request);
+    require(onlyInA &&
+                dynamic_cast<ScopedRegistryElementA*>(onlyInA.element()) !=
+                    nullptr,
+            "runtime A could not resolve its private type registration");
+
+    request.instanceId = "tests.instance.scoped.missing-in-b";
+    auto missingInB = runtimeB.prepareElement(request);
+    require(
+        !missingInB &&
+            missingInB.errorCode ==
+                synaptome::runtime::Runtime::ElementErrorCode::
+                    TypeNotRegistered,
+        "runtime B observed a type registered only in runtime A's scope");
+}
 }
 
 int main() {
     try {
-        LayerFactory& factory = LayerFactory::instance();
+        RunScopedElementTypeRegistryIsolationScenario();
+
+        LayerFactory factory;
         factory.registerType("tests.runtime.good", [] {
             return std::make_unique<ContractElement>();
         });

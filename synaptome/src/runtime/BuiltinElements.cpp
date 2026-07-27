@@ -7,8 +7,8 @@
 
 namespace synaptome::runtime {
 
-void registerBuiltinElements(LayerFactory& factory) {
-    factory.registerType("example.signalBloom", []() {
+void registerBuiltinElements(LayerFactory& elementTypes) {
+    elementTypes.registerType("example.signalBloom", []() {
         return std::make_unique<SignalBloomLayer>();
     });
 }

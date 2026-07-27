@@ -57,7 +57,9 @@ routing, staged setup, failed/successful same-address replacement,
 host-registration collision rollback, matching-ID modifier preservation,
 live-registry rebinding, idempotent shutdown, and safe release. Add
 `--incremental-app` to prove the full host still compiles and links through the
-library.
+library. It also proves scoped type-registry isolation: two Runtime instances
+may bind the same type ID to different test creators, and neither can resolve a
+type registered only in the other.
 
 `Layer::setup(ParameterRegistry&)` receives a private staging registry, not the
 canonical live registry. Author code must only register its own namespace and
@@ -67,7 +69,8 @@ use a behavior-specific suffix instead. If later registry lookup is
 unavoidable, override
 `onParameterRegistryCommitted(ParameterRegistry&) noexcept` only to retain the
 committed registry pointer. Full effect/compositing ownership and a scoped
-factory/catalog remain SEAC-3 work.
+typed descriptor/catalog remain SEAC-3 work. The compatibility factory itself
+is already non-global and explicitly owned per app, Runtime test, or bench.
 
 Circuit Trace currently has an isolated eight-direction native contract:
 

@@ -13,7 +13,7 @@
 #include "../core/ParameterRegistry.h"
 #include "../core/OptionProviderRegistry.h"
 #include "../io/MidiRouter.h"
-#include "../visuals/LayerFactory.h"
+#include "../visuals/Layer.h"
 #include "../visuals/LayerLibrary.h"
 #include "../io/ConsoleStore.h"
 #include "HudFeedRegistry.h"
@@ -99,6 +99,8 @@ public:
     void setOptionProviderRegistry(const OptionProviderRegistry* registry);
     void setMidiRouter(MidiRouter* router);
     void setLayerLibrary(LayerLibrary* library);
+    void setOfflineElementCreator(
+        std::function<std::unique_ptr<Layer>(const std::string&)> creator);
     void setLayerPackageInspectionPath(const std::string& path);
     void setPackagePresetSelectionProvider(
         std::function<std::string(const std::string&, const std::string&)> provider);
@@ -447,6 +449,8 @@ private:
     mutable std::size_t lastOptionProviderRevision_ = 0;
     MidiRouter* midiRouter_ = nullptr;
     LayerLibrary* layerLibrary_ = nullptr;
+    std::function<std::unique_ptr<Layer>(const std::string&)>
+        offlineElementCreator_;
     std::function<const LayerLibrary::Entry*(const std::string&)> consoleAssetResolver_;
     std::function<bool(int, const std::string&)> consoleSlotLoadCallback_;
     std::function<bool(int)> consoleSlotUnloadCallback_;
@@ -1030,6 +1034,13 @@ inline void ControlMappingHubState::setLayerLibrary(LayerLibrary* library) {
     layerLibrary_ = library;
     markOfflineHydrationDirty();
     rebuildAssetCatalog();
+    tableModel_.dirty = true;
+}
+
+inline void ControlMappingHubState::setOfflineElementCreator(
+    std::function<std::unique_ptr<Layer>(const std::string&)> creator) {
+    offlineElementCreator_ = std::move(creator);
+    markOfflineHydrationDirty();
     tableModel_.dirty = true;
 }
 
@@ -6223,12 +6234,11 @@ inline void ControlMappingHubState::hydrateOfflineAssetsIfNeeded() const {
     offlineBoolParamIndices_.clear();
     offlineStringParamIndices_.clear();
     offlineOpacityValues_.clear();
-    if (!layerLibrary_) {
+    if (!layerLibrary_ || !offlineElementCreator_) {
         return;
     }
-    auto& factory = LayerFactory::instance();
     for (const auto& entry : layerLibrary_->entries()) {
-        auto layer = factory.create(entry.type);
+        auto layer = offlineElementCreator_(entry.type);
         if (!layer) {
             continue;
         }

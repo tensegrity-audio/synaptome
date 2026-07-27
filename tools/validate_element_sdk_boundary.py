@@ -119,7 +119,7 @@ def main() -> int:
         errors.append("host project must compile the controlled registration unit")
     if "SignalBloomLayer" in app_source:
         errors.append("ofApp.cpp must not know the Signal Bloom concrete class")
-    if "registerBuiltinElements(factory)" not in app_source:
+    if "registerBuiltinElements(elementTypes)" not in app_source:
         errors.append("host must call the controlled built-in registration entrypoint")
     if 'registerType("example.signalBloom"' not in builtin_source:
         errors.append("built-in registration unit must own the Signal Bloom type binding")

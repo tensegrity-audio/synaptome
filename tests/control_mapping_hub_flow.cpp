@@ -31,7 +31,6 @@
 #include "../synaptome/src/ui/WindowMonitorPlacement.h"
 #include "../synaptome/src/io/MidiRouter.h"
 #include "../synaptome/src/io/MidiRouter.cpp"
-#include "../synaptome/src/visuals/LayerFactory.cpp"
 #include "../synaptome/src/visuals/LayerLibrary.cpp"
 
 // The BrowserFlow harness uses deliberately small openFrameworks stubs. These
@@ -3188,7 +3187,116 @@ bool RunWindowMonitorPlacementScenario() {
     return true;
 }
 
+namespace {
+class OfflineElementCreatorProbe final : public Layer {
+public:
+    void setup(ParameterRegistry& registry) override {
+        ParameterRegistry::Descriptor meta;
+        meta.label = "Probe: Amount";
+        meta.group = "Probe";
+        meta.description = "BrowserFlow probe for offline element hydration";
+        meta.range.min = 0.0f;
+        meta.range.max = 1.0f;
+        meta.range.step = 0.01f;
+        registry.addFloat(
+            registryPrefix() + ".amount", &amount_, amount_, meta);
+    }
+
+    void update(const LayerUpdateParams&) override {}
+    void draw(const LayerDrawParams&) override {}
+
+private:
+    float amount_ = 0.25f;
+};
+
+void verifyOfflineElementCreatorHydration() {
+    const auto uniqueSuffix = std::to_string(
+        std::chrono::high_resolution_clock::now().time_since_epoch().count());
+    const auto layersDir =
+        std::filesystem::temp_directory_path() /
+        ("cmh_offline_element_creator_" + uniqueSuffix);
+    std::filesystem::create_directories(layersDir);
+    const auto assetPath = layersDir / "tests.offline.probe.json";
+    std::ofstream out(assetPath, std::ios::trunc);
+    if (!out) {
+        throw std::runtime_error("Failed to create offline creator probe asset");
+    }
+    out << R"JSON({
+    "id":"tests.offline.probe",
+    "label":"Offline Creator Probe",
+    "category":"Tests",
+    "type":"tests.offline.probe",
+    "registryPrefix":"tests.offline.probe"
+})JSON";
+    out.close();
+
+    LayerLibrary library;
+    if (!library.reload(layersDir.string()) ||
+        !library.find("tests.offline.probe")) {
+        throw std::runtime_error("Failed to load offline creator probe asset");
+    }
+
+    ParameterRegistry liveRegistry;
+    ControlMappingHubState hydratedHub;
+    hydratedHub.setParameterRegistry(&liveRegistry);
+    hydratedHub.setLayerLibrary(&library);
+    int creatorInvocations = 0;
+    hydratedHub.setOfflineElementCreator(
+        [&creatorInvocations](const std::string& type) -> std::unique_ptr<Layer> {
+            ++creatorInvocations;
+            if (type == "tests.offline.probe") {
+                return std::make_unique<OfflineElementCreatorProbe>();
+            }
+            return nullptr;
+        });
+    hydratedHub.rebuildModel();
+
+    if (creatorInvocations != 1) {
+        throw std::runtime_error(
+            "Offline element creator was not invoked exactly once for the probe");
+    }
+    if (hydratedHub.offlineLayers_.size() != 1 ||
+        !hydratedHub.offlineRegistry_.findFloat("tests.offline.probe.amount")) {
+        throw std::runtime_error(
+            "Offline element creator did not hydrate the probe layer registry");
+    }
+    const auto hydratedRow = std::find_if(
+        hydratedHub.tableModel_.rows.begin(),
+        hydratedHub.tableModel_.rows.end(),
+        [](const ControlMappingHubState::ParameterRow& row) {
+            return row.id == "tests.offline.probe.amount" &&
+                   row.offline && row.isFloat && row.floatParam;
+        });
+    if (hydratedRow == hydratedHub.tableModel_.rows.end()) {
+        throw std::runtime_error(
+            "Hydrated probe parameter did not appear as an offline Browser row");
+    }
+
+    ParameterRegistry unhydratedRegistry;
+    ControlMappingHubState unhydratedHub;
+    unhydratedHub.setParameterRegistry(&unhydratedRegistry);
+    unhydratedHub.setLayerLibrary(&library);
+    unhydratedHub.rebuildModel();
+    const auto unexpectedRow = std::find_if(
+        unhydratedHub.tableModel_.rows.begin(),
+        unhydratedHub.tableModel_.rows.end(),
+        [](const ControlMappingHubState::ParameterRow& row) {
+            return row.id == "tests.offline.probe.amount";
+        });
+    if (!unhydratedHub.offlineLayers_.empty() ||
+        !unhydratedHub.offlineRegistry_.floats().empty() ||
+        !unhydratedHub.offlineRegistry_.bools().empty() ||
+        !unhydratedHub.offlineRegistry_.strings().empty() ||
+        unexpectedRow != unhydratedHub.tableModel_.rows.end()) {
+        throw std::runtime_error(
+            "Hub without an offline creator unexpectedly hydrated the probe");
+    }
+}
+}
+
 bool RunLayerPackageReadOnlyInspectionScenario() {
+    verifyOfflineElementCreatorHydration();
+
     ParameterRegistry registry;
     OptionProviderRegistry optionProviders;
     if (!optionProviders.setProvider(

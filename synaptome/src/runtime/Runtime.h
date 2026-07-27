@@ -72,7 +72,7 @@ public:
 
     using ProgressCallback = std::function<void(std::string_view step)>;
 
-    Runtime(LayerFactory& factory, ParameterRegistry& parameters);
+    Runtime(const LayerFactory& elementTypes, ParameterRegistry& parameters);
     ~Runtime() noexcept;
 
     Runtime(const Runtime&) = delete;
@@ -87,6 +87,7 @@ public:
         const ElementRequest& request,
         Layer& replacing,
         const ProgressCallback& progress = {});
+    bool hasElementType(const std::string& typeId) const noexcept;
 
     void releasePreparedElement(ElementResult& prepared) noexcept;
 
@@ -145,7 +146,7 @@ private:
     void releaseTrackedElement(Layer* element) noexcept;
     void releaseElement(std::unique_ptr<Layer>& element) noexcept;
 
-    LayerFactory& factory_;
+    const LayerFactory& elementTypes_;
     ParameterRegistry& parameters_;
     std::unordered_map<Layer*, ElementOwnership> ownership_;
     std::unordered_set<std::string> activePrefixes_;

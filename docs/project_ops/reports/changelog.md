@@ -2,6 +2,27 @@
 
 This changelog records Project Ops and administrative workflow changes. Product release versioning remains governed by `docs/release_policy.md`.
 
+## 2026-07-26 - architecture - seac3_scoped_element_type_registry
+
+- Request ID: `spine_element_architecture_convergence`
+- Phase / Milestone: SEAC-3 in progress
+- Ownership: Removed the process-global `LayerFactory` singleton. The host,
+  RuntimeCore tests, and package bench now own independent element type
+  registries and inject them into Runtime.
+- Isolation: RuntimeCore proves that two registries may resolve the same type
+  ID to different creators and that a type registered in one Runtime cannot
+  leak into another.
+- Consumers: Scene validation uses non-constructing type lookup. Control &
+  Mapping receives a narrow offline element-creator callback instead of
+  reaching into a global registry; BrowserFlow proves injected hydration and
+  the no-callback unhydrated case.
+- Compatibility: The legacy `LayerFactory` source name and all established type
+  IDs remain unchanged. This is scoped source/static registration, not dynamic
+  discovery or a native plug-in ABI.
+- Remaining gate: Add typed descriptor/package ownership, reduce the host-only
+  mutable composition view, and move remaining effect/compositing behavior
+  behind the spine.
+
 ## 2026-07-26 - architecture - seac3_transactional_element_replacement
 
 - Request ID: `spine_element_architecture_convergence`

@@ -25,6 +25,12 @@ def main() -> int:
     control_hub_header = (
         ROOT / "synaptome/src/ui/ControlMappingHubState.h"
     ).read_text(encoding="utf-8")
+    layer_factory_header = (
+        ROOT / "synaptome/src/visuals/LayerFactory.h"
+    ).read_text(encoding="utf-8")
+    layer_factory_source = (
+        ROOT / "synaptome/src/visuals/LayerFactory.cpp"
+    ).read_text(encoding="utf-8")
     project = (ROOT / "synaptome/Synaptome.vcxproj").read_text(encoding="utf-8")
     solution = (ROOT / "synaptome/Synaptome.sln").read_text(encoding="utf-8")
     core_project = (
@@ -32,6 +38,12 @@ def main() -> int:
     ).read_text(encoding="utf-8")
     test_project = (
         ROOT / "synaptome/tests/RuntimeCoreTest/RuntimeCoreTest.vcxproj"
+    ).read_text(encoding="utf-8")
+    runtime_test = (
+        ROOT / "tests/runtime_core_native_main.cpp"
+    ).read_text(encoding="utf-8")
+    package_bench = (
+        ROOT / "tests/layer_package_bench_main.cpp"
     ).read_text(encoding="utf-8")
 
     for token in ("ofApp", "../ui/", "../io/"):
@@ -68,6 +80,11 @@ def main() -> int:
         errors.append("ofApp still defines the composition-layer storage record")
     if "Runtime::CompositionLayers& consoleSlots" not in app_header:
         errors.append("ofApp compatibility view must reference runtime-owned composition layers")
+    if (
+        "LayerFactory elementTypes_" not in app_header
+        or "Runtime runtime_{elementTypes_, paramRegistry}" not in app_header
+    ):
+        errors.append("ofApp must own and inject one scoped element type registry")
     if "std::unique_ptr<Layer> element_" not in composition_header:
         errors.append("runtime composition layer must own its element privately")
     for token in (
@@ -152,6 +169,34 @@ def main() -> int:
             "parameter consumers need synchronous no-throw invalidation after "
             "registry storage replacement"
         )
+    if "setOfflineElementCreator" not in control_hub_header:
+        errors.append(
+            "Control & Mapping offline inspection must receive a narrow "
+            "scoped element creator"
+        )
+    if "bool contains(" not in layer_factory_header:
+        errors.append("scoped element type registry is missing non-constructing lookup")
+    if "runtime_.hasElementType(entry->type)" not in app:
+        errors.append("scene validation must query Runtime without constructing an element")
+    setup_start = app.find("void ofApp::setup()")
+    setup_end = app.find("void ofApp::update()", setup_start)
+    if setup_start < 0 or setup_end < 0:
+        errors.append("could not inspect host setup registration boundary")
+    elif ".registerType(" in app[setup_start:setup_end]:
+        errors.append("host setup still mutates the element type registry")
+    for surface_name, surface in (
+        ("factory header", layer_factory_header),
+        ("factory source", layer_factory_source),
+        ("runtime", runtime_header + runtime_source),
+        ("host", app_header + app),
+        ("Control & Mapping", control_hub_header),
+        ("RuntimeCore test", runtime_test),
+        ("package bench", package_bench),
+    ):
+        if "LayerFactory::instance" in surface or "static LayerFactory& instance" in surface:
+            errors.append(
+                f"{surface_name} still depends on the process-global element factory"
+            )
 
     for token in (
         "ConfigurationType>StaticLibrary",
