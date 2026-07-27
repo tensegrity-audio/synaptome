@@ -15,7 +15,7 @@
 #include "ui/MenuSkin.h"
 #include "ui/WindowMonitorPlacement.h"
 #include "ui/ControlHubEventBridge_clean.h"
-#include "visuals/TextLayer.h"
+#include "runtime/BuiltinElementHostBindings.h"
 #include "runtime/BuiltinElements.h"
 #ifdef _WIN32
 #ifndef NOMINMAX
@@ -1884,94 +1884,7 @@ void ofApp::setup() {
             "UI",
             "Set true to rebroadcast controller/projector HUD layout snapshots.");
 
-    auto& textState = TextLayerState::instance();
-    textState.refreshAvailableFonts();
-    const std::string overlayGroup = "Overlay";
-    addString("overlay.text.content",
-              &textState.content,
-              textState.content,
-              "Center Text",
-              overlayGroup,
-              "Text displayed in the center text slot");
-    addString("overlay.text.topLeft",
-              &textState.topLeft,
-              textState.topLeft,
-              "Top Left Text",
-              overlayGroup,
-              "Text displayed in the top-left text slot");
-    addString("overlay.text.topRight",
-              &textState.topRight,
-              textState.topRight,
-              "Top Right Text",
-              overlayGroup,
-              "Text displayed in the top-right text slot");
-    addString("overlay.text.bottomLeft",
-              &textState.bottomLeft,
-              textState.bottomLeft,
-              "Bottom Left Text",
-              overlayGroup,
-              "Text displayed in the bottom-left text slot");
-    addString("overlay.text.bottomRight",
-              &textState.bottomRight,
-              textState.bottomRight,
-              "Bottom Right Text",
-              overlayGroup,
-              "Text displayed in the bottom-right text slot");
-    addString("overlay.text.font",
-              &textState.font,
-              textState.font,
-              "Font File",
-              overlayGroup,
-              "TrueType font filename under data/fonts");
-    float fontIndexMax = textState.fontIndexMax();
-    addFloat("overlay.text.fontIndex",
-             &textState.fontIndex,
-             textState.fontIndex,
-             "Font Index",
-             overlayGroup,
-             makeRange(0.0f, fontIndexMax, 1.0f),
-             false,
-             0,
-             std::string(),
-             "Select discovered font by index");
-    addFloat("overlay.text.size",
-             &textState.fontSize,
-             textState.fontSize,
-             "Center Text Size",
-             overlayGroup,
-             makeRange(12.0f, 256.0f, 1.0f),
-             false,
-             0,
-             "px",
-             "Center text font size in pixels");
-    addFloat("overlay.text.corner.size",
-             &textState.cornerFontSize,
-             textState.cornerFontSize,
-             "Corner Text Size",
-             overlayGroup,
-             makeRange(8.0f, 256.0f, 1.0f),
-             false,
-             0,
-             "px",
-             "Corner text font size in pixels");
-    addFloat("overlay.text.color.r",
-             &textState.colorR,
-             textState.colorR,
-             "Text Color R",
-             overlayGroup,
-             makeRange(0.0f, 255.0f, 1.0f));
-    addFloat("overlay.text.color.g",
-             &textState.colorG,
-             textState.colorG,
-             "Text Color G",
-             overlayGroup,
-             makeRange(0.0f, 255.0f, 1.0f));
-    addFloat("overlay.text.color.b",
-             &textState.colorB,
-             textState.colorB,
-             "Text Color B",
-             overlayGroup,
-             makeRange(0.0f, 255.0f, 1.0f));
+    synaptome::runtime::registerBuiltinElementHostParameters(paramRegistry);
     struct SensorParamDef {
         const char* id;
         float* valuePtr;
@@ -3058,7 +2971,7 @@ void ofApp::update() {
     param_bpm = ofClamp(param_bpm, 40.0f, 240.0f);
     param_masterFx = ofClamp(param_masterFx, 0.0f, 1.0f);
 
-    TextLayerState::instance().syncFontSelection();
+    synaptome::runtime::updateBuiltinElementHostParameters();
 
     LayerUpdateParams layerParams;
     layerParams.dt = paused ? 0.0f : frameDt * speed;

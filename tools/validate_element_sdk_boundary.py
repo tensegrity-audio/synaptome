@@ -66,6 +66,14 @@ def main() -> int:
         APP / "runtime" / "SynaptomeRuntimeCore.vcxproj",
         errors,
     )
+    builtin_host_bindings_header = read(
+        APP / "src" / "runtime" / "BuiltinElementHostBindings.h",
+        errors,
+    )
+    builtin_host_bindings_source = read(
+        APP / "src" / "runtime" / "BuiltinElementHostBindings.cpp",
+        errors,
+    )
     builtin_source = read(APP / "src" / "runtime" / "BuiltinElements.cpp", errors)
     signal_registration_source = read(
         APP / "src" / "runtime" / "SignalBloomRegistration.cpp",
@@ -73,6 +81,10 @@ def main() -> int:
     )
     bench_project = read(
         APP / "tests" / "LayerPackageBench" / "LayerPackageBench.vcxproj",
+        errors,
+    )
+    browser_flow_project = read(
+        APP / "tests" / "BrowserFlowTest" / "BrowserFlowTest.vcxproj",
         errors,
     )
     bench_source = read(ROOT / "tests" / "layer_package_bench_main.cpp", errors)
@@ -265,6 +277,16 @@ def main() -> int:
         errors.append("host must link the shipping Signal Bloom element project")
     if r'clcompile include="src\runtime\builtinelements.cpp"' not in app_lower:
         errors.append("host project must compile the controlled registration unit")
+    if (
+        r'clcompile include="src\runtime\builtinelementhostbindings.cpp"'
+        not in app_lower
+    ):
+        errors.append("host project must compile the built-in host binding unit")
+    if (
+        r'clinclude include="src\runtime\builtinelementhostbindings.h"'
+        not in app_lower
+    ):
+        errors.append("host project must include the built-in host binding header")
     if r'clcompile include="src\runtime\signalbloomregistration.cpp"' not in app_lower:
         errors.append("host project must compile the Signal Bloom registration bridge")
     if "SignalBloomLayer" in app_source:
@@ -273,6 +295,84 @@ def main() -> int:
         errors.append("ofApp.cpp must delegate all element type bindings")
     if "registerBuiltinElements(elementTypes_)" not in app_source:
         errors.append("host must call the controlled built-in registration entrypoint")
+    if (
+        "registerBuiltinElementHostParameters(paramRegistry)"
+        not in app_source
+    ):
+        errors.append("host must register built-in host parameters through the binding unit")
+    if "updateBuiltinElementHostParameters()" not in app_source:
+        errors.append("host must synchronize built-in host parameters through the binding unit")
+    for token in ("TextLayerState", "TextLayer.h"):
+        if token in app_source or token in app_header:
+            errors.append(
+                "ofApp must not own the text element compatibility binding: "
+                + token
+            )
+    for token in (
+        "TextLayer",
+        "TextLayerState",
+        "::instance",
+        "syncFontSelection",
+        "std::function",
+        "Composition",
+        "ofFbo",
+        "Layer*",
+        "void*",
+    ):
+        if token in builtin_host_bindings_header:
+            errors.append(
+                "built-in host binding header exposes concrete or executable "
+                "ownership: "
+                + token
+            )
+    for token in (
+        "void registerBuiltinElementHostParameters(ParameterRegistry& registry);",
+        "void updateBuiltinElementHostParameters();",
+    ):
+        if token not in builtin_host_bindings_header:
+            errors.append(
+                "built-in host binding header is missing its pointer-free "
+                "entrypoint: "
+                + token
+            )
+    for token in (
+        '#include "../visuals/TextLayerState.h"',
+        "TextLayerState::instance()",
+        "refreshAvailableFonts()",
+        "syncFontSelection()",
+    ):
+        if token not in builtin_host_bindings_source:
+            errors.append(
+                "built-in host binding source must privately own text state "
+                "synchronization: "
+                + token
+            )
+    expected_text_parameter_ids = {
+        "overlay.text.content",
+        "overlay.text.topLeft",
+        "overlay.text.topRight",
+        "overlay.text.bottomLeft",
+        "overlay.text.bottomRight",
+        "overlay.text.font",
+        "overlay.text.fontIndex",
+        "overlay.text.size",
+        "overlay.text.corner.size",
+        "overlay.text.color.r",
+        "overlay.text.color.g",
+        "overlay.text.color.b",
+    }
+    bound_text_parameter_id_list = re.findall(
+        r'add(?:Float|String)\s*\(\s*"(overlay\.text\.[^"]+)"',
+        builtin_host_bindings_source,
+    )
+    if (
+        len(bound_text_parameter_id_list) != len(expected_text_parameter_ids)
+        or set(bound_text_parameter_id_list) != expected_text_parameter_ids
+    ):
+        errors.append(
+            "built-in host binding source must own exactly the 12 text "
+            "parameter IDs"
+        )
     if "registerSignalBloomElement(elementTypes)" not in builtin_source:
         errors.append("built-in registration unit must compose the Signal Bloom bridge")
     if 'registerType("example.signalBloom"' not in signal_registration_source:
@@ -339,7 +439,7 @@ def main() -> int:
     leaked_classes = sorted(
         class_name
         for class_name in concrete_classes
-        if class_name != "TextLayer" and re.search(
+        if re.search(
             rf"\b{re.escape(class_name)}\b",
             app_source + "\n" + app_header,
         )
@@ -350,12 +450,39 @@ def main() -> int:
             + ", ".join(leaked_classes)
         )
     runtime_project_lower = runtime_project.lower()
-    for registration_unit in ("builtinelements.cpp", "signalbloomregistration.cpp"):
+    for registration_unit in (
+        "builtinelementhostbindings.cpp",
+        "builtinelements.cpp",
+        "signalbloomregistration.cpp",
+    ):
         if registration_unit in runtime_project_lower:
             errors.append(
                 "RuntimeCore must exclude host registration unit "
                 + registration_unit
             )
+    binding_unit = "builtinelementhostbindings"
+    if (
+        binding_unit in runtime_project_lower
+        or binding_unit in element_lower
+        or binding_unit in bench_project_lower
+    ):
+        errors.append(
+            "RuntimeCore and element/package targets must exclude the "
+            "host-only built-in binding unit"
+        )
+    browser_flow_project_lower = browser_flow_project.lower()
+    for token in (
+        r"\src\runtime\builtinelementhostbindings.cpp",
+        r"\src\visuals\textlayerstate.cpp",
+    ):
+        if token not in browser_flow_project_lower:
+            errors.append(
+                "BrowserFlow must compile the zero-text host binding seam: " + token
+            )
+    if r"\src\visuals\textlayer.cpp" in browser_flow_project_lower:
+        errors.append(
+            "BrowserFlow zero-text binding contract must not compile TextLayer.cpp"
+        )
     if '#include "../docs/examples/artist_sdk/SignalBloomLayer.cpp"' in bench_source:
         errors.append("bench must link the compile-contract library instead of including .cpp")
     if '#include "../synaptome/src/visuals/LayerFactory.cpp"' in bench_source:

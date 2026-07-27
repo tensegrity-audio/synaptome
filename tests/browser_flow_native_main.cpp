@@ -49,6 +49,8 @@ int main() {
         { "midi_namespace_cleanup", browser_flow::RunMidiNamespaceCleanupScenario },
         { "parameter_registry_storage_invalidation",
           browser_flow::RunParameterRegistryStorageInvalidationScenario },
+        { "builtin_element_host_parameters_without_text_element",
+          browser_flow::RunBuiltinElementHostParametersWithoutTextElementScenario },
         { "element_parameter_registry_contract",
           browser_flow::RunElementParameterRegistryContractScenario },
         { "element_parameter_midi_rebind",

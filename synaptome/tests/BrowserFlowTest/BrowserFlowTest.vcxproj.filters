@@ -7,6 +7,12 @@
     <ClCompile Include="$(TensegrityUnityTestRoot)\test_browser_flow\hud_feed_registry_stub.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="$(SynaptomeAppRoot)\src\runtime\BuiltinElementHostBindings.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="$(SynaptomeAppRoot)\src\visuals\TextLayerState.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source Files" />

@@ -5,20 +5,20 @@ State Summary
 - Phase: EXECUTION
 - Status: In Progress
 - Steps Complete: 2 / 12
-- Progress: SEAC-3R is in progress inside SEAC-3. `SynaptomeRuntimeCore` owns staged element setup, transactional registry/element/action replacement, the fixed eight composition records, FBO state, exact parameter ownership, generic lifecycle/render routing, immutable composition queries, live actions, and on-demand typed telemetry. All host registration is composed outside `ofApp.cpp` through the controlled `BuiltinElements.cpp` aggregate: 22 core bindings live there and Signal Bloom delegates to one package leaf registrar shared by the aggregate and package bench. Registration-only concrete includes and creator ownership left `ofApp`; direct `TextLayerState` font/state synchronization and the render-target adapter remain named host coupling.
-- Last Step Outcome: 2026-07-27 - Consolidated all host creator registration through the controlled aggregate, added the shared Signal Bloom package leaf registrar, removed registration-only concrete dependencies from `ofApp`, and passed the Release host, package bench, BrowserFlow Release build, public-app, scene/display transaction, SDK/runtime boundary, catalog, and parameter-manifest gates.
-- Next Step: Finish SEAC-3R by reducing or retiring the render-target adapter. After SEAC-3 closes, begin SEAC-4A static `ElementDescriptor` action declarations and live binding parity; package serialization remains SEAC-7, generated registration remains SEAC-8, and persisted action mappings remain SEAC-9.
+- Progress: SEAC-3R is in progress inside SEAC-3. `SynaptomeRuntimeCore` owns staged element setup, transactional registry/element/action replacement, the fixed eight composition records, FBO state, exact parameter ownership, generic lifecycle/render routing, immutable composition queries, live actions, and on-demand typed telemetry. All host registration is composed outside `ofApp.cpp` through the controlled `BuiltinElements.cpp` aggregate: 22 core bindings live there and Signal Bloom delegates to one package leaf registrar shared by the aggregate and package bench. Registration-only concrete includes, creator ownership, and direct built-in state access have left `ofApp`; the host-only `BuiltinElementHostBindings` adapter now isolates legacy Text parameter registration and font synchronization. `HostCompositionRenderer` and retirement of the render-target seam remain the final SEAC-3R gate.
+- Last Step Outcome: 2026-07-27 - Moved the 12 `overlay.text.*` bindings and font-selection synchronization behind `BuiltinElementHostBindings`, removed direct `TextLayer`/`TextLayerState` dependencies from `ofApp`, preserved the existing parameter IDs and presentation metadata, and added focused zero-Text-element Browser contract coverage without adding a RuntimeCore or public Element SDK dependency.
+- Next Step: Finish SEAC-3R by extracting `HostCompositionRenderer` and reducing or retiring `compositionRenderTargetsForHost` without changing rendered output. After SEAC-3 closes, begin SEAC-4A static `ElementDescriptor` action declarations and live binding parity; package serialization remains SEAC-7, generated registration remains SEAC-8, and persisted action mappings remain SEAC-9.
 - Dependencies / Overlap: `show_readiness_operator_stability`, `layer_package_compatibility_bench_scaffolding`, `docs/architecture/synaptome_spine_element_model.md`, `docs/architecture/synaptome_layer_system_roadmap.md`, `docs/architecture/synaptome_artist_sdk.md`, parameter/scene/mapping contracts, and layer-authoring tests.
 - Primary Scope: runtime
 - Secondary Scopes: contracts, artist-sdk, tests, docs, release
-- Blocking Issues / Unknowns: Native binary modules remain an optional architecture decision rather than a promised deliverable. The aggregate registration list and registration-source tool lists remain handwritten until SEAC-8. Typed descriptor/catalog ownership, static action declaration parity, authoritative parameter declarations, `TextLayerState` host coupling, concrete host effect execution, and the render-target adapter remain boundaries. Persisted parameter/action mapping semantics remain SEAC-9.
+- Blocking Issues / Unknowns: Native binary modules remain an optional architecture decision rather than a promised deliverable. The aggregate registration list and registration-source tool lists remain handwritten until SEAC-8. Typed descriptor/catalog ownership, static action declaration parity, authoritative parameter declarations, concrete host effect execution, and the render-target adapter remain boundaries. The shared `TextLayerState` singleton, cross-instance values, and pre-adoption `configure()` side effects remain explicit SEAC-4B/SEAC-5 parameter/state-ownership debt behind the host adapter. Persisted parameter/action mapping semantics remain SEAC-9.
 - Impact / Priority Notes: This is the active architecture lane and precedes automatic discovery, broader package activation, or new content-family expansion.
 - Priority Score: N/A
 - Priority Lane: Fast-Track
 - Ready State: Ready
 - Ready Gate: The architecture direction, compatibility policy, ordered tasks, and stop conditions are explicit; the operator accepted residual show-validation risk and authorized execution.
-- Project Ops / Roadmap Updates (timestamped): 2026-07-26 - Added the canonical model and subordinated package/discovery work to its contract and build gates. 2026-07-26 - Promoted SEAC to execution after dual-screen validation was deferred. 2026-07-26 - Completed the dependency inventory and froze the Element SDK v1 source/static-link boundary. 2026-07-26 - Landed the first SEAC-3 build and registration slice. 2026-07-26 - Moved generic element preparation/release and exact registration ownership behind the first Runtime facade seam. 2026-07-26 - Linked the first runtime-core library and moved fixed composition storage plus generic update/draw/resize ownership behind it. 2026-07-26 - Added isolated parameter staging and transactional same-address visual-element replacement. 2026-07-26 - Hardened reserved opacity ownership, prepared-result lifetime, FX/UI-to-visual adoption, bool modifier migration, and registry-consumer invalidation. 2026-07-26 - Removed the global element factory and proved per-Runtime type-registry isolation. 2026-07-26 - Moved zero-based effect coverage-window policy into Runtime and removed the duplicate `PostEffectChain` resolver without expanding the Element SDK. 2026-07-26 - Added the Runtime composition mutation control plane, Runtime-owned layer opacity, a const-only host view, and narrow render/legacy-element seams. 2026-07-27 - Replaced the const live host view with pointer-free by-value snapshots and removed public live composition access. 2026-07-27 - Replaced pointer-addressed generic element replacement with a zero-based composition-layer transaction and narrowed mutable legacy access to two compatibility areas. 2026-07-27 - Removed the derived element cache and moved ordinary built-in views, bindings, and parameter actions to snapshot-addressed registry access. 2026-07-27 - Added live-instance action registration, pointer-free snapshot discovery, and generic slot-addressed invocation without adding persisted action mappings. 2026-07-27 - Replaced read-only concrete element inspection with separate on-demand typed telemetry and made Geodesic subdivision durable parameter state. 2026-07-27 - Consolidated host creator bindings in the controlled aggregate and shared Signal Bloom's package leaf registrar with its bench without claiming generated registration.
-- Resume From: Phase EXECUTION, State In Progress, Next Action reduce or retire the render-target adapter to close SEAC-3R before SEAC-4A.
+- Project Ops / Roadmap Updates (timestamped): 2026-07-26 - Added the canonical model and subordinated package/discovery work to its contract and build gates. 2026-07-26 - Promoted SEAC to execution after dual-screen validation was deferred. 2026-07-26 - Completed the dependency inventory and froze the Element SDK v1 source/static-link boundary. 2026-07-26 - Landed the first SEAC-3 build and registration slice. 2026-07-26 - Moved generic element preparation/release and exact registration ownership behind the first Runtime facade seam. 2026-07-26 - Linked the first runtime-core library and moved fixed composition storage plus generic update/draw/resize ownership behind it. 2026-07-26 - Added isolated parameter staging and transactional same-address visual-element replacement. 2026-07-26 - Hardened reserved opacity ownership, prepared-result lifetime, FX/UI-to-visual adoption, bool modifier migration, and registry-consumer invalidation. 2026-07-26 - Removed the global element factory and proved per-Runtime type-registry isolation. 2026-07-26 - Moved zero-based effect coverage-window policy into Runtime and removed the duplicate `PostEffectChain` resolver without expanding the Element SDK. 2026-07-26 - Added the Runtime composition mutation control plane, Runtime-owned layer opacity, a const-only host view, and narrow render/legacy-element seams. 2026-07-27 - Replaced the const live host view with pointer-free by-value snapshots and removed public live composition access. 2026-07-27 - Replaced pointer-addressed generic element replacement with a zero-based composition-layer transaction and narrowed mutable legacy access to two compatibility areas. 2026-07-27 - Removed the derived element cache and moved ordinary built-in views, bindings, and parameter actions to snapshot-addressed registry access. 2026-07-27 - Added live-instance action registration, pointer-free snapshot discovery, and generic slot-addressed invocation without adding persisted action mappings. 2026-07-27 - Replaced read-only concrete element inspection with separate on-demand typed telemetry and made Geodesic subdivision durable parameter state. 2026-07-27 - Consolidated host creator bindings in the controlled aggregate and shared Signal Bloom's package leaf registrar with its bench without claiming generated registration. 2026-07-27 - Isolated legacy Text host parameters and font synchronization behind `BuiltinElementHostBindings` without claiming singleton retirement or authoritative declarations.
+- Resume From: Phase EXECUTION, State In Progress, Next Action extract `HostCompositionRenderer` and retire the render-target seam to close SEAC-3R before SEAC-4A.
 
 ## Milestone Synthesis
 
@@ -395,6 +395,15 @@ source-code archaeology or private host knowledge.
   the aggregate and package bench. `ofApp` no longer owns creator lambdas or
   registration-only concrete includes. This is the SEAC-3R controlled-source
   checkpoint, not generated registration or SEAC-8 completion.
+- 2026-07-27 - Added host-only `BuiltinElementHostBindings` and moved all 12
+  `overlay.text.*` registrations plus per-frame font-selection synchronization
+  out of `ofApp`. The adapter privately owns the legacy `TextLayerState`
+  bridge, is excluded from RuntimeCore and element/package targets, and is
+  covered by a focused Browser scenario that does not instantiate
+  `TextLayer`. Canonical and combined parameter manifests retain the same
+  parameter semantics and counts with updated source provenance. The singleton,
+  shared-instance values, and pre-adoption configuration effects remain
+  SEAC-4B/SEAC-5 debt.
 
 ## Validation
 
@@ -478,12 +487,22 @@ source-code archaeology or private host knowledge.
   types and unchanged parameter IDs/counts.
 - Passed: Public-app validates all 17 contracts, including the static scene and
   display contract; the explicit scene/display transaction check also passes.
-- Open Gate: Reduce or retire `compositionRenderTargetsForHost` to close SEAC-3R.
+- Passed: The Element SDK boundary validator enforces the host-only Text bridge,
+  exact 12-ID binding set, absence of direct Text dependencies from `ofApp`,
+  exclusion from RuntimeCore and element/package targets, and the zero-Text
+  Browser test wiring. Canonical and combined manifests remain semantically
+  identical apart from binding-source provenance and retain their parameter
+  counts.
+- Passed: The Release host and BrowserFlow Release target compile and link with
+  the host-binding adapter. BrowserFlow execution remains intentionally deferred
+  because the suite includes the postponed dual-screen path.
+- Open Gate: Extract `HostCompositionRenderer` and reduce or retire
+  `compositionRenderTargetsForHost` to close SEAC-3R.
   Static descriptor/action binding parity is SEAC-4A; authoritative parameter
   declarations/catalog parity is SEAC-4B; package serialization, generated
   registration, and persisted action mappings remain SEAC-7, SEAC-8, and
-  SEAC-9 respectively. Direct `TextLayerState` synchronization remains named
-  host coupling.
+  SEAC-9 respectively. The shared Text singleton and its pre-adoption state
+  effects remain SEAC-4B/SEAC-5 debt behind the host-only adapter.
 - Not Run: BrowserFlow execution and live dual-screen hardware rehearsal remain
   explicitly deferred because the suite includes the deferred dual-screen path;
   its Release build passes.

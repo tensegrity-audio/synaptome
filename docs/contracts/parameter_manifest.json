@@ -9,6 +9,7 @@
   ],
   "sources": [
     "synaptome/src/ofApp.cpp",
+    "synaptome/src/runtime/BuiltinElementHostBindings.cpp",
     "synaptome/src/runtime/BuiltinElements.cpp",
     "synaptome/src/runtime/SignalBloomRegistration.cpp",
     "synaptome/src/visuals/**/*.cpp",
@@ -20827,7 +20828,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 2078
+        "line": 1991
       }
     },
     {
@@ -20838,7 +20839,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 2076
+        "line": 1989
       }
     },
     {
@@ -20849,7 +20850,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 2080
+        "line": 1993
       }
     },
     {
@@ -20860,7 +20861,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 2079
+        "line": 1992
       }
     },
     {
@@ -20871,7 +20872,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 2077
+        "line": 1990
       }
     },
     {
@@ -21077,8 +21078,8 @@
       "family": "overlay",
       "units": "",
       "source": {
-        "path": "synaptome/src/ofApp.cpp",
-        "line": 1908
+        "path": "synaptome/src/runtime/BuiltinElementHostBindings.cpp",
+        "line": 87
       }
     },
     {
@@ -21088,8 +21089,8 @@
       "family": "overlay",
       "units": "",
       "source": {
-        "path": "synaptome/src/ofApp.cpp",
-        "line": 1914
+        "path": "synaptome/src/runtime/BuiltinElementHostBindings.cpp",
+        "line": 95
       }
     },
     {
@@ -21099,8 +21100,8 @@
       "family": "overlay",
       "units": "",
       "source": {
-        "path": "synaptome/src/ofApp.cpp",
-        "line": 1969
+        "path": "synaptome/src/runtime/BuiltinElementHostBindings.cpp",
+        "line": 164
       }
     },
     {
@@ -21110,8 +21111,8 @@
       "family": "overlay",
       "units": "",
       "source": {
-        "path": "synaptome/src/ofApp.cpp",
-        "line": 1963
+        "path": "synaptome/src/runtime/BuiltinElementHostBindings.cpp",
+        "line": 156
       }
     },
     {
@@ -21121,8 +21122,8 @@
       "family": "overlay",
       "units": "",
       "source": {
-        "path": "synaptome/src/ofApp.cpp",
-        "line": 1957
+        "path": "synaptome/src/runtime/BuiltinElementHostBindings.cpp",
+        "line": 148
       }
     },
     {
@@ -21132,8 +21133,8 @@
       "family": "overlay",
       "units": "",
       "source": {
-        "path": "synaptome/src/ofApp.cpp",
-        "line": 1890
+        "path": "synaptome/src/runtime/BuiltinElementHostBindings.cpp",
+        "line": 63
       }
     },
     {
@@ -21143,8 +21144,8 @@
       "family": "overlay",
       "units": "px",
       "source": {
-        "path": "synaptome/src/ofApp.cpp",
-        "line": 1947
+        "path": "synaptome/src/runtime/BuiltinElementHostBindings.cpp",
+        "line": 136
       }
     },
     {
@@ -21154,8 +21155,8 @@
       "family": "overlay",
       "units": "",
       "source": {
-        "path": "synaptome/src/ofApp.cpp",
-        "line": 1920
+        "path": "synaptome/src/runtime/BuiltinElementHostBindings.cpp",
+        "line": 103
       }
     },
     {
@@ -21165,8 +21166,8 @@
       "family": "overlay",
       "units": "",
       "source": {
-        "path": "synaptome/src/ofApp.cpp",
-        "line": 1927
+        "path": "synaptome/src/runtime/BuiltinElementHostBindings.cpp",
+        "line": 112
       }
     },
     {
@@ -21176,8 +21177,8 @@
       "family": "overlay",
       "units": "px",
       "source": {
-        "path": "synaptome/src/ofApp.cpp",
-        "line": 1937
+        "path": "synaptome/src/runtime/BuiltinElementHostBindings.cpp",
+        "line": 124
       }
     },
     {
@@ -21187,8 +21188,8 @@
       "family": "overlay",
       "units": "",
       "source": {
-        "path": "synaptome/src/ofApp.cpp",
-        "line": 1896
+        "path": "synaptome/src/runtime/BuiltinElementHostBindings.cpp",
+        "line": 71
       }
     },
     {
@@ -21198,8 +21199,8 @@
       "family": "overlay",
       "units": "",
       "source": {
-        "path": "synaptome/src/ofApp.cpp",
-        "line": 1902
+        "path": "synaptome/src/runtime/BuiltinElementHostBindings.cpp",
+        "line": 79
       }
     },
     {
@@ -21482,7 +21483,7 @@
       "units": "Hz",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1987
+        "line": 1900
       }
     },
     {
@@ -21493,7 +21494,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1985
+        "line": 1898
       }
     },
     {
@@ -21504,7 +21505,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1983
+        "line": 1896
       }
     },
     {
@@ -21515,7 +21516,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1986
+        "line": 1899
       }
     },
     {
@@ -21526,7 +21527,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1988
+        "line": 1901
       }
     },
     {
@@ -21537,7 +21538,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1984
+        "line": 1897
       }
     },
     {
@@ -21548,7 +21549,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1989
+        "line": 1902
       }
     },
     {

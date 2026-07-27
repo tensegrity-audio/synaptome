@@ -16,6 +16,8 @@
 #include <vector>
 
 #include "../synaptome/src/core/ParameterRegistry.h"
+#include "../synaptome/src/runtime/BuiltinElementHostBindings.h"
+#include "../synaptome/src/visuals/TextLayerState.h"
 #include "../synaptome/src/ui/MenuController.h"
 #include "../synaptome/src/ui/MenuController.cpp"
 #include "../synaptome/src/ui/HotkeyManager.cpp"
@@ -945,6 +947,215 @@ bool RunParameterRegistryStorageInvalidationScenario() {
             std::fabs(replacementValue - 0.5f) < 0.0001f &&
             std::fabs(originalValue - 0.25f) < 0.0001f,
         "rebuilt row did not edit only the live registry storage");
+    return true;
+}
+
+bool RunBuiltinElementHostParametersWithoutTextElementScenario() {
+    auto require = [](bool condition, const std::string& message) {
+        if (!condition) throw std::runtime_error(message);
+    };
+    auto nearlyEqual = [](float left, float right) {
+        return std::fabs(left - right) < 0.0001f;
+    };
+
+    constexpr const char* stringIds[] = {
+        "overlay.text.content",
+        "overlay.text.topLeft",
+        "overlay.text.topRight",
+        "overlay.text.bottomLeft",
+        "overlay.text.bottomRight",
+        "overlay.text.font",
+    };
+    constexpr const char* floatIds[] = {
+        "overlay.text.fontIndex",
+        "overlay.text.size",
+        "overlay.text.corner.size",
+        "overlay.text.color.r",
+        "overlay.text.color.g",
+        "overlay.text.color.b",
+    };
+
+    auto& textState = TextLayerState::instance();
+    struct ScopedTextStateRestore {
+        TextLayerState& state;
+        std::string content;
+        std::string font;
+        float fontIndex = 0.0f;
+
+        ~ScopedTextStateRestore() noexcept {
+            try {
+                state.content = content;
+                state.font = font;
+                state.fontIndex = fontIndex;
+                state.syncFontSelection();
+                state.content = content;
+                state.font = font;
+                state.fontIndex = fontIndex;
+            } catch (...) {
+                // Test cleanup must not mask the original scenario failure.
+            }
+        }
+    } restore{
+        textState,
+        textState.content,
+        textState.font,
+        textState.fontIndex,
+    };
+    textState.refreshAvailableFonts();
+
+    ParameterRegistry registry;
+    synaptome::runtime::registerBuiltinElementHostParameters(registry);
+    require(
+        registry.strings().size() == std::size(stringIds) &&
+            registry.floats().size() == std::size(floatIds) &&
+            registry.bools().empty(),
+        "zero-text host binding did not register exactly 6 strings and 6 floats");
+
+    for (const char* id : stringIds) {
+        const auto* parameter = registry.findString(id);
+        require(
+            parameter && parameter->value && parameter->meta.group == "Overlay",
+            std::string("zero-text host binding omitted string metadata: ") + id);
+    }
+    for (const char* id : floatIds) {
+        const auto* parameter = registry.findFloat(id);
+        require(
+            parameter && parameter->value && parameter->meta.group == "Overlay",
+            std::string("zero-text host binding omitted float metadata: ") + id);
+    }
+    struct ExpectedMetadata {
+        const char* id;
+        const char* label;
+        const char* description;
+    };
+    constexpr ExpectedMetadata expectedStringMetadata[] = {
+        {"overlay.text.content", "Motion: Center Text",
+         "Text displayed in the center text slot"},
+        {"overlay.text.topLeft", "Motion: Top Left Text",
+         "Text displayed in the top-left text slot"},
+        {"overlay.text.topRight", "Motion: Top Right Text",
+         "Text displayed in the top-right text slot"},
+        {"overlay.text.bottomLeft", "Motion: Bottom Left Text",
+         "Text displayed in the bottom-left text slot"},
+        {"overlay.text.bottomRight", "Motion: Bottom Right Text",
+         "Text displayed in the bottom-right text slot"},
+        {"overlay.text.font", "Motion: Font File",
+         "TrueType font filename under data/fonts"},
+    };
+    constexpr ExpectedMetadata expectedFloatMetadata[] = {
+        {"overlay.text.fontIndex", "Motion: Font Index",
+         "Select discovered font by index"},
+        {"overlay.text.size", "Scale: Center Text Size",
+         "Center text font size in pixels"},
+        {"overlay.text.corner.size", "Scale: Corner Text Size",
+         "Corner text font size in pixels"},
+        {"overlay.text.color.r", "Color: Text Color R", ""},
+        {"overlay.text.color.g", "Color: Text Color G", ""},
+        {"overlay.text.color.b", "Color: Text Color B", ""},
+    };
+    for (const auto& expected : expectedStringMetadata) {
+        const auto* parameter = registry.findString(expected.id);
+        require(
+            parameter &&
+                parameter->meta.label == expected.label &&
+                parameter->meta.description == expected.description,
+            std::string("zero-text host binding changed string presentation metadata: ") +
+                expected.id);
+    }
+    for (const auto& expected : expectedFloatMetadata) {
+        const auto* parameter = registry.findFloat(expected.id);
+        require(
+            parameter &&
+                parameter->meta.label == expected.label &&
+                parameter->meta.description == expected.description,
+            std::string("zero-text host binding changed float presentation metadata: ") +
+                expected.id);
+    }
+
+    const auto requireRange =
+        [&](const char* id,
+            float min,
+            float max,
+            float step,
+            const std::string& units = std::string()) {
+            const auto* parameter = registry.findFloat(id);
+            require(
+                parameter &&
+                    nearlyEqual(parameter->meta.range.min, min) &&
+                    nearlyEqual(parameter->meta.range.max, max) &&
+                    nearlyEqual(parameter->meta.range.step, step) &&
+                    parameter->meta.units == units,
+                std::string("zero-text host binding changed range metadata: ") +
+                    id);
+        };
+    const auto* fontIndex = registry.findFloat("overlay.text.fontIndex");
+    require(fontIndex, "zero-text host binding omitted font index");
+    requireRange(
+        "overlay.text.fontIndex",
+        0.0f,
+        fontIndex->meta.range.max,
+        1.0f);
+    require(fontIndex->meta.range.max >= 0.0f,
+            "zero-text font index exposed a negative maximum");
+    requireRange("overlay.text.size", 12.0f, 256.0f, 1.0f, "px");
+    requireRange("overlay.text.corner.size", 8.0f, 256.0f, 1.0f, "px");
+    requireRange("overlay.text.color.r", 0.0f, 255.0f, 1.0f);
+    requireRange("overlay.text.color.g", 0.0f, 255.0f, 1.0f);
+    requireRange("overlay.text.color.b", 0.0f, 255.0f, 1.0f);
+
+    ControlMappingHubState hub;
+    hub.setParameterRegistry(&registry);
+    hub.setConsoleSlotInventoryCallback(
+        [] { return std::vector<ConsoleLayerInfo>{}; });
+    hub.rebuildModel();
+
+    const auto findRow = [&](const std::string& id) {
+        return std::find_if(
+            hub.tableModel_.rows.begin(),
+            hub.tableModel_.rows.end(),
+            [&](const ControlMappingHubState::ParameterRow& row) {
+                return row.id == id;
+            });
+    };
+    for (const char* id : stringIds) {
+        require(
+            findRow(id) != hub.tableModel_.rows.end(),
+            std::string("Browser omitted zero-text string row: ") + id);
+    }
+    for (const char* id : floatIds) {
+        require(
+            findRow(id) != hub.tableModel_.rows.end(),
+            std::string("Browser omitted zero-text float row: ") + id);
+    }
+
+    const auto contentRow = findRow("overlay.text.content");
+    require(
+        contentRow != hub.tableModel_.rows.end() &&
+            hub.setRowStringValue(*contentRow, "Browser without TextLayer") &&
+            registry.getStringBase("overlay.text.content") ==
+                "Browser without TextLayer" &&
+            registry.findString("overlay.text.content")->valueForPersistence() ==
+                "Browser without TextLayer",
+        "Browser could not edit live and base text content without a text element");
+
+    fontIndex = registry.findFloat("overlay.text.fontIndex");
+    *fontIndex->value = fontIndex->meta.range.max + 10.0f;
+    synaptome::runtime::updateBuiltinElementHostParameters();
+    require(
+        *fontIndex->value >= fontIndex->meta.range.min &&
+            *fontIndex->value <= fontIndex->meta.range.max &&
+            nearlyEqual(*fontIndex->value, std::round(*fontIndex->value)),
+        "zero-text font synchronization did not clamp and snap font index");
+
+    bool duplicateRejected = false;
+    try {
+        synaptome::runtime::registerBuiltinElementHostParameters(registry);
+    } catch (const std::logic_error&) {
+        duplicateRejected = true;
+    }
+    require(
+        duplicateRejected,
+        "built-in host binding did not reject duplicate registration");
     return true;
 }
 

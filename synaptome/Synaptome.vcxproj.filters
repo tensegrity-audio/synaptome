@@ -152,6 +152,9 @@
 
 		</ns0:ClCompile>
 
+		<ns0:ClCompile Include="src\runtime\BuiltinElementHostBindings.cpp">
+			<ns0:Filter>src</ns0:Filter>
+		</ns0:ClCompile>
 		<ns0:ClCompile Include="src\runtime\BuiltinElements.cpp">
 
 			<ns0:Filter>src</ns0:Filter>
@@ -2678,6 +2681,9 @@
 
 		</ns0:ClInclude>
 
+		<ns0:ClInclude Include="src\runtime\BuiltinElementHostBindings.h">
+			<ns0:Filter>src</ns0:Filter>
+		</ns0:ClInclude>
 		<ns0:ClInclude Include="src\runtime\BuiltinElements.h">
 
 			<ns0:Filter>src</ns0:Filter>

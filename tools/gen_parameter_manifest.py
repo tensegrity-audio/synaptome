@@ -120,8 +120,8 @@ def parse_factory_types(*sources: Path) -> dict[str, str]:
     return {match.group(1): match.group(2) for match in pattern.finditer(text)}
 
 
-def parse_core_parameters(of_app: Path) -> list[dict[str, Any]]:
-    text = of_app.read_text(encoding="utf-8")
+def parse_core_parameters(source_path: Path) -> list[dict[str, Any]]:
+    text = source_path.read_text(encoding="utf-8")
     entries: list[dict[str, Any]] = []
     call_kinds = {
         "addFloat": "float",
@@ -140,7 +140,7 @@ def parse_core_parameters(of_app: Path) -> list[dict[str, Any]]:
                     "scope": "core",
                     "family": family_for(param_id),
                     "units": infer_units(param_id),
-                    "source": source_ref(of_app, line_for(text, match.start())),
+                    "source": source_ref(source_path, line_for(text, match.start())),
                 }
             )
 
@@ -154,7 +154,7 @@ def parse_core_parameters(of_app: Path) -> list[dict[str, Any]]:
                 "scope": "sensor",
                 "family": "sensors",
                 "units": infer_units(param_id),
-                "source": source_ref(of_app, line_for(text, match.start())),
+                "source": source_ref(source_path, line_for(text, match.start())),
             }
         )
     return entries
@@ -289,6 +289,9 @@ def build_manifest(
     package_roots: list[Path] | tuple[Path, ...] | None = None,
 ) -> dict[str, Any]:
     of_app = APP_ROOT / "src" / "ofApp.cpp"
+    builtin_host_bindings = (
+        APP_ROOT / "src" / "runtime" / "BuiltinElementHostBindings.cpp"
+    )
     builtin_elements = APP_ROOT / "src" / "runtime" / "BuiltinElements.cpp"
     signal_bloom_registration = (
         APP_ROOT / "src" / "runtime" / "SignalBloomRegistration.cpp"
@@ -300,8 +303,9 @@ def build_manifest(
     layer_templates, explicit_parameters = parse_layer_templates(factory_types)
 
     parameters: dict[str, dict[str, Any]] = {}
-    for entry in parse_core_parameters(of_app):
-        add_unique(parameters, entry)
+    for core_source in (of_app, builtin_host_bindings):
+        for entry in parse_core_parameters(core_source):
+            add_unique(parameters, entry)
     for entry in explicit_parameters:
         add_unique(parameters, entry)
 
@@ -477,6 +481,7 @@ def build_manifest(
         ],
         "sources": [
             "synaptome/src/ofApp.cpp",
+            "synaptome/src/runtime/BuiltinElementHostBindings.cpp",
             "synaptome/src/runtime/BuiltinElements.cpp",
             "synaptome/src/runtime/SignalBloomRegistration.cpp",
             "synaptome/src/visuals/**/*.cpp",

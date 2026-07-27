@@ -501,6 +501,7 @@
 		<ClCompile Include="src\main.cpp" />
 
 		<ClCompile Include="src\ofApp.cpp" />
+		<ClCompile Include="src\runtime\BuiltinElementHostBindings.cpp" />
 		<ClCompile Include="src\runtime\BuiltinElements.cpp" />
 		<ClCompile Include="src\runtime\SignalBloomRegistration.cpp" />
 		<ClCompile Include="src\visuals\CircuitTraceLayer.cpp" />
@@ -691,6 +692,7 @@
 
 		<ClInclude Include="src\ofApp.h" />
 		<ClInclude Include="src\core\OptionProviderRegistry.h" />
+		<ClInclude Include="src\runtime\BuiltinElementHostBindings.h" />
 		<ClInclude Include="src\runtime\BuiltinElements.h" />
 		<ClInclude Include="src\runtime\SignalBloomRegistration.h" />
 		<ClInclude Include="src\visuals\CircuitTraceLayer.h" />

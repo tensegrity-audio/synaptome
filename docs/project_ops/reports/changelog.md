@@ -2,6 +2,35 @@
 
 This changelog records Project Ops and administrative workflow changes. Product release versioning remains governed by `docs/release_policy.md`.
 
+## 2026-07-27 - architecture - seac3r_builtin_host_binding_isolation
+
+- Request ID: `spine_element_architecture_convergence`
+- Phase / Milestone: SEAC-3R in progress inside SEAC-3
+- Host boundary: Added host-only `BuiltinElementHostBindings` and moved the 12
+  `overlay.text.*` registrations plus per-frame font-selection synchronization
+  out of `ofApp`. The application root no longer includes or names
+  `TextLayer`/`TextLayerState`.
+- Contract boundary: The adapter privately owns the legacy Text singleton
+  bridge and is excluded from RuntimeCore, the public Element SDK, and
+  element/package targets. This checkpoint isolates direct coupling; it does
+  not claim singleton retirement or authoritative parameter declarations.
+- Parameter compatibility: Existing IDs, kinds, groups, labels, descriptions,
+  ranges, units, registration order, and update timing remain unchanged.
+  Canonical and combined manifests retain identical parameter semantics and
+  counts; only binding-source provenance changes.
+- Focused confidence: Added a Browser contract scenario proving all 12 controls
+  remain registered, inspectable, editable, persistent, and font-synchronized
+  without a `TextLayer` instance. The scenario pins presentation/range metadata,
+  duplicate-registration rejection, and restores shared singleton state.
+- Roadmap boundary: `HostCompositionRenderer` and retirement of
+  `compositionRenderTargetsForHost` remain the final SEAC-3R gate. The shared
+  Text singleton, cross-instance values, and pre-adoption `configure()` side
+  effects remain explicit SEAC-4B/SEAC-5 parameter/state-ownership debt.
+- Validation: Element SDK boundary, canonical/combined parameter-manifest,
+  Release host, BrowserFlow Release compile/link, Project Ops, and diff checks
+  pass. BrowserFlow execution remains intentionally deferred because the suite
+  includes the postponed dual-screen path.
+
 ## 2026-07-27 - architecture - seac3r_controlled_registration_consolidation
 
 - Request ID: `spine_element_architecture_convergence`

@@ -51,6 +51,8 @@
   <ItemGroup>
     <ClCompile Include="$(SynaptomeTestRoot)\browser_flow_native_main.cpp" />
     <ClCompile Include="$(SynaptomeUnityTestRoot)\test_browser_flow\hud_feed_registry_stub.cpp" />
+    <ClCompile Include="$(SynaptomeAppRoot)\src\runtime\BuiltinElementHostBindings.cpp" />
+    <ClCompile Include="$(SynaptomeAppRoot)\src\visuals\TextLayerState.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>
