@@ -32,7 +32,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>$(SynaptomeThirdPartyRoot);$(SynaptomeTestRoot)\stubs;$(SynaptomeOpenFrameworksRoot)\libs\glm\include;$(SynaptomeTestRoot);$(SynaptomeAppRoot)\src;$(SynaptomeAppRoot)\src\core;$(SynaptomeAppRoot)\src\io;$(SynaptomeAppRoot)\src\ui;$(SynaptomeAppRoot)\src\visuals;$(SynaptomeAppRoot)\src\visuals\effects;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SynaptomeElementSdkIncludeRoot);$(SynaptomeThirdPartyRoot);$(SynaptomeTestRoot)\stubs;$(SynaptomeOpenFrameworksRoot)\libs\glm\include;$(SynaptomeTestRoot);$(SynaptomeAppRoot)\src;$(SynaptomeAppRoot)\src\core;$(SynaptomeAppRoot)\src\io;$(SynaptomeAppRoot)\src\ui;$(SynaptomeAppRoot)\src\visuals;$(SynaptomeAppRoot)\src\visuals\effects;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
@@ -42,7 +42,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>MaxSpeed</Optimization>
-      <AdditionalIncludeDirectories>$(SynaptomeThirdPartyRoot);$(SynaptomeTestRoot)\stubs;$(SynaptomeOpenFrameworksRoot)\libs\glm\include;$(SynaptomeTestRoot);$(SynaptomeAppRoot)\src;$(SynaptomeAppRoot)\src\core;$(SynaptomeAppRoot)\src\io;$(SynaptomeAppRoot)\src\ui;$(SynaptomeAppRoot)\src\visuals;$(SynaptomeAppRoot)\src\visuals\effects;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SynaptomeElementSdkIncludeRoot);$(SynaptomeThirdPartyRoot);$(SynaptomeTestRoot)\stubs;$(SynaptomeOpenFrameworksRoot)\libs\glm\include;$(SynaptomeTestRoot);$(SynaptomeAppRoot)\src;$(SynaptomeAppRoot)\src\core;$(SynaptomeAppRoot)\src\io;$(SynaptomeAppRoot)\src\ui;$(SynaptomeAppRoot)\src\visuals;$(SynaptomeAppRoot)\src\visuals\effects;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>

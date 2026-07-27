@@ -27,6 +27,10 @@ def direct_includes(text: str) -> list[str]:
 
 def main() -> int:
     errors: list[str] = []
+    action_header = read(
+        APP / "sdk" / "include" / "synaptome" / "element" / "Action.h",
+        errors,
+    )
     layer_forwarder = read(SDK / "Layer.h", errors)
     builder_forwarder = read(SDK / "LayerParameterBuilder.h", errors)
     example_header = read(EXAMPLE / "SignalBloomLayer.h", errors)
@@ -64,6 +68,44 @@ def main() -> int:
         includes = direct_includes(text)
         if includes != [expected]:
             errors.append(f"{name} must be the one documented compatibility forwarder")
+
+    for token in (
+        "struct ActionDescriptor",
+        "std::string id",
+        "std::string label",
+        "std::string groupId;",
+        "std::string description",
+        "enum class ActionExecutionStatus",
+        "Succeeded",
+        "Rejected",
+        "Failed",
+        "struct ActionExecutionResult",
+        "using ActionHandler = std::function<ActionExecutionResult()>",
+        "class ActionRegistrar",
+        "virtual void add(",
+    ):
+        if token not in action_header:
+            errors.append(f"public action contract is missing {token}")
+    if "std::string group;" in action_header:
+        errors.append(
+            "public action descriptor must expose stable groupId, not ambiguous group"
+        )
+    for token in (
+        "Composition",
+        "Runtime",
+        "LayerFactory",
+        "ParameterRegistry",
+        "ofApp",
+        "ofMain",
+        "MidiRouter",
+        "OscParameterRouter",
+    ):
+        if token in action_header:
+            errors.append(
+                f"public action contract imports forbidden host/runtime ownership: {token}"
+            )
+    if "registerActions(" not in read(APP / "src" / "visuals" / "Layer.h", errors):
+        errors.append("compatibility Layer must expose optional live action registration")
 
     for header in public_sdk_surfaces:
         text = read(header, errors)
@@ -117,6 +159,11 @@ def main() -> int:
     for token in required_contract_tokens:
         if token not in contract_lower:
             errors.append(f"compile-contract project missing {token}")
+    if "<synaptome/element/action.h>" not in read(
+        ROOT / "tests" / "element_sdk_compile_contract.cpp",
+        errors,
+    ).lower():
+        errors.append("compile-contract must include the public Action header directly")
     forbidden_contract_roots = (
         r"$(synaptomeapproot)\src;",
         r"$(synaptomeapproot)\src\core",
@@ -163,8 +210,8 @@ def main() -> int:
         return 1
     print(
         "[element-sdk-boundary] PASS public includes, shipping static library, "
-        "controlled registration, compile-contract roots, and no Runtime "
-        "composition leak"
+        "pointer-free live action contract, controlled registration, "
+        "compile-contract roots, and no Runtime composition leak"
     )
     return 0
 

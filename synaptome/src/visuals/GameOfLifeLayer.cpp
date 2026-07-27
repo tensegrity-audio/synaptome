@@ -225,6 +225,21 @@ void GameOfLifeLayer::setup(ParameterRegistry& registry) {
     syncTexture();
 }
 
+void GameOfLifeLayer::registerActions(
+    synaptome::element::ActionRegistrar& registrar) {
+    registrar.add(
+        {
+            "simulation.randomize",
+            "Randomize Simulation",
+            "simulation",
+            "Immediately randomize the board using the current density.",
+        },
+        [this]() {
+            randomize();
+            return synaptome::element::ActionExecutionResult::succeeded();
+        });
+}
+
 void GameOfLifeLayer::update(const LayerUpdateParams& params) {
     enabled_ = paramEnabled_;
     if (!enabled_) return;

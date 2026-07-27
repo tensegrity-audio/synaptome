@@ -6259,18 +6259,14 @@ bool ofApp::adjustGeodesicSubdivisionAtSlot(
         return false;
     }
 
-    Layer* base =
-        runtime_.legacyCompositionElementForHost(zeroBasedIndex);
-    auto* geodesic = dynamic_cast<GeodesicLayer*>(base);
-    if (!geodesic) {
-        return false;
-    }
-    if (delta > 0) {
-        geodesic->incrementSubdivision();
-    } else {
-        geodesic->decrementSubdivision();
-    }
-    return true;
+    const std::string_view actionId =
+        delta > 0
+            ? "subdivision.increment"
+            : "subdivision.decrement";
+    return static_cast<bool>(
+        runtime_.invokeCompositionAction(
+            zeroBasedIndex,
+            actionId));
 }
 
 bool ofApp::randomizeGameOfLifeAtSlot(
@@ -6282,14 +6278,10 @@ bool ofApp::randomizeGameOfLifeAtSlot(
         return false;
     }
 
-    Layer* base =
-        runtime_.legacyCompositionElementForHost(zeroBasedIndex);
-    auto* gameOfLife = dynamic_cast<GameOfLifeLayer*>(base);
-    if (!gameOfLife) {
-        return false;
-    }
-    gameOfLife->randomize();
-    return true;
+    return static_cast<bool>(
+        runtime_.invokeCompositionAction(
+            zeroBasedIndex,
+            "simulation.randomize"));
 }
 
 std::string ofApp::gridDeformationSummary(

@@ -29,6 +29,96 @@ def function_body(source: str, signature: str) -> str:
     raise ValueError(f"unterminated function body: {signature}")
 
 
+def strip_cpp_comments(source: str) -> str:
+    """Remove C++ comments while preserving strings, chars, and line layout."""
+    result: list[str] = []
+    index = 0
+    quote = ""
+    escaped = False
+    while index < len(source):
+        char = source[index]
+        next_char = source[index + 1] if index + 1 < len(source) else ""
+        if quote:
+            result.append(char)
+            if escaped:
+                escaped = False
+            elif char == "\\":
+                escaped = True
+            elif char == quote:
+                quote = ""
+            index += 1
+            continue
+        if char in ('"', "'"):
+            quote = char
+            result.append(char)
+            index += 1
+            continue
+        if char == "/" and next_char == "/":
+            result.extend((" ", " "))
+            index += 2
+            while index < len(source) and source[index] not in "\r\n":
+                result.append(" ")
+                index += 1
+            continue
+        if char == "/" and next_char == "*":
+            result.extend((" ", " "))
+            index += 2
+            while index < len(source):
+                if (
+                    source[index] == "*"
+                    and index + 1 < len(source)
+                    and source[index + 1] == "/"
+                ):
+                    result.extend((" ", " "))
+                    index += 2
+                    break
+                result.append(
+                    source[index] if source[index] in "\r\n" else " "
+                )
+                index += 1
+            continue
+        result.append(char)
+        index += 1
+    return "".join(result)
+
+
+def call_expressions(source: str, callee_pattern: str) -> list[str]:
+    """Return balanced call expressions matching a regex callee pattern."""
+    calls: list[str] = []
+    pattern = re.compile(callee_pattern + r"\s*\(")
+    for match in pattern.finditer(source):
+        open_paren = source.find("(", match.start(), match.end())
+        depth = 0
+        quote = ""
+        escaped = False
+        for index in range(open_paren, len(source)):
+            char = source[index]
+            if quote:
+                if escaped:
+                    escaped = False
+                elif char == "\\":
+                    escaped = True
+                elif char == quote:
+                    quote = ""
+                continue
+            if char in ('"', "'"):
+                quote = char
+                continue
+            if char == "(":
+                depth += 1
+            elif char == ")":
+                depth -= 1
+                if depth == 0:
+                    calls.append(source[match.start():index + 1])
+                    break
+    return calls
+
+
+def first_string_literal(source: str) -> str | None:
+    match = re.search(r'"((?:\\.|[^"\\])*)"', source)
+    return match.group(1) if match else None
+
+
 def main() -> int:
     errors: list[str] = []
     runtime_header = (ROOT / "synaptome/src/runtime/Runtime.h").read_text(encoding="utf-8")
@@ -46,6 +136,34 @@ def main() -> int:
     ).read_text(encoding="utf-8")
     layer_header = (
         ROOT / "synaptome/src/visuals/Layer.h"
+    ).read_text(encoding="utf-8")
+    action_header = (
+        ROOT / "synaptome/sdk/include/synaptome/element/Action.h"
+    ).read_text(encoding="utf-8")
+    action_table = (
+        ROOT / "synaptome/src/runtime/ElementActionTable.h"
+    ).read_text(encoding="utf-8")
+    geodesic_header = (
+        ROOT / "synaptome/src/visuals/GeodesicLayer.h"
+    ).read_text(encoding="utf-8")
+    geodesic_source = (
+        ROOT / "synaptome/src/visuals/GeodesicLayer.cpp"
+    ).read_text(encoding="utf-8")
+    game_of_life_header = (
+        ROOT / "synaptome/src/visuals/GameOfLifeLayer.h"
+    ).read_text(encoding="utf-8")
+    game_of_life_source = (
+        ROOT / "synaptome/src/visuals/GameOfLifeLayer.cpp"
+    ).read_text(encoding="utf-8")
+    midi_router = (
+        ROOT / "synaptome/src/io/MidiRouter.h"
+    ).read_text(encoding="utf-8") + (
+        ROOT / "synaptome/src/io/MidiRouter.cpp"
+    ).read_text(encoding="utf-8")
+    osc_parameter_router = (
+        ROOT / "synaptome/src/io/OscParameterRouter.h"
+    ).read_text(encoding="utf-8") + (
+        ROOT / "synaptome/src/io/OscParameterRouter.cpp"
     ).read_text(encoding="utf-8")
     control_hub_header = (
         ROOT / "synaptome/src/ui/ControlMappingHubState.h"
@@ -110,6 +228,7 @@ def main() -> int:
         "ElementErrorCode",
         "compositionSnapshot",
         "compositionLayerSnapshot",
+        "invokeCompositionAction",
         "adoptPreparedElement",
         "releasePreparedElement",
         "updateCompositionElements",
@@ -123,7 +242,6 @@ def main() -> int:
         "clearCompositionLayer",
         "compositionRenderTargetsForHost",
         "compositionElementForHost",
-        "legacyCompositionElementForHost",
     ):
         if token not in runtime_source and token not in runtime_header:
             errors.append(f"runtime lifecycle seam is missing {token}")
@@ -134,6 +252,8 @@ def main() -> int:
         "struct CompositionSnapshot",
         "enum class CompositionMutationError",
         "struct CompositionMutationResult",
+        "enum class CompositionActionError",
+        "struct CompositionActionResult",
     ):
         if token not in composition_types:
             errors.append(f"runtime composition control plane is missing {token}")
@@ -190,6 +310,7 @@ def main() -> int:
         "active",
         "opacity",
         "coverage",
+        "std::vector<element::ActionDescriptor> actions",
         "std::array<CompositionLayerSnapshot",
     ):
         if token not in snapshot_surface:
@@ -208,16 +329,294 @@ def main() -> int:
     ):
         if token in snapshot_surface:
             errors.append(f"composition snapshot DTOs expose forbidden ownership: {token}")
+
+    descriptor_start = action_header.find("struct ActionDescriptor")
+    descriptor_end = action_header.find(
+        "enum class ActionExecutionStatus",
+        descriptor_start,
+    )
+    if descriptor_start < 0 or descriptor_end < 0:
+        errors.append("could not inspect the public live action descriptor")
+        action_descriptor_surface = ""
+    else:
+        action_descriptor_surface = action_header[
+            descriptor_start:descriptor_end
+        ]
+    for token in (
+        "std::string id;",
+        "std::string label;",
+        "std::string groupId;",
+        "std::string description;",
+    ):
+        if token not in action_descriptor_surface:
+            errors.append(f"live action descriptor is missing {token}")
+    if "std::string group;" in action_descriptor_surface:
+        errors.append(
+            "live action descriptor must use stable groupId instead of group"
+        )
+    for token in (
+        "*",
+        "&",
+        "std::function",
+        "ActionHandler",
+        "Layer",
+        "Runtime",
+        "ParameterRegistry",
+        "ofApp",
+    ):
+        if token in action_descriptor_surface:
+            errors.append(
+                f"live action descriptor exposes forbidden ownership: {token}"
+            )
+    for token in (
+        "using ActionHandler = std::function<ActionExecutionResult()>",
+        "class ActionRegistrar",
+        "virtual void add(",
+    ):
+        if token not in action_header:
+            errors.append(f"public live action contract is missing {token}")
+    if "registerActions(" not in layer_header:
+        errors.append("compatibility Layer is missing optional action registration")
+    for token in (
+        "contractError() const",
+        "isValidId(",
+        "entry.descriptor.id",
+        "entry.descriptor.label.empty()",
+        "isValidGroupId(entry.descriptor.groupId)",
+        "invalid action group ID",
+        "entry.handler",
+        "duplicate action ID",
+        "descriptors() const",
+        "find(",
+    ):
+        if token not in action_table:
+            errors.append(f"runtime live action table is missing {token}")
+    if "character != '_'" in action_table:
+        errors.append(
+            "live action IDs must use dotted lowerCamel segments; underscores "
+            "must remain invalid"
+        )
+    group_validator_start = action_table.find(
+        "static bool isValidGroupId("
+    )
+    group_validator_end = action_table.find(
+        "std::vector<Entry> entries_",
+        group_validator_start,
+    )
+    if group_validator_start < 0 or group_validator_end < 0:
+        errors.append("could not inspect live action groupId validation")
+        group_validator_surface = ""
+    else:
+        group_validator_surface = action_table[
+            group_validator_start:group_validator_end
+        ]
+    for token in (
+        "id.empty()",
+        "id.front() < 'a'",
+        "id.front() > 'z'",
+        "character >= 'a'",
+        "character <= 'z'",
+        "character >= 'A'",
+        "character <= 'Z'",
+        "character >= '0'",
+        "character <= '9'",
+    ):
+        if token not in group_validator_surface:
+            errors.append(
+                f"live action groupId lowerCamel validation is missing {token}"
+            )
+    for forbidden in ("character == '.'", "character == '_'", "character == '-'"):
+        if forbidden in group_validator_surface:
+            errors.append(
+                "live action groupId must remain a single alphanumeric "
+                f"lowerCamel segment: {forbidden}"
+            )
+    for token in (
+        "GeodesicLayer",
+        "GameOfLifeLayer",
+        "dynamic_cast<",
+    ):
+        if token in runtime_header or token in runtime_source:
+            errors.append(
+                f"generic Runtime action dispatch depends on a concrete element: {token}"
+            )
+    for header, label in (
+        (geodesic_header, "Geodesic"),
+        (game_of_life_header, "Game of Life"),
+    ):
+        if not re.search(r"\bregisterActions\s*\(", strip_cpp_comments(header)):
+            errors.append(
+                f"{label} live action implementation is missing registration"
+            )
+    try:
+        geodesic_actions_body = function_body(
+            strip_cpp_comments(geodesic_source),
+            "void GeodesicLayer::registerActions",
+        )
+        game_of_life_actions_body = function_body(
+            strip_cpp_comments(game_of_life_source),
+            "void GameOfLifeLayer::registerActions",
+        )
+    except ValueError as exc:
+        errors.append(str(exc))
+        geodesic_action_calls: list[str] = []
+        game_of_life_action_calls: list[str] = []
+    else:
+        geodesic_action_calls = call_expressions(
+            geodesic_actions_body,
+            r"\bregistrar\s*\.\s*add",
+        )
+        game_of_life_action_calls = call_expressions(
+            game_of_life_actions_body,
+            r"\bregistrar\s*\.\s*add",
+        )
+
+    action_success_pattern = re.compile(
+        r"\bActionExecutionResult\s*::\s*succeeded\s*\(\s*\)"
+    )
+    concrete_action_contracts = (
+        (
+            geodesic_action_calls,
+            "subdivision.increment",
+            "geometry",
+            "incrementSubdivision",
+            ("decrementSubdivision",),
+            "Geodesic",
+        ),
+        (
+            geodesic_action_calls,
+            "subdivision.decrement",
+            "geometry",
+            "decrementSubdivision",
+            ("incrementSubdivision",),
+            "Geodesic",
+        ),
+        (
+            game_of_life_action_calls,
+            "simulation.randomize",
+            "simulation",
+            "randomize",
+            (),
+            "Game of Life",
+        ),
+    )
+    for calls, action_id, group_id, handler_name, forbidden_handlers, label in (
+        concrete_action_contracts
+    ):
+        matching_calls = [
+            call
+            for call in calls
+            if first_string_literal(call) == action_id
+        ]
+        if len(matching_calls) != 1:
+            errors.append(
+                f"{label} must register action {action_id} exactly once"
+            )
+            continue
+        action_call = matching_calls[0]
+        descriptor_literals = re.findall(
+            r'"((?:\\.|[^"\\])*)"',
+            action_call,
+        )
+        if len(descriptor_literals) < 4:
+            errors.append(
+                f"{label} action {action_id} is missing complete descriptor metadata"
+            )
+        else:
+            if not descriptor_literals[1]:
+                errors.append(
+                    f"{label} action {action_id} must retain a nonempty label"
+                )
+            if descriptor_literals[2] != group_id:
+                errors.append(
+                    f"{label} action {action_id} groupId must remain {group_id}"
+                )
+        handler_pattern = re.compile(
+            rf"(?:\bthis\s*->\s*)?\b{re.escape(handler_name)}\s*"
+            r"\(\s*\)"
+        )
+        if not handler_pattern.search(action_call):
+            errors.append(
+                f"{label} action {action_id} is not paired with "
+                f"{handler_name}()"
+            )
+        for forbidden_handler in forbidden_handlers:
+            if re.search(
+                rf"(?:\bthis\s*->\s*)?\b"
+                rf"{re.escape(forbidden_handler)}\s*\(\s*\)",
+                action_call,
+            ):
+                errors.append(
+                    f"{label} action {action_id} is also wired to "
+                    f"{forbidden_handler}()"
+                )
+        if not action_success_pattern.search(action_call):
+            errors.append(
+                f"{label} action {action_id} must report successful execution"
+            )
+
+    for call in game_of_life_action_calls:
+        registered_id = first_string_literal(call)
+        if registered_id and "reseed" in registered_id.split("."):
+            errors.append(
+                "Game of Life must not expose a .reseed live action route: "
+                f"{registered_id}"
+            )
+    for token in (
+        'result.stage = "actions"',
+        "registerActions(result.stagedActions_)",
+        "stagedActions_.contractError()",
+        "state.actions = layer.actions_.descriptors()",
+        "CompositionActionError::IndexOutOfRange",
+        "CompositionActionError::SlotEmpty",
+        "CompositionActionError::KindMismatch",
+        "CompositionActionError::ActionNotFound",
+        "CompositionActionError::Rejected",
+        "CompositionActionError::ExecutionFailure",
+        "layer.actions_.find(actionId)",
+        "ActionExecutionStatus::Succeeded",
+        "ActionExecutionStatus::Rejected",
+        "ActionExecutionStatus::Failed",
+        "catch (const std::exception& error)",
+        "catch (...)",
+    ):
+        if token not in runtime_source:
+            errors.append(f"Runtime live action control plane is missing {token}")
+    if composition_header.find("std::unique_ptr<Layer> element_") > composition_header.find(
+        "ElementActionTable actions_"
+    ):
+        errors.append(
+            "live action handlers must be declared after the element so they "
+            "are destroyed first"
+        )
+    if runtime_header.find("std::unique_ptr<Layer> element_") > runtime_header.find(
+        "ElementActionTable stagedActions_"
+    ):
+        errors.append(
+            "prepared action handlers must be declared after the candidate "
+            "element so they are destroyed first"
+        )
+    for token in (
+        "layer->actions_.swap(prepared.stagedActions_)",
+        "retiredActions.swap(layer->actions_)",
+        "retiredElement.swap(layer->element_)",
+    ):
+        if token not in runtime_source:
+            errors.append(f"Runtime action/element lifetime ordering is missing {token}")
     for token in (
         "ElementResult prepareCompositionElementReplacement(",
         "CompositionSnapshot compositionSnapshot() const",
         "std::optional<CompositionLayerSnapshot> compositionLayerSnapshot(",
+        "CompositionActionResult invokeCompositionAction(",
         "const Layer* compositionElementForHost(",
-        "Layer* legacyCompositionElementForHost(",
         "CompositionRenderTargets compositionRenderTargetsForHost(",
     ):
         if token not in runtime_header:
             errors.append(f"Runtime immutable query/host seam is missing {token}")
+    if "legacyCompositionElementForHost" in runtime_header + runtime_source + app:
+        errors.append(
+            "the zero-caller mutable composition-element seam must remain retired"
+        )
     if re.search(
         r"\bprepareElementReplacement\s*\(",
         runtime_header + runtime_source + app + runtime_test,
@@ -297,6 +696,7 @@ def main() -> int:
         "runtime_.clearCompositionLayer",
         "runtime_.compositionSnapshot",
         "runtime_.compositionLayerSnapshot",
+        "runtime_.invokeCompositionAction",
         "runtime_.compositionRenderTargetsForHost",
         "runtime_.resizeCompositionElements",
         "runtime_.updateCompositionElements",
@@ -446,17 +846,18 @@ def main() -> int:
             "rather than requesting a mutable live element"
         )
 
+    app_without_comments = strip_cpp_comments(app)
     try:
         geodesic_query_body = function_body(
             app,
             "std::optional<int> ofApp::geodesicSubdivisionAtSlot",
         )
         geodesic_adjust_body = function_body(
-            app,
+            app_without_comments,
             "bool ofApp::adjustGeodesicSubdivisionAtSlot",
         )
         game_of_life_randomize_body = function_body(
-            app,
+            app_without_comments,
             "bool ofApp::randomizeGameOfLifeAtSlot",
         )
         first_type_body = function_body(
@@ -516,44 +917,81 @@ def main() -> int:
             "runtime_.compositionLayerSnapshot",
             'slot->typeId != "geodesic"',
             "delta == 0",
-            "runtime_.legacyCompositionElementForHost",
-            "dynamic_cast<GeodesicLayer*>",
-            "geodesic->incrementSubdivision()",
-            "geodesic->decrementSubdivision()",
         ):
             if token not in geodesic_adjust_body:
                 errors.append(
-                    "Geodesic mutable action adapter is missing semantic "
+                    "Geodesic runtime action adapter is missing semantic "
                     f"guard: {token}"
                 )
+        polarity_expression = (
+            r"(?:delta\s*>\s*0|0\s*<\s*delta)\s*\?\s*"
+            r'"subdivision\.increment"\s*:\s*'
+            r'"subdivision\.decrement"'
+        )
+        geodesic_invocations = call_expressions(
+            geodesic_adjust_body,
+            r"\bruntime_\s*\.\s*invokeCompositionAction",
+        )
+        invokes_polarity_directly = any(
+            re.search(polarity_expression, call, re.DOTALL)
+            for call in geodesic_invocations
+        )
+        mapped_action = re.search(
+            rf"(?:const\s+)?(?:std::string_view|auto)\s+"
+            rf"([A-Za-z_][A-Za-z0-9_]*)\s*=\s*"
+            rf"{polarity_expression}",
+            geodesic_adjust_body,
+            re.DOTALL,
+        )
+        invokes_mapped_action = bool(
+            mapped_action
+            and any(
+                re.search(
+                    rf"\b{re.escape(mapped_action.group(1))}\b",
+                    call,
+                )
+                for call in geodesic_invocations
+            )
+        )
+        if not geodesic_invocations:
+            errors.append(
+                "Geodesic runtime action adapter must invoke a Runtime action"
+            )
+        elif not invokes_polarity_directly and not invokes_mapped_action:
+            errors.append(
+                "Geodesic runtime action adapter must map positive delta to "
+                "subdivision.increment and non-positive delta to "
+                "subdivision.decrement in the invoked action"
+            )
         for token in (
             "runtime_.compositionLayerSnapshot",
             'slot->typeId != "gameOfLife"',
-            "runtime_.legacyCompositionElementForHost",
-            "dynamic_cast<GameOfLifeLayer*>",
-            "gameOfLife->randomize()",
         ):
             if token not in game_of_life_randomize_body:
                 errors.append(
-                    "Game of Life mutable action adapter is missing semantic "
+                    "Game of Life runtime action adapter is missing semantic "
                     f"guard: {token}"
                 )
-
-        app_without_mutable_action_bodies = app.replace(
-            geodesic_adjust_body,
-            "",
-            1,
-        ).replace(
+        game_of_life_invocations = call_expressions(
             game_of_life_randomize_body,
-            "",
-            1,
+            r"\bruntime_\s*\.\s*invokeCompositionAction",
         )
-        if "runtime_.legacyCompositionElementForHost" in app_without_mutable_action_bodies:
+        if not any(
+            re.search(r'"simulation\.randomize"', call)
+            for call in game_of_life_invocations
+        ):
             errors.append(
-                "mutable legacy composition-element access escaped the two "
-                "named action adapter bodies"
+                "Game of Life runtime action adapter must invoke "
+                "simulation.randomize"
+            )
+
+        if "runtime_.legacyCompositionElementForHost" in app:
+            errors.append(
+                "host action paths must not request mutable live elements"
             )
         for token in (
+            "dynamic_cast<GeodesicLayer*>",
+            "dynamic_cast<GameOfLifeLayer*>",
             "dynamic_cast<GridLayer*>",
             "dynamic_cast<PerlinNoiseLayer*>",
             "dynamic_cast<const PerlinNoiseLayer*>",
@@ -658,6 +1096,66 @@ def main() -> int:
                     "core OSC routes are missing snapshot/registry-backed "
                     f"binding: {token}"
                 )
+
+    persisted_roots = (
+        ROOT / "docs/contracts",
+        ROOT / "docs/examples",
+        ROOT / "synaptome/bin/data",
+        ROOT / "tools/testdata",
+    )
+    persisted_action_ids = (
+        "subdivision.increment",
+        "subdivision.decrement",
+        "simulation.randomize",
+    )
+    for persisted_root in persisted_roots:
+        for json_path in persisted_root.rglob("*.json"):
+            text = json_path.read_text(encoding="utf-8", errors="replace")
+            for action_id in persisted_action_ids:
+                if action_id in text:
+                    errors.append(
+                        "live-only action leaked into persisted JSON: "
+                        f"{json_path.relative_to(ROOT)} ({action_id})"
+                    )
+    deferred_mapping_surface = midi_router + osc_parameter_router
+    deferred_schema_paths = (
+        ROOT / "docs/schemas/layer_package.schema.json",
+        ROOT / "docs/schemas/layer_browser_inspection_payload.schema.json",
+        ROOT / "docs/schemas/scene.schema.json",
+        ROOT / "docs/schemas/midi_bank.schema.json",
+        ROOT / "docs/schemas/osc_map.schema.json",
+        ROOT / "docs/schemas/hotkeys.schema.json",
+        ROOT / "docs/schemas/device_map.schema.json",
+        ROOT / "docs/schemas/parameter_manifest.schema.json",
+    )
+    deferred_schema_surface = "\n".join(
+        path.read_text(encoding="utf-8")
+        for path in deferred_schema_paths
+    )
+    for token in (
+        "invokeCompositionAction",
+        "ActionDescriptor",
+        "ActionHandler",
+        ".actions.",
+    ):
+        if token in deferred_mapping_surface:
+            errors.append(
+                "MIDI/OSC mapping router must not persist or invoke live "
+                f"actions in this checkpoint: {token}"
+            )
+    for token in (
+        '"actions"',
+        '"action"',
+        '"actionId"',
+        '"targetKind"',
+        ".actions.",
+    ):
+        if token in deferred_schema_surface:
+            errors.append(
+                "persisted package/scene/mapping schemas must not declare "
+                f"action targets in this checkpoint: {token}"
+            )
+
     direct_metadata_write = re.compile(
         r"(?:\bslot|consoleSlots\s*(?:\[[^\]]+\]|\.at\([^)]*\)))"
         r"(?:\.|->)(?:assetId|label|type|paramPrefix|kind|active|opacity|"
@@ -781,6 +1279,20 @@ def main() -> int:
         "clearCompositionLayer",
         "compositionRenderTargetsForHost",
         "tests.stable-opacity-mapping",
+        "RunCompositionActionScenario",
+        "InvalidActionMode::InvalidUnderscore",
+        "InvalidActionMode::EmptyLabel",
+        "InvalidActionMode::InvalidGroupId",
+        'groupId == "version"',
+        "prepared actions became discoverable before adoption",
+        "mutating a copied action descriptor changed Runtime state",
+        "action execution status translation or exception containment drifted",
+        "same local action ID did not remain scoped to its composition slot",
+        "prepared replacement published candidate action declarations",
+        "action replacement did not atomically publish and retain tables",
+        "retired action handlers did not precede matching element destruction",
+        "clear retained action discovery, invocation, or handler lifetime",
+        "shutdown retained a live action table or destroyed it out of order",
     ):
         if token not in runtime_test:
             errors.append(f"RuntimeCore test is missing control-plane coverage: {token}")
@@ -792,7 +1304,7 @@ def main() -> int:
         return 1
     print(
         "[runtime-core-boundary] PASS linked RuntimeCore lifecycle and "
-        "immutable composition query/control/replacement plane"
+        "immutable composition query/control/replacement plus live action plane"
     )
     return 0
 

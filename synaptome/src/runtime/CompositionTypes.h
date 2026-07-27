@@ -1,8 +1,11 @@
 #pragma once
 
+#include <synaptome/element/Action.h>
+
 #include <array>
 #include <cstddef>
 #include <string>
+#include <vector>
 
 namespace synaptome::runtime {
 
@@ -43,6 +46,7 @@ struct CompositionLayerSnapshot {
     bool active = false;
     float opacity = 1.0f;
     CompositionCoverage coverage;
+    std::vector<element::ActionDescriptor> actions;
 };
 
 struct CompositionSnapshot {
@@ -66,6 +70,26 @@ struct CompositionMutationResult {
 
     explicit operator bool() const noexcept {
         return errorCode == CompositionMutationError::None;
+    }
+};
+
+enum class CompositionActionError {
+    None,
+    IndexOutOfRange,
+    SlotEmpty,
+    KindMismatch,
+    ActionNotFound,
+    Rejected,
+    ExecutionFailure,
+};
+
+struct CompositionActionResult {
+    CompositionActionError errorCode = CompositionActionError::None;
+    std::string actionId;
+    std::string error;
+
+    explicit operator bool() const noexcept {
+        return errorCode == CompositionActionError::None;
     }
 };
 

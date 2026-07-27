@@ -134,7 +134,8 @@ per-assignment opacity parameter.
 
 The host reads composition metadata through copied DTOs. A
 `CompositionLayerSnapshot` contains only index, occupancy, element presence,
-kind, stable assignment identity, active state, opacity, and coverage;
+kind, stable assignment identity, active state, opacity, coverage, and copied
+pointer-free live action descriptors;
 `CompositionSnapshot` contains the fixed eight-layer array. The DTOs carry no
 element, FBO, parameter-registry, creator, or host pointers, and changing a copy
 cannot mutate Runtime. One bounds-checked optional layer query supports focused
@@ -145,22 +146,30 @@ passes a zero-based composition-layer index to
 `prepareCompositionElementReplacement`; Runtime resolves the current element,
 rejects out-of-range, empty, effect, or overlay layers before construction, and
 keeps the old instance live through candidate setup. Adoption is the commit
-point. After commit, the caller-held prepared result keeps the retired element
-alive until pointer-bearing parameter, mapping, MIDI, and OSC consumers have
-been invalidated or rebound.
+point. After commit, the caller-held prepared result keeps the retired action
+table and element alive together until pointer-bearing parameter, mapping,
+MIDI, and OSC consumers have been invalidated or rebound.
 
-Mutable FBO access, read-only element inspection, and mutable element-specific
-compatibility actions still use three separate named host seams. Those seams are
-SEAC-3 migration debt. Generic replacement no longer consumes the mutable
-element seam. The host no longer caches derived Grid, Geodesic, Perlin, or Game
-of Life pointers. It selects instances from immutable composition snapshots and
-uses each copied registry prefix for live parameter reads, MIDI/OSC binding,
-Grid density cycling, and Game of Life pause. Mutable legacy access is
-structurally isolated to two slot-addressed compatibility actions: Geodesic
-subdivision adjustment and immediate Game of Life randomization. The Geodesic
-subdivision status query and current video status inspection remain read-only
-compatibility debt. The next boundary replaces those action and status adapters
-with declared contracts so the mutable and read-only seams can retire.
+Mutable FBO access and read-only element inspection remain named host seams and
+SEAC-3 migration debt. Mutable element-specific action access has been replaced
+by a generic live-instance contract. During candidate preparation an element
+may register pointer-free action descriptors and no-argument handlers. Runtime
+validates the local IDs and handlers, owns the handler table, copies only the
+descriptors into `CompositionLayerSnapshot`, and invokes a command by
+zero-based composition-layer index plus local action ID. The host no longer
+caches derived Grid, Geodesic, Perlin, or Game of Life pointers. It selects
+instances from immutable composition snapshots and uses each copied registry
+prefix for live parameter reads, MIDI/OSC binding, Grid density cycling, and
+Game of Life pause.
+
+This first action slice is intentionally not a persistence or mapping contract.
+Actions do not become parameter state, receive an expanded
+`console.layerN.actions.*` address, appear in scenes or presets, or enter
+MIDI/OSC mapping snapshots. Discovery is limited to a currently adopted live
+instance. Static `ElementDescriptor` action declarations, package/catalog
+inspection, declaration/registration parity, and persisted action mappings are
+SEAC-4 work. The Geodesic subdivision status query and current video status
+inspection remain read-only compatibility debt.
 
 The spine does not:
 
@@ -183,6 +192,7 @@ for cleanup. The target lifecycle must make unload explicit:
 ```text
 configure
   -> register parameters / setup
+  -> register live actions
   -> update
   -> draw
   -> unload
@@ -205,6 +215,24 @@ The target contract must make the following explicit:
 An element may have no public parameters and still be hostable. It does not
 become a fully controllable Synaptome instrument until it declares a stable
 parameter surface.
+
+An element may also register no live actions. A live action is a no-argument command,
+not durable state. Its descriptor uses a stable local lower-camel dotted ID,
+nonempty display label, stable `groupId`, and description; its handler reports
+success, rejection, or failure. `groupId` is one lower-camel alphanumeric
+segment such as `geometry` or `simulation`, not a display label. Runtime rejects
+invalid or duplicate IDs, empty labels, invalid group IDs, and empty handlers
+before publishing the candidate. Only descriptors cross the snapshot boundary.
+Invocation is synchronous on Runtime's owner thread and non-reentrant. External
+MIDI, OSC, device, and worker threads queue action requests to that thread. An
+action handler may mutate only element-owned state; it must not re-enter
+composition mutation, clear or replace its own slot, shut down or destroy
+Runtime, or invoke another composition action before returning.
+Adopted actions remain discoverable and invokable while a layer is inactive;
+inactive gates update/draw behavior, not commands. `Succeeded` means the
+command completed, `Rejected` means it was declined in the current state, and
+`Failed` or an exception means execution failed after it may have begun.
+Runtime neither retries nor rolls back handler-side mutation.
 
 The compatibility `LayerFactory` is an explicitly owned element type registry,
 not a singleton. Each Runtime receives one registry by reference; app, bench,

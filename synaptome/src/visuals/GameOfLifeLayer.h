@@ -9,6 +9,8 @@ class GameOfLifeLayer : public Layer {
 public:
     void configure(const ofJson& config) override;
     void setup(ParameterRegistry& registry) override;
+    void registerActions(
+        synaptome::element::ActionRegistrar& registrar) override;
     void update(const LayerUpdateParams& params) override;
     void draw(const LayerDrawParams& params) override;
 

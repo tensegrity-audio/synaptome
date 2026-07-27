@@ -32,7 +32,7 @@
   <ItemDefinitionGroup>
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>$(SynaptomeThirdPartyRoot);$(SynaptomeTestRoot)\stubs;$(SynaptomeOpenFrameworksRoot)\libs\glm\include;$(SynaptomeTestRoot);$(SynaptomeAppRoot)\src;$(SynaptomeAppRoot)\src\visuals;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SynaptomeElementSdkIncludeRoot);$(SynaptomeThirdPartyRoot);$(SynaptomeTestRoot)\stubs;$(SynaptomeOpenFrameworksRoot)\libs\glm\include;$(SynaptomeTestRoot);$(SynaptomeAppRoot)\src;$(SynaptomeAppRoot)\src\visuals;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
   </ItemDefinitionGroup>

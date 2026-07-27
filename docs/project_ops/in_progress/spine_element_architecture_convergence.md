@@ -5,20 +5,20 @@ State Summary
 - Phase: EXECUTION
 - Status: In Progress
 - Steps Complete: 2 / 12
-- Progress: SEAC-3 is in progress. `SynaptomeRuntimeCore` now owns staged element setup, atomic same-address registry/element replacement, the fixed eight composition records, FBO state, exact parameter ownership, generic lifecycle/render routing, zero-based effect coverage-window policy, the composition mutation control plane, and immutable by-value composition queries. The host has no derived Grid/Geodesic/Perlin/Game of Life pointer cache. Ordinary HUD reads, MIDI/OSC bindings, Grid density cycling, and Game of Life pause select copied slots and resolve live `ParameterRegistry` storage by stable prefix. Mutable `legacyCompositionElementForHost` access is structurally isolated to slot-validated Geodesic subdivision adjustment and immediate Game of Life randomization.
-- Last Step Outcome: 2026-07-27 - Removed derived element caches and concrete parameter-pointer adapters; migrated Grid/Geodesic/Perlin/Game of Life views, MIDI/OSC bindings, Grid density, and Game of Life pause to snapshot-addressed registry access while preserving public IDs and control semantics.
-- Next Step: Replace the two remaining mutable action adapters with a declared action contract, then migrate Geodesic subdivision and video status off read-only element inspection and continue reducing the render-target seam. Typed descriptor/catalog ownership remains a later candidate.
+- Progress: SEAC-3 is in progress. `SynaptomeRuntimeCore` now owns staged element setup, atomic same-address registry/element/action replacement, the fixed eight composition records, FBO state, exact parameter ownership, generic lifecycle/render routing, zero-based effect coverage-window policy, the composition mutation control plane, immutable by-value composition queries, and live-instance action dispatch. Action descriptors are copied into snapshots without handlers or element pointers. Geodesic subdivision +/- and immediate Game of Life randomization use the generic Runtime command path; the mutable composition-element seam is removed.
+- Last Step Outcome: 2026-07-27 - Added the public no-argument live action contract with required display labels and stable lower-camel `groupId` metadata, then migrated Geodesic `subdivision.increment`/`subdivision.decrement` plus Game of Life `simulation.randomize` to slot-addressed Runtime invocation without changing scenes, presets, or mappings.
+- Next Step: Migrate Geodesic subdivision and video status off read-only element inspection and continue reducing the render-target seam. Static/offline `ElementDescriptor` action declarations, catalog parity, and persisted action mappings remain SEAC-4 gates.
 - Dependencies / Overlap: `show_readiness_operator_stability`, `layer_package_compatibility_bench_scaffolding`, `docs/architecture/synaptome_spine_element_model.md`, `docs/architecture/synaptome_layer_system_roadmap.md`, `docs/architecture/synaptome_artist_sdk.md`, parameter/scene/mapping contracts, and layer-authoring tests.
 - Primary Scope: runtime
 - Secondary Scopes: contracts, artist-sdk, tests, docs, release
-- Blocking Issues / Unknowns: Native binary modules remain an optional architecture decision rather than a promised deliverable. Typed descriptor/package catalog ownership, concrete host effect execution, the render-target seam, Geodesic/video read-only status inspection, and the two mutable legacy action adapters remain SEAC-3 boundaries.
+- Blocking Issues / Unknowns: Native binary modules remain an optional architecture decision rather than a promised deliverable. Typed descriptor/package catalog ownership, static action declaration parity, persisted action mapping semantics, concrete host effect execution, the render-target seam, and Geodesic/video read-only status inspection remain boundaries.
 - Impact / Priority Notes: This is the active architecture lane and precedes automatic discovery, broader package activation, or new content-family expansion.
 - Priority Score: N/A
 - Priority Lane: Fast-Track
 - Ready State: Ready
 - Ready Gate: The architecture direction, compatibility policy, ordered tasks, and stop conditions are explicit; the operator accepted residual show-validation risk and authorized execution.
-- Project Ops / Roadmap Updates (timestamped): 2026-07-26 - Added the canonical model and subordinated package/discovery work to its contract and build gates. 2026-07-26 - Promoted SEAC to execution after dual-screen validation was deferred. 2026-07-26 - Completed the dependency inventory and froze the Element SDK v1 source/static-link boundary. 2026-07-26 - Landed the first SEAC-3 build and registration slice. 2026-07-26 - Moved generic element preparation/release and exact registration ownership behind the first Runtime facade seam. 2026-07-26 - Linked the first runtime-core library and moved fixed composition storage plus generic update/draw/resize ownership behind it. 2026-07-26 - Added isolated parameter staging and transactional same-address visual-element replacement. 2026-07-26 - Hardened reserved opacity ownership, prepared-result lifetime, FX/UI-to-visual adoption, bool modifier migration, and registry-consumer invalidation. 2026-07-26 - Removed the global element factory and proved per-Runtime type-registry isolation. 2026-07-26 - Moved zero-based effect coverage-window policy into Runtime and removed the duplicate `PostEffectChain` resolver without expanding the Element SDK. 2026-07-26 - Added the Runtime composition mutation control plane, Runtime-owned layer opacity, a const-only host view, and narrow render/legacy-element seams. 2026-07-27 - Replaced the const live host view with pointer-free by-value snapshots and removed public live composition access. 2026-07-27 - Replaced pointer-addressed generic element replacement with a zero-based composition-layer transaction and narrowed mutable legacy access to two compatibility areas. 2026-07-27 - Removed the derived element cache and moved ordinary built-in views, bindings, and parameter actions to snapshot-addressed registry access.
-- Resume From: Phase EXECUTION, State In Progress, Next Action replace the two remaining slot-addressed mutable action adapters with a declared action contract.
+- Project Ops / Roadmap Updates (timestamped): 2026-07-26 - Added the canonical model and subordinated package/discovery work to its contract and build gates. 2026-07-26 - Promoted SEAC to execution after dual-screen validation was deferred. 2026-07-26 - Completed the dependency inventory and froze the Element SDK v1 source/static-link boundary. 2026-07-26 - Landed the first SEAC-3 build and registration slice. 2026-07-26 - Moved generic element preparation/release and exact registration ownership behind the first Runtime facade seam. 2026-07-26 - Linked the first runtime-core library and moved fixed composition storage plus generic update/draw/resize ownership behind it. 2026-07-26 - Added isolated parameter staging and transactional same-address visual-element replacement. 2026-07-26 - Hardened reserved opacity ownership, prepared-result lifetime, FX/UI-to-visual adoption, bool modifier migration, and registry-consumer invalidation. 2026-07-26 - Removed the global element factory and proved per-Runtime type-registry isolation. 2026-07-26 - Moved zero-based effect coverage-window policy into Runtime and removed the duplicate `PostEffectChain` resolver without expanding the Element SDK. 2026-07-26 - Added the Runtime composition mutation control plane, Runtime-owned layer opacity, a const-only host view, and narrow render/legacy-element seams. 2026-07-27 - Replaced the const live host view with pointer-free by-value snapshots and removed public live composition access. 2026-07-27 - Replaced pointer-addressed generic element replacement with a zero-based composition-layer transaction and narrowed mutable legacy access to two compatibility areas. 2026-07-27 - Removed the derived element cache and moved ordinary built-in views, bindings, and parameter actions to snapshot-addressed registry access. 2026-07-27 - Added live-instance action registration, pointer-free snapshot discovery, and generic slot-addressed invocation without adding persisted action mappings.
+- Resume From: Phase EXECUTION, State In Progress, Next Action migrate read-only Geodesic/video status and reduce remaining host seams.
 
 ## Milestone Synthesis
 
@@ -372,6 +372,11 @@ source-code archaeology or private host knowledge.
   ordinary HUD reads, MIDI/OSC binding, Grid density cycling, and Game of Life
   pause. Geodesic subdivision adjustment and immediate Game of Life
   randomization are the only remaining mutable compatibility actions.
+- 2026-07-27 - Added the public live-instance action contract. Runtime stages
+  validated no-argument handlers, copies pointer-free descriptors into
+  composition snapshots, and invokes actions by layer index plus local ID.
+  Geodesic subdivision and Game of Life immediate randomization now use that
+  path; no persisted action mapping or static descriptor claim was added.
 
 ## Validation
 
@@ -416,9 +421,9 @@ source-code archaeology or private host knowledge.
   through reassignment, Console/Browser unload, bulk clear, and scene
   publication rather than reporting a destructive partial success.
 - Passed: RuntimeCore and Element SDK boundary validators enforce pointer-free
-  by-value snapshots, explicit mutation commands, named render/read-only/
-  mutable-legacy element seams, absence of live host aggregate access, and no
-  public composition/effect SDK leak.
+  by-value snapshots, explicit mutation commands, named render/read-only seams,
+  complete removal of mutable element access, absence of live host aggregate
+  access, and no public composition/effect SDK leak.
 - Passed: RuntimeCore proves snapshot capacity and bounds, empty/element/effect/
   overlay projection, copy isolation, mutation freshness, clear behavior, and
   no element construction during query.
@@ -427,16 +432,23 @@ source-code archaeology or private host knowledge.
   preparation and abort, cross-layer and stale-candidate rejection, atomic
   commit, lifecycle progress, retired-element guard lifetime, clear/reuse
   generation changes, and candidate cleanup after Runtime expiry.
+- Passed: RuntimeCore action coverage rejects invalid/duplicate IDs, empty
+  labels, invalid group IDs, empty handlers, and throwing registration; proves
+  pointer-free live discovery and copy isolation; translates all invocation
+  errors and handler outcomes; scopes local IDs per layer; and verifies atomic
+  replacement, clear, shutdown, exception containment, and
+  handler-before-element destruction.
 - Passed: Runtime boundary validation rejects derived element caches,
   pointer-taking Perlin/Game of Life MIDI adapters, and mutable element access
-  outside the two brace-balanced, slot/type-validated action bodies. It also
-  pins live registry reads/writes, descriptor-sourced MIDI ranges, established
-  snap/step policies, and snapshot/registry-backed core OSC routes.
-- Open Gate: Reduce or retire `compositionRenderTargetsForHost`,
-  `compositionElementForHost`, and `legacyCompositionElementForHost`. The
-  mutable element seam remains only inside Geodesic subdivision adjustment and
-  Game of Life randomization adapters. Geodesic subdivision status and video
-  status remain the concrete read-only inspection debt.
+  from host action paths. It pins live registry reads/writes,
+  descriptor-sourced MIDI ranges, established snap/step policies,
+  snapshot/registry-backed core OSC routes, pointer-free action discovery,
+  structured Runtime dispatch, exact built-in action IDs, and the absence of
+  those IDs from persisted JSON.
+- Open Gate: Reduce or retire `compositionRenderTargetsForHost` and
+  `compositionElementForHost`. Geodesic subdivision status and video status
+  remain the concrete read-only inspection debt. Static action descriptors,
+  catalog parity, and persisted mappings remain SEAC-4 gates.
 - Not Run: Live dual-screen hardware rehearsal remains explicitly deferred.
 - Manual Evidence: User approved the architecture direction and requested a prioritized Project Ops roadmap.
 

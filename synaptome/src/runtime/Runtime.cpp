@@ -34,6 +34,7 @@ Runtime::ElementResult::~ElementResult() {
     } else {
         // A prepared result may outlive its Runtime. Keep the private setup
         // registry alive until after the candidate's destructor has run.
+        stagedActions_.clear();
         element_.reset();
         stagedParameters_.reset();
     }
@@ -50,6 +51,7 @@ Runtime::ElementResult::ElementResult(ElementResult&& other) noexcept
       error(std::move(other.error)),
       stagedParameters_(std::move(other.stagedParameters_)),
       element_(std::move(other.element_)),
+      stagedActions_(std::move(other.stagedActions_)),
       replacementElement_(std::exchange(other.replacementElement_, nullptr)),
       replacementElementRevision_(
           std::exchange(other.replacementElementRevision_, 0)),
@@ -64,6 +66,7 @@ Runtime::ElementResult& Runtime::ElementResult::operator=(
     if (runtime_ && !runtimeLifetime_.expired()) {
         runtime_->releasePreparedElement(*this);
     }
+    stagedActions_ = std::move(other.stagedActions_);
     element_ = std::move(other.element_);
     stagedParameters_ = std::move(other.stagedParameters_);
     replacementElement_ =
@@ -293,6 +296,23 @@ Runtime::ElementResult Runtime::prepareElementImpl(
         }
         if (progress) progress("setup");
 
+        result.stage = "actions";
+        result.element_->registerActions(result.stagedActions_);
+        const auto actionContractError =
+            result.stagedActions_.contractError();
+        if (!actionContractError.empty()) {
+            if (result.ownsPrefixReservation_) {
+                activePrefixes_.erase(request.registryPrefix);
+                result.ownsPrefixReservation_ = false;
+            }
+            result.stagedActions_.clear();
+            result.element_.reset();
+            result.stagedParameters_.reset();
+            result.errorCode = ElementErrorCode::ContractViolation;
+            result.error = actionContractError;
+            return result;
+        }
+
         result.stage = "enable";
         result.element_->setExternalEnabled(request.enabled);
         if (progress) progress("enable");
@@ -307,6 +327,7 @@ Runtime::ElementResult Runtime::prepareElementImpl(
             activePrefixes_.erase(request.registryPrefix);
             result.ownsPrefixReservation_ = false;
         }
+        result.stagedActions_.clear();
         result.element_.reset();
         result.stagedParameters_.reset();
         result.errorCode = ElementErrorCode::LifecycleFailure;
@@ -317,6 +338,7 @@ Runtime::ElementResult Runtime::prepareElementImpl(
             activePrefixes_.erase(request.registryPrefix);
             result.ownsPrefixReservation_ = false;
         }
+        result.stagedActions_.clear();
         result.element_.reset();
         result.stagedParameters_.reset();
         result.errorCode = ElementErrorCode::LifecycleFailure;
@@ -344,6 +366,7 @@ void Runtime::releasePreparedElement(ElementResult& prepared) noexcept {
     if (prepared.ownsPrefixReservation_) {
         activePrefixes_.erase(prepared.registryPrefix);
     }
+    prepared.stagedActions_.clear();
     prepared.element_.reset();
     prepared.stagedParameters_.reset();
     prepared.replacementElement_ = nullptr;
@@ -377,6 +400,7 @@ CompositionLayerSnapshot Runtime::snapshotCompositionLayer(
     state.active = layer.active;
     state.opacity = layer.opacity;
     state.coverage = layer.coverage;
+    state.actions = layer.actions_.descriptors();
     return state;
 }
 
@@ -399,6 +423,84 @@ std::optional<CompositionLayerSnapshot> Runtime::compositionLayerSnapshot(
         zeroBasedIndex);
 }
 
+CompositionActionResult Runtime::invokeCompositionAction(
+    std::size_t zeroBasedIndex,
+    std::string_view actionId) {
+    auto fail = [actionId](
+        CompositionActionError code,
+        std::string error) {
+        CompositionActionResult result;
+        result.errorCode = code;
+        result.actionId = std::string(actionId);
+        result.error = std::move(error);
+        return result;
+    };
+
+    if (zeroBasedIndex >= compositionLayers_.size()) {
+        return fail(
+            CompositionActionError::IndexOutOfRange,
+            "composition layer index is out of range");
+    }
+    auto& layer = compositionLayers_[zeroBasedIndex];
+    if (layer.assetId.empty()) {
+        return fail(
+            CompositionActionError::SlotEmpty,
+            "composition layer is empty");
+    }
+    if (layer.kind != CompositionKind::Element) {
+        return fail(
+            CompositionActionError::KindMismatch,
+            "composition action requires an Element composition entry");
+    }
+    if (!layer.element_) {
+        return fail(
+            CompositionActionError::SlotEmpty,
+            "composition layer does not contain an element");
+    }
+    const auto* handler = layer.actions_.find(actionId);
+    if (!handler) {
+        return fail(
+            CompositionActionError::ActionNotFound,
+            "composition element does not declare action: " +
+                std::string(actionId));
+    }
+
+    try {
+        const auto execution = (*handler)();
+        switch (execution.status) {
+        case element::ActionExecutionStatus::Succeeded: {
+            CompositionActionResult result;
+            result.actionId = std::string(actionId);
+            return result;
+        }
+        case element::ActionExecutionStatus::Rejected:
+            return fail(
+                CompositionActionError::Rejected,
+                execution.message.empty()
+                    ? "composition action was rejected"
+                    : execution.message);
+        case element::ActionExecutionStatus::Failed:
+            return fail(
+                CompositionActionError::ExecutionFailure,
+                execution.message.empty()
+                    ? "composition action execution failed"
+                    : execution.message);
+        }
+        return fail(
+            CompositionActionError::ExecutionFailure,
+            "composition action returned an invalid execution status");
+    } catch (const std::exception& error) {
+        return fail(
+            CompositionActionError::ExecutionFailure,
+            std::string("composition action threw an exception: ") +
+                error.what());
+    } catch (...) {
+        return fail(
+            CompositionActionError::ExecutionFailure,
+            "composition action threw an unknown exception");
+    }
+}
+
 Runtime::CompositionRenderTargets Runtime::compositionRenderTargetsForHost(
     std::size_t zeroBasedIndex) noexcept {
     auto* layer = mutableCompositionLayer(zeroBasedIndex);
@@ -414,12 +516,6 @@ const Layer* Runtime::compositionElementForHost(
     std::size_t zeroBasedIndex) const noexcept {
     if (zeroBasedIndex >= compositionLayers_.size()) return nullptr;
     return compositionLayers_[zeroBasedIndex].element_.get();
-}
-
-Layer* Runtime::legacyCompositionElementForHost(
-    std::size_t zeroBasedIndex) noexcept {
-    auto* layer = mutableCompositionLayer(zeroBasedIndex);
-    return layer ? layer->element_.get() : nullptr;
 }
 
 float Runtime::normalizeOpacity(float opacity) noexcept {
@@ -440,6 +536,7 @@ CompositionCoverage Runtime::normalizeCoverage(
 void Runtime::forceClearCompositionLayerNoexcept(
     CompositionLayer& layer) noexcept {
     const bool hadElement = layer.element_ != nullptr;
+    layer.actions_.clear();
     releaseElement(layer.element_);
     if (hadElement) {
         ++layer.elementRevision_;
@@ -651,6 +748,7 @@ CompositionMutationResult Runtime::adoptPreparedElementImpl(
         candidate->onParameterRegistryCommitted(parameters_);
         ownership_.swap(nextOwnership);
         activePrefixes_.swap(nextActivePrefixes);
+        layer->actions_.swap(prepared.stagedActions_);
         layer->element_.swap(prepared.element_);
         ++layer->elementRevision_;
         layer->assetId.swap(assignment.definitionId);
@@ -902,6 +1000,8 @@ CompositionMutationResult Runtime::clearCompositionLayer(
         ownership_.swap(nextOwnership);
         activePrefixes_.swap(nextActivePrefixes);
         std::unique_ptr<Layer> retiredElement;
+        ElementActionTable retiredActions;
+        retiredActions.swap(layer->actions_);
         retiredElement.swap(layer->element_);
         if (oldElement) {
             ++layer->elementRevision_;

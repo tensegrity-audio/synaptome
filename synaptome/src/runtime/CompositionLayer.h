@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CompositionTypes.h"
+#include "ElementActionTable.h"
 
 #include <synaptome/element/compat/Layer.h>
 
@@ -33,6 +34,9 @@ public:
 private:
     friend class Runtime;
     std::unique_ptr<Layer> element_;
+    // Declared after element_ so handlers are destroyed before the element
+    // they may capture.
+    ElementActionTable actions_;
     std::string opacityParameterId_;
     // Invalidates prepared replacement tokens even if an allocator later
     // reuses the retired element's address.

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <synaptome/element/Action.h>
+
 #include "ofMain.h"
 #include "../core/ParameterRegistry.h"
 #include "../ofJson.h"
@@ -36,6 +38,10 @@ public:
     virtual void onParameterRegistryCommitted(
         ParameterRegistry& registry) noexcept {
         (void)registry;
+    }
+    virtual void registerActions(
+        synaptome::element::ActionRegistrar& registrar) {
+        (void)registrar;
     }
     virtual void update(const LayerUpdateParams& params) = 0;
     virtual void draw(const LayerDrawParams& params) = 0;

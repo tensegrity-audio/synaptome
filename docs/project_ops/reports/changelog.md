@@ -2,6 +2,44 @@
 
 This changelog records Project Ops and administrative workflow changes. Product release versioning remains governed by `docs/release_policy.md`.
 
+## 2026-07-27 - architecture - seac3_live_instance_action_contract
+
+- Request ID: `spine_element_architecture_convergence`
+- Phase / Milestone: SEAC-3 in progress
+- Public SDK: Added a pointer-free `ActionDescriptor`, no-argument
+  `ActionHandler`, structured execution result, and optional
+  `Layer::registerActions()` hook. Descriptors separate the required display
+  `label` from a stable, required, single-segment lower-camel `groupId`.
+- Runtime boundary: Candidate preparation stages and validates each live
+  instance's action table. Immutable composition snapshots copy descriptors but
+  never handlers or element pointers. `Runtime::invokeCompositionAction()`
+  dispatches by zero-based layer index and local action ID with structured
+  bounds, kind, support, rejection, and execution failures.
+- Built-in migration: Geodesic declares `subdivision.increment` and
+  `subdivision.decrement`; Game of Life declares `simulation.randomize`, which
+  preserves the existing immediate randomization behavior rather than the
+  delayed/quantized `.reseed` parameter path. Host shortcuts now use the
+  generic Runtime command. The zero-caller
+  `Runtime::legacyCompositionElementForHost` seam was removed.
+- Compatibility boundary: These actions are live-instance commands, not
+  durable state. No expanded `.actions.` address, scene/preset value, package
+  declaration, parameter manifest entry, MIDI/OSC target, mapping snapshot, or
+  schema change is introduced.
+- Deferred gate: Static/offline `ElementDescriptor` actions, package/catalog
+  inspection, declaration/registration parity, and persisted action mappings
+  remain SEAC-4 work. Geodesic subdivision and video status remain read-only
+  inspection debt.
+- Validation: Element SDK and RuntimeCore boundary checks pin the pointer-free
+  descriptor and exact `groupId` field, optional registration hook,
+  action-table validation, live snapshot projection, generic structured
+  dispatch, concrete RuntimeCore isolation, exact built-in IDs/groups, host
+  adapter semantics, and absence of those IDs from persisted JSON. The native
+  RuntimeCore action scenario covers invalid IDs, empty labels, invalid group
+  IDs, empty handlers, discovery/copy isolation, structured outcomes,
+  per-layer scoping, replacement, clear, shutdown, and handler lifetime. Both
+  focused validators, the Project Ops audit, all 17 public-app contracts, and
+  `git diff --check` pass.
+
 ## 2026-07-27 - architecture - seac3_snapshot_registry_parameter_views
 
 - Request ID: `spine_element_architecture_convergence`

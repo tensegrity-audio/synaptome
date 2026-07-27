@@ -2,8 +2,11 @@
 #include <cmath>
 #include <exception>
 #include <iostream>
+#include <memory>
 #include <stdexcept>
 #include <string>
+#include <string_view>
+#include <utility>
 #include <vector>
 
 #include "../synaptome/src/runtime/Runtime.h"
@@ -300,6 +303,190 @@ public:
 
 private:
     float value_ = 0.9f;
+};
+
+struct ActionContractState {
+    int constructionCount = 0;
+    std::array<int, 16> successCount{};
+    std::array<bool, 16> destroyed{};
+    std::array<bool, 16> handlersGoneBeforeElement{};
+    std::array<std::weak_ptr<int>, 16> handlerLifetimes;
+};
+
+class ActionContractElement final : public Layer {
+public:
+    ActionContractElement(
+        ActionContractState& state,
+        int serial,
+        bool secondVersion)
+        : state_(state),
+          serial_(serial),
+          secondVersion_(secondVersion) {}
+
+    ~ActionContractElement() override {
+        const auto index = static_cast<std::size_t>(serial_);
+        state_.handlersGoneBeforeElement[index] =
+            state_.handlerLifetimes[index].expired();
+        state_.destroyed[index] = true;
+    }
+
+    void setup(ParameterRegistry& registry) override {
+        ParameterRegistry::Descriptor descriptor;
+        descriptor.label = "Action Contract Value";
+        registry.addFloat(
+            registryPrefix() + ".value",
+            &value_,
+            value_,
+            descriptor);
+    }
+
+    void registerActions(
+        synaptome::element::ActionRegistrar& registrar) override {
+        auto lifetime = std::make_shared<int>(serial_);
+        state_.handlerLifetimes[static_cast<std::size_t>(serial_)] =
+            lifetime;
+        const std::string versionedId = secondVersion_
+            ? "version.second"
+            : "version.first";
+        registrar.add(
+            {
+                versionedId,
+                secondVersion_ ? "Second Version" : "First Version",
+                "version",
+                "Proves replacement publishes a new action table.",
+            },
+            [this, lifetime] {
+                (void)lifetime;
+                ++state_.successCount[static_cast<std::size_t>(serial_)];
+                return synaptome::element::ActionExecutionResult::succeeded();
+            });
+        registrar.add(
+            {
+                "execution.reject",
+                "Reject",
+                "execution",
+                "Returns an intentional rejection.",
+            },
+            [] {
+                return synaptome::element::ActionExecutionResult::rejected(
+                    "intentional rejection");
+            });
+        registrar.add(
+            {
+                "execution.fail",
+                "Fail",
+                "execution",
+                "Returns an intentional execution failure.",
+            },
+            [] {
+                return synaptome::element::ActionExecutionResult::failed(
+                    "intentional failure");
+            });
+        registrar.add(
+            {
+                "render.reset2D",
+                "Reset 2D",
+                "render",
+                "Pins accepted lowerCamel identifiers with digits.",
+            },
+            [] {
+                return synaptome::element::ActionExecutionResult::succeeded();
+            });
+        registrar.add(
+            {
+                "execution.throw",
+                "Throw",
+                "execution",
+                "Throws to prove Runtime contains action exceptions.",
+            },
+            []() -> synaptome::element::ActionExecutionResult {
+                throw std::runtime_error("intentional action exception");
+            });
+    }
+
+    void update(const LayerUpdateParams&) override {}
+    void draw(const LayerDrawParams&) override {}
+
+private:
+    ActionContractState& state_;
+    int serial_ = 0;
+    bool secondVersion_ = false;
+    float value_ = 0.5f;
+};
+
+enum class InvalidActionMode {
+    InvalidStart,
+    InvalidUnderscore,
+    InvalidTrailingDot,
+    DuplicateId,
+    EmptyLabel,
+    InvalidGroupId,
+    EmptyHandler,
+    ThrowDuringRegistration,
+};
+
+class InvalidActionElement final : public Layer {
+public:
+    explicit InvalidActionElement(InvalidActionMode mode)
+        : mode_(mode) {}
+
+    void setup(ParameterRegistry& registry) override {
+        ParameterRegistry::Descriptor descriptor;
+        descriptor.label = "Invalid Action Candidate";
+        registry.addFloat(
+            registryPrefix() + ".value",
+            &value_,
+            value_,
+            descriptor);
+    }
+
+    void registerActions(
+        synaptome::element::ActionRegistrar& registrar) override {
+        if (mode_ == InvalidActionMode::ThrowDuringRegistration) {
+            throw std::runtime_error(
+                "intentional action registration failure");
+        }
+        std::string id = "valid.action";
+        if (mode_ == InvalidActionMode::InvalidStart) {
+            id = "Invalid.action";
+        } else if (mode_ == InvalidActionMode::InvalidUnderscore) {
+            id = "invalid_action";
+        } else if (mode_ == InvalidActionMode::InvalidTrailingDot) {
+            id = "invalid.";
+        }
+        synaptome::element::ActionHandler handler = [] {
+            return synaptome::element::ActionExecutionResult::succeeded();
+        };
+        if (mode_ == InvalidActionMode::EmptyHandler) {
+            handler = {};
+        }
+        const std::string label =
+            mode_ == InvalidActionMode::EmptyLabel
+            ? ""
+            : "Invalid Fixture";
+        const std::string groupId =
+            mode_ == InvalidActionMode::InvalidGroupId
+            ? "Invalid Group"
+            : "tests";
+        registrar.add(
+            {id, label, groupId, "Contract fixture."},
+            std::move(handler));
+        if (mode_ == InvalidActionMode::DuplicateId) {
+            registrar.add(
+                {id, "Duplicate Fixture", "tests", "Contract fixture."},
+                [] {
+                    return synaptome::element::
+                        ActionExecutionResult::succeeded();
+                });
+        }
+    }
+
+    void update(const LayerUpdateParams&) override {}
+    void draw(const LayerDrawParams&) override {}
+
+private:
+    InvalidActionMode mode_;
+    float value_ = 0.5f;
 };
 
 void RunScopedElementTypeRegistryIsolationScenario() {
@@ -941,6 +1128,436 @@ void RunCompositionSlotReplacementScenario() {
         lifetime.destroyed[7],
         "expired Runtime replacement did not release its candidate safely");
 }
+
+void RunCompositionActionScenario() {
+    LayerFactory factory;
+    ActionContractState state;
+    factory.registerType("tests.runtime.actions.v1", [&] {
+        const int serial = state.constructionCount++;
+        return std::make_unique<ActionContractElement>(
+            state,
+            serial,
+            false);
+    });
+    factory.registerType("tests.runtime.actions.v2", [&] {
+        const int serial = state.constructionCount++;
+        return std::make_unique<ActionContractElement>(
+            state,
+            serial,
+            true);
+    });
+    factory.registerType("tests.runtime.actions.invalid-start", [] {
+        return std::make_unique<InvalidActionElement>(
+            InvalidActionMode::InvalidStart);
+    });
+    factory.registerType("tests.runtime.actions.invalid-underscore", [] {
+        return std::make_unique<InvalidActionElement>(
+            InvalidActionMode::InvalidUnderscore);
+    });
+    factory.registerType("tests.runtime.actions.invalid-trailing-dot", [] {
+        return std::make_unique<InvalidActionElement>(
+            InvalidActionMode::InvalidTrailingDot);
+    });
+    factory.registerType("tests.runtime.actions.duplicate-id", [] {
+        return std::make_unique<InvalidActionElement>(
+            InvalidActionMode::DuplicateId);
+    });
+    factory.registerType("tests.runtime.actions.empty-handler", [] {
+        return std::make_unique<InvalidActionElement>(
+            InvalidActionMode::EmptyHandler);
+    });
+    factory.registerType("tests.runtime.actions.empty-label", [] {
+        return std::make_unique<InvalidActionElement>(
+            InvalidActionMode::EmptyLabel);
+    });
+    factory.registerType("tests.runtime.actions.invalid-group", [] {
+        return std::make_unique<InvalidActionElement>(
+            InvalidActionMode::InvalidGroupId);
+    });
+    factory.registerType("tests.runtime.actions.throw-register", [] {
+        return std::make_unique<InvalidActionElement>(
+            InvalidActionMode::ThrowDuringRegistration);
+    });
+
+    ParameterRegistry parameters;
+    synaptome::runtime::Runtime runtime(factory, parameters);
+
+    synaptome::runtime::Runtime::ElementRequest invalidRequest;
+    invalidRequest.definitionId = "tests.definition.actions.invalid";
+    invalidRequest.instanceId = "tests.instance.actions.invalid";
+    invalidRequest.registryPrefix = "console.layer1";
+    for (const std::string typeId : {
+             "tests.runtime.actions.invalid-start",
+             "tests.runtime.actions.invalid-underscore",
+             "tests.runtime.actions.invalid-trailing-dot",
+             "tests.runtime.actions.duplicate-id",
+             "tests.runtime.actions.empty-label",
+             "tests.runtime.actions.invalid-group",
+             "tests.runtime.actions.empty-handler",
+         }) {
+        invalidRequest.typeId = typeId;
+        const auto invalid = runtime.prepareElement(invalidRequest);
+        require(
+            !invalid &&
+                invalid.errorCode ==
+                    synaptome::runtime::Runtime::ElementErrorCode::
+                        ContractViolation &&
+                invalid.stage == "actions" &&
+                parameters.findFloat("console.layer1.value") == nullptr,
+            "invalid action declaration escaped staging or used the wrong error");
+    }
+    invalidRequest.typeId = "tests.runtime.actions.throw-register";
+    const auto throwingRegistration =
+        runtime.prepareElement(invalidRequest);
+    require(
+        !throwingRegistration &&
+            throwingRegistration.errorCode ==
+                synaptome::runtime::Runtime::ElementErrorCode::
+                    LifecycleFailure &&
+            throwingRegistration.stage == "actions" &&
+            parameters.findFloat("console.layer1.value") == nullptr,
+        "throwing action registration escaped Runtime lifecycle containment");
+
+    const auto outOfRange = runtime.invokeCompositionAction(
+        synaptome::runtime::kCompositionLayerCount,
+        "version.first");
+    const auto empty =
+        runtime.invokeCompositionAction(0, "version.first");
+    require(
+        !outOfRange &&
+            outOfRange.errorCode ==
+                synaptome::runtime::CompositionActionError::
+                    IndexOutOfRange &&
+            outOfRange.actionId == "version.first" &&
+            !empty &&
+            empty.errorCode ==
+                synaptome::runtime::CompositionActionError::SlotEmpty,
+        "action invocation bounds or empty-slot errors drifted");
+
+    synaptome::runtime::CompositionAssignment nonElement;
+    nonElement.kind = synaptome::runtime::CompositionKind::Effect;
+    nonElement.definitionId = "tests.effect.actions";
+    nonElement.label = "Action Effect";
+    nonElement.typeId = "fx.actions";
+    nonElement.registryPrefix = "effects.actions";
+    nonElement.active = true;
+    require(runtime.assignCompositionEntry(4, nonElement),
+            "action scenario could not assign its effect");
+    const auto effectAction =
+        runtime.invokeCompositionAction(4, "version.first");
+    require(
+        !effectAction &&
+            effectAction.errorCode ==
+                synaptome::runtime::CompositionActionError::KindMismatch,
+        "effect assignment accepted an Element action");
+    require(runtime.clearCompositionLayer(4),
+            "action scenario could not clear its effect");
+    nonElement.kind = synaptome::runtime::CompositionKind::Overlay;
+    nonElement.definitionId = "tests.overlay.actions";
+    nonElement.typeId = "ui.actions";
+    nonElement.registryPrefix = "ui.actions";
+    require(runtime.assignCompositionEntry(4, nonElement),
+            "action scenario could not assign its overlay");
+    const auto overlayAction =
+        runtime.invokeCompositionAction(4, "version.first");
+    require(
+        !overlayAction &&
+            overlayAction.errorCode ==
+                synaptome::runtime::CompositionActionError::KindMismatch,
+        "overlay assignment accepted an Element action");
+    require(runtime.clearCompositionLayer(4),
+            "action scenario could not clear its overlay");
+
+    synaptome::runtime::Runtime::ElementRequest firstRequest;
+    firstRequest.typeId = "tests.runtime.actions.v1";
+    firstRequest.definitionId = "tests.definition.actions.first";
+    firstRequest.instanceId = "tests.instance.actions.first";
+    firstRequest.registryPrefix = "console.layer1";
+    firstRequest.enabled = false;
+    auto firstPrepared = runtime.prepareElement(firstRequest);
+    require(
+        firstPrepared &&
+            runtime.compositionLayerSnapshot(0)->actions.empty(),
+        "prepared actions became discoverable before adoption");
+    require(
+        runtime.adoptPreparedElement(
+            0,
+            std::move(firstPrepared),
+            assignmentFor(firstRequest, "Action First")),
+        "action scenario did not adopt its first element");
+
+    const std::vector<std::string> expectedFirstIds = {
+        "version.first",
+        "execution.reject",
+        "execution.fail",
+        "render.reset2D",
+        "execution.throw",
+    };
+    const auto firstSnapshot = runtime.compositionLayerSnapshot(0);
+    require(
+        firstSnapshot &&
+            !firstSnapshot->active &&
+            firstSnapshot->actions.size() == expectedFirstIds.size(),
+        "action snapshot did not publish the inactive element declarations");
+    require(
+        firstSnapshot->actions.front().label == "First Version" &&
+            firstSnapshot->actions.front().groupId == "version" &&
+            firstSnapshot->actions.front().description ==
+                "Proves replacement publishes a new action table.",
+        "action snapshot did not copy complete descriptor metadata");
+    for (std::size_t i = 0; i < expectedFirstIds.size(); ++i) {
+        require(
+            firstSnapshot->actions[i].id == expectedFirstIds[i],
+            "action snapshot registration order drifted");
+    }
+    auto mutatedCopy = *firstSnapshot;
+    mutatedCopy.actions.front().id = "copy.mutated";
+    require(
+        runtime.compositionLayerSnapshot(0)->actions.front().id ==
+            "version.first",
+        "mutating a copied action descriptor changed Runtime state");
+
+    auto invalidReplacementRequest = firstRequest;
+    invalidReplacementRequest.typeId =
+        "tests.runtime.actions.duplicate-id";
+    invalidReplacementRequest.definitionId =
+        "tests.definition.actions.invalid-replacement";
+    invalidReplacementRequest.instanceId =
+        "tests.instance.actions.invalid-replacement";
+    const auto invalidReplacement =
+        runtime.prepareCompositionElementReplacement(
+            0,
+            invalidReplacementRequest);
+    require(
+        !invalidReplacement &&
+            invalidReplacement.errorCode ==
+                synaptome::runtime::Runtime::ElementErrorCode::
+                    ContractViolation &&
+            invalidReplacement.stage == "actions" &&
+            runtime.compositionLayerSnapshot(0)->actions.front().id ==
+                "version.first",
+        "failed action replacement changed the live declaration table");
+
+    const auto success =
+        runtime.invokeCompositionAction(0, "version.first");
+    const auto rejected =
+        runtime.invokeCompositionAction(0, "execution.reject");
+    const auto failed =
+        runtime.invokeCompositionAction(0, "execution.fail");
+    const auto threw =
+        runtime.invokeCompositionAction(0, "execution.throw");
+    const auto missing =
+        runtime.invokeCompositionAction(0, "version.missing");
+    const auto usableAfterThrow =
+        runtime.invokeCompositionAction(0, "version.first");
+    require(
+        success &&
+            usableAfterThrow &&
+            state.successCount[0] == 2 &&
+            !rejected &&
+            rejected.errorCode ==
+                synaptome::runtime::CompositionActionError::Rejected &&
+            rejected.actionId == "execution.reject" &&
+            rejected.error == "intentional rejection" &&
+            !failed &&
+            failed.errorCode ==
+                synaptome::runtime::CompositionActionError::
+                    ExecutionFailure &&
+            failed.actionId == "execution.fail" &&
+            failed.error == "intentional failure" &&
+            !threw &&
+            threw.errorCode ==
+                synaptome::runtime::CompositionActionError::
+                    ExecutionFailure &&
+            threw.actionId == "execution.throw" &&
+            threw.error.find("intentional action exception") !=
+                std::string::npos &&
+            !missing &&
+            missing.errorCode ==
+                synaptome::runtime::CompositionActionError::ActionNotFound &&
+            missing.actionId == "version.missing",
+        "action execution status translation or exception containment drifted");
+
+    auto secondRequest = firstRequest;
+    secondRequest.definitionId = "tests.definition.actions.sibling";
+    secondRequest.instanceId = "tests.instance.actions.sibling";
+    secondRequest.registryPrefix = "console.layer2";
+    auto secondPrepared = runtime.prepareElement(secondRequest);
+    require(
+        runtime.adoptPreparedElement(
+            1,
+            std::move(secondPrepared),
+            assignmentFor(secondRequest, "Action Sibling")),
+        "action scenario did not adopt its sibling element");
+    require(
+        runtime.invokeCompositionAction(1, "version.first") &&
+            state.successCount[0] == 2 &&
+            state.successCount[1] == 1,
+        "same local action ID did not remain scoped to its composition slot");
+
+    auto replacementRequest = firstRequest;
+    replacementRequest.typeId = "tests.runtime.actions.v2";
+    replacementRequest.definitionId =
+        "tests.definition.actions.replacement";
+    replacementRequest.instanceId =
+        "tests.instance.actions.replacement";
+    {
+        auto aborted =
+            runtime.prepareCompositionElementReplacement(
+                0,
+                replacementRequest);
+        require(
+            aborted &&
+                runtime.compositionLayerSnapshot(0)->actions.front().id ==
+                    "version.first",
+            "prepared replacement published candidate action declarations");
+        runtime.releasePreparedElement(aborted);
+        require(
+            state.destroyed[2] &&
+                state.handlersGoneBeforeElement[2] &&
+                runtime.invokeCompositionAction(0, "version.first"),
+            "aborted action candidate damaged the live table or lifetime order");
+    }
+
+    {
+        auto replacement =
+            runtime.prepareCompositionElementReplacement(
+                0,
+                replacementRequest);
+        const auto retiredHandlerLifetime =
+            state.handlerLifetimes[0];
+        require(
+            runtime.adoptPreparedElement(
+                0,
+                std::move(replacement),
+                assignmentFor(
+                    replacementRequest,
+                    "Action Replacement")),
+            "action replacement did not commit");
+        const auto replacedSnapshot =
+            runtime.compositionLayerSnapshot(0);
+        const auto retiredId =
+            runtime.invokeCompositionAction(0, "version.first");
+        require(
+            replacedSnapshot &&
+                replacedSnapshot->actions.front().id ==
+                    "version.second" &&
+                !retiredId &&
+                retiredId.errorCode ==
+                    synaptome::runtime::CompositionActionError::
+                        ActionNotFound &&
+                runtime.invokeCompositionAction(0, "version.second") &&
+                !state.destroyed[0] &&
+                !retiredHandlerLifetime.expired(),
+            "action replacement did not atomically publish and retain tables");
+    }
+    require(
+        state.destroyed[0] &&
+            state.handlersGoneBeforeElement[0],
+        "retired action handlers did not precede matching element destruction");
+
+    const auto clearResult = runtime.clearCompositionLayer(0);
+    const auto clearedAction =
+        runtime.invokeCompositionAction(0, "version.second");
+    require(
+        clearResult &&
+            runtime.compositionLayerSnapshot(0)->actions.empty() &&
+            !clearedAction &&
+            clearedAction.errorCode ==
+                synaptome::runtime::CompositionActionError::SlotEmpty &&
+            state.destroyed[3] &&
+            state.handlersGoneBeforeElement[3],
+        "clear retained action discovery, invocation, or handler lifetime");
+    runtime.shutdownComposition();
+    require(
+        runtime.compositionLayerSnapshot(1)->actions.empty() &&
+            state.destroyed[1] &&
+            state.handlersGoneBeforeElement[1] &&
+            state.constructionCount == 4,
+        "shutdown retained a live action table or destroyed it out of order");
+
+    ActionContractState expiryState;
+    synaptome::runtime::Runtime::ElementResult outlivesRuntime;
+    std::weak_ptr<int> expiryHandlerLifetime;
+    LayerFactory expiryFactory;
+    expiryFactory.registerType("tests.runtime.actions.expiry", [&] {
+        const int serial = expiryState.constructionCount++;
+        return std::make_unique<ActionContractElement>(
+            expiryState,
+            serial,
+            false);
+    });
+    ParameterRegistry expiryParameters;
+    {
+        synaptome::runtime::Runtime expiryRuntime(
+            expiryFactory,
+            expiryParameters);
+        auto expiryRequest = firstRequest;
+        expiryRequest.typeId = "tests.runtime.actions.expiry";
+        expiryRequest.definitionId =
+            "tests.definition.actions.expiry";
+        expiryRequest.instanceId =
+            "tests.instance.actions.expiry";
+        outlivesRuntime = expiryRuntime.prepareElement(expiryRequest);
+        expiryHandlerLifetime = expiryState.handlerLifetimes[0];
+        require(
+            outlivesRuntime &&
+                !expiryHandlerLifetime.expired() &&
+                !expiryState.destroyed[0],
+            "action-bearing candidate was not retained before Runtime expiry");
+    }
+    require(
+        outlivesRuntime &&
+            !expiryHandlerLifetime.expired() &&
+            !expiryState.destroyed[0],
+        "Runtime expiry prematurely released its action-bearing candidate");
+    outlivesRuntime =
+        synaptome::runtime::Runtime::ElementResult{};
+    require(
+        expiryHandlerLifetime.expired() &&
+            expiryState.destroyed[0] &&
+            expiryState.handlersGoneBeforeElement[0],
+        "expired Runtime released an action-bearing candidate out of order");
+
+    ActionContractState destructorState;
+    LayerFactory destructorFactory;
+    destructorFactory.registerType("tests.runtime.actions.destructor", [&] {
+        const int serial = destructorState.constructionCount++;
+        return std::make_unique<ActionContractElement>(
+            destructorState,
+            serial,
+            false);
+    });
+    ParameterRegistry destructorParameters;
+    {
+        synaptome::runtime::Runtime destructorRuntime(
+            destructorFactory,
+            destructorParameters);
+        auto destructorRequest = firstRequest;
+        destructorRequest.typeId =
+            "tests.runtime.actions.destructor";
+        destructorRequest.definitionId =
+            "tests.definition.actions.destructor";
+        destructorRequest.instanceId =
+            "tests.instance.actions.destructor";
+        auto destructorPrepared =
+            destructorRuntime.prepareElement(destructorRequest);
+        require(
+            destructorRuntime.adoptPreparedElement(
+                0,
+                std::move(destructorPrepared),
+                assignmentFor(
+                    destructorRequest,
+                    "Action Destructor")),
+            "action destructor scenario did not adopt its element");
+    }
+    require(
+        destructorState.destroyed[0] &&
+            destructorState.handlersGoneBeforeElement[0] &&
+            destructorParameters.findFloat(
+                "console.layer1.value") == nullptr,
+        "Runtime destructor retained actions, element, or parameters");
+}
 }
 
 int main() {
@@ -948,6 +1565,7 @@ int main() {
         RunScopedElementTypeRegistryIsolationScenario();
         RunCompositionSnapshotScenario();
         RunCompositionSlotReplacementScenario();
+        RunCompositionActionScenario();
 
         LayerFactory factory;
         factory.registerType("tests.runtime.good", [] {
@@ -1737,7 +2355,9 @@ int main() {
                     "console.layer1.opacity") == nullptr,
             "Runtime destructor left element/container parameter pointers live");
 
-        std::cout << "[runtime_core] PASS lifecycle, ownership, composition routing\n";
+        std::cout
+            << "[runtime_core] PASS lifecycle, ownership, composition routing, "
+               "live actions\n";
         return 0;
     } catch (const std::exception& error) {
         std::cerr << "[runtime_core] FAIL " << error.what() << "\n";

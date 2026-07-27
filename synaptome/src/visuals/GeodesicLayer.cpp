@@ -126,6 +126,32 @@ void GeodesicLayer::setup(ParameterRegistry& registry) {
     rebuildGeodesic();
 }
 
+void GeodesicLayer::registerActions(
+    synaptome::element::ActionRegistrar& registrar) {
+    registrar.add(
+        {
+            "subdivision.increment",
+            "Increase Subdivision",
+            "geometry",
+            "Increase geodesic subdivision by one, up to the current maximum.",
+        },
+        [this]() {
+            incrementSubdivision();
+            return synaptome::element::ActionExecutionResult::succeeded();
+        });
+    registrar.add(
+        {
+            "subdivision.decrement",
+            "Decrease Subdivision",
+            "geometry",
+            "Decrease geodesic subdivision by one, down to the current minimum.",
+        },
+        [this]() {
+            decrementSubdivision();
+            return synaptome::element::ActionExecutionResult::succeeded();
+        });
+}
+
 void GeodesicLayer::update(const LayerUpdateParams& params) {
     enabled_ = paramEnabled_;
 

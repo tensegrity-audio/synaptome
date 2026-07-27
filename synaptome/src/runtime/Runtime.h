@@ -67,6 +67,9 @@ public:
         // the setup registry is still alive, including after Runtime expiry.
         std::unique_ptr<ParameterRegistry> stagedParameters_;
         std::unique_ptr<Layer> element_;
+        // Declared after element_ so handlers are destroyed before the
+        // candidate or retired element they may capture.
+        ElementActionTable stagedActions_;
         Layer* replacementElement_ = nullptr;
         // Paired with replacementElement_ so commit never relies on pointer
         // identity alone after a slot has changed.
@@ -104,6 +107,9 @@ public:
     CompositionSnapshot compositionSnapshot() const;
     std::optional<CompositionLayerSnapshot> compositionLayerSnapshot(
         std::size_t zeroBasedIndex) const;
+    CompositionActionResult invokeCompositionAction(
+        std::size_t zeroBasedIndex,
+        std::string_view actionId);
 
     struct CompositionRenderTargets {
         ofFbo* layer = nullptr;
@@ -119,8 +125,6 @@ public:
         std::size_t zeroBasedIndex) noexcept;
     const Layer* compositionElementForHost(
         std::size_t zeroBasedIndex) const noexcept;
-    Layer* legacyCompositionElementForHost(
-        std::size_t zeroBasedIndex) noexcept;
     CompositionCoverageWindow resolveEffectCoverage(
         std::size_t effectLayerIndex,
         float coverage) const noexcept;

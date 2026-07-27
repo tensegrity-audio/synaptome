@@ -14,12 +14,12 @@ resize/update/draw dispatch. Prepared ownership cannot escape the facade,
 adoption validates its source runtime and canonical `console.layerN` address,
 and explicit shutdown releases elements and FBO resources while the graphics
 context is live. Candidate setup now writes to an isolated parameter registry;
-same-address adoption commits the registry and element together, while failed
-setup or commit leaves the live layer unchanged. Replacement preparation now
+same-address adoption commits the registry, action table, and element together,
+while failed setup or commit leaves the live layer unchanged. Replacement preparation now
 selects the current element by zero-based composition-layer index inside
 Runtime; the host no longer obtains a mutable element pointer for the generic
 replacement transaction. The caller-held prepared result retains the retired
-element after commit until host invalidation is complete. The host still adapts
+action table and element after commit until host invalidation is complete. The host still adapts
 effect compositing and compatibility inspection through named host-only seams
 while persistence and mapping consumers read copied snapshots. Element type
 registration is now scoped per Runtime:
@@ -29,25 +29,28 @@ type lookup, and Control & Mapping receives only a narrow offline creator.
 Runtime now owns the pure, zero-based effect coverage-window policy through
 `CompositionCoverageWindow` and `Runtime::resolveEffectCoverage`; `drawConsole`
 consumes its half-open input range. `PostEffectChain` remains the host-side
-concrete shader and parameter executor. This extraction adds no Element SDK
-type, effect interface, dynamic-loading surface, or ABI promise. Typed
-composition mutation now goes through `CompositionAssignment`,
+concrete shader and parameter executor. Apart from the source-compatible live
+action contract, this extraction adds no effect interface, dynamic-loading
+surface, or ABI promise. Typed composition mutation now goes through
+`CompositionAssignment`,
 `CompositionMutationResult`, and explicit Runtime commands for element
 adoption, effect/overlay assignment, active state, label, coverage, and clear.
 Runtime also owns the canonical `console.layerN.opacity` registration and its
 transactional replacement. The host observes composition through an immutable,
 by-value snapshot, or one bounds-checked optional layer snapshot.
-`CompositionLayerSnapshot` carries only assignment identity and layer state;
-it exposes no element, FBO, registry, creator, or host pointers. Read-only
-element inspection, mutable legacy element access, and mutable FBO access remain
-separate named host seams. The host no longer caches derived Grid, Geodesic,
-Perlin, or Game of Life pointers: ordinary HUD reads, MIDI/OSC binding, Grid
-density cycling, and Game of Life pause resolve snapshot prefixes through
-`ParameterRegistry`. Mutable element access is isolated to slot-validated
-Geodesic subdivision adjustment and immediate Game of Life randomization.
-Geodesic subdivision status and video-specific status still use read-only
-inspection. The live aggregate and public `CompositionLayer` accessors are
-gone. Typed descriptor/catalog ownership is not yet complete.
+`CompositionLayerSnapshot` carries assignment identity, layer state, and
+pointer-free descriptors for actions registered by the live instance; it
+exposes no element, FBO, registry, creator, handler, or host pointers.
+`Runtime::invokeCompositionAction()` invokes one no-argument action by
+zero-based composition-layer index and local action ID, with structured bounds,
+kind, support, rejection, and execution failures. Read-only element inspection
+and mutable FBO access remain separate named host seams. The host no longer
+caches derived Grid, Geodesic, Perlin, or Game of Life pointers: ordinary HUD
+reads, MIDI/OSC binding, Grid density cycling, and Game of Life pause resolve
+snapshot prefixes through `ParameterRegistry`. Geodesic subdivision status and
+video-specific status still use read-only inspection. The live aggregate and
+public `CompositionLayer` accessors are gone. Typed descriptor/catalog
+ownership is not yet complete.
 
 This document records the dependency inventory and the minimum Element SDK v1
 contract that must exist before Synaptome moves code into new build targets.
@@ -161,8 +164,8 @@ SDK interface or a dynamically loadable effect contract.
 The immutable query plane consists of `CompositionLayerSnapshot` and
 `CompositionSnapshot`. A layer snapshot copies its zero-based index, occupancy,
 element-presence flag, composition kind, definition/label/type/prefix identity,
-active state, opacity, and coverage. `Runtime::compositionSnapshot()` returns
-the fixed eight-layer aggregate by value;
+active state, opacity, coverage, and copied pointer-free live action
+descriptors. `Runtime::compositionSnapshot()` returns the fixed eight-layer aggregate by value;
 `Runtime::compositionLayerSnapshot()` returns a bounds-checked optional copy.
 Neither DTO carries executable or render-resource ownership.
 
@@ -238,6 +241,14 @@ An element type has a pure-data descriptor available without construction or
 - render/resource requirements;
 - lifecycle and test requirements.
 
+This remains the SEAC-4 target contract. The first SEAC-3 action slice does
+not claim offline or type-level action discovery. It collects actions during
+candidate preparation, publishes copied pointer-free descriptors only after
+adoption, and keeps handler storage private to Runtime.
+Moving those declarations into the static `ElementDescriptor`, generating
+package/catalog views, and validating declaration/registration parity are
+explicit catalog debt.
+
 Element kinds in v1 are `visual` and `effect`. Operator overlays remain
 spine-owned UI modules, not creative elements. Existing effects may use a
 runtime adapter until a focused effect interface is extracted, but they must
@@ -276,6 +287,7 @@ inspect descriptor
   -> create
   -> configure identity and definition data
   -> setup against scoped services
+  -> register live actions
   -> activate
   -> update / render / resize
   -> deactivate
@@ -297,17 +309,18 @@ Rules:
 - an element that needs later registry lookup overrides
   `onParameterRegistryCommitted`; that hook is a trivial, no-throw pointer
   rebind and performs no allocation or device work;
-- the old live instance remains active until a replacement has configured and
-  set up successfully;
+- the old live instance remains active until a replacement has configured, set
+  up, and registered a valid action table successfully;
 - replacement preparation identifies the live element by zero-based
   composition-layer index; out-of-range, empty, effect, and overlay layers fail
   validation before the element factory is called;
 - adoption rejects host-owned ID collisions before mutation, swaps the staged
-  registry and element as one commit, preserves modifiers on matching stable
-  parameter IDs, and leaves candidate defaults/base values authoritative;
+  registry, action table, and element as one commit, preserves modifiers on
+  matching stable parameter IDs, and leaves candidate defaults/base values
+  authoritative;
 - after adoption, the host synchronously invalidates pointer-bearing parameter
   views and retired element routes while the caller-held prepared result keeps
-  the retired element alive;
+  the retired action table and element alive together;
 - activation and deactivation are explicit;
 - shutdown is explicit, idempotent, and releases registrations/resources owned
   by the instance;
@@ -410,6 +423,53 @@ Rules:
 SEAC-4 implements this representation. SEAC-2 freezes its boundary and
 ownership.
 
+### Live Action Compatibility Contract
+
+The first action contract is deliberately narrower than the final static
+descriptor and mapping model:
+
+- `ActionDescriptor` contains only local `id`, `label`, `groupId`, and
+  `description` strings;
+- `Layer::registerActions(ActionRegistrar&)` is an optional live-instance hook;
+- every handler is a no-argument command returning `Succeeded`, `Rejected`, or
+  `Failed` with optional diagnostic text;
+- action IDs are unique within one live element and use lower-camel dotted
+  segments such as `subdivision.increment`;
+- `label` is required display text; `groupId` is a required stable,
+  single-segment lower-camel alphanumeric ID such as `geometry` or
+  `simulation`, not a display label;
+- empty IDs, duplicate IDs, invalid IDs, empty labels, invalid group IDs, and
+  empty handlers reject candidate preparation before adoption;
+- Runtime owns handler storage and copies descriptors, never handlers, into
+  composition snapshots;
+- `Runtime::invokeCompositionAction(zeroBasedIndex, actionId)` rejects
+  out-of-range, empty, effect, overlay, and unsupported requests without a
+  concrete element cast, and converts handler rejection, failure, or exception
+  into `CompositionActionResult`;
+- action handlers are destroyed before the element they may capture on every
+  candidate and live retirement path, including failed or aborted preparation,
+  replacement, clear, shutdown, Runtime expiry, and implicit Runtime
+  destruction;
+- adopted actions remain discoverable and invokable when their composition
+  layer is inactive; inactive gates update/draw behavior, not commands;
+- `Succeeded` means the command completed, `Rejected` means the element
+  declined it in the current state, and `Failed` or a thrown exception means
+  execution failed after it may have begun. Runtime does not retry or roll back
+  handler-side mutation;
+- invocation is synchronous on Runtime's owner thread and non-reentrant;
+  external MIDI, OSC, device, or worker threads must queue invocation to that
+  thread;
+- a handler may mutate only its element-owned state. It must not re-enter
+  Runtime composition mutation, clear or replace its slot, shut down or destroy
+  Runtime, or invoke another composition action before returning.
+
+These actions are commands, not state. They have no expanded
+`console.layerN.actions.*` address in this checkpoint, do not enter
+`ParameterRegistry`, and are not written into scenes, presets, mapping
+snapshots, package manifests, or parameter manifests. MIDI/OSC action targets,
+trigger/edge semantics, offline inspection, static `ElementDescriptor`
+declarations, and declaration/registration parity remain later gated work.
+
 ### Packages And Offline Inspection
 
 `layer.package.json` evolves into the canonical typed package declaration.
@@ -455,22 +515,23 @@ Host metadata reads now use `Runtime::compositionSnapshot()` or
 adoption, assignment, active, label, coverage, and clear commands. No live
 composition aggregate or public `CompositionLayer` accessor crosses the
 boundary. Per-layer render FBOs remain available through
-`CompositionRenderTargets`; read-only element inspection uses
-`compositionElementForHost`, while mutable type-specific compatibility actions
-use `legacyCompositionElementForHost`. Generic replacement no longer uses that
-mutable seam: `Runtime::prepareCompositionElementReplacement()` selects the
-live element by zero-based layer index and preserves the two-phase
+`CompositionRenderTargets`; read-only element inspection still uses
+`compositionElementForHost`. Mutable Geodesic subdivision and Game of Life
+randomization now register live actions and are invoked through
+`Runtime::invokeCompositionAction()`, replacing the retired
+`legacyCompositionElementForHost` seam. Their descriptors are copied into the
+immutable layer snapshot for live discovery. Generic replacement continues to
+use `Runtime::prepareCompositionElementReplacement()` and the two-phase
 prepare/adopt transaction. There is no derived element-pointer cache or refresh
 path. `firstConsoleElementOfType()` selects the first matching copied slot in
 composition order; its registry prefix drives live parameter reads and writes,
 HUD projection, and MIDI/OSC binding. Perlin and Game of Life MIDI ranges come
 from registered descriptors while their established snap/step behavior remains
-unchanged. Mutable access is permitted only inside
-`adjustGeodesicSubdivisionAtSlot()` and `randomizeGameOfLifeAtSlot()`, after
-snapshot kind/type validation. `geodesicSubdivisionAtSlot()` uses the read-only
-inspection seam for unregistered subdivision status; video status is the other
-remaining concrete read-only consumer. The three Runtime host-only methods
-remain SEAC-3 migration debt and are not public Element SDK headers.
+unchanged. `geodesicSubdivisionAtSlot()` uses the read-only inspection seam for
+unregistered subdivision status; video status is the other remaining concrete
+read-only consumer. Render-target and read-only element inspection remain
+host-only SEAC-3 migration debt. Static/offline action descriptors remain
+SEAC-4 debt.
 
 ## SEAC-3 Extraction Sequence
 
@@ -510,6 +571,9 @@ No-output-change extraction is accepted only when:
 - runtime core has no concrete element or operator UI dependencies;
 - the host has no concrete element includes or casts for the migrated element;
 - descriptor inspection does not instantiate the element;
+- live action snapshots expose descriptors but no handlers or element pointers;
+- invalid action registration rejects preparation, and action invocation
+  returns structured errors without concrete RuntimeCore element dependencies;
 - failed replacement preserves the prior live layer;
 - setup/update/offscreen render/shutdown/reload pass through the real SDK seam;
 - graphics-state containment and declaration parity pass;
