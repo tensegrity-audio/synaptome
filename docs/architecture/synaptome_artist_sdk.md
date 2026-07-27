@@ -94,7 +94,10 @@ Current gap:
   through a package leaf registrar plus the controlled built-in aggregate and
   project; the creator binding no longer belongs in `ofApp.cpp`, but a public
   no-source-edit extension mechanism does not exist yet.
-- `LayerFactory::registerType()` should diagnose duplicate type names before this becomes a public plugin surface.
+- `LayerFactory::registerType()` now accepts one atomic static
+  descriptor-plus-creator record and rejects invalid descriptors, missing
+  creators, and duplicate type IDs before activation. Package ownership,
+  serialized descriptors, and generated registration remain later gates.
 
 ### Level 2: Parametric Layer
 
@@ -188,7 +191,11 @@ First public decision:
   scene fixture, and validator instead of implying hot-loaded plugins already
   exist. Signal Bloom's leaf is shared by the host aggregate and package bench.
 - Synaptome must not claim no-source-edit installation until a generated registration, module manifest, or plugin/package loader is implemented and validated.
-- `LayerFactory::registerType()` must fail loudly for empty or duplicate type IDs so package collisions cannot silently replace layer implementations.
+- `LayerFactory::registerType()` fails loudly for invalid descriptors, missing
+  creators, and duplicate type IDs, so malformed or colliding source
+  registrations cannot partially activate or silently replace implementations.
+  This validation does not yet provide package serialization, generated
+  registration, discovery, or persisted mappings.
 
 ## Layer System Roadmap
 

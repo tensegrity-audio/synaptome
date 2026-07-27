@@ -45,8 +45,9 @@ def parse_factory_types() -> dict[str, str]:
         for source in sources
     )
     pattern = re.compile(
-        r'registerType\(\s*"([^"]+)"\s*,\s*\[\]\(\)\s*\{\s*return\s+std::make_unique<([^>]+)>',
-        re.MULTILINE,
+        r'registerType\(\s*(?:ElementDescriptor\s*)?\{\s*"([^"]+)".*?'
+        r'std::make_unique<([^>]+)>',
+        re.DOTALL,
     )
     return {match.group(1): match.group(2) for match in pattern.finditer(text)}
 

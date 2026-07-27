@@ -2,8 +2,12 @@
 
 Status: Frozen architecture decision for SEAC-2, 2026-07-26.
 
-Implementation status: SEAC-3 complete; SEAC-4A is the current gate. Signal
-Bloom has a shipping static-library target, a separate stub compile-contract
+Implementation status: SEAC-3 and SEAC-4A complete; SEAC-4B is the current
+gate. The public minimum `ElementDescriptor` carries only stable type ID, the
+closed `Visual`/`Effect` kind, and ordered pointer-free action descriptors. It
+does not yet declare a display label, implementation/package version or owner,
+capabilities/dependencies, parameters, resources, or persistence metadata.
+Signal Bloom has a shipping static-library target, a separate stub compile-contract
 target, public compatibility include paths, and a controlled built-in
 registration entrypoint.
 The first Runtime facade now owns compatibility element preparation/release,
@@ -28,11 +32,13 @@ action table and element after commit until host invalidation is complete.
 composition presentation, and reaches the concrete `PostEffectChain` only
 through the narrow internal `HostCompositionEffects` interface. `ofApp`
 delegates rendering and presentation, while persistence and mapping consumers
-read copied snapshots. No raw mutable render target crosses Runtime. Element type
-registration is now scoped per Runtime:
+read copied snapshots. No raw mutable render target crosses Runtime. Element
+type registration is now scoped per Runtime. Each registration atomically
+contributes one minimal descriptor plus one creator:
 the legacy-named `LayerFactory` has no process-global singleton, the host and
 each bench own an independent registry, scene validation uses non-constructing
-type lookup, and Control & Mapping receives only a narrow offline creator.
+type lookup, copied descriptor enumeration cannot mutate the registry, and
+Control & Mapping receives only a narrow offline creator.
 All host registration is now composed through the controlled
 `BuiltinElements.cpp` aggregate instead of `ofApp.cpp`: 22 core creator
 bindings live in that aggregate, while Signal Bloom is delegated to the narrow
@@ -57,8 +63,11 @@ Runtime also owns the canonical `console.layerN.opacity` registration and its
 transactional replacement. The host observes composition through an immutable,
 by-value snapshot, or one bounds-checked optional layer snapshot.
 `CompositionLayerSnapshot` carries assignment identity, layer state, and
-pointer-free descriptors for actions registered by the live instance; it
+copied static action descriptors in their declared order; it
 exposes no element, FBO, registry, creator, handler, or host pointers.
+Runtime seeds a private handler table from that declaration, and the live
+element binds handlers by action ID. Missing, undeclared, duplicate, or empty
+bindings reject preparation before adoption.
 `Runtime::invokeCompositionAction()` invokes one no-argument action by
 zero-based composition-layer index and local action ID, with structured bounds,
 kind, support, rejection, and execution failures. Read-only element inspection
@@ -72,7 +81,9 @@ pause resolve snapshot prefixes through `ParameterRegistry`. Geodesic
 subdivisions are durable parameter state; video source label and capture
 readiness are pointer-free live telemetry. The live aggregate, public
 `CompositionLayer` accessors, and `compositionElementForHost` seam are gone.
-Typed descriptor/catalog ownership is not yet complete.
+Minimal type/kind/action descriptor authority is complete. Broader catalog,
+parameter, package-owner/version, capability, and persistence metadata remain
+outside this descriptor slice.
 
 This document records the dependency inventory and the minimum Element SDK v1
 contract that must exist before Synaptome moves code into new build targets.
@@ -103,14 +114,14 @@ architecture.
 | Compile graph | `synaptome/Synaptome.vcxproj:497` compiles the host, runtime facilities, UI, and every visual implementation into one executable. | A small element change rebuilds and relinks the application. |
 | Element API | `synaptome/src/visuals/Layer.h:3` includes `ofMain.h`, `ofJson`, and the concrete `ParameterRegistry`; its draw context exposes mutable `ofCamera&`. | The public seam is broad and tied to runtime internals. |
 | Concrete dependencies | Registration-only concrete headers and creator lambdas now live in the handwritten `BuiltinElements.cpp` aggregate. Signal Bloom's package leaf registrar is shared by that aggregate and its bench. Legacy Text parameter/state access lives behind host-only `BuiltinElementHostBindings`. | Adding a built-in no longer adds a creator lambda or concrete state dependency to `ofApp`, but still edits the aggregate/project until SEAC-8 generation exists; the shared Text singleton remains internal compatibility debt. |
-| Type special cases | Mutable element-specific action/status casts have been replaced by registered parameters, live actions, and typed telemetry. GPU-target ownership and presentation are isolated in `HostCompositionRenderer`; the raw Runtime target adapter is retired. | SEAC-3 control/query/render ownership is closed; static declaration parity is the SEAC-4A gap. |
+| Type special cases | Mutable element-specific action/status casts have been replaced by registered parameters, statically declared actions with live handler binding, and typed telemetry. GPU-target ownership and presentation are isolated in `HostCompositionRenderer`; the raw Runtime target adapter is retired. | SEAC-3 control/query/render ownership and SEAC-4A type/kind/action declaration parity are closed; authoritative parameters and catalog parity are the SEAC-4B gap. |
 | Lifecycle | `synaptome/src/visuals/Layer.h:23` has configure, setup, update, draw, resize, and enable methods, then relies on destruction. Runtime replacement is transactional. | There is still no typed setup result, explicit element teardown hook, or normalized health contract. |
 | Composition | Runtime owns the fixed assignment/state/lifecycle records and coverage policy. `HostCompositionRenderer` owns per-slot/composite FBOs and presentation behind `HostCompositionEffects`; `ofApp::drawConsole` delegates. | The state and graphics owners are now explicit; real pixel/GL evidence remains a later confidence-suite gate. |
-| Registry | At the SEAC-2 freeze, `LayerFactory` was process-global. It is now a Runtime-scoped type-to-creator map, but still has no descriptor, owner, version, enumeration, unregister, or atomic package registration. | Type creation is isolated; identity and package metadata still lack one typed authority. |
+| Registry | At the SEAC-2 freeze, `LayerFactory` was process-global. It is now a Runtime-scoped descriptor-plus-creator registry with atomic validation, non-constructing lookup, and copied enumeration. It still has no package owner/version, unregister, or atomic package registration. | Minimal type/kind/action identity is isolated and inspectable; package ownership and broader metadata still lack one typed authority. |
 | Catalog | `LayerLibrary` owns legacy JSON loading, package activation, and preset merging; package tools generate a second legacy catalog representation. | The package manifest is not yet the runtime's typed source of truth. |
 | Parameters | Package JSON, C++ `setup()`, and generated adapters repeat parameter metadata; `ParameterRegistry::Descriptor` at `synaptome/src/core/ParameterRegistry.h:24` is incomplete for the target contract. | Runtime binding and declaration metadata can drift. |
 | Services | Elements reach global services such as audio analysis, video catalog, and text state directly. | Isolated tests can still depend on hidden process state. |
-| Inspection | Browser/control inspection can instantiate an element and call `setup()` to discover parameters. | Inspection may allocate resources or touch devices. |
+| Inspection | Type/kind/action inspection no longer constructs an element. Browser/control parameter inspection can still instantiate an element and call `setup()` to discover parameters. | SEAC-4A inspection is construction-free; parameter inspection may still allocate resources or touch devices until SEAC-4B. |
 | Tests | The package bench proves stub-backed element lifecycle/draw dispatch. Browser tests still use private app internals. `HostCompositionRendererTest` separately compiles the production renderer/Runtime sources against FBO/GL stubs. | The renderer harness proves traversal/policy/failure behavior, not pixels, shader execution, or a real GL context; Browser execution is deferred with dual-screen testing. |
 
 The inventory also identifies two state risks that later tasks must preserve:
@@ -270,24 +281,25 @@ temporary duplicate-assignment restrictions.
 
 ### Static Descriptor
 
-An element type has a pure-data descriptor available without construction or
-`setup()`. At minimum it contains:
+An element type now has a minimal pure-data descriptor available without
+construction or `setup()`. The implemented SEAC-4A record contains exactly:
 
-- type ID, display label, implementation version, and element kind;
-- owning package ID/version and compatible SDK/runtime range;
-- capabilities and declared dependencies;
-- parameter declarations and supported actions;
-- deterministic/reset support;
-- render/resource requirements;
-- lifecycle and test requirements.
+- stable `typeId`;
+- closed `ElementKind` (`Visual` or `Effect`);
+- ordered pointer-free `ActionDescriptor` declarations.
 
-This remains the SEAC-4 target contract. The first SEAC-3 action slice does
-not claim offline or type-level action discovery. It collects actions during
-candidate preparation, publishes copied pointer-free descriptors only after
-adoption, and keeps handler storage private to Runtime.
-Moving those declarations into the static `ElementDescriptor`, generating
-package/catalog views, and validating declaration/registration parity are
-explicit catalog debt.
+`LayerFactory` validates the static action IDs, labels, group IDs, and
+duplicates when it accepts the descriptor and creator. Lookup and enumeration
+do not invoke the creator, and enumeration returns copies.
+
+The broader Element Package target still needs display label,
+implementation/package version and owner, compatible SDK/runtime range,
+capabilities and dependencies, parameter declarations, deterministic/reset
+support, render/resource requirements, lifecycle/test requirements, and
+persistence metadata. Those fields are deliberately not present in the
+SEAC-4A `ElementDescriptor`. Parameter and catalog authority belong to
+SEAC-4B, package serialization to SEAC-7, and generated registration to
+SEAC-8.
 
 Element kinds in v1 are `visual` and `effect`. Operator overlays remain
 spine-owned UI modules, not creative elements. Existing effects may use a
@@ -296,11 +308,15 @@ share the same identity, registration, diagnostics, and scene-validation path.
 
 ### Registration
 
-One non-global runtime registry accepts an atomic registration record:
+One non-global runtime registry currently accepts an atomic registration
+record:
 
 ```text
-descriptor + creator + package/version owner
+minimal descriptor + creator
 ```
+
+Package/version ownership remains part of the later package registration
+record, not the implemented SEAC-4A record.
 
 Rules:
 
@@ -308,8 +324,9 @@ Rules:
   process-global fallback;
 - empty and duplicate IDs fail before activation;
 - descriptor and creator registration cannot partially succeed;
-- registrations can be enumerated and attributed to their owner;
-- host and bench use the same generated registration entrypoint;
+- registrations can be looked up without construction and enumerated as
+  independent copies;
+- host and bench use the same controlled registration entrypoint;
 - unregister/lifetime behavior is explicit even while built-ins remain
   process-lifetime static registrations;
 - package manifests, runtime registration, tests, and docs do not each maintain
@@ -465,12 +482,14 @@ ownership.
 
 ### Live Action Compatibility Contract
 
-The first action contract is deliberately narrower than the final static
-descriptor and mapping model:
+SEAC-4A separates static action metadata from live handler binding:
 
 - `ActionDescriptor` contains only local `id`, `label`, `groupId`, and
   `description` strings;
-- `Layer::registerActions(ActionRegistrar&)` is an optional live-instance hook;
+- `ElementDescriptor::actions` is the authoritative ordered declaration for
+  action metadata;
+- `Layer::registerActions(ActionRegistrar&)` is an optional live-instance hook
+  that binds an action ID to its handler but cannot redefine metadata;
 - every handler is a no-argument command returning `Succeeded`, `Rejected`, or
   `Failed` with optional diagnostic text;
 - action IDs are unique within one live element and use lower-camel dotted
@@ -478,10 +497,12 @@ descriptor and mapping model:
 - `label` is required display text; `groupId` is a required stable,
   single-segment lower-camel alphanumeric ID such as `geometry` or
   `simulation`, not a display label;
-- empty IDs, duplicate IDs, invalid IDs, empty labels, invalid group IDs, and
-  empty handlers reject candidate preparation before adoption;
-- Runtime owns handler storage and copies descriptors, never handlers, into
-  composition snapshots;
+- empty IDs, duplicate IDs, invalid IDs, empty labels, and invalid group IDs
+  reject factory registration before activation;
+- missing declared bindings plus empty, duplicate, or undeclared live bindings
+  reject candidate preparation before adoption;
+- Runtime owns handler storage and copies the static descriptors, never
+  handlers, into composition snapshots in canonical declaration order;
 - `Runtime::invokeCompositionAction(zeroBasedIndex, actionId)` rejects
   out-of-range, empty, effect, overlay, and unsupported requests without a
   concrete element cast, and converts handler rejection, failure, or exception
@@ -507,8 +528,8 @@ These actions are commands, not state. They have no expanded
 `console.layerN.actions.*` address in this checkpoint, do not enter
 `ParameterRegistry`, and are not written into scenes, presets, mapping
 snapshots, package manifests, or parameter manifests. MIDI/OSC action targets,
-trigger/edge semantics, offline inspection, static `ElementDescriptor`
-declarations, and declaration/registration parity remain later gated work.
+trigger/edge semantics, package serialization, and persisted action mappings
+remain later gated work.
 
 ### Live Telemetry Compatibility Contract
 
@@ -615,8 +636,19 @@ dependency is `HostCompositionEffects`, implemented by `PostEffectChain`.
 Mutable Geodesic subdivision and Game of Life
 randomization register live actions and are invoked through
 `Runtime::invokeCompositionAction()`, replacing the retired
-`legacyCompositionElementForHost` seam. Their descriptors are copied into the
-immutable layer snapshot for live discovery. Generic replacement continues to
+`legacyCompositionElementForHost` seam. Their static descriptors declare the
+canonical action metadata and order; their live hooks bind handlers by ID.
+Those declarations are copied into the immutable layer snapshot for discovery.
+
+The shipping SEAC-4A declaration set is:
+
+| Type set | Ordered action declaration |
+| --- | --- |
+| 21 shipping visual types, including Signal Bloom | Empty |
+| Geodesic | `subdivision.increment` / `Increase Subdivision` / `geometry` / `Increase geodesic subdivision by one, up to the current maximum.`; then `subdivision.decrement` / `Decrease Subdivision` / `geometry` / `Decrease geodesic subdivision by one, down to the current minimum.` |
+| Game of Life | `simulation.randomize` / `Randomize Simulation` / `simulation` / `Immediately randomize the board using the current density.` |
+
+Generic replacement continues to
 use `Runtime::prepareCompositionElementReplacement()` and the two-phase
 prepare/adopt transaction. There is no derived element-pointer cache or refresh
 path. `firstConsoleElementOfType()` selects the first matching copied slot in
@@ -630,8 +662,9 @@ are removed. Direct Text state access has also left `ofApp` through
 `BuiltinElementHostBindings`; the shared singleton and its pre-adoption
 configuration side effects remain SEAC-4B/SEAC-5 state-ownership debt. The
 retired `CompositionRenderTargets`/`compositionRenderTargetsForHost` seam does
-not remain as compatibility debt. Static/offline action descriptors are the
-current SEAC-4A gate.
+not remain as compatibility debt. SEAC-4A static type/kind/action declarations
+and live binding parity are complete; authoritative parameter declarations and
+catalog parity are the current SEAC-4B gate.
 
 ## Completed SEAC-3 Extraction Sequence
 
@@ -680,10 +713,18 @@ No-output-change extraction is accepted only when:
   built-in-state dependencies;
 - built-in compatibility bindings are isolated behind a host-owned adapter
   excluded from RuntimeCore and the public Element SDK;
-- descriptor inspection does not instantiate the element;
-- live action snapshots expose descriptors but no handlers or element pointers;
-- invalid action registration rejects preparation, and action invocation
-  returns structured errors without concrete RuntimeCore element dependencies;
+- invalid static descriptors reject atomically without replacing a prior
+  registration;
+- descriptor lookup and copied enumeration do not instantiate an element;
+- missing descriptors and non-visual descriptors reject at Runtime's
+  descriptor stage before prefix reservation or construction;
+- action snapshots preserve static declaration order and metadata while
+  exposing no handlers or element pointers;
+- missing, undeclared, duplicate, and empty live action bindings reject
+  preparation; replacement remains atomic and action cleanup precedes element
+  destruction;
+- action invocation returns structured errors without concrete RuntimeCore
+  element dependencies;
 - on-demand telemetry returns typed pointer-free copies, contains collection
   and contract failures, and does not change or burden ordinary composition
   snapshots;
@@ -712,6 +753,11 @@ This decision does not promise or implement:
 - automatic package discovery or activation;
 - the complete Scene v2/state-provenance model;
 - the final parameter declaration implementation;
+- display label, implementation/package version or owner, capabilities,
+  dependencies, resources, and persistence fields in `ElementDescriptor`;
+- serialization of the runtime descriptor into packages;
+- generated registration;
+- persisted MIDI/OSC action targets and action mappings;
 - live dual-screen hardware validation.
 
 Those remain separate gated tasks. A raw openFrameworks experiment must first

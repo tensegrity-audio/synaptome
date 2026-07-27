@@ -26,6 +26,71 @@ void require(
     }
 }
 
+synaptome::element::ElementDescriptor visualDescriptor(
+    std::string typeId,
+    std::vector<synaptome::element::ActionDescriptor> actions = {}) {
+    synaptome::element::ElementDescriptor descriptor;
+    descriptor.typeId = std::move(typeId);
+    descriptor.kind = synaptome::element::ElementKind::Visual;
+    descriptor.actions = std::move(actions);
+    return descriptor;
+}
+
+synaptome::element::ElementDescriptor effectDescriptor(
+    std::string typeId,
+    std::vector<synaptome::element::ActionDescriptor> actions = {}) {
+    synaptome::element::ElementDescriptor descriptor;
+    descriptor.typeId = std::move(typeId);
+    descriptor.kind = synaptome::element::ElementKind::Effect;
+    descriptor.actions = std::move(actions);
+    return descriptor;
+}
+
+std::vector<synaptome::element::ActionDescriptor>
+actionContractDescriptors(bool secondVersion) {
+    return {
+        {
+            secondVersion ? "version.second" : "version.first",
+            secondVersion ? "Second Version" : "First Version",
+            "version",
+            "Proves replacement publishes a new action table.",
+        },
+        {
+            "execution.reject",
+            "Reject",
+            "execution",
+            "Returns an intentional rejection.",
+        },
+        {
+            "execution.fail",
+            "Fail",
+            "execution",
+            "Returns an intentional execution failure.",
+        },
+        {
+            "render.reset2D",
+            "Reset 2D",
+            "render",
+            "Pins accepted lowerCamel identifiers with digits.",
+        },
+        {
+            "execution.throw",
+            "Throw",
+            "execution",
+            "Throws to prove Runtime contains action exceptions.",
+        },
+    };
+}
+
+bool sameActionDescriptor(
+    const synaptome::element::ActionDescriptor& left,
+    const synaptome::element::ActionDescriptor& right) {
+    return left.id == right.id &&
+        left.label == right.label &&
+        left.groupId == right.groupId &&
+        left.description == right.description;
+}
+
 template <typename T>
 T telemetryValue(
     const synaptome::runtime::Runtime& runtime,
@@ -449,57 +514,32 @@ public:
         const std::string versionedId = secondVersion_
             ? "version.second"
             : "version.first";
-        registrar.add(
-            {
-                versionedId,
-                secondVersion_ ? "Second Version" : "First Version",
-                "version",
-                "Proves replacement publishes a new action table.",
-            },
+        registrar.bind(
+            versionedId,
             [this, lifetime] {
                 (void)lifetime;
                 ++state_.successCount[static_cast<std::size_t>(serial_)];
                 return synaptome::element::ActionExecutionResult::succeeded();
             });
-        registrar.add(
-            {
-                "execution.reject",
-                "Reject",
-                "execution",
-                "Returns an intentional rejection.",
-            },
+        registrar.bind(
+            "execution.reject",
             [] {
                 return synaptome::element::ActionExecutionResult::rejected(
                     "intentional rejection");
             });
-        registrar.add(
-            {
-                "execution.fail",
-                "Fail",
-                "execution",
-                "Returns an intentional execution failure.",
-            },
+        registrar.bind(
+            "execution.fail",
             [] {
                 return synaptome::element::ActionExecutionResult::failed(
                     "intentional failure");
             });
-        registrar.add(
-            {
-                "render.reset2D",
-                "Reset 2D",
-                "render",
-                "Pins accepted lowerCamel identifiers with digits.",
-            },
+        registrar.bind(
+            "render.reset2D",
             [] {
                 return synaptome::element::ActionExecutionResult::succeeded();
             });
-        registrar.add(
-            {
-                "execution.throw",
-                "Throw",
-                "execution",
-                "Throws to prove Runtime contains action exceptions.",
-            },
+        registrar.bind(
+            "execution.throw",
             []() -> synaptome::element::ActionExecutionResult {
                 throw std::runtime_error("intentional action exception");
             });
@@ -516,13 +556,10 @@ private:
 };
 
 enum class InvalidActionMode {
-    InvalidStart,
-    InvalidUnderscore,
-    InvalidTrailingDot,
-    DuplicateId,
-    EmptyLabel,
-    InvalidGroupId,
+    UnknownBinding,
+    DuplicateBinding,
     EmptyHandler,
+    MissingBinding,
     ThrowDuringRegistration,
 };
 
@@ -547,34 +584,23 @@ public:
             throw std::runtime_error(
                 "intentional action registration failure");
         }
-        std::string id = "valid.action";
-        if (mode_ == InvalidActionMode::InvalidStart) {
-            id = "Invalid.action";
-        } else if (mode_ == InvalidActionMode::InvalidUnderscore) {
-            id = "invalid_action";
-        } else if (mode_ == InvalidActionMode::InvalidTrailingDot) {
-            id = "invalid.";
+        if (mode_ == InvalidActionMode::MissingBinding) {
+            return;
         }
+        const std::string id =
+            mode_ == InvalidActionMode::UnknownBinding
+            ? "unknown.action"
+            : "valid.action";
         synaptome::element::ActionHandler handler = [] {
             return synaptome::element::ActionExecutionResult::succeeded();
         };
         if (mode_ == InvalidActionMode::EmptyHandler) {
             handler = {};
         }
-        const std::string label =
-            mode_ == InvalidActionMode::EmptyLabel
-            ? ""
-            : "Invalid Fixture";
-        const std::string groupId =
-            mode_ == InvalidActionMode::InvalidGroupId
-            ? "Invalid Group"
-            : "tests";
-        registrar.add(
-            {id, label, groupId, "Contract fixture."},
-            std::move(handler));
-        if (mode_ == InvalidActionMode::DuplicateId) {
-            registrar.add(
-                {id, "Duplicate Fixture", "tests", "Contract fixture."},
+        registrar.bind(id, std::move(handler));
+        if (mode_ == InvalidActionMode::DuplicateBinding) {
+            registrar.bind(
+                id,
                 [] {
                     return synaptome::element::
                         ActionExecutionResult::succeeded();
@@ -685,36 +711,181 @@ private:
     TelemetryFixtureMode mode_ = TelemetryFixtureMode::Valid;
 };
 
+void RunElementDescriptorRegistryScenario() {
+    LayerFactory factory;
+    int originalConstructions = 0;
+    int duplicateConstructions = 0;
+
+    factory.registerType(
+        visualDescriptor("tests.runtime.descriptor.valid"),
+        [&] {
+            ++originalConstructions;
+            return std::make_unique<EmptyElement>();
+        });
+    const auto* stableDescriptor =
+        factory.descriptor("tests.runtime.descriptor.valid");
+    factory.registerType(
+        effectDescriptor("tests.runtime.descriptor.effect"),
+        [] {
+            return std::make_unique<EmptyElement>();
+        });
+    require(
+        stableDescriptor &&
+            stableDescriptor ==
+                factory.descriptor("tests.runtime.descriptor.valid") &&
+            stableDescriptor->kind ==
+                synaptome::element::ElementKind::Visual &&
+            factory.descriptor("tests.runtime.descriptor.effect")->kind ==
+                synaptome::element::ElementKind::Effect &&
+            originalConstructions == 0,
+        "descriptor registration invoked a creator or invalidated lookup");
+
+    bool duplicateRejected = false;
+    try {
+        factory.registerType(
+            visualDescriptor("tests.runtime.descriptor.valid"),
+            [&] {
+                ++duplicateConstructions;
+                return std::make_unique<EmptyElement>();
+            });
+    } catch (const std::logic_error&) {
+        duplicateRejected = true;
+    }
+
+    auto rejectsDescriptor = [&](std::string typeId) {
+        try {
+            factory.registerType(
+                visualDescriptor(std::move(typeId)),
+                [] {
+                    return std::make_unique<EmptyElement>();
+                });
+        } catch (const std::invalid_argument&) {
+            return true;
+        }
+        return false;
+    };
+    auto invalidKind =
+        visualDescriptor("tests.runtime.descriptor.invalidKind");
+    invalidKind.kind =
+        static_cast<synaptome::element::ElementKind>(255);
+    bool invalidKindRejected = false;
+    try {
+        factory.registerType(
+            std::move(invalidKind),
+            [] {
+                return std::make_unique<EmptyElement>();
+            });
+    } catch (const std::invalid_argument&) {
+        invalidKindRejected = true;
+    }
+    bool emptyCreatorRejected = false;
+    try {
+        factory.registerType(
+            visualDescriptor("tests.runtime.descriptor.emptyCreator"),
+            LayerFactory::Creator{});
+    } catch (const std::invalid_argument&) {
+        emptyCreatorRejected = true;
+    }
+
+    require(
+        duplicateRejected &&
+            invalidKindRejected &&
+            emptyCreatorRejected &&
+            rejectsDescriptor("") &&
+            rejectsDescriptor("Invalid.start") &&
+            rejectsDescriptor("invalid_type") &&
+            rejectsDescriptor("invalid-type") &&
+            rejectsDescriptor("invalid.") &&
+            factory.descriptors().size() == 2 &&
+            originalConstructions == 0 &&
+            duplicateConstructions == 0,
+        "invalid or duplicate descriptors mutated the registry");
+
+    auto created = factory.create("tests.runtime.descriptor.valid");
+    require(
+        created &&
+            originalConstructions == 1 &&
+            duplicateConstructions == 0,
+        "duplicate registration replaced the original descriptor creator");
+}
+
 void RunScopedElementTypeRegistryIsolationScenario() {
     // Runtime receives its type registry by reference, so independently
     // constructed registries must never share or fall back to global state.
     LayerFactory registryA;
     LayerFactory registryB;
     constexpr const char* kSharedType = "tests.runtime.scoped.shared";
-    constexpr const char* kOnlyInAType = "tests.runtime.scoped.only-a";
+    constexpr const char* kOnlyInAType = "tests.runtime.scoped.onlyA";
 
-    registryA.registerType(kSharedType, [] {
+    registryA.registerType(visualDescriptor(kSharedType), [] {
         return std::make_unique<ScopedRegistryElementA>();
     });
-    registryB.registerType(kSharedType, [] {
+    registryB.registerType(visualDescriptor(kSharedType), [] {
         return std::make_unique<ScopedRegistryElementB>();
     });
-    registryA.registerType(kOnlyInAType, [] {
+    registryA.registerType(visualDescriptor(kOnlyInAType), [] {
         return std::make_unique<ScopedRegistryElementA>();
     });
     int lookupConstructionCount = 0;
-    registryA.registerType("tests.runtime.scoped.lookup-only", [&] {
-        ++lookupConstructionCount;
-        return std::make_unique<ScopedRegistryElementA>();
-    });
+    registryA.registerType(
+        visualDescriptor(
+            "tests.runtime.scoped.lookupOnly",
+            {
+                {
+                    "lookup.first",
+                    "Lookup First",
+                    "lookup",
+                    "Pins static descriptor action order.",
+                },
+                {
+                    "lookup.second",
+                    "Lookup Second",
+                    "lookup",
+                    "Pins static descriptor action order.",
+                },
+            }),
+        [&] {
+            ++lookupConstructionCount;
+            return std::make_unique<ScopedRegistryElementA>();
+        });
+
+    const auto* lookupDescriptor =
+        registryA.descriptor("tests.runtime.scoped.lookupOnly");
+    auto descriptorCopies = registryA.descriptors();
+    require(
+        lookupDescriptor &&
+            lookupDescriptor->typeId ==
+                "tests.runtime.scoped.lookupOnly" &&
+            lookupDescriptor->kind ==
+                synaptome::element::ElementKind::Visual &&
+            lookupDescriptor->actions.size() == 2 &&
+            lookupDescriptor->actions[0].id == "lookup.first" &&
+            lookupDescriptor->actions[1].id == "lookup.second" &&
+            descriptorCopies.size() == 3 &&
+            descriptorCopies[0].typeId == kSharedType &&
+            descriptorCopies[1].typeId == kOnlyInAType &&
+            descriptorCopies[2].typeId ==
+                "tests.runtime.scoped.lookupOnly" &&
+            lookupConstructionCount == 0,
+        "descriptor lookup constructed an element or lost static/deterministic order");
+    descriptorCopies[2].typeId = "copy.mutated";
+    descriptorCopies[2].actions[0].id = "copy.mutated";
+    require(
+        registryA.descriptor("tests.runtime.scoped.lookupOnly")->typeId ==
+                "tests.runtime.scoped.lookupOnly" &&
+            registryA.descriptor(
+                "tests.runtime.scoped.lookupOnly")->actions[0].id ==
+                "lookup.first" &&
+            lookupConstructionCount == 0,
+        "mutating enumerated descriptor copies changed the registry");
 
     ParameterRegistry parametersA;
     ParameterRegistry parametersB;
     synaptome::runtime::Runtime runtimeA(registryA, parametersA);
     synaptome::runtime::Runtime runtimeB(registryB, parametersB);
     require(
-        runtimeA.hasElementType("tests.runtime.scoped.lookup-only") &&
-            !runtimeB.hasElementType("tests.runtime.scoped.lookup-only") &&
+        runtimeA.hasElementType("tests.runtime.scoped.lookupOnly") &&
+            !runtimeB.hasElementType("tests.runtime.scoped.lookupOnly") &&
             lookupConstructionCount == 0,
         "scoped type lookup constructed an element or leaked across runtimes");
 
@@ -754,7 +925,8 @@ void RunScopedElementTypeRegistryIsolationScenario() {
         !missingInB &&
             missingInB.errorCode ==
                 synaptome::runtime::Runtime::ElementErrorCode::
-                    TypeNotRegistered,
+                    TypeNotRegistered &&
+            missingInB.stage == "descriptor",
         "runtime B observed a type registered only in runtime A's scope");
 }
 
@@ -809,7 +981,7 @@ void RunEffectCoverageWindowScenario(
 void RunCompositionSnapshotScenario() {
     LayerFactory factory;
     int constructionCount = 0;
-    factory.registerType("tests.runtime.snapshot", [&] {
+    factory.registerType(visualDescriptor("tests.runtime.snapshot"), [&] {
         ++constructionCount;
         return std::make_unique<ContractElement>();
     });
@@ -1005,7 +1177,9 @@ void RunCompositionSnapshotScenario() {
 void RunCompositionSlotReplacementScenario() {
     LayerFactory factory;
     SlotReplacementLifetimeState lifetime;
-    factory.registerType("tests.runtime.slot-replacement", [&] {
+    factory.registerType(
+        visualDescriptor("tests.runtime.slotReplacement"),
+        [&] {
         const int serial = lifetime.constructionCount++;
         return std::make_unique<SlotReplacementLifetimeElement>(
             lifetime,
@@ -1015,7 +1189,7 @@ void RunCompositionSlotReplacementScenario() {
     synaptome::runtime::Runtime runtime(factory, parameters);
 
     synaptome::runtime::Runtime::ElementRequest request;
-    request.typeId = "tests.runtime.slot-replacement";
+    request.typeId = "tests.runtime.slotReplacement";
     request.definitionId = "tests.definition.slot-initial";
     request.instanceId = "tests.instance.slot-initial";
     request.registryPrefix = "console.layer1";
@@ -1353,52 +1527,145 @@ void RunCompositionSlotReplacementScenario() {
 void RunCompositionActionScenario() {
     LayerFactory factory;
     ActionContractState state;
-    factory.registerType("tests.runtime.actions.v1", [&] {
+    factory.registerType(
+        visualDescriptor(
+            "tests.runtime.actions.v1",
+            actionContractDescriptors(false)),
+        [&] {
         const int serial = state.constructionCount++;
         return std::make_unique<ActionContractElement>(
             state,
             serial,
             false);
     });
-    factory.registerType("tests.runtime.actions.v2", [&] {
+    factory.registerType(
+        visualDescriptor(
+            "tests.runtime.actions.v2",
+            actionContractDescriptors(true)),
+        [&] {
         const int serial = state.constructionCount++;
         return std::make_unique<ActionContractElement>(
             state,
             serial,
             true);
     });
-    factory.registerType("tests.runtime.actions.invalid-start", [] {
-        return std::make_unique<InvalidActionElement>(
-            InvalidActionMode::InvalidStart);
-    });
-    factory.registerType("tests.runtime.actions.invalid-underscore", [] {
-        return std::make_unique<InvalidActionElement>(
-            InvalidActionMode::InvalidUnderscore);
-    });
-    factory.registerType("tests.runtime.actions.invalid-trailing-dot", [] {
-        return std::make_unique<InvalidActionElement>(
-            InvalidActionMode::InvalidTrailingDot);
-    });
-    factory.registerType("tests.runtime.actions.duplicate-id", [] {
-        return std::make_unique<InvalidActionElement>(
-            InvalidActionMode::DuplicateId);
-    });
-    factory.registerType("tests.runtime.actions.empty-handler", [] {
-        return std::make_unique<InvalidActionElement>(
-            InvalidActionMode::EmptyHandler);
-    });
-    factory.registerType("tests.runtime.actions.empty-label", [] {
-        return std::make_unique<InvalidActionElement>(
-            InvalidActionMode::EmptyLabel);
-    });
-    factory.registerType("tests.runtime.actions.invalid-group", [] {
-        return std::make_unique<InvalidActionElement>(
-            InvalidActionMode::InvalidGroupId);
-    });
-    factory.registerType("tests.runtime.actions.throw-register", [] {
-        return std::make_unique<InvalidActionElement>(
-            InvalidActionMode::ThrowDuringRegistration);
-    });
+    const std::vector<synaptome::element::ActionDescriptor>
+        oneDeclaredAction = {
+            {
+                "valid.action",
+                "Valid Action",
+                "tests",
+                "Contract fixture.",
+            },
+        };
+    auto registerInvalidBindingType = [&](
+        std::string typeId,
+        InvalidActionMode mode) {
+        factory.registerType(
+            visualDescriptor(std::move(typeId), oneDeclaredAction),
+            [mode] {
+                return std::make_unique<InvalidActionElement>(mode);
+            });
+    };
+    registerInvalidBindingType(
+        "tests.runtime.actions.unknownBinding",
+        InvalidActionMode::UnknownBinding);
+    registerInvalidBindingType(
+        "tests.runtime.actions.duplicateBinding",
+        InvalidActionMode::DuplicateBinding);
+    registerInvalidBindingType(
+        "tests.runtime.actions.emptyHandler",
+        InvalidActionMode::EmptyHandler);
+    registerInvalidBindingType(
+        "tests.runtime.actions.missingBinding",
+        InvalidActionMode::MissingBinding);
+    registerInvalidBindingType(
+        "tests.runtime.actions.throwRegister",
+        InvalidActionMode::ThrowDuringRegistration);
+    int effectConstructionCount = 0;
+    factory.registerType(
+        effectDescriptor("tests.runtime.actions.effect"),
+        [&] {
+            ++effectConstructionCount;
+            return std::make_unique<EmptyElement>();
+        });
+
+    LayerFactory invalidDeclarationFactory;
+    int invalidDeclarationConstructionCount = 0;
+    auto rejectsStaticDeclaration = [&](
+        synaptome::element::ElementDescriptor descriptor) {
+        const auto typeId = descriptor.typeId;
+        try {
+            invalidDeclarationFactory.registerType(
+                std::move(descriptor),
+                [&] {
+                    ++invalidDeclarationConstructionCount;
+                    return std::make_unique<EmptyElement>();
+                });
+        } catch (const std::exception&) {
+            return !invalidDeclarationFactory.contains(typeId);
+        }
+        return false;
+    };
+    require(
+        rejectsStaticDeclaration(visualDescriptor(
+            "tests.runtime.actions.staticInvalidStart",
+            {{
+                "Invalid.action",
+                "Invalid Start",
+                "tests",
+                "Static declaration fixture.",
+            }})) &&
+            rejectsStaticDeclaration(visualDescriptor(
+                "tests.runtime.actions.staticInvalidUnderscore",
+                {{
+                    "invalid_action",
+                    "Invalid Underscore",
+                    "tests",
+                    "Static declaration fixture.",
+                }})) &&
+            rejectsStaticDeclaration(visualDescriptor(
+                "tests.runtime.actions.staticInvalidTrailingDot",
+                {{
+                    "invalid.",
+                    "Invalid Trailing Dot",
+                    "tests",
+                    "Static declaration fixture.",
+                }})) &&
+            rejectsStaticDeclaration(visualDescriptor(
+                "tests.runtime.actions.staticEmptyLabel",
+                {{
+                    "valid.action",
+                    "",
+                    "tests",
+                    "Static declaration fixture.",
+                }})) &&
+            rejectsStaticDeclaration(visualDescriptor(
+                "tests.runtime.actions.staticInvalidGroup",
+                {{
+                    "valid.action",
+                    "Invalid Group",
+                    "Invalid Group",
+                    "Static declaration fixture.",
+                }})) &&
+            rejectsStaticDeclaration(visualDescriptor(
+                "tests.runtime.actions.staticDuplicate",
+                {
+                    {
+                        "valid.action",
+                        "First",
+                        "tests",
+                        "Static declaration fixture.",
+                    },
+                    {
+                        "valid.action",
+                        "Second",
+                        "tests",
+                        "Static declaration fixture.",
+                    },
+                })) &&
+            invalidDeclarationConstructionCount == 0,
+        "invalid static action declarations were accepted or constructed an element");
 
     ParameterRegistry parameters;
     synaptome::runtime::Runtime runtime(factory, parameters);
@@ -1408,13 +1675,10 @@ void RunCompositionActionScenario() {
     invalidRequest.instanceId = "tests.instance.actions.invalid";
     invalidRequest.registryPrefix = "console.layer1";
     for (const std::string typeId : {
-             "tests.runtime.actions.invalid-start",
-             "tests.runtime.actions.invalid-underscore",
-             "tests.runtime.actions.invalid-trailing-dot",
-             "tests.runtime.actions.duplicate-id",
-             "tests.runtime.actions.empty-label",
-             "tests.runtime.actions.invalid-group",
-             "tests.runtime.actions.empty-handler",
+             "tests.runtime.actions.unknownBinding",
+             "tests.runtime.actions.duplicateBinding",
+             "tests.runtime.actions.emptyHandler",
+             "tests.runtime.actions.missingBinding",
          }) {
         invalidRequest.typeId = typeId;
         const auto invalid = runtime.prepareElement(invalidRequest);
@@ -1425,9 +1689,9 @@ void RunCompositionActionScenario() {
                         ContractViolation &&
                 invalid.stage == "actions" &&
                 parameters.findFloat("console.layer1.value") == nullptr,
-            "invalid action declaration escaped staging or used the wrong error");
+            "invalid live action binding escaped staging or used the wrong error");
     }
-    invalidRequest.typeId = "tests.runtime.actions.throw-register";
+    invalidRequest.typeId = "tests.runtime.actions.throwRegister";
     const auto throwingRegistration =
         runtime.prepareElement(invalidRequest);
     require(
@@ -1438,6 +1702,18 @@ void RunCompositionActionScenario() {
             throwingRegistration.stage == "actions" &&
             parameters.findFloat("console.layer1.value") == nullptr,
         "throwing action registration escaped Runtime lifecycle containment");
+
+    invalidRequest.typeId = "tests.runtime.actions.effect";
+    const auto effectPreparation = runtime.prepareElement(invalidRequest);
+    require(
+        !effectPreparation &&
+            effectPreparation.errorCode ==
+                synaptome::runtime::Runtime::ElementErrorCode::
+                    ContractViolation &&
+            effectPreparation.stage == "descriptor" &&
+            effectConstructionCount == 0 &&
+            parameters.findFloat("console.layer1.value") == nullptr,
+        "effect descriptor reached the visual element creator or wrong failure stage");
 
     const auto outOfRange = runtime.invokeCompositionAction(
         synaptome::runtime::kCompositionLayerCount,
@@ -1515,10 +1791,15 @@ void RunCompositionActionScenario() {
         "execution.throw",
     };
     const auto firstSnapshot = runtime.compositionLayerSnapshot(0);
+    const auto* firstTypeDescriptor =
+        factory.descriptor("tests.runtime.actions.v1");
     require(
         firstSnapshot &&
+            firstTypeDescriptor &&
             !firstSnapshot->active &&
-            firstSnapshot->actions.size() == expectedFirstIds.size(),
+            firstSnapshot->actions.size() == expectedFirstIds.size() &&
+            firstSnapshot->actions.size() ==
+                firstTypeDescriptor->actions.size(),
         "action snapshot did not publish the inactive element declarations");
     require(
         firstSnapshot->actions.front().label == "First Version" &&
@@ -1528,8 +1809,11 @@ void RunCompositionActionScenario() {
         "action snapshot did not copy complete descriptor metadata");
     for (std::size_t i = 0; i < expectedFirstIds.size(); ++i) {
         require(
-            firstSnapshot->actions[i].id == expectedFirstIds[i],
-            "action snapshot registration order drifted");
+            firstSnapshot->actions[i].id == expectedFirstIds[i] &&
+                sameActionDescriptor(
+                    firstSnapshot->actions[i],
+                    firstTypeDescriptor->actions[i]),
+            "action snapshot drifted from static metadata or order");
     }
     auto mutatedCopy = *firstSnapshot;
     mutatedCopy.actions.front().id = "copy.mutated";
@@ -1540,7 +1824,7 @@ void RunCompositionActionScenario() {
 
     auto invalidReplacementRequest = firstRequest;
     invalidReplacementRequest.typeId =
-        "tests.runtime.actions.duplicate-id";
+        "tests.runtime.actions.missingBinding";
     invalidReplacementRequest.definitionId =
         "tests.definition.actions.invalid-replacement";
     invalidReplacementRequest.instanceId =
@@ -1555,8 +1839,11 @@ void RunCompositionActionScenario() {
                 synaptome::runtime::Runtime::ElementErrorCode::
                     ContractViolation &&
             invalidReplacement.stage == "actions" &&
-            runtime.compositionLayerSnapshot(0)->actions.front().id ==
-                "version.first",
+            runtime.compositionLayerSnapshot(0)->actions.size() ==
+                firstTypeDescriptor->actions.size() &&
+            sameActionDescriptor(
+                runtime.compositionLayerSnapshot(0)->actions.front(),
+                firstTypeDescriptor->actions.front()),
         "failed action replacement changed the live declaration table");
 
     const auto success =
@@ -1701,7 +1988,11 @@ void RunCompositionActionScenario() {
     synaptome::runtime::Runtime::ElementResult outlivesRuntime;
     std::weak_ptr<int> expiryHandlerLifetime;
     LayerFactory expiryFactory;
-    expiryFactory.registerType("tests.runtime.actions.expiry", [&] {
+    expiryFactory.registerType(
+        visualDescriptor(
+            "tests.runtime.actions.expiry",
+            actionContractDescriptors(false)),
+        [&] {
         const int serial = expiryState.constructionCount++;
         return std::make_unique<ActionContractElement>(
             expiryState,
@@ -1742,7 +2033,11 @@ void RunCompositionActionScenario() {
 
     ActionContractState destructorState;
     LayerFactory destructorFactory;
-    destructorFactory.registerType("tests.runtime.actions.destructor", [&] {
+    destructorFactory.registerType(
+        visualDescriptor(
+            "tests.runtime.actions.destructor",
+            actionContractDescriptors(false)),
+        [&] {
         const int serial = destructorState.constructionCount++;
         return std::make_unique<ActionContractElement>(
             destructorState,
@@ -1787,7 +2082,7 @@ void RunCompositionTelemetryScenario() {
     auto registerTelemetryType = [&](
         const std::string& typeId,
         TelemetryFixtureMode mode) {
-        factory.registerType(typeId, [&, mode] {
+        factory.registerType(visualDescriptor(typeId), [&, mode] {
             auto state = std::make_shared<TelemetryInstanceState>();
             state->serial = nextSerial++;
             state->ready = (state->serial % 2) == 0;
@@ -1804,21 +2099,23 @@ void RunCompositionTelemetryScenario() {
         "tests.runtime.telemetry.valid",
         TelemetryFixtureMode::Valid);
     registerTelemetryType(
-        "tests.runtime.telemetry.invalid-id",
+        "tests.runtime.telemetry.invalidId",
         TelemetryFixtureMode::InvalidId);
     registerTelemetryType(
-        "tests.runtime.telemetry.duplicate-id",
+        "tests.runtime.telemetry.duplicateId",
         TelemetryFixtureMode::DuplicateId);
     registerTelemetryType(
-        "tests.runtime.telemetry.empty-label",
+        "tests.runtime.telemetry.emptyLabel",
         TelemetryFixtureMode::EmptyLabel);
     registerTelemetryType(
-        "tests.runtime.telemetry.invalid-group",
+        "tests.runtime.telemetry.invalidGroup",
         TelemetryFixtureMode::InvalidGroupId);
     registerTelemetryType(
         "tests.runtime.telemetry.throw",
         TelemetryFixtureMode::Throw);
-    factory.registerType("tests.runtime.telemetry.empty", [] {
+    factory.registerType(
+        visualDescriptor("tests.runtime.telemetry.empty"),
+        [] {
         return std::make_unique<EmptyElement>();
     });
 
@@ -1980,22 +2277,22 @@ void RunCompositionTelemetryScenario() {
              std::string,
              synaptome::runtime::CompositionTelemetryError>>{
              {
-                 "tests.runtime.telemetry.invalid-id",
+                 "tests.runtime.telemetry.invalidId",
                  synaptome::runtime::CompositionTelemetryError::
                      ContractViolation,
              },
              {
-                 "tests.runtime.telemetry.duplicate-id",
+                 "tests.runtime.telemetry.duplicateId",
                  synaptome::runtime::CompositionTelemetryError::
                      ContractViolation,
              },
              {
-                 "tests.runtime.telemetry.empty-label",
+                 "tests.runtime.telemetry.emptyLabel",
                  synaptome::runtime::CompositionTelemetryError::
                      ContractViolation,
              },
              {
-                 "tests.runtime.telemetry.invalid-group",
+                 "tests.runtime.telemetry.invalidGroup",
                  synaptome::runtime::CompositionTelemetryError::
                      ContractViolation,
              },
@@ -2089,6 +2386,7 @@ void RunCompositionTelemetryScenario() {
 
 int main() {
     try {
+        RunElementDescriptorRegistryScenario();
         RunScopedElementTypeRegistryIsolationScenario();
         RunCompositionSnapshotScenario();
         RunCompositionSlotReplacementScenario();
@@ -2096,31 +2394,41 @@ int main() {
         RunCompositionTelemetryScenario();
 
         LayerFactory factory;
-        factory.registerType("tests.runtime.good", [] {
+        factory.registerType(visualDescriptor("tests.runtime.good"), [] {
             return std::make_unique<ContractElement>();
         });
-        factory.registerType("tests.runtime.failing", [] {
+        factory.registerType(visualDescriptor("tests.runtime.failing"), [] {
             return std::make_unique<FailingElement>();
         });
-        factory.registerType("tests.runtime.empty", [] {
+        factory.registerType(visualDescriptor("tests.runtime.empty"), [] {
             return std::make_unique<EmptyElement>();
         });
-        factory.registerType("tests.runtime.foreign", [] {
+        factory.registerType(visualDescriptor("tests.runtime.foreign"), [] {
             return std::make_unique<ForeignParameterElement>();
         });
-        factory.registerType("tests.runtime.destructive-failing", [] {
+        factory.registerType(
+            visualDescriptor("tests.runtime.destructiveFailing"),
+            [] {
             return std::make_unique<DestructiveFailingElement>();
         });
-        factory.registerType("tests.runtime.registry-aware", [] {
+        factory.registerType(
+            visualDescriptor("tests.runtime.registryAware"),
+            [] {
             return std::make_unique<RegistryAwareElement>();
         });
-        factory.registerType("tests.runtime.reserved-opacity", [] {
+        factory.registerType(
+            visualDescriptor("tests.runtime.reservedOpacity"),
+            [] {
             return std::make_unique<ReservedOpacityElement>();
         });
-        factory.registerType("tests.runtime.host-collision", [] {
+        factory.registerType(
+            visualDescriptor("tests.runtime.hostCollision"),
+            [] {
             return std::make_unique<HostCollisionElement>();
         });
-        factory.registerType("tests.runtime.retained-registry", [] {
+        factory.registerType(
+            visualDescriptor("tests.runtime.retainedRegistry"),
+            [] {
             return std::make_unique<RetainedSetupRegistryElement>();
         });
 
@@ -2252,7 +2560,7 @@ int main() {
         require(parameters.findFloat("foreign.value") == nullptr,
                 "contract violation leaked its foreign registration");
 
-        request.typeId = "tests.runtime.reserved-opacity";
+        request.typeId = "tests.runtime.reservedOpacity";
         request.definitionId = "tests.definition.reserved-opacity";
         request.instanceId = "tests.instance.reserved-opacity";
         request.registryPrefix = "console.layer2";
@@ -2272,7 +2580,7 @@ int main() {
 
         retainedRegistryDestructorRan = false;
         retainedRegistryWasAlive = false;
-        request.typeId = "tests.runtime.retained-registry";
+        request.typeId = "tests.runtime.retainedRegistry";
         request.definitionId = "tests.definition.retained-registry";
         request.instanceId = "tests.instance.retained-registry";
         request.registryPrefix = "console.layer2";
@@ -2401,7 +2709,7 @@ int main() {
             &liveHostValue,
             liveHostValue,
             liveHostDescriptor);
-        request.typeId = "tests.runtime.destructive-failing";
+        request.typeId = "tests.runtime.destructiveFailing";
         request.definitionId = "tests.definition.failed-replacement";
         request.instanceId = "tests.instance.failed-replacement";
         auto failedReplacement =
@@ -2468,7 +2776,7 @@ int main() {
             &hostOwnedValue,
             hostOwnedValue,
             replacementHostDescriptor);
-        request.typeId = "tests.runtime.host-collision";
+        request.typeId = "tests.runtime.hostCollision";
         request.definitionId = "tests.definition.conflicting";
         request.instanceId = "tests.instance.conflicting";
         {
@@ -2603,7 +2911,7 @@ int main() {
                 "composition clear retained spine-owned opacity");
         parameters.removeById("host.live");
 
-        request.typeId = "tests.runtime.registry-aware";
+        request.typeId = "tests.runtime.registryAware";
         request.definitionId = "tests.definition.registry-aware";
         request.instanceId = "tests.instance.registry-aware";
         request.registryPrefix = "console.layer2";

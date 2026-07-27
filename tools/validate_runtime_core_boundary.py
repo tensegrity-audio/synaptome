@@ -140,6 +140,9 @@ def main() -> int:
     action_header = (
         ROOT / "synaptome/sdk/include/synaptome/element/Action.h"
     ).read_text(encoding="utf-8")
+    descriptor_header = (
+        ROOT / "synaptome/sdk/include/synaptome/element/ElementDescriptor.h"
+    ).read_text(encoding="utf-8")
     telemetry_header = (
         ROOT / "synaptome/sdk/include/synaptome/element/Telemetry.h"
     ).read_text(encoding="utf-8")
@@ -191,6 +194,9 @@ def main() -> int:
     ).read_text(encoding="utf-8")
     layer_factory_source = (
         ROOT / "synaptome/src/visuals/LayerFactory.cpp"
+    ).read_text(encoding="utf-8")
+    builtin_elements = (
+        ROOT / "synaptome/src/runtime/BuiltinElements.cpp"
     ).read_text(encoding="utf-8")
     post_effect_header = (
         ROOT / "synaptome/src/visuals/effects/PostEffectChain.h"
@@ -375,16 +381,16 @@ def main() -> int:
         if token in snapshot_surface:
             errors.append(f"composition snapshot DTOs expose forbidden ownership: {token}")
 
-    descriptor_start = action_header.find("struct ActionDescriptor")
-    descriptor_end = action_header.find(
-        "enum class ActionExecutionStatus",
+    descriptor_start = descriptor_header.find("struct ActionDescriptor")
+    descriptor_end = descriptor_header.find(
+        "enum class ElementKind",
         descriptor_start,
     )
     if descriptor_start < 0 or descriptor_end < 0:
-        errors.append("could not inspect the public live action descriptor")
+        errors.append("could not inspect the public static action descriptor")
         action_descriptor_surface = ""
     else:
-        action_descriptor_surface = action_header[
+        action_descriptor_surface = descriptor_header[
             descriptor_start:descriptor_end
         ]
     for token in (
@@ -394,10 +400,10 @@ def main() -> int:
         "std::string description;",
     ):
         if token not in action_descriptor_surface:
-            errors.append(f"live action descriptor is missing {token}")
+            errors.append(f"static action descriptor is missing {token}")
     if "std::string group;" in action_descriptor_surface:
         errors.append(
-            "live action descriptor must use stable groupId instead of group"
+            "static action descriptor must use stable groupId instead of group"
         )
     for token in (
         "*",
@@ -411,71 +417,55 @@ def main() -> int:
     ):
         if token in action_descriptor_surface:
             errors.append(
-                f"live action descriptor exposes forbidden ownership: {token}"
+                f"static action descriptor exposes forbidden ownership: {token}"
             )
     for token in (
         "using ActionHandler = std::function<ActionExecutionResult()>",
         "class ActionRegistrar",
-        "virtual void add(",
+        "virtual void bind(",
     ):
         if token not in action_header:
-            errors.append(f"public live action contract is missing {token}")
+            errors.append(f"public action binding contract is missing {token}")
+    for token in (
+        "enum class ElementKind",
+        "Visual",
+        "Effect",
+        "struct ElementDescriptor",
+        "std::string typeId;",
+        "ElementKind kind",
+        "std::vector<ActionDescriptor> actions;",
+    ):
+        if token not in descriptor_header:
+            errors.append(f"public element descriptor is missing {token}")
+    for forbidden in (
+        "std::function",
+        "ActionHandler",
+        "Creator",
+        "Layer",
+        "Runtime",
+        "ParameterRegistry",
+        "ofFbo",
+        "ofJson",
+    ):
+        if forbidden in descriptor_header:
+            errors.append(
+                "public element descriptor exposes forbidden ownership: "
+                + forbidden
+            )
     if "registerActions(" not in layer_header:
         errors.append("compatibility Layer is missing optional action registration")
     for token in (
         "contractError() const",
-        "isValidId(",
         "entry.descriptor.id",
-        "entry.descriptor.label.empty()",
-        "isValidGroupId(entry.descriptor.groupId)",
-        "invalid action group ID",
         "entry.handler",
-        "duplicate action ID",
+        "duplicate action binding",
+        "undeclared action binding",
+        "did not bind declared action",
         "descriptors() const",
         "find(",
     ):
         if token not in action_table:
             errors.append(f"runtime live action table is missing {token}")
-    if "character != '_'" in action_table:
-        errors.append(
-            "live action IDs must use dotted lowerCamel segments; underscores "
-            "must remain invalid"
-        )
-    group_validator_start = action_table.find(
-        "static bool isValidGroupId("
-    )
-    group_validator_end = action_table.find(
-        "std::vector<Entry> entries_",
-        group_validator_start,
-    )
-    if group_validator_start < 0 or group_validator_end < 0:
-        errors.append("could not inspect live action groupId validation")
-        group_validator_surface = ""
-    else:
-        group_validator_surface = action_table[
-            group_validator_start:group_validator_end
-        ]
-    for token in (
-        "id.empty()",
-        "id.front() < 'a'",
-        "id.front() > 'z'",
-        "character >= 'a'",
-        "character <= 'z'",
-        "character >= 'A'",
-        "character <= 'Z'",
-        "character >= '0'",
-        "character <= '9'",
-    ):
-        if token not in group_validator_surface:
-            errors.append(
-                f"live action groupId lowerCamel validation is missing {token}"
-            )
-    for forbidden in ("character == '.'", "character == '_'", "character == '-'"):
-        if forbidden in group_validator_surface:
-            errors.append(
-                "live action groupId must remain a single alphanumeric "
-                f"lowerCamel segment: {forbidden}"
-            )
 
     telemetry_entry_start = telemetry_header.find("struct TelemetryEntry")
     telemetry_entry_end = telemetry_header.find(
@@ -682,7 +672,7 @@ def main() -> int:
     ):
         if not re.search(r"\bregisterActions\s*\(", strip_cpp_comments(header)):
             errors.append(
-                f"{label} live action implementation is missing registration"
+                f"{label} live action implementation is missing binding"
             )
     try:
         geodesic_actions_body = function_body(
@@ -700,11 +690,11 @@ def main() -> int:
     else:
         geodesic_action_calls = call_expressions(
             geodesic_actions_body,
-            r"\bregistrar\s*\.\s*add",
+            r"\bregistrar\s*\.\s*bind",
         )
         game_of_life_action_calls = call_expressions(
             game_of_life_actions_body,
-            r"\bregistrar\s*\.\s*add",
+            r"\bregistrar\s*\.\s*bind",
         )
 
     action_success_pattern = re.compile(
@@ -736,7 +726,7 @@ def main() -> int:
             "Game of Life",
         ),
     )
-    for calls, action_id, group_id, handler_name, forbidden_handlers, label in (
+    for calls, action_id, _group_id, handler_name, forbidden_handlers, label in (
         concrete_action_contracts
     ):
         matching_calls = [
@@ -746,27 +736,10 @@ def main() -> int:
         ]
         if len(matching_calls) != 1:
             errors.append(
-                f"{label} must register action {action_id} exactly once"
+                f"{label} must bind action {action_id} exactly once"
             )
             continue
         action_call = matching_calls[0]
-        descriptor_literals = re.findall(
-            r'"((?:\\.|[^"\\])*)"',
-            action_call,
-        )
-        if len(descriptor_literals) < 4:
-            errors.append(
-                f"{label} action {action_id} is missing complete descriptor metadata"
-            )
-        else:
-            if not descriptor_literals[1]:
-                errors.append(
-                    f"{label} action {action_id} must retain a nonempty label"
-                )
-            if descriptor_literals[2] != group_id:
-                errors.append(
-                    f"{label} action {action_id} groupId must remain {group_id}"
-                )
         handler_pattern = re.compile(
             rf"(?:\bthis\s*->\s*)?\b{re.escape(handler_name)}\s*"
             r"\(\s*\)"
@@ -797,6 +770,20 @@ def main() -> int:
             errors.append(
                 "Game of Life must not expose a .reseed live action route: "
                 f"{registered_id}"
+            )
+    for token in (
+        '"subdivision.increment"',
+        '"Increase Subdivision"',
+        '"subdivision.decrement"',
+        '"Decrease Subdivision"',
+        '"geometry"',
+        '"simulation.randomize"',
+        '"Randomize Simulation"',
+        '"simulation"',
+    ):
+        if token not in builtin_elements:
+            errors.append(
+                "controlled static action descriptors are missing " + token
             )
     for token in (
         'result.stage = "actions"',
@@ -1893,11 +1880,15 @@ def main() -> int:
         "setCompositionLayerCoverage",
         "clearCompositionLayer",
         "tests.stable-opacity-mapping",
+        "RunElementDescriptorRegistryScenario",
+        "invalid or duplicate descriptors mutated the registry",
         "RunCompositionActionScenario",
-        "InvalidActionMode::InvalidUnderscore",
-        "InvalidActionMode::EmptyLabel",
-        "InvalidActionMode::InvalidGroupId",
-        'groupId == "version"',
+        "InvalidActionMode::UnknownBinding",
+        "InvalidActionMode::DuplicateBinding",
+        "InvalidActionMode::EmptyHandler",
+        "InvalidActionMode::MissingBinding",
+        "invalid static action declarations were accepted",
+        "effect descriptor reached the visual element creator",
         "prepared actions became discoverable before adoption",
         "mutating a copied action descriptor changed Runtime state",
         "action execution status translation or exception containment drifted",
@@ -1949,9 +1940,10 @@ def main() -> int:
         return 1
     print(
         "[runtime-core-boundary] PASS linked RuntimeCore lifecycle and "
-        "immutable composition query/control/replacement plus live action and "
-        "on-demand typed telemetry planes, with host-only composition rendering "
-        "and its stub-backed renderer contract"
+        "immutable composition query/control/replacement plus static action "
+        "declaration, bind-only live action, and on-demand typed telemetry "
+        "planes, with host-only composition rendering and its stub-backed "
+        "renderer contract"
     )
     return 0
 

@@ -188,7 +188,10 @@ def collect_errors(
         if sdk.get("noHeavySetupSideEffects") is not True:
             errors.append("catalog sdk.noHeavySetupSideEffects must be true")
 
-    if f'registerType("{EXPECTED_TYPE}"' not in registration_text:
+    if not re.search(
+        rf'registerType\(\s*(?:[\w:]+)?\s*\{{\s*"{re.escape(EXPECTED_TYPE)}"',
+        registration_text,
+    ):
         errors.append("registration snippet must register the catalog type")
     if "std::make_unique<SignalBloomLayer>" not in registration_text:
         errors.append("registration snippet must create SignalBloomLayer")

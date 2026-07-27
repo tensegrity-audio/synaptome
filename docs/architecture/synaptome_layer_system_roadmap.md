@@ -77,7 +77,8 @@ their implementation.
 Synaptome already has:
 
 - C++ `Layer` subclasses.
-- `LayerFactory` source registration.
+- `LayerFactory` source registration of an explicit minimal descriptor plus
+  creator.
 - `LayerLibrary` JSON catalog ingestion.
 - Browser-visible parameters through `ParameterRegistry`.
 - Generated `docs/contracts/parameter_manifest.json`.
@@ -260,7 +261,7 @@ indexes them, but this document owns their meaning and next actions.
 | CG-13 | Manifest generation from package parameters | Package-derived parameter manifest snapshots expand package suffixes through `registryPrefix`; `gen_parameter_manifest.py --include-packages` now writes/checks a draft combined manifest without changing the canonical manifest. | Decide when package-derived entries become part of the canonical `parameter_manifest.json` rather than a draft combined gate. |
 | CG-14 | Dropdown option metadata and dynamic providers | Matching live package parameters use one labeled picker for static `options[]` and registered `optionsSource` choices. Selection updates the existing registry value, provider revisions close stale pickers, and unavailable current values remain preserved until explicit replacement. | Reuse the same metadata/picker path on the next packaged layer and keep raw numeric/string editing available only where no choices are declared. |
 | CG-15 | Layer preset package contract | Package-owned suffix-based presets and ordered banks are schema-validated. The Browser persists a stable bank/preset selection in the operator-local override and applies it on the next layer load with tested precedence and rollback. | Keep current scene values authoritative; consider live preset application only after value provenance and transactional rollback exist. |
-| CG-16 | Single-layer package validator and runtime bench | Signal Bloom now passes a focused static check and native stub-backed lifecycle/draw-dispatch bench; full package-vs-runtime descriptor comparison and pixel/non-blank output checks remain. | Compare every runtime descriptor against package declarations, then add optional rendered-output assertions. |
+| CG-16 | Single-layer package validator and runtime bench | Signal Bloom now passes a focused static check and native stub-backed lifecycle/draw-dispatch bench. Before construction, the bench inspects one copied `Visual` runtime descriptor with an empty action declaration and proves enumeration-copy isolation. Package-vs-runtime parameter/full-descriptor comparison and pixel/non-blank output checks remain. | Complete SEAC-4B parameter/catalog authority, then serialize and compare the broader package descriptor in SEAC-7 before adding optional rendered-output assertions. |
 | CG-17 | Folder-driven discovery and file-backed generated layers | Current catalog behavior relies on explicit layer JSON entries; STL-style dropped files do not yet have a standard generated asset/template path. | Define discovery roots, folder-to-Browser rules, stable generated IDs, sidecar overrides, and template schemas for file-backed generated layers. |
 | CG-18 | Package OSC mapping presets | Packages can ship validated suffix-based OSC/audio/control mapping suggestions, and activation records but never applies the chosen mapping preset. Editable Browser mapping rows do not exist yet. | Add explicit apply/edit controls with slot expansion, conflict preview, and rollback while retaining scene/operator ownership. |
 
@@ -484,10 +485,15 @@ Success means one layer can prove that it works without launching the full
 performance UI.
 
 Implemented lifecycle seam: `LayerPackageBench` creates Signal Bloom through
-`LayerFactory`, registers 18 parameters, advances 240 frames, issues a
+`LayerFactory`. Before creation it inspects the registered `Visual` descriptor,
+verifies its empty ordered action declaration, and proves copied enumeration
+cannot mutate the registry. It then registers 18 parameters, advances 240
+frames, issues a
 stub-backed draw call, verifies scene-value precedence, and rejects duplicate
 factory registration. It does not create a real framebuffer or prove pixels,
-GL state, or non-blank output; those remain future bench depth.
+GL state, or non-blank output. It also does not prove package serialization or
+package-vs-runtime parameter/full-descriptor parity; those remain future bench
+depth.
 
 ### Phase 10: Registration Evolution
 
@@ -498,8 +504,13 @@ Current public path:
 ```text
 source files
   -> register_<packageId>.cpp
-  -> LayerFactory::registerType(...)
+  -> LayerFactory::registerType(
+       ElementDescriptor{typeId, kind, ordered actions},
+       creator)
 ```
+
+This remains handwritten source registration. It is not package descriptor
+serialization, package discovery, or SEAC-8 generated registration.
 
 Future options:
 
@@ -513,14 +524,12 @@ without pretending Synaptome has hot-loaded plugins before it does.
 
 ## Immediate Next Step
 
-The safe vertical slice now includes a generated optional runtime adapter,
-revisioned app-owned dynamic option resolution, explicit labeled live parameter
-selection with unavailable-value preservation, and labeled operator-local
-preset selection for the next layer load. Release, incremental, native-flow,
-contract, and stub-backed lifecycle/draw-dispatch bench gates pass.
+The current architecture gate is SEAC-4B: make parameter declarations and
+catalog views authoritative without changing the SEAC-4A minimal
+type/kind/action descriptor. Then serialize the broader package descriptor in
+SEAC-7, generate controlled registration in SEAC-8, and add transactional
+parameter/action mapping controls in SEAC-9.
 
-1. Add mapping-preset preview/apply/edit controls with slot expansion, conflict
-   handling, and rollback;
-   never auto-apply package mappings.
-2. Keep scanning and generated/plugin registration disabled until duplicate,
-   dependency, rollback, and ABI policy are tested.
+Keep package scanning and generated/plugin registration disabled until their
+ordered gates cover duplicate handling, dependency policy, rollback, and ABI
+claims. Package mappings remain suggestions and must never auto-apply.

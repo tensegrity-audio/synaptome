@@ -32,6 +32,16 @@ def main() -> int:
         APP / "sdk" / "include" / "synaptome" / "element" / "Action.h",
         errors,
     )
+    descriptor_header = read(
+        APP
+        / "sdk"
+        / "include"
+        / "synaptome"
+        / "element"
+        / "ElementDescriptor.h",
+        errors,
+    )
+    action_contract = descriptor_header + "\n" + action_header
     telemetry_header = read(
         APP / "sdk" / "include" / "synaptome" / "element" / "Telemetry.h",
         errors,
@@ -124,14 +134,42 @@ def main() -> int:
         "struct ActionExecutionResult",
         "using ActionHandler = std::function<ActionExecutionResult()>",
         "class ActionRegistrar",
-        "virtual void add(",
+        "virtual void bind(",
     ):
-        if token not in action_header:
+        if token not in action_contract:
             errors.append(f"public action contract is missing {token}")
-    if "std::string group;" in action_header:
+    if "std::string group;" in action_contract:
         errors.append(
             "public action descriptor must expose stable groupId, not ambiguous group"
         )
+    for token in (
+        "enum class ElementKind",
+        "Visual",
+        "Effect",
+        "struct ElementDescriptor",
+        "std::string typeId;",
+        "ElementKind kind",
+        "std::vector<ActionDescriptor> actions;",
+    ):
+        if token not in descriptor_header:
+            errors.append(f"public element descriptor is missing {token}")
+    for token in (
+        "*",
+        "&",
+        "std::function",
+        "ActionHandler",
+        "Creator",
+        "Layer",
+        "Runtime",
+        "ParameterRegistry",
+        "ofJson",
+        "ofFbo",
+    ):
+        if token in descriptor_header:
+            errors.append(
+                "public element descriptor exposes forbidden ownership: "
+                + token
+            )
     for token in (
         "using TelemetryValue =",
         "std::variant<bool, std::int64_t, double, std::string>",
@@ -183,14 +221,18 @@ def main() -> int:
         "MidiRouter",
         "OscParameterRouter",
     ):
-        if token in action_header or token in telemetry_header:
+        if (
+            token in action_header
+            or token in descriptor_header
+            or token in telemetry_header
+        ):
             errors.append(
-                "public action/telemetry contract imports forbidden "
+                "public descriptor/action/telemetry contract imports forbidden "
                 f"host/runtime ownership: {token}"
             )
     compatibility_layer = read(APP / "src" / "visuals" / "Layer.h", errors)
     if "registerActions(" not in compatibility_layer:
-        errors.append("compatibility Layer must expose optional live action registration")
+        errors.append("compatibility Layer must expose optional live action binding")
     if not re.search(
         r"virtual\s+void\s+collectTelemetry\s*\(\s*"
         r"synaptome::element::TelemetrySink&\s+sink\s*\)\s*const",
@@ -266,11 +308,19 @@ def main() -> int:
     for token in required_contract_tokens:
         if token not in contract_lower:
             errors.append(f"compile-contract project missing {token}")
-    if "<synaptome/element/action.h>" not in read(
+    compile_contract_source = read(
         ROOT / "tests" / "element_sdk_compile_contract.cpp",
         errors,
-    ).lower():
+    ).lower()
+    if "<synaptome/element/action.h>" not in compile_contract_source:
         errors.append("compile-contract must include the public Action header directly")
+    if (
+        "<synaptome/element/elementdescriptor.h>"
+        not in compile_contract_source
+    ):
+        errors.append(
+            "compile-contract must include the public ElementDescriptor header directly"
+        )
     forbidden_contract_roots = (
         r"$(synaptomeapproot)\src;",
         r"$(synaptomeapproot)\src\core",
@@ -397,7 +447,11 @@ def main() -> int:
         )
     if "registerSignalBloomElement(elementTypes)" not in builtin_source:
         errors.append("built-in registration unit must compose the Signal Bloom bridge")
-    if 'registerType("example.signalBloom"' not in signal_registration_source:
+    if not re.search(
+        r'registerType\(\s*\{\s*"example\.signalBloom"\s*,\s*'
+        r'synaptome::element::ElementKind::Visual',
+        signal_registration_source,
+    ):
         errors.append("Signal Bloom registration bridge must own its type binding")
     bench_project_lower = bench_project.lower()
     if r"\src\runtime\builtinelements.cpp" in bench_project_lower:
@@ -409,7 +463,7 @@ def main() -> int:
 
     registered_types = set(
         re.findall(
-            r'registerType\(\s*"([^"]+)"',
+            r'registerType\(\s*(?:ElementDescriptor\s*)?\{\s*"([^"]+)"',
             builtin_source + "\n" + signal_registration_source,
         )
     )
@@ -573,8 +627,9 @@ def main() -> int:
         return 1
     print(
         "[element-sdk-boundary] PASS public includes, shipping static library, "
-        "pointer-free live action and typed telemetry contracts, controlled registration, "
-        "compile-contract roots, and no Runtime/host-renderer composition leak"
+        "pointer-free static element/action descriptors, bind-only live actions, "
+        "typed telemetry, controlled registration, compile-contract roots, and "
+        "no Runtime/host-renderer composition leak"
     )
     return 0
 

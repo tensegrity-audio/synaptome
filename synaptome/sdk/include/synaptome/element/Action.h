@@ -1,17 +1,12 @@
 #pragma once
 
+#include <synaptome/element/ElementDescriptor.h>
+
 #include <functional>
 #include <string>
 #include <utility>
 
 namespace synaptome::element {
-
-struct ActionDescriptor {
-    std::string id;
-    std::string label;
-    std::string groupId;
-    std::string description;
-};
 
 enum class ActionExecutionStatus {
     Succeeded,
@@ -52,8 +47,8 @@ class ActionRegistrar {
 public:
     virtual ~ActionRegistrar() = default;
 
-    virtual void add(
-        ActionDescriptor descriptor,
+    virtual void bind(
+        std::string actionId,
         ActionHandler handler) = 0;
 };
 

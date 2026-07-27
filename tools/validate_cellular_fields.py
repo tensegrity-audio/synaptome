@@ -186,7 +186,11 @@ def validate_runtime(runtime: CellularRuntime, project: str, factory: str) -> li
         errors.append(f"{runtime.runtime_type}: project missing {compile_entry}")
     if header_entry not in project:
         errors.append(f"{runtime.runtime_type}: project missing {header_entry}")
-    if f'registerType("{runtime.runtime_type}"' not in factory:
+    if not re.search(
+        rf'ElementDescriptor\s*\{{\s*"{re.escape(runtime.runtime_type)}"\s*,'
+        r'\s*ElementKind::Visual',
+        factory,
+    ):
         errors.append(f"{runtime.runtime_type}: factory registration is missing")
     if f"std::make_unique<{runtime.class_name}>" not in factory:
         errors.append(f"{runtime.runtime_type}: factory must construct {runtime.class_name}")

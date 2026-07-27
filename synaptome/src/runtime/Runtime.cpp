@@ -8,6 +8,7 @@
 #include <cmath>
 #include <exception>
 #include <limits>
+#include <stdexcept>
 #include <utility>
 
 namespace synaptome::runtime {
@@ -238,22 +239,35 @@ Runtime::ElementResult Runtime::prepareElementImpl(
         return result;
     }
 
+    result.stage = "descriptor";
+    const auto* descriptor = elementTypes_.descriptor(request.typeId);
+    if (!descriptor) {
+        result.errorCode = ElementErrorCode::TypeNotRegistered;
+        result.error = "element type is not registered: " + request.typeId;
+        return result;
+    }
+    if (descriptor->kind != element::ElementKind::Visual) {
+        result.errorCode = ElementErrorCode::ContractViolation;
+        result.error =
+            "composition element requires a Visual element descriptor: " +
+            request.typeId;
+        return result;
+    }
+
     if (!replacing) {
         activePrefixes_.insert(request.registryPrefix);
         result.ownsPrefixReservation_ = true;
     }
     try {
+        result.stagedActions_ =
+            ElementActionTable(descriptor->actions);
         result.stage = "create";
         result.element_ = elementTypes_.create(request.typeId);
         if (progress) progress("create");
         if (!result.element_) {
-            if (result.ownsPrefixReservation_) {
-                activePrefixes_.erase(request.registryPrefix);
-                result.ownsPrefixReservation_ = false;
-            }
-            result.errorCode = ElementErrorCode::TypeNotRegistered;
-            result.error = "element type is not registered: " + request.typeId;
-            return result;
+            throw std::logic_error(
+                "registered element creator returned no element: " +
+                request.typeId);
         }
 
         result.element_->setRegistryPrefix(request.registryPrefix);

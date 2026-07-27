@@ -279,7 +279,9 @@ Rules:
 Relationships:
 - Browser discovers layer catalog entries.
 - Console slots host layer instances.
-- LayerFactory creates the C++ instance for an entry's `type`.
+- LayerFactory validates and stores one atomic static descriptor-plus-creator
+  record, exposes descriptors without construction, and creates the C++
+  instance for a registered type.
 - LayerLibrary supplies defaults and metadata.
 - ParameterRegistry exposes layer controls.
 - Scenes persist the resulting slot and parameter state.
@@ -289,7 +291,10 @@ Current gaps:
 - Golden static layer-library ingestion and minimal public SDK example fixtures now exist (`tools/layer_catalog_regression.py`, `tools/validate_artist_sdk_example.py`); package/no-source-edit extension loading remains follow-up (`CG-16`).
 - Some content-specific layers and assets need to be separated from core examples.
 - Browser offline hydration can instantiate assets to inspect metadata, so layer setup must avoid heavy side effects where possible.
-- `LayerFactory::registerType()` rejects empty or duplicate type IDs; public package discovery still needs operator-facing diagnostics.
+- `LayerFactory::registerType()` rejects invalid descriptors, missing creators,
+  and duplicate type IDs before registration can partially activate. Public
+  package serialization, generated registration, discovery, and
+  operator-facing package diagnostics remain later work.
 - FX and UI/HUD assets are not yet authored through one completely uniform layer extension path.
 - Default scenes contain some legacy/stale IDs that should be migrated before public examples are published.
 

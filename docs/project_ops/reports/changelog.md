@@ -2,6 +2,55 @@
 
 This changelog records Project Ops and administrative workflow changes. Product release versioning remains governed by `docs/release_policy.md`.
 
+## 2026-07-27 - architecture - seac4a_static_element_descriptor_actions
+
+- Request ID: `spine_element_architecture_convergence`
+- Phase / Milestone: SEAC-4A complete inside SEAC-4; 3 of 12 roadmap steps
+  remain complete and SEAC-4 stays In Progress at SEAC-4B
+- Public SDK: Added the minimal `ElementDescriptor` with stable `typeId`,
+  closed `Visual`/`Effect` kind, and ordered pointer-free action descriptors.
+  This record intentionally has no display label, implementation/package
+  version or owner, capabilities/dependencies, parameters, resources, or
+  persistence metadata.
+- Registry boundary: `LayerFactory` atomically validates and stores one
+  descriptor plus creator. Empty/invalid IDs, invalid action metadata,
+  duplicate actions, duplicate type registration, and empty creators fail
+  without replacing the prior record. Descriptor lookup and copied enumeration
+  never construct an element and there is no process-global fallback.
+- Runtime boundary: Preparation rejects a missing descriptor as
+  `TypeNotRegistered` and a non-`Visual` descriptor as `ContractViolation` at
+  the descriptor stage before prefix reservation or creator invocation.
+  Runtime seeds its private action table from the ordered static declaration;
+  each declared ID must receive exactly one nonempty handler, and undeclared,
+  duplicate, empty, or missing bindings reject preparation.
+- Snapshot/lifetime behavior: Composition snapshots publish the copied static
+  action order and metadata, never handlers. Candidate failure, clear,
+  replacement, shutdown, and Runtime destruction preserve the existing
+  handler-before-element cleanup rule; failed replacement remains atomic.
+- Shipping migration: All 23 shipping types declare `Visual`. Twenty-one have
+  empty action lists. Geodesic declares `subdivision.increment` followed by
+  `subdivision.decrement`; Game of Life declares `simulation.randomize`;
+  Signal Bloom declares no actions.
+- Focused confidence: Factory and RuntimeCore coverage passes descriptor
+  grammar, atomic duplicate/replacement, construction-free lookup/enumeration,
+  copy isolation, missing/non-visual rejection without construction, exact
+  binding-set failures, cleanup, canonical snapshots, and replacement
+  atomicity. LayerPackageBench passes its pre-construction Signal Bloom
+  `Visual`/empty-action descriptor inspection and copied-enumeration isolation,
+  then its existing lifecycle, 18-parameter, and stub-backed draw contract.
+- Compatibility: No persisted format or public ID changed. This checkpoint
+  does not add parameter declarations, scenes/presets, package/manifests,
+  MIDI/OSC action targets, or persisted action mappings. It does not serialize
+  the runtime descriptor into the Signal Bloom package.
+- Validation: Release host, ElementSdkCompileContract, RuntimeCore,
+  LayerPackageBench, catalog/shipping registration, Element SDK/RuntimeCore
+  boundary, Project Ops, and diff checks pass. BrowserFlow Release
+  compile/link remains passing; BrowserFlow execution and live dual-screen
+  hardware rehearsal remain explicitly deferred.
+- Next gate: SEAC-4B authoritative parameter declarations/catalog parity.
+  Package serialization, generated registration, and persisted action mappings
+  remain SEAC-7, SEAC-8, and SEAC-9.
+
 ## 2026-07-27 - architecture - seac3r_host_composition_renderer_boundary
 
 - Request ID: `spine_element_architecture_convergence`

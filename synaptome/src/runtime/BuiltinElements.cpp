@@ -25,33 +25,110 @@
 #include "../visuals/VideoClipLayer.h"
 #include "../visuals/VideoGrabberLayer.h"
 
+#include <synaptome/element/ElementDescriptor.h>
+
 #include <memory>
 
 namespace synaptome::runtime {
 
 void registerBuiltinElements(LayerFactory& elementTypes) {
-    elementTypes.registerType("grid", []() { return std::make_unique<GridLayer>(); });
-    elementTypes.registerType("geodesic", []() { return std::make_unique<GeodesicLayer>(); });
-    elementTypes.registerType("audioWaveform", []() { return std::make_unique<AudioWaveformLayer>(); });
-    elementTypes.registerType("oscilloscope", []() { return std::make_unique<OscilloscopeLayer>(); });
-    elementTypes.registerType("perlin", []() { return std::make_unique<PerlinNoiseLayer>(); });
-    elementTypes.registerType("stlModel", []() { return std::make_unique<StlModelLayer>(); });
-    elementTypes.registerType("gameOfLife", []() { return std::make_unique<GameOfLifeLayer>(); });
-    elementTypes.registerType("reactionDiffusion", []() { return std::make_unique<ReactionDiffusionLayer>(); });
-    elementTypes.registerType("lenia", []() { return std::make_unique<LeniaLayer>(); });
-    elementTypes.registerType("excitableMedia", []() { return std::make_unique<ExcitableMediaLayer>(); });
-    elementTypes.registerType("agentField", []() { return std::make_unique<AgentFieldLayer>(); });
-    elementTypes.registerType("circuitTrace", []() { return std::make_unique<CircuitTraceLayer>(); });
-    elementTypes.registerType("flocking", []() { return std::make_unique<FlockingLayer>(); });
-    elementTypes.registerType("flowField", []() { return std::make_unique<FlowFieldLayer>(); });
-    elementTypes.registerType("riverFormation", []() { return std::make_unique<RiverFormationLayer>(); });
-    elementTypes.registerType("arcticAuroraScene", []() { return std::make_unique<ArcticAuroraSceneLayer>(); });
-    elementTypes.registerType("mountainIsland", []() { return std::make_unique<MountainIslandLayer>(); });
-    elementTypes.registerType("solarSystem", []() { return std::make_unique<SolarSystemLayer>(); });
-    elementTypes.registerType("cosmosFormation", []() { return std::make_unique<CosmosFormationLayer>(); });
-    elementTypes.registerType("media.webcam", []() { return std::make_unique<VideoGrabberLayer>(); });
-    elementTypes.registerType("media.clip", []() { return std::make_unique<VideoClipLayer>(); });
-    elementTypes.registerType("text", []() { return std::make_unique<TextLayer>(); });
+    using synaptome::element::ElementDescriptor;
+    using synaptome::element::ElementKind;
+
+    elementTypes.registerType(
+        ElementDescriptor{"grid", ElementKind::Visual, {}},
+        []() { return std::make_unique<GridLayer>(); });
+    elementTypes.registerType(
+        ElementDescriptor{
+            "geodesic",
+            ElementKind::Visual,
+            {
+                {
+                    "subdivision.increment",
+                    "Increase Subdivision",
+                    "geometry",
+                    "Increase geodesic subdivision by one, up to the current maximum.",
+                },
+                {
+                    "subdivision.decrement",
+                    "Decrease Subdivision",
+                    "geometry",
+                    "Decrease geodesic subdivision by one, down to the current minimum.",
+                },
+            },
+        },
+        []() { return std::make_unique<GeodesicLayer>(); });
+    elementTypes.registerType(
+        ElementDescriptor{"audioWaveform", ElementKind::Visual, {}},
+        []() { return std::make_unique<AudioWaveformLayer>(); });
+    elementTypes.registerType(
+        ElementDescriptor{"oscilloscope", ElementKind::Visual, {}},
+        []() { return std::make_unique<OscilloscopeLayer>(); });
+    elementTypes.registerType(
+        ElementDescriptor{"perlin", ElementKind::Visual, {}},
+        []() { return std::make_unique<PerlinNoiseLayer>(); });
+    elementTypes.registerType(
+        ElementDescriptor{"stlModel", ElementKind::Visual, {}},
+        []() { return std::make_unique<StlModelLayer>(); });
+    elementTypes.registerType(
+        ElementDescriptor{
+            "gameOfLife",
+            ElementKind::Visual,
+            {
+                {
+                    "simulation.randomize",
+                    "Randomize Simulation",
+                    "simulation",
+                    "Immediately randomize the board using the current density.",
+                },
+            },
+        },
+        []() { return std::make_unique<GameOfLifeLayer>(); });
+    elementTypes.registerType(
+        ElementDescriptor{"reactionDiffusion", ElementKind::Visual, {}},
+        []() { return std::make_unique<ReactionDiffusionLayer>(); });
+    elementTypes.registerType(
+        ElementDescriptor{"lenia", ElementKind::Visual, {}},
+        []() { return std::make_unique<LeniaLayer>(); });
+    elementTypes.registerType(
+        ElementDescriptor{"excitableMedia", ElementKind::Visual, {}},
+        []() { return std::make_unique<ExcitableMediaLayer>(); });
+    elementTypes.registerType(
+        ElementDescriptor{"agentField", ElementKind::Visual, {}},
+        []() { return std::make_unique<AgentFieldLayer>(); });
+    elementTypes.registerType(
+        ElementDescriptor{"circuitTrace", ElementKind::Visual, {}},
+        []() { return std::make_unique<CircuitTraceLayer>(); });
+    elementTypes.registerType(
+        ElementDescriptor{"flocking", ElementKind::Visual, {}},
+        []() { return std::make_unique<FlockingLayer>(); });
+    elementTypes.registerType(
+        ElementDescriptor{"flowField", ElementKind::Visual, {}},
+        []() { return std::make_unique<FlowFieldLayer>(); });
+    elementTypes.registerType(
+        ElementDescriptor{"riverFormation", ElementKind::Visual, {}},
+        []() { return std::make_unique<RiverFormationLayer>(); });
+    elementTypes.registerType(
+        ElementDescriptor{"arcticAuroraScene", ElementKind::Visual, {}},
+        []() { return std::make_unique<ArcticAuroraSceneLayer>(); });
+    elementTypes.registerType(
+        ElementDescriptor{"mountainIsland", ElementKind::Visual, {}},
+        []() { return std::make_unique<MountainIslandLayer>(); });
+    elementTypes.registerType(
+        ElementDescriptor{"solarSystem", ElementKind::Visual, {}},
+        []() { return std::make_unique<SolarSystemLayer>(); });
+    elementTypes.registerType(
+        ElementDescriptor{"cosmosFormation", ElementKind::Visual, {}},
+        []() { return std::make_unique<CosmosFormationLayer>(); });
+    elementTypes.registerType(
+        ElementDescriptor{"media.webcam", ElementKind::Visual, {}},
+        []() { return std::make_unique<VideoGrabberLayer>(); });
+    elementTypes.registerType(
+        ElementDescriptor{"media.clip", ElementKind::Visual, {}},
+        []() { return std::make_unique<VideoClipLayer>(); });
+    elementTypes.registerType(
+        ElementDescriptor{"text", ElementKind::Visual, {}},
+        []() { return std::make_unique<TextLayer>(); });
     registerSignalBloomElement(elementTypes);
 }
 

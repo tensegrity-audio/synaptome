@@ -114,8 +114,9 @@ def add_unique(entries: dict[str, dict[str, Any]], entry: dict[str, Any]) -> Non
 def parse_factory_types(*sources: Path) -> dict[str, str]:
     text = "\n".join(source.read_text(encoding="utf-8") for source in sources)
     pattern = re.compile(
-        r'registerType\(\s*"([^"]+)"\s*,\s*\[\]\(\)\s*\{\s*return\s+std::make_unique<([^>]+)>',
-        re.MULTILINE,
+        r'registerType\(\s*(?:ElementDescriptor\s*)?\{\s*"([^"]+)".*?'
+        r'std::make_unique<([^>]+)>',
+        re.DOTALL,
     )
     return {match.group(1): match.group(2) for match in pattern.finditer(text)}
 

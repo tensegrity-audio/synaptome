@@ -67,6 +67,10 @@ persistence failure, labeled static/runtime choices update the existing live
 parameter while preserving unavailable values, mapping suggestions are not
 auto-applied, and inspection/catalog/mapping state remains unchanged. The layer
 bench compares all 18 runtime IDs, kinds, and float ranges against the package
-and dispatches lifecycle/draw calls through openFrameworks stubs. It does not
-create a graphics context, execute a real FBO/GL render, read pixels, or detect
-blank output.
+and dispatches lifecycle/draw calls through openFrameworks stubs. Before
+creation it also inspects Signal Bloom's registered `Visual` descriptor,
+verifies its empty ordered action declaration, and proves that mutating copied
+enumeration cannot change the registry. The package does not serialize that
+runtime descriptor, so this is source-registration inspection rather than
+package/full-descriptor parity. The bench does not create a graphics context,
+execute a real FBO/GL render, read pixels, or detect blank output.

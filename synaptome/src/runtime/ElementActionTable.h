@@ -13,55 +13,79 @@ namespace synaptome::runtime {
 class ElementActionTable final : public element::ActionRegistrar {
 public:
     ElementActionTable() = default;
+    explicit ElementActionTable(
+        const std::vector<element::ActionDescriptor>& descriptors) {
+        seed(descriptors);
+    }
     ElementActionTable(const ElementActionTable&) = delete;
     ElementActionTable& operator=(const ElementActionTable&) = delete;
 
     ElementActionTable(ElementActionTable&& other) noexcept {
-        entries_.swap(other.entries_);
+        swap(other);
     }
 
     ElementActionTable& operator=(ElementActionTable&& other) noexcept {
         if (this != &other) {
-            entries_.clear();
-            entries_.swap(other.entries_);
+            clear();
+            swap(other);
         }
         return *this;
     }
 
-    void add(
-        element::ActionDescriptor descriptor,
+    void bind(
+        std::string actionId,
         element::ActionHandler handler) override {
-        entries_.push_back({
-            std::move(descriptor),
-            std::move(handler),
-        });
+        if (!bindingError_.empty()) {
+            return;
+        }
+        if (actionId.empty()) {
+            bindingError_ =
+                "element registered an empty action binding ID";
+            return;
+        }
+        if (!handler) {
+            bindingError_ =
+                "element registered an empty action handler: " +
+                actionId;
+            return;
+        }
+        for (auto& entry : entries_) {
+            if (entry.descriptor.id != actionId) {
+                continue;
+            }
+            if (entry.handler) {
+                bindingError_ =
+                    "element registered a duplicate action binding: " +
+                    actionId;
+                return;
+            }
+            entry.handler = std::move(handler);
+            return;
+        }
+        bindingError_ =
+            "element registered an undeclared action binding: " +
+            actionId;
+    }
+
+    void seed(
+        const std::vector<element::ActionDescriptor>& descriptors) {
+        std::vector<Entry> next;
+        next.reserve(descriptors.size());
+        for (const auto& descriptor : descriptors) {
+            next.push_back({descriptor, {}});
+        }
+        entries_.swap(next);
+        bindingError_.clear();
     }
 
     std::string contractError() const {
-        for (std::size_t i = 0; i < entries_.size(); ++i) {
-            const auto& entry = entries_[i];
-            if (!isValidId(entry.descriptor.id)) {
-                return "element registered an invalid action ID: " +
-                    entry.descriptor.id;
-            }
-            if (entry.descriptor.label.empty()) {
-                return "element registered an action with an empty label: " +
-                    entry.descriptor.id;
-            }
-            if (!isValidGroupId(entry.descriptor.groupId)) {
-                return "element registered an invalid action group ID: " +
-                    entry.descriptor.groupId;
-            }
+        if (!bindingError_.empty()) {
+            return bindingError_;
+        }
+        for (const auto& entry : entries_) {
             if (!entry.handler) {
-                return "element registered an empty action handler: " +
+                return "element did not bind declared action: " +
                     entry.descriptor.id;
-            }
-            for (std::size_t prior = 0; prior < i; ++prior) {
-                if (entries_[prior].descriptor.id ==
-                    entry.descriptor.id) {
-                    return "element registered a duplicate action ID: " +
-                        entry.descriptor.id;
-                }
             }
         }
         return {};
@@ -88,10 +112,12 @@ public:
 
     void clear() noexcept {
         entries_.clear();
+        bindingError_.clear();
     }
 
     void swap(ElementActionTable& other) noexcept {
         entries_.swap(other.entries_);
+        bindingError_.swap(other.bindingError_);
     }
 
 private:
@@ -100,53 +126,8 @@ private:
         element::ActionHandler handler;
     };
 
-    static bool isValidId(std::string_view id) noexcept {
-        bool atSegmentStart = true;
-        for (const char character : id) {
-            if (atSegmentStart) {
-                if (character < 'a' || character > 'z') {
-                    return false;
-                }
-                atSegmentStart = false;
-                continue;
-            }
-            if (character == '.') {
-                atSegmentStart = true;
-                continue;
-            }
-            const bool lowercase =
-                character >= 'a' && character <= 'z';
-            const bool uppercase =
-                character >= 'A' && character <= 'Z';
-            const bool digit =
-                character >= '0' && character <= '9';
-            if (!lowercase && !uppercase && !digit) {
-                return false;
-            }
-        }
-        return !id.empty() && !atSegmentStart;
-    }
-
-    static bool isValidGroupId(std::string_view id) noexcept {
-        if (id.empty() || id.front() < 'a' || id.front() > 'z') {
-            return false;
-        }
-        for (std::size_t i = 1; i < id.size(); ++i) {
-            const char character = id[i];
-            const bool lowercase =
-                character >= 'a' && character <= 'z';
-            const bool uppercase =
-                character >= 'A' && character <= 'Z';
-            const bool digit =
-                character >= '0' && character <= '9';
-            if (!lowercase && !uppercase && !digit) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     std::vector<Entry> entries_;
+    std::string bindingError_;
 };
 
 } // namespace synaptome::runtime

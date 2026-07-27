@@ -1,10 +1,15 @@
 #pragma once
 
+#include <synaptome/element/ElementDescriptor.h>
+
 #include "Layer.h"
-#include <unordered_map>
+
+#include <deque>
 #include <functional>
 #include <memory>
 #include <string>
+#include <string_view>
+#include <vector>
 
 class LayerFactory {
 public:
@@ -16,10 +21,24 @@ public:
     LayerFactory(LayerFactory&&) = delete;
     LayerFactory& operator=(LayerFactory&&) = delete;
 
-    void registerType(const std::string& type, Creator creator);
-    bool contains(const std::string& type) const noexcept;
-    std::unique_ptr<Layer> create(const std::string& type) const;
+    void registerType(
+        synaptome::element::ElementDescriptor descriptor,
+        Creator creator);
+    bool contains(std::string_view typeId) const noexcept;
+    const synaptome::element::ElementDescriptor* descriptor(
+        std::string_view typeId) const noexcept;
+    std::vector<synaptome::element::ElementDescriptor>
+        descriptors() const;
+    std::unique_ptr<Layer> create(std::string_view typeId) const;
 
 private:
-    std::unordered_map<std::string, Creator> creators_;
+    struct Registration {
+        synaptome::element::ElementDescriptor descriptor;
+        Creator creator;
+    };
+
+    const Registration* registration(
+        std::string_view typeId) const noexcept;
+
+    std::deque<Registration> registrations_;
 };

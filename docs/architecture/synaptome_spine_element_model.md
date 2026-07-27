@@ -136,7 +136,7 @@ per-assignment opacity parameter.
 The host reads composition metadata through copied DTOs. A
 `CompositionLayerSnapshot` contains only index, occupancy, element presence,
 kind, stable assignment identity, active state, opacity, coverage, and copied
-pointer-free live action descriptors;
+pointer-free static action descriptors in their declared order;
 `CompositionSnapshot` contains the fixed eight-layer array. The DTOs carry no
 element, FBO, parameter-registry, creator, or host pointers, and changing a copy
 cannot mutate Runtime. One bounds-checked optional layer query supports focused
@@ -162,11 +162,14 @@ dedicated renderer test proves stub-backed traversal/policy/failure behavior,
 not pixels, shaders, or a real GL context.
 
 Mutable element-specific action access has been replaced by a generic
-live-instance contract. During candidate preparation an element may register
-pointer-free action descriptors and no-argument handlers. Runtime validates the
-local IDs and handlers, owns the handler table, copies only the descriptors
-into `CompositionLayerSnapshot`, and invokes a command by zero-based
-composition-layer index plus local action ID. The host no longer caches derived
+descriptor-and-binding contract. Each registered type has a construction-free
+minimal descriptor containing its stable type ID, closed `Visual`/`Effect`
+kind, and ordered action descriptors. During candidate preparation Runtime
+seeds its private action table from that declaration, and the element binds
+no-argument handlers by action ID. Missing, undeclared, duplicate, or empty
+bindings reject preparation. Runtime copies the static descriptors in
+declaration order into `CompositionLayerSnapshot` and invokes a command by
+zero-based composition-layer index plus local action ID. The host no longer caches derived
 Grid, Geodesic, Perlin, or Game of Life pointers. It selects instances from
 immutable composition snapshots and uses each copied registry prefix for live
 parameter reads, MIDI/OSC binding, Grid density cycling, and Game of Life pause.
@@ -175,9 +178,10 @@ This first action slice is intentionally not a persistence or mapping contract.
 Actions do not become parameter state, receive an expanded
 `console.layerN.actions.*` address, appear in scenes or presets, or enter
 MIDI/OSC mapping snapshots. Discovery is limited to a currently adopted live
-instance. Static `ElementDescriptor` action declarations, package/catalog
-inspection, declaration/registration parity, and persisted action mappings are
-SEAC-4 work. Geodesic subdivisions are durable parameter state, while video
+instance. SEAC-4A static type/kind/action declarations and live binding parity
+are complete. Authoritative static parameter declarations and catalog views
+remain SEAC-4B, package serialization remains SEAC-7, and persisted action
+mappings remain SEAC-9. Geodesic subdivisions are durable parameter state, while video
 source and capture observations use the typed on-demand telemetry query. The
 read-only `compositionElementForHost` compatibility seam is removed.
 
@@ -202,7 +206,7 @@ for cleanup. The target lifecycle must make unload explicit:
 ```text
 configure
   -> register parameters / setup
-  -> register live actions
+  -> bind declared action handlers
   -> update
   -> draw
   -> unload
@@ -226,13 +230,15 @@ An element may have no public parameters and still be hostable. It does not
 become a fully controllable Synaptome instrument until it declares a stable
 parameter surface.
 
-An element may also register no live actions. A live action is a no-argument command,
-not durable state. Its descriptor uses a stable local lower-camel dotted ID,
+An element may also declare no actions. An action is a no-argument command, not
+durable state. Its static descriptor uses a stable local lower-camel dotted ID,
 nonempty display label, stable `groupId`, and description; its handler reports
 success, rejection, or failure. `groupId` is one lower-camel alphanumeric
-segment such as `geometry` or `simulation`, not a display label. Runtime rejects
-invalid or duplicate IDs, empty labels, invalid group IDs, and empty handlers
-before publishing the candidate. Only descriptors cross the snapshot boundary.
+segment such as `geometry` or `simulation`, not a display label. `LayerFactory`
+rejects invalid or duplicate static IDs, empty labels, and invalid group IDs.
+Runtime rejects missing declared bindings plus empty, duplicate, or undeclared
+live bindings before publishing the candidate. Only the static descriptors
+cross the snapshot boundary in canonical declaration order.
 Invocation is synchronous on Runtime's owner thread and non-reentrant. External
 MIDI, OSC, device, and worker threads queue action requests to that thread. An
 action handler may mutate only element-owned state; it must not re-enter
@@ -267,8 +273,13 @@ parameters remain authoritative and are not duplicated as telemetry.
 The compatibility `LayerFactory` is an explicitly owned element type registry,
 not a singleton. Each Runtime receives one registry by reference; app, bench,
 and test registries are isolated, and a missing type never falls back to
-another Runtime's registrations. The legacy class name may change only with a
-focused source migration; the stable type IDs do not.
+another Runtime's registrations. A registration atomically stores one minimal
+`ElementDescriptor` plus one creator. Descriptor lookup and copied enumeration
+do not construct an element. The implemented descriptor contains only type ID,
+kind, and ordered actions; display label, version/package ownership,
+capabilities/dependencies, parameters, resources, and persistence metadata are
+later contracts. The legacy class name may change only with a focused source
+migration; the stable type IDs do not.
 
 During the current compiler-matched compatibility phase, `setup()` receives an
 isolated staging registry. It may register only the element instance namespace

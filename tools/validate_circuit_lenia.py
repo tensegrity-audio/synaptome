@@ -105,7 +105,10 @@ def validate() -> list[str]:
     if data.get("textureSize") != [160, 90]:
         errors.append("Circuit Lenia must use the coarse 160x90 field")
     if (
-        'registerType("lenia"' not in registration
+        not re.search(
+            r'ElementDescriptor\s*\{\s*"lenia"\s*,\s*ElementKind::Visual',
+            registration,
+        )
         or "std::make_unique<LeniaLayer>" not in registration
     ):
         errors.append("the shared Lenia runtime must remain factory registered")

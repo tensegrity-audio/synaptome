@@ -304,13 +304,18 @@ public:
     Harness()
         : runtime(factory, parameters),
           renderer(runtime, effects) {
-        factory.registerType("tests.host-renderer.element", [this] {
-            require(
-                nextState_ < pendingStates_.size(),
-                "element factory was invoked without pending state");
-            return std::make_unique<TraceElement>(
-                pendingStates_[nextState_++]);
-        });
+        synaptome::element::ElementDescriptor descriptor;
+        descriptor.typeId = "tests.hostRenderer.element";
+        descriptor.kind = synaptome::element::ElementKind::Visual;
+        factory.registerType(
+            std::move(descriptor),
+            [this] {
+                require(
+                    nextState_ < pendingStates_.size(),
+                    "element factory was invoked without pending state");
+                return std::make_unique<TraceElement>(
+                    pendingStates_[nextState_++]);
+            });
     }
 
     std::shared_ptr<ElementState> addElement(
@@ -323,7 +328,7 @@ public:
         pendingStates_.push_back(state);
 
         Runtime::ElementRequest request;
-        request.typeId = "tests.host-renderer.element";
+        request.typeId = "tests.hostRenderer.element";
         request.definitionId =
             "tests.host-renderer.element." + std::to_string(index);
         request.instanceId =

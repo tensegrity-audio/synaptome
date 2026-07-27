@@ -43,16 +43,25 @@ Until generated registration exists, a type still needs one controlled static
 registration record:
 
 ```cpp
-factory.registerType("example.signalBloom", []() {
-    return std::make_unique<SignalBloomLayer>();
-});
+factory.registerType(
+    {
+        "example.signalBloom",
+        synaptome::element::ElementKind::Visual,
+        {},
+    },
+    []() {
+        return std::make_unique<SignalBloomLayer>();
+    });
 ```
 
-The host and isolated lifecycle bench now call the same
-`registerBuiltinElements()` entrypoint; `ofApp.cpp` no longer knows the Signal
-Bloom concrete class. Adding a new type still requires updating the controlled
-registration unit until SEAC-8 generates it. This is source/static
-registration, not hot-loaded plug-ins.
+The host aggregate and isolated lifecycle bench now call the same
+`registerSignalBloomElement()` package leaf registrar; `ofApp.cpp` no longer
+knows the Signal Bloom concrete class. The registry validates the static
+descriptor and creator together, rejects invalid or duplicate declarations,
+and exposes descriptor inspection without constructing the element. Adding a
+new type still requires updating the controlled registration unit until SEAC-8
+generates it. This is source/static registration, not package serialization,
+automatic discovery, hot-loaded plug-ins, or persisted action mapping.
 
 Run the complete focused boundary check with:
 

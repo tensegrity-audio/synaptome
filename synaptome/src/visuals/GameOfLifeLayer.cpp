@@ -227,13 +227,8 @@ void GameOfLifeLayer::setup(ParameterRegistry& registry) {
 
 void GameOfLifeLayer::registerActions(
     synaptome::element::ActionRegistrar& registrar) {
-    registrar.add(
-        {
-            "simulation.randomize",
-            "Randomize Simulation",
-            "simulation",
-            "Immediately randomize the board using the current density.",
-        },
+    registrar.bind(
+        "simulation.randomize",
         [this]() {
             randomize();
             return synaptome::element::ActionExecutionResult::succeeded();

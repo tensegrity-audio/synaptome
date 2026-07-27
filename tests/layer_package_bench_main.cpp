@@ -34,6 +34,24 @@ int main() {
         LayerFactory factory;
         synaptome::runtime::registerSignalBloomElement(factory);
 
+        const auto* descriptor =
+            factory.descriptor("example.signalBloom");
+        auto descriptors = factory.descriptors();
+        require(
+            descriptor &&
+                descriptor->typeId == "example.signalBloom" &&
+                descriptor->kind ==
+                    synaptome::element::ElementKind::Visual &&
+                descriptor->actions.empty() &&
+                descriptors.size() == 1 &&
+                descriptors.front().typeId == "example.signalBloom",
+            "static Signal Bloom descriptor was not inspectable before creation");
+        descriptors.front().typeId = "copy.mutated";
+        require(
+            factory.descriptor("example.signalBloom")->typeId ==
+                "example.signalBloom",
+            "mutating the enumerated descriptor copy changed the factory");
+
         auto layer = factory.create("example.signalBloom");
         require(layer != nullptr, "factory did not create Signal Bloom");
         layer->setRegistryPrefix("bench.signal_bloom");
@@ -65,6 +83,10 @@ int main() {
         require(static_cast<bool>(packageStream), "could not read package declaration");
         ofJson package;
         packageStream >> package;
+        require(
+            package["asset"].value("type", std::string()) ==
+                descriptor->typeId,
+            "package asset type does not match the registered descriptor");
         std::unordered_map<std::string, ofJson> declared;
         for (const auto& parameter : package["parameters"]) {
             declared[parameter.value("id", std::string())] = parameter;
@@ -132,9 +154,7 @@ int main() {
 
         bool duplicateRejected = false;
         try {
-            factory.registerType("example.signalBloom", [] {
-                return std::make_unique<SignalBloomLayer>();
-            });
+            synaptome::runtime::registerSignalBloomElement(factory);
         } catch (const std::logic_error&) {
             duplicateRejected = true;
         }

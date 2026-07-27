@@ -186,7 +186,10 @@ def validate() -> list[str]:
     ):
         if entry not in project:
             errors.append(f"Synaptome.vcxproj missing {entry}")
-    if 'registerType("circuitTrace"' not in registration:
+    if not re.search(
+        r'ElementDescriptor\s*\{\s*"circuitTrace"\s*,\s*ElementKind::Visual',
+        registration,
+    ):
         errors.append("LayerFactory must register circuitTrace")
     if "std::make_unique<CircuitTraceLayer>" not in registration:
         errors.append("circuitTrace registration must construct CircuitTraceLayer")
