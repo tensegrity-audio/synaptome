@@ -178,6 +178,7 @@ public:
                         float setValue,
                         const BindingMetadata& binding = BindingMetadata());
     void adjustCcRange(const std::string& target, float dMin, float dMax);
+    void unbindTargetsByPrefix(const std::string& prefix);
     void unbindByPrefix(const std::string& prefix);
 
     const std::vector<CcMap>& getCcMaps() const { return ccMaps; }

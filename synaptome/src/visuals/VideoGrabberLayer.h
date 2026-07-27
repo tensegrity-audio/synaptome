@@ -36,6 +36,10 @@ public:
 
     void configure(const ofJson& config) override;
     void setup(ParameterRegistry& registry) override;
+    void onParameterRegistryCommitted(
+        ParameterRegistry& registry) noexcept override {
+        registry_ = &registry;
+    }
     void update(const LayerUpdateParams& params) override;
     void draw(const LayerDrawParams& params) override;
     void onWindowResized(int width, int height) override;

@@ -60,7 +60,12 @@ public:
 
     private:
         friend class Runtime;
+        // Declared before element_ so element destruction always runs while
+        // the setup registry is still alive, including after Runtime expiry.
+        std::unique_ptr<ParameterRegistry> stagedParameters_;
         std::unique_ptr<Layer> element_;
+        Layer* replacementElement_ = nullptr;
+        bool ownsPrefixReservation_ = false;
         Runtime* runtime_ = nullptr;
         std::weak_ptr<void> runtimeLifetime_;
     };
@@ -77,6 +82,10 @@ public:
 
     ElementResult prepareElement(
         const ElementRequest& request,
+        const ProgressCallback& progress = {});
+    ElementResult prepareElementReplacement(
+        const ElementRequest& request,
+        Layer& replacing,
         const ProgressCallback& progress = {});
 
     void releasePreparedElement(ElementResult& prepared) noexcept;
@@ -120,13 +129,18 @@ private:
     };
 
     bool prefixIsAvailable(const std::string& prefix) const;
-    std::vector<ParameterKey> parameterSnapshot() const;
-    static std::vector<ParameterKey> parameterDelta(
-        const std::vector<ParameterKey>& before,
-        const std::vector<ParameterKey>& after);
+    static std::vector<ParameterKey> parameterSnapshot(
+        const ParameterRegistry& parameters);
     static bool idBelongsToPrefix(
         const std::string& id,
         const std::string& prefix);
+    static bool isReservedCompositionParameter(
+        const std::string& id,
+        const std::string& prefix);
+    ElementResult prepareElementImpl(
+        const ElementRequest& request,
+        Layer* replacing,
+        const ProgressCallback& progress);
     void removeParameters(const std::vector<ParameterKey>& parameters) noexcept;
     void releaseTrackedElement(Layer* element) noexcept;
     void releaseElement(std::unique_ptr<Layer>& element) noexcept;

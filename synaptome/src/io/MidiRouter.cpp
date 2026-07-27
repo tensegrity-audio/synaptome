@@ -11,6 +11,16 @@
 #include <cmath>
 
 namespace {
+    bool idBelongsToNamespace(
+        const std::string& id,
+        const std::string& prefix) {
+        return !prefix.empty() &&
+            (id == prefix ||
+             (id.size() > prefix.size() &&
+              id.compare(0, prefix.size(), prefix) == 0 &&
+              id[prefix.size()] == '.'));
+    }
+
     float map01ToRange(float v01, float outMin, float outMax) {
         return ofLerp(outMin, outMax, ofClamp(v01, 0.0f, 1.0f));
     }
@@ -1584,38 +1594,33 @@ void MidiRouter::setOrUpdateBtn(const std::string& target,
     adjustCcRange(target, dMin, dMax);
 }
 
-void MidiRouter::unbindByPrefix(const std::string& prefix) {
-    auto belongsToNamespace = [&](const std::string& id) {
-        return !prefix.empty() &&
-            (id == prefix ||
-             (id.size() > prefix.size() &&
-              id.compare(0, prefix.size(), prefix) == 0 &&
-              id[prefix.size()] == '.'));
-    };
-
+void MidiRouter::unbindTargetsByPrefix(const std::string& prefix) {
     for (auto it = floatTargets.begin(); it != floatTargets.end();) {
-        if (belongsToNamespace(it->first)) {
+        if (idBelongsToNamespace(it->first, prefix)) {
             it = floatTargets.erase(it);
         } else {
             ++it;
         }
     }
     for (auto it = boolTargets.begin(); it != boolTargets.end();) {
-        if (belongsToNamespace(it->first)) {
+        if (idBelongsToNamespace(it->first, prefix)) {
             it = boolTargets.erase(it);
         } else {
             ++it;
         }
     }
+}
 
+void MidiRouter::unbindByPrefix(const std::string& prefix) {
+    unbindTargetsByPrefix(prefix);
     ccMaps.erase(std::remove_if(ccMaps.begin(), ccMaps.end(), [&](const CcMap& map) {
-        return belongsToNamespace(map.target);
+        return idBelongsToNamespace(map.target, prefix);
     }), ccMaps.end());
     btnMaps.erase(std::remove_if(btnMaps.begin(), btnMaps.end(), [&](const BtnMap& map) {
-        return belongsToNamespace(map.target);
+        return idBelongsToNamespace(map.target, prefix);
     }), btnMaps.end());
     oscMaps.erase(std::remove_if(oscMaps.begin(), oscMaps.end(), [&](const OscMap& map) {
-        return belongsToNamespace(map.target);
+        return idBelongsToNamespace(map.target, prefix);
     }), oscMaps.end());
 }
 

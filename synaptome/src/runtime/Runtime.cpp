@@ -18,9 +18,22 @@ bool Runtime::idBelongsToPrefix(
          id[prefix.size()] == '.');
 }
 
+bool Runtime::isReservedCompositionParameter(
+    const std::string& id,
+    const std::string& prefix) {
+    // Whole-layer opacity belongs to the composition container. Elements may
+    // expose their own internal alpha controls under a different stable ID.
+    return id == prefix + ".opacity";
+}
+
 Runtime::ElementResult::~ElementResult() {
-    if (runtime_ && !runtimeLifetime_.expired() && element_) {
-        runtime_->releaseElement(element_);
+    if (runtime_ && !runtimeLifetime_.expired()) {
+        runtime_->releasePreparedElement(*this);
+    } else {
+        // A prepared result may outlive its Runtime. Keep the private setup
+        // registry alive until after the candidate's destructor has run.
+        element_.reset();
+        stagedParameters_.reset();
     }
 }
 
@@ -32,17 +45,26 @@ Runtime::ElementResult::ElementResult(ElementResult&& other) noexcept
       instanceId(std::move(other.instanceId)),
       registryPrefix(std::move(other.registryPrefix)),
       error(std::move(other.error)),
+      stagedParameters_(std::move(other.stagedParameters_)),
       element_(std::move(other.element_)),
+      replacementElement_(std::exchange(other.replacementElement_, nullptr)),
+      ownsPrefixReservation_(
+          std::exchange(other.ownsPrefixReservation_, false)),
       runtime_(std::exchange(other.runtime_, nullptr)),
       runtimeLifetime_(std::move(other.runtimeLifetime_)) {}
 
 Runtime::ElementResult& Runtime::ElementResult::operator=(
     ElementResult&& other) noexcept {
     if (this == &other) return *this;
-    if (runtime_ && !runtimeLifetime_.expired() && element_) {
-        runtime_->releaseElement(element_);
+    if (runtime_ && !runtimeLifetime_.expired()) {
+        runtime_->releasePreparedElement(*this);
     }
     element_ = std::move(other.element_);
+    stagedParameters_ = std::move(other.stagedParameters_);
+    replacementElement_ =
+        std::exchange(other.replacementElement_, nullptr);
+    ownsPrefixReservation_ =
+        std::exchange(other.ownsPrefixReservation_, false);
     errorCode = other.errorCode;
     stage = std::move(other.stage);
     typeId = std::move(other.typeId);
@@ -82,36 +104,21 @@ bool Runtime::prefixIsAvailable(const std::string& prefix) const {
     return true;
 }
 
-std::vector<Runtime::ParameterKey> Runtime::parameterSnapshot() const {
+std::vector<Runtime::ParameterKey> Runtime::parameterSnapshot(
+    const ParameterRegistry& parameters) {
     std::vector<ParameterKey> result;
     result.reserve(
-        parameters_.floats().size() +
-        parameters_.bools().size() +
-        parameters_.strings().size());
-    for (const auto& entry : parameters_.floats()) {
+        parameters.floats().size() +
+        parameters.bools().size() +
+        parameters.strings().size());
+    for (const auto& entry : parameters.floats()) {
         result.push_back({ParameterKind::Float, entry.meta.id});
     }
-    for (const auto& entry : parameters_.bools()) {
+    for (const auto& entry : parameters.bools()) {
         result.push_back({ParameterKind::Bool, entry.meta.id});
     }
-    for (const auto& entry : parameters_.strings()) {
+    for (const auto& entry : parameters.strings()) {
         result.push_back({ParameterKind::String, entry.meta.id});
-    }
-    return result;
-}
-
-std::vector<Runtime::ParameterKey> Runtime::parameterDelta(
-    const std::vector<ParameterKey>& before,
-    const std::vector<ParameterKey>& after) {
-    std::vector<ParameterKey> result;
-    for (const auto& candidate : after) {
-        const bool existed = std::any_of(
-            before.begin(),
-            before.end(),
-            [&](const ParameterKey& entry) {
-                return entry.kind == candidate.kind && entry.id == candidate.id;
-            });
-        if (!existed) result.push_back(candidate);
     }
     return result;
 }
@@ -125,6 +132,20 @@ void Runtime::removeParameters(
 
 Runtime::ElementResult Runtime::prepareElement(
     const ElementRequest& request,
+    const ProgressCallback& progress) {
+    return prepareElementImpl(request, nullptr, progress);
+}
+
+Runtime::ElementResult Runtime::prepareElementReplacement(
+    const ElementRequest& request,
+    Layer& replacing,
+    const ProgressCallback& progress) {
+    return prepareElementImpl(request, &replacing, progress);
+}
+
+Runtime::ElementResult Runtime::prepareElementImpl(
+    const ElementRequest& request,
+    Layer* replacing,
     const ProgressCallback& progress) {
     ElementResult result;
     result.stage = "validate";
@@ -152,23 +173,36 @@ Runtime::ElementResult Runtime::prepareElement(
         result.error = "element registry prefix is empty";
         return result;
     }
-    if (!prefixIsAvailable(request.registryPrefix)) {
+    const auto replacedOwnership =
+        replacing ? ownership_.find(replacing) : ownership_.end();
+    if (replacing &&
+        (replacedOwnership == ownership_.end() ||
+         replacedOwnership->second.prefix != request.registryPrefix)) {
+        result.errorCode = ElementErrorCode::InvalidRequest;
+        result.error =
+            "replacement element does not own the requested registry prefix";
+        return result;
+    }
+    if (!replacing && !prefixIsAvailable(request.registryPrefix)) {
         result.errorCode = ElementErrorCode::PrefixInUse;
         result.error = "element registry prefix is already in use: " +
             request.registryPrefix;
         return result;
     }
 
-    activePrefixes_.insert(request.registryPrefix);
-    std::vector<ParameterKey> registeredParameters;
-    std::vector<ParameterKey> parametersBeforeSetup;
-    bool setupStarted = false;
+    if (!replacing) {
+        activePrefixes_.insert(request.registryPrefix);
+        result.ownsPrefixReservation_ = true;
+    }
     try {
         result.stage = "create";
         result.element_ = factory_.create(request.typeId);
         if (progress) progress("create");
         if (!result.element_) {
-            activePrefixes_.erase(request.registryPrefix);
+            if (result.ownsPrefixReservation_) {
+                activePrefixes_.erase(request.registryPrefix);
+                result.ownsPrefixReservation_ = false;
+            }
             result.errorCode = ElementErrorCode::TypeNotRegistered;
             result.error = "element type is not registered: " + request.typeId;
             return result;
@@ -180,28 +214,37 @@ Runtime::ElementResult Runtime::prepareElement(
         result.element_->configure(request.config);
         if (progress) progress("configure");
 
-        parametersBeforeSetup = parameterSnapshot();
-        setupStarted = true;
+        result.stagedParameters_ = std::make_unique<ParameterRegistry>();
         result.stage = "setup";
-        result.element_->setup(parameters_);
-        registeredParameters = parameterDelta(
-            parametersBeforeSetup,
-            parameterSnapshot());
-        const auto foreignParameter = std::find_if(
+        result.element_->setup(*result.stagedParameters_);
+        const auto registeredParameters =
+            parameterSnapshot(*result.stagedParameters_);
+        const auto invalidParameter = std::find_if(
             registeredParameters.begin(),
             registeredParameters.end(),
             [&](const ParameterKey& parameter) {
                 return !idBelongsToPrefix(
                     parameter.id,
-                    request.registryPrefix);
+                    request.registryPrefix) ||
+                    isReservedCompositionParameter(
+                        parameter.id,
+                        request.registryPrefix);
             });
-        if (foreignParameter != registeredParameters.end()) {
-            removeParameters(registeredParameters);
-            activePrefixes_.erase(request.registryPrefix);
+        if (invalidParameter != registeredParameters.end()) {
+            if (result.ownsPrefixReservation_) {
+                activePrefixes_.erase(request.registryPrefix);
+                result.ownsPrefixReservation_ = false;
+            }
             result.element_.reset();
+            result.stagedParameters_.reset();
             result.errorCode = ElementErrorCode::ContractViolation;
-            result.error = "element registered a parameter outside its namespace: " +
-                foreignParameter->id;
+            result.error = isReservedCompositionParameter(
+                               invalidParameter->id,
+                               request.registryPrefix)
+                ? "element registered a layer-container reserved parameter: " +
+                    invalidParameter->id
+                : "element registered a parameter outside its namespace: " +
+                    invalidParameter->id;
             return result;
         }
         if (progress) progress("setup");
@@ -210,35 +253,28 @@ Runtime::ElementResult Runtime::prepareElement(
         result.element_->setExternalEnabled(request.enabled);
         if (progress) progress("enable");
 
-        Layer* element = result.element_.get();
         result.runtime_ = this;
         result.runtimeLifetime_ = lifetime_;
+        result.replacementElement_ = replacing;
         result.stage = "ready";
-        ownership_.emplace(
-            element,
-            ElementOwnership{request.registryPrefix, registeredParameters});
         return result;
     } catch (const std::exception& error) {
-        if (setupStarted) {
-            registeredParameters = parameterDelta(
-                parametersBeforeSetup,
-                parameterSnapshot());
+        if (result.ownsPrefixReservation_) {
+            activePrefixes_.erase(request.registryPrefix);
+            result.ownsPrefixReservation_ = false;
         }
-        removeParameters(registeredParameters);
-        activePrefixes_.erase(request.registryPrefix);
         result.element_.reset();
+        result.stagedParameters_.reset();
         result.errorCode = ElementErrorCode::LifecycleFailure;
         result.error = error.what();
         return result;
     } catch (...) {
-        if (setupStarted) {
-            registeredParameters = parameterDelta(
-                parametersBeforeSetup,
-                parameterSnapshot());
+        if (result.ownsPrefixReservation_) {
+            activePrefixes_.erase(request.registryPrefix);
+            result.ownsPrefixReservation_ = false;
         }
-        removeParameters(registeredParameters);
-        activePrefixes_.erase(request.registryPrefix);
         result.element_.reset();
+        result.stagedParameters_.reset();
         result.errorCode = ElementErrorCode::LifecycleFailure;
         result.error = "unknown element lifecycle failure";
         return result;
@@ -261,7 +297,15 @@ void Runtime::releaseElement(std::unique_ptr<Layer>& element) noexcept {
 
 void Runtime::releasePreparedElement(ElementResult& prepared) noexcept {
     if (prepared.runtime_ != this || prepared.runtimeLifetime_.expired()) return;
-    releaseElement(prepared.element_);
+    if (prepared.ownsPrefixReservation_) {
+        activePrefixes_.erase(prepared.registryPrefix);
+    }
+    prepared.element_.reset();
+    prepared.stagedParameters_.reset();
+    prepared.replacementElement_ = nullptr;
+    prepared.ownsPrefixReservation_ = false;
+    prepared.runtime_ = nullptr;
+    prepared.runtimeLifetime_.reset();
 }
 
 CompositionLayer* Runtime::compositionLayer(
@@ -281,17 +325,60 @@ bool Runtime::adoptPreparedElement(
     ElementResult&& prepared) {
     auto* layer = compositionLayer(zeroBasedIndex);
     if (!layer ||
-        layer->element_ ||
         !prepared.element_ ||
+        !prepared.stagedParameters_ ||
         prepared.runtime_ != this ||
         prepared.runtimeLifetime_.expired() ||
-        ownership_.find(prepared.element_.get()) == ownership_.end() ||
         prepared.registryPrefix !=
             "console.layer" + std::to_string(zeroBasedIndex + 1)) {
         return false;
     }
-    layer->element_ = std::move(prepared.element_);
-    return true;
+    Layer* const oldElement = layer->element_.get();
+    if (oldElement != prepared.replacementElement_) return false;
+
+    const auto oldOwnership =
+        oldElement ? ownership_.find(oldElement) : ownership_.end();
+    if (oldElement && oldOwnership == ownership_.end()) return false;
+    if (!oldElement && prepared.replacementElement_) return false;
+
+    try {
+        std::vector<std::string> removedIds;
+        if (oldOwnership != ownership_.end()) {
+            removedIds.reserve(oldOwnership->second.parameters.size());
+            for (const auto& parameter : oldOwnership->second.parameters) {
+                removedIds.push_back(parameter.id);
+            }
+        }
+
+        auto nextParameters = parameters_.replacingIds(
+            removedIds,
+            *prepared.stagedParameters_);
+        auto nextOwnership = ownership_;
+        if (oldElement) nextOwnership.erase(oldElement);
+        Layer* const candidate = prepared.element_.get();
+        nextOwnership.emplace(
+            candidate,
+            ElementOwnership{
+                prepared.registryPrefix,
+                parameterSnapshot(*prepared.stagedParameters_)});
+        auto nextActivePrefixes = activePrefixes_;
+        nextActivePrefixes.insert(prepared.registryPrefix);
+
+        parameters_.swap(nextParameters);
+        candidate->onParameterRegistryCommitted(parameters_);
+        ownership_.swap(nextOwnership);
+        activePrefixes_.swap(nextActivePrefixes);
+        layer->element_.swap(prepared.element_);
+
+        prepared.stagedParameters_.reset();
+        prepared.replacementElement_ = nullptr;
+        prepared.ownsPrefixReservation_ = false;
+        prepared.runtime_ = nullptr;
+        prepared.runtimeLifetime_.reset();
+        return true;
+    } catch (...) {
+        return false;
+    }
 }
 
 void Runtime::releaseCompositionElement(

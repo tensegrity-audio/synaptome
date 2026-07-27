@@ -33,6 +33,10 @@ public:
     virtual void configure(const ofJson& config) { (void)config; }
 
     virtual void setup(ParameterRegistry& registry) = 0;
+    virtual void onParameterRegistryCommitted(
+        ParameterRegistry& registry) noexcept {
+        (void)registry;
+    }
     virtual void update(const LayerUpdateParams& params) = 0;
     virtual void draw(const LayerDrawParams& params) = 0;
     virtual void onWindowResized(int width, int height) { (void)width; (void)height; }

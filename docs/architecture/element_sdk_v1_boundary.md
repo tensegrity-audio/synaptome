@@ -13,10 +13,12 @@ the fixed composition records, element pointers, per-layer FBOs, and generic
 resize/update/draw dispatch. Prepared ownership cannot escape the facade,
 adoption validates its source runtime and canonical `console.layerN` address,
 and explicit shutdown releases elements and FBO resources while the graphics
-context is live. The host still adapts effect compositing,
-persistence, mappings, and compatibility inspection through a temporary
-internal view. Transactional replacement and isolated registry/catalog
-ownership are not yet complete.
+context is live. Candidate setup now writes to an isolated parameter registry;
+same-address adoption commits the registry and element together, while failed
+setup or commit leaves the live layer unchanged. The host still adapts effect
+compositing, persistence, mappings, and compatibility inspection through a
+temporary internal view. Isolated factory/catalog ownership is not yet
+complete.
 
 This document records the dependency inventory and the minimum Element SDK v1
 contract that must exist before Synaptome moves code into new build targets.
@@ -237,8 +239,22 @@ Rules:
 - descriptor inspection never constructs an element;
 - setup reports success or structured failure and does not throw across the
   host boundary;
+- the compatibility `setup(ParameterRegistry&)` receives a private staging
+  registry, may only register IDs in the instance namespace, and must not
+  retain the registry address;
+- `{instancePrefix}.opacity` is reserved for the layer container and is
+  rejected even though it is inside the instance namespace; element-local
+  alpha controls use a behavior-specific suffix;
+- an element that needs later registry lookup overrides
+  `onParameterRegistryCommitted`; that hook is a trivial, no-throw pointer
+  rebind and performs no allocation or device work;
 - the old live instance remains active until a replacement has configured and
   set up successfully;
+- adoption rejects host-owned ID collisions before mutation, swaps the staged
+  registry and element as one commit, preserves modifiers on matching stable
+  parameter IDs, and leaves candidate defaults/base values authoritative;
+- after adoption, the host synchronously invalidates pointer-bearing parameter
+  views and retired element routes before publishing layer metadata;
 - activation and deactivation are explicit;
 - shutdown is explicit, idempotent, and releases registrations/resources owned
   by the instance;
@@ -332,7 +348,9 @@ Rules:
   broad unverified prefix deletion;
 - declaration parity checks compare identity, kind, default, range, step,
   group, units, options, quick access, and deprecation;
-- `active` and `opacity` are reserved layer-container concepts;
+- `active` and `opacity` are reserved layer-container concepts; the current
+  compatibility runtime enforces the concrete `{instancePrefix}.opacity`
+  reservation at preparation time;
 - MIDI and OSC adapters target generic registered parameter IDs and actions;
   they never require concrete element casts.
 

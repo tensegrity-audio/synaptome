@@ -2,6 +2,36 @@
 
 This changelog records Project Ops and administrative workflow changes. Product release versioning remains governed by `docs/release_policy.md`.
 
+## 2026-07-26 - architecture - seac3_transactional_element_replacement
+
+- Request ID: `spine_element_architecture_convergence`
+- Phase / Milestone: SEAC-3 in progress
+- Transaction: Element setup now runs against an isolated parameter registry.
+  Runtime prebuilds the next registry, ownership map, and prefix set, then
+  commits those with the new element using no-fail swaps.
+- Rollback: Setup failure, host-owned ID collision, abandoned preparation, and
+  invalid adoption leave the live element, metadata, registry, opacity,
+  modifiers, mappings, and FBOs unchanged.
+- Ownership: Runtime rejects the layer-container-owned
+  `console.layerN.opacity` address during every preparation, including an
+  initial empty-layer install. Prepared candidates are destroyed before their
+  private staging registry on every failure and expired-runtime path.
+- Host: Visual replacements prepare and adopt before slot publication.
+  Target-only MIDI rebinding preserves address-based MIDI/OSC map definitions;
+  stable matching parameter IDs retain modifiers while new element defaults
+  remain authoritative.
+- Consumers: Registry replacement synchronously invalidates Control & Mapping
+  row pointers and retired element/OSC references before fallible host
+  publication. FX/UI-to-visual transitions also adopt before retiring the old
+  host assignment.
+- Compatibility: `setup()` receives staging storage and must not retain its
+  address. `onParameterRegistryCommitted()` is the no-throw live-registry
+  rebind hook. This changes the compiler-matched C++ vtable and does not promise
+  a stable binary ABI.
+- Remaining gate: Replace the process-global factory/catalog boundary with
+  scoped runtime ownership and continue moving effect/compositing adapters out
+  of the host.
+
 ## 2026-07-26 - architecture - seac3_runtime_core_composition_ownership
 
 - Request ID: `spine_element_architecture_convergence`

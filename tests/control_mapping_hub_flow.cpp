@@ -815,9 +815,23 @@ bool RunMidiMappingFlowScenario(const std::filesystem::path& artifactPath) {
 
 bool RunMidiNamespaceCleanupScenario() {
     MidiRouter router;
+    float layer1Value = 0.5f;
+    router.bindFloat(
+        "console.layer1.opacity",
+        &layer1Value,
+        0.0f,
+        1.0f,
+        false,
+        0.0f);
     router.setOrUpdateCc("console.layer1.opacity", 11);
     router.setOrUpdateCc("console.layer10.opacity", 12);
     router.setOrUpdateCc("console.layer1extra.opacity", 13);
+
+    router.unbindTargetsByPrefix("console.layer1");
+    if (router.getCcMaps().size() != 3) {
+        throw std::runtime_error(
+            "target-only MIDI cleanup removed persisted mappings");
+    }
 
     router.unbindByPrefix("console.layer1");
 
@@ -839,6 +853,79 @@ bool RunMidiNamespaceCleanupScenario() {
     if (!hasTarget("console.layer1extra.opacity")) {
         throw std::runtime_error("MIDI namespace cleanup removed a textual sibling");
     }
+    return true;
+}
+
+bool RunParameterRegistryStorageInvalidationScenario() {
+    auto require = [](bool condition, const std::string& message) {
+        if (!condition) throw std::runtime_error(message);
+    };
+    ParameterRegistry registry;
+    float originalValue = 0.25f;
+    ParameterRegistry::Descriptor descriptor;
+    descriptor.label = "Unrelated Runtime Value";
+    registry.addFloat(
+        "runtime.unrelated",
+        &originalValue,
+        originalValue,
+        descriptor);
+
+    ControlMappingHubState hub;
+    hub.setParameterRegistry(&registry);
+    hub.rebuildModel();
+    const auto originalRow = std::find_if(
+        hub.tableModel_.rows.begin(),
+        hub.tableModel_.rows.end(),
+        [](const ControlMappingHubState::ParameterRow& row) {
+            return row.id == "runtime.unrelated";
+        });
+    require(originalRow != hub.tableModel_.rows.end(),
+            "prebuilt model omitted the unrelated registry row");
+    require(originalRow->floatParam &&
+                originalRow->floatParam->value == &originalValue,
+            "prebuilt model did not cache the original registry entry");
+
+    hub.selectedRow_ = static_cast<int>(
+        std::distance(hub.tableModel_.rows.begin(), originalRow));
+    hub.activeRowSet_ = &hub.tableModel_.allRowIndices;
+    hub.routingPopoverVisible_ = true;
+
+    ParameterRegistry replacement;
+    float replacementValue = 0.75f;
+    replacement.addFloat(
+        "runtime.unrelated",
+        &replacementValue,
+        replacementValue,
+        descriptor);
+    registry.swap(replacement);
+    hub.invalidateParameterRegistryStorage();
+
+    require(hub.tableModel_.rows.empty(),
+            "registry invalidation retained pointer-bearing rows");
+    require(hub.activeRowSet_ == nullptr && hub.selectedRow_ == -1,
+            "registry invalidation retained a pointer-bearing selection");
+    require(!hub.routingPopoverVisible_,
+            "registry invalidation retained a row-backed popover");
+    require(hub.tableModel_.dirty,
+            "registry invalidation did not request a safe rebuild");
+
+    hub.rebuildModel();
+    const auto rebuiltRow = std::find_if(
+        hub.tableModel_.rows.begin(),
+        hub.tableModel_.rows.end(),
+        [](const ControlMappingHubState::ParameterRow& row) {
+            return row.id == "runtime.unrelated";
+        });
+    require(rebuiltRow != hub.tableModel_.rows.end(),
+            "model did not rebuild the unrelated registry row");
+    require(rebuiltRow->floatParam &&
+                rebuiltRow->floatParam->value == &replacementValue,
+            "rebuilt model retained the replaced registry entry");
+    require(
+        hub.setRowFloatValue(*rebuiltRow, 0.5f) &&
+            std::fabs(replacementValue - 0.5f) < 0.0001f &&
+            std::fabs(originalValue - 0.25f) < 0.0001f,
+        "rebuilt row did not edit only the live registry storage");
     return true;
 }
 

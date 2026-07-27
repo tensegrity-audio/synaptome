@@ -89,6 +89,7 @@ public:
     void setSavedSceneLoadCallback(std::function<bool(const std::string&)> cb);
     void setSavedSceneSaveAsCallback(std::function<bool(const std::string&, bool)> cb);
     void setSavedSceneOverwriteCallback(std::function<bool(const std::string&)> cb);
+    void invalidateParameterRegistryStorage() noexcept;
     void markConsoleSlotsDirty() const;
     void refreshConsoleSlotBindings() const;
     void setLayoutBand(const ofRectangle& bounds);
@@ -956,6 +957,21 @@ inline void ControlMappingHubState::setSavedSceneSaveAsCallback(std::function<bo
 
 inline void ControlMappingHubState::setSavedSceneOverwriteCallback(std::function<bool(const std::string&)> cb) {
     savedSceneOverwriteCallback_ = std::move(cb);
+}
+
+inline void ControlMappingHubState::invalidateParameterRegistryStorage() noexcept {
+    // Parameter rows cache addresses of entries inside ParameterRegistry
+    // vectors. Call this synchronously after those vectors are replaced so no
+    // UI path can observe stale entry pointers before the next model rebuild.
+    tableModel_.rows.clear();
+    tableModel_.categories.clear();
+    tableModel_.allRowIndices.clear();
+    tableModel_.tree.clear();
+    activeRowSet_ = nullptr;
+    activeGridItems_.clear();
+    selectedRow_ = -1;
+    routingPopoverVisible_ = false;
+    tableModel_.dirty = true;
 }
 
 inline void ControlMappingHubState::markConsoleSlotsDirty() const {

@@ -169,6 +169,10 @@ public:
     std::vector<FloatParam*> orderedQuickFloat() const;
     void removeById(const std::string& id);
     void removeByPrefix(const std::string& prefix);
+    ParameterRegistry replacingIds(
+        const std::vector<std::string>& ids,
+        const ParameterRegistry& additions) const;
+    void swap(ParameterRegistry& other) noexcept;
 
 private:
     static bool floatsNearlyEqual(float a, float b, float epsilon = 1e-4f);
@@ -977,4 +981,54 @@ inline void ParameterRegistry::removeByPrefix(const std::string& prefix) {
     strings_.erase(std::remove_if(strings_.begin(), strings_.end(), [&](const StringParam& entry) {
         return belongsToNamespace(entry.meta.id);
     }), strings_.end());
+}
+
+inline ParameterRegistry ParameterRegistry::replacingIds(
+    const std::vector<std::string>& ids,
+    const ParameterRegistry& additions) const {
+    ParameterRegistry next = *this;
+    auto replacesId = [&](const std::string& id) {
+        return std::find(ids.begin(), ids.end(), id) != ids.end();
+    };
+    for (const auto& id : ids) {
+        next.removeById(id);
+    }
+
+    auto requireAvailable = [&](const std::string& id) {
+        if (next.findFloat(id) || next.findBool(id) || next.findString(id)) {
+            throw std::logic_error(
+                "ParameterRegistry::replacingIds duplicate id: " + id);
+        }
+    };
+    for (const auto& entry : additions.floats_) {
+        requireAvailable(entry.meta.id);
+        auto replacement = entry;
+        if (replacesId(entry.meta.id)) {
+            if (const auto* previous = findFloat(entry.meta.id)) {
+                replacement.modifiers = previous->modifiers;
+            }
+        }
+        next.floats_.push_back(std::move(replacement));
+    }
+    for (const auto& entry : additions.bools_) {
+        requireAvailable(entry.meta.id);
+        auto replacement = entry;
+        if (replacesId(entry.meta.id)) {
+            if (const auto* previous = findBool(entry.meta.id)) {
+                replacement.modifiers = previous->modifiers;
+            }
+        }
+        next.bools_.push_back(std::move(replacement));
+    }
+    for (const auto& entry : additions.strings_) {
+        requireAvailable(entry.meta.id);
+        next.strings_.push_back(entry);
+    }
+    return next;
+}
+
+inline void ParameterRegistry::swap(ParameterRegistry& other) noexcept {
+    floats_.swap(other.floats_);
+    bools_.swap(other.bools_);
+    strings_.swap(other.strings_);
 }

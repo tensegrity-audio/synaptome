@@ -47,6 +47,8 @@ int main() {
                  "tests/artifacts/midi_mapping_flow.json");
          } },
         { "midi_namespace_cleanup", browser_flow::RunMidiNamespaceCleanupScenario },
+        { "parameter_registry_storage_invalidation",
+          browser_flow::RunParameterRegistryStorageInvalidationScenario },
         { "slot_dropdown_focus", browser_flow::RunSlotDropdownFocusScenario },
         { "slot_binding_refresh", browser_flow::RunSlotBindingRefreshScenario },
         { "webcam_replay_flow", [] {

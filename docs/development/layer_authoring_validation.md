@@ -53,10 +53,21 @@ distinct definition and instance identity, lifecycle ordering, structured
 setup failures, exact parameter ownership, prefix reservation for
 zero-parameter elements, out-of-namespace registration rollback, composition
 ownership/provenance, canonical slot addressing, generic update/draw/resize
-routing, idempotent shutdown, and safe release. Add
+routing, staged setup, failed/successful same-address replacement,
+host-registration collision rollback, matching-ID modifier preservation,
+live-registry rebinding, idempotent shutdown, and safe release. Add
 `--incremental-app` to prove the full host still compiles and links through the
-library. This remains an interim compatibility seam: transactional replacement,
-explicit shutdown, and full effect/compositing ownership remain SEAC-3 work.
+library.
+
+`Layer::setup(ParameterRegistry&)` receives a private staging registry, not the
+canonical live registry. Author code must only register its own namespace and
+must not retain that address. The layer container owns
+`{instancePrefix}.opacity`; an element that needs internal alpha control must
+use a behavior-specific suffix instead. If later registry lookup is
+unavoidable, override
+`onParameterRegistryCommitted(ParameterRegistry&) noexcept` only to retain the
+committed registry pointer. Full effect/compositing ownership and a scoped
+factory/catalog remain SEAC-3 work.
 
 Circuit Trace currently has an isolated eight-direction native contract:
 

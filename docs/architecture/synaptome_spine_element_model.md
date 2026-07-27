@@ -148,6 +148,16 @@ An element may have no public parameters and still be hostable. It does not
 become a fully controllable Synaptome instrument until it declares a stable
 parameter surface.
 
+During the current compiler-matched compatibility phase, `setup()` receives an
+isolated staging registry. It may register only the element instance namespace
+and must not retain that registry address. The concrete
+`{instancePrefix}.opacity` address is reserved for the layer container and is
+rejected even when an element registers it inside its namespace. Elements that
+require later registry lookup receive the canonical live registry through the no-throw
+`onParameterRegistryCommitted()` hook. A candidate is published only after
+setup and registry validation succeed; failed setup or commit leaves the live
+element, layer metadata, parameter state, mappings, and FBOs unchanged.
+
 Whole-layer active state and opacity belong to the layer container. Elements
 must not add a second generic owner for those concepts. Element-local
 visibility parameters must name the internal object they affect.

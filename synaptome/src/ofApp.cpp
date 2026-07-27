@@ -5159,10 +5159,31 @@ bool ofApp::addAssetToConsoleLayer(int layerIndex,
     ConsoleSlot& slot = consoleSlots[idx];
     auto finish = [&](bool success) {
         if (success) {
-            rebuildDynamicOscRoutes();
-            persistConsoleAssignments();
             if (controlMappingHub) {
                 controlMappingHub->markConsoleSlotsDirty();
+            }
+            menuController.requestViewModelRefresh();
+            try {
+                rebuildDynamicOscRoutes();
+            } catch (const std::exception& ex) {
+                ofLogWarning("ofApp")
+                    << "Failed to rebuild dynamic OSC routes after committing "
+                    << assetId << ": " << ex.what();
+            } catch (...) {
+                ofLogWarning("ofApp")
+                    << "Failed to rebuild dynamic OSC routes after committing "
+                    << assetId;
+            }
+            try {
+                persistConsoleAssignments();
+            } catch (const std::exception& ex) {
+                ofLogWarning("ofApp")
+                    << "Failed to persist committed console assignment "
+                    << assetId << ": " << ex.what();
+            } catch (...) {
+                ofLogWarning("ofApp")
+                    << "Failed to persist committed console assignment "
+                    << assetId;
             }
             if (timingSceneLoad) {
                 const uint64_t nowMs = static_cast<uint64_t>(ofGetElapsedTimeMillis());
@@ -5173,7 +5194,6 @@ bool ofApp::addAssetToConsoleLayer(int layerIndex,
                 installStepStartedMs = nowMs;
             }
             ofLogNotice("ofApp") << "Console layer " << layerIndex << " loaded asset " << assetId;
-            menuController.requestViewModelRefresh();
         }
         return success;
     };
@@ -5193,6 +5213,119 @@ bool ofApp::addAssetToConsoleLayer(int layerIndex,
         return finish(true);
     }
 
+    const bool nextIsFx = isFxType(entry->type);
+    const bool nextIsUiOverlay = isUiOverlayType(entry->type);
+    if (!nextIsFx && !nextIsUiOverlay) {
+        const std::string prefix =
+            "console.layer" + std::to_string(layerIndex);
+        synaptome::runtime::Runtime::ElementRequest request;
+        request.typeId = entry->type;
+        request.definitionId = entry->id;
+        request.instanceId = prefix;
+        request.registryPrefix = prefix;
+        request.config = layerConfig;
+        request.enabled = activate;
+
+        const bool replacingElement = slot.hasElement();
+        const std::string retiredType = slot.type;
+        std::string nextAssetId = entry->id;
+        std::string nextLabel = entryLabel;
+        std::string nextType = entry->type;
+        std::string nextPrefix = prefix;
+        auto progressCallback = [&](std::string_view step) {
+            logSceneLoadInstallStep(std::string(step));
+        };
+        auto prepared = replacingElement
+            ? runtime_.prepareElementReplacement(
+                request,
+                *slot.element(),
+                progressCallback)
+            : runtime_.prepareElement(request, progressCallback);
+        if (!prepared) {
+            ofLogWarning("ofApp") << "Failed to prepare element for asset "
+                                  << assetId << ": " << prepared.error;
+            return false;
+        }
+
+        if (!runtime_.adoptPreparedElement(
+                static_cast<std::size_t>(idx),
+                std::move(prepared))) {
+            ofLogWarning("ofApp")
+                << "Runtime rejected prepared element adoption for "
+                << assetId;
+            return false;
+        }
+
+        // Runtime adoption replaces ParameterRegistry vector storage. Invalidate
+        // pointer-bearing consumers and all retired element routes before any
+        // fallible host-side publication can let the old element be destroyed.
+        if (controlMappingHub) {
+            controlMappingHub->invalidateParameterRegistryStorage();
+        }
+        if (replacingElement) {
+            midi.unbindTargetsByPrefix(prefix);
+        }
+        refreshLayerReferences();
+        try {
+            rebuildDynamicOscRoutes();
+        } catch (const std::exception& ex) {
+            ofLogWarning("ofApp")
+                << "Failed to invalidate retired OSC routes for "
+                << assetId << ": " << ex.what();
+        } catch (...) {
+            ofLogWarning("ofApp")
+                << "Failed to invalidate retired OSC routes for "
+                << assetId;
+        }
+        if (!replacingElement) {
+            unregisterConsoleLayerCoverageParam(layerIndex);
+            if (isFxType(retiredType)) {
+                try {
+                    setFxRouteForType(retiredType, 0.0f);
+                } catch (const std::exception& ex) {
+                    ofLogWarning("ofApp")
+                        << "Failed to disable retired FX route "
+                        << retiredType << ": " << ex.what();
+                } catch (...) {
+                    ofLogWarning("ofApp")
+                        << "Failed to disable retired FX route "
+                        << retiredType;
+                }
+            }
+        }
+
+        slot.assetId.swap(nextAssetId);
+        slot.label.swap(nextLabel);
+        slot.type.swap(nextType);
+        slot.paramPrefix.swap(nextPrefix);
+        slot.active = activate;
+        slot.opacity = requestedOpacity;
+        slot.coverage = ConsoleLayerCoverageInfo();
+        slot.coverageParamValue = 0.0f;
+
+        Layer* layerPtr = slot.element();
+        try {
+            if (auto* perlin = dynamic_cast<PerlinNoiseLayer*>(layerPtr)) {
+                registerPerlinMidi(perlin);
+            } else if (auto* gol = dynamic_cast<GameOfLifeLayer*>(layerPtr)) {
+                registerGameOfLifeMidi(gol);
+                if (activate) {
+                    gol->randomize();
+                }
+            }
+        } catch (const std::exception& ex) {
+            ofLogWarning("ofApp")
+                << "Failed to install optional legacy controls for "
+                << assetId << ": " << ex.what();
+        } catch (...) {
+            ofLogWarning("ofApp")
+                << "Failed to install optional legacy controls for "
+                << assetId;
+        }
+        registerConsoleLayerOpacityParam(layerIndex, slot);
+        return finish(true);
+    }
+
     clearConsoleSlot(idx);
     logSceneLoadInstallStep("clear");
     slot.assetId = entry->id;
@@ -5201,7 +5334,7 @@ bool ofApp::addAssetToConsoleLayer(int layerIndex,
     slot.opacity = requestedOpacity;
     slot.active = activate;
 
-    if (isFxType(entry->type)) {
+    if (nextIsFx) {
         slot.paramPrefix = entry->registryPrefix.empty() ? entry->id : entry->registryPrefix;
         applyEffectCoverageDefaults(slot, entry->type);
         registerConsoleLayerCoverageParam(layerIndex, slot);
@@ -5209,66 +5342,11 @@ bool ofApp::addAssetToConsoleLayer(int layerIndex,
         return finish(true);
     }
 
-    if (isUiOverlayType(entry->type)) {
+    if (nextIsUiOverlay) {
         slot.paramPrefix = entry->registryPrefix.empty() ? entry->id : entry->registryPrefix;
         return finish(true);
     }
-
-    const std::string prefix = "console.layer" + std::to_string(layerIndex);
-    synaptome::runtime::Runtime::ElementRequest request;
-    request.typeId = entry->type;
-    request.definitionId = entry->id;
-    request.instanceId = prefix;
-    request.registryPrefix = prefix;
-    request.config = layerConfig;
-    request.enabled = activate;
-    auto prepared = runtime_.prepareElement(
-        request,
-        [&](std::string_view step) {
-            logSceneLoadInstallStep(std::string(step));
-        });
-    if (!prepared) {
-        ofLogWarning("ofApp") << "Failed to prepare element for asset "
-                              << assetId << ": " << prepared.error;
-        slot.assetId.clear();
-        slot.type.clear();
-        slot.paramPrefix.clear();
-        slot.active = false;
-        return false;
-    }
-    if (!runtime_.adoptPreparedElement(
-            static_cast<std::size_t>(idx),
-            std::move(prepared))) {
-        ofLogWarning("ofApp") << "Runtime rejected prepared element adoption for "
-                              << assetId;
-        slot.assetId.clear();
-        slot.type.clear();
-        slot.paramPrefix.clear();
-        slot.active = false;
-        return false;
-    }
-    slot.paramPrefix = prefix;
-
-    if (slot.element()) {
-        Layer* layerPtr = slot.element();
-        if (auto* grid = dynamic_cast<GridLayer*>(layerPtr)) {
-            gridLayer = grid;
-        } else if (auto* geo = dynamic_cast<GeodesicLayer*>(layerPtr)) {
-            geodesicLayer = geo;
-        } else if (auto* perlin = dynamic_cast<PerlinNoiseLayer*>(layerPtr)) {
-            perlinLayer = perlin;
-            registerPerlinMidi(perlin);
-        } else if (auto* gol = dynamic_cast<GameOfLifeLayer*>(layerPtr)) {
-            gameOfLifeLayer = gol;
-            registerGameOfLifeMidi(gol);
-            if (activate) {
-                gol->randomize();
-            }
-        }
-        registerConsoleLayerOpacityParam(layerIndex, slot);
-    }
-
-    return finish(true);
+    return false;
 }
 
 void ofApp::openAssetBrowserForConsole(int layerIndex) {
@@ -5656,7 +5734,20 @@ void ofApp::registerConsoleLayerOpacityParam(int layerIndex, ConsoleSlot& slot) 
     meta.quickAccessOrder = 0;
     const std::string paramId = slot.paramPrefix + ".opacity";
     try {
-        paramRegistry.addFloat(paramId, &slot.opacity, defaultValue, meta);
+        if (auto* existing = paramRegistry.findFloat(paramId)) {
+            existing->meta = meta;
+            existing->meta.id = paramId;
+            existing->value = &slot.opacity;
+            existing->defaultValue = defaultValue;
+            existing->baseValue = defaultValue;
+            existing->applyBaseToLive();
+        } else {
+            paramRegistry.addFloat(
+                paramId,
+                &slot.opacity,
+                defaultValue,
+                meta);
+        }
         midi.bindFloat(paramId,
                        &slot.opacity,
                        meta.range.min,

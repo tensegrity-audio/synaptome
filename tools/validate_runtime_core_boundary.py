@@ -16,6 +16,15 @@ def main() -> int:
     composition_header = (
         ROOT / "synaptome/src/runtime/CompositionLayer.h"
     ).read_text(encoding="utf-8")
+    parameter_registry = (
+        ROOT / "synaptome/src/core/ParameterRegistry.h"
+    ).read_text(encoding="utf-8")
+    layer_header = (
+        ROOT / "synaptome/src/visuals/Layer.h"
+    ).read_text(encoding="utf-8")
+    control_hub_header = (
+        ROOT / "synaptome/src/ui/ControlMappingHubState.h"
+    ).read_text(encoding="utf-8")
     project = (ROOT / "synaptome/Synaptome.vcxproj").read_text(encoding="utf-8")
     solution = (ROOT / "synaptome/Synaptome.sln").read_text(encoding="utf-8")
     core_project = (
@@ -39,7 +48,11 @@ def main() -> int:
         "prefixIsAvailable",
         "removeById",
         "activePrefixes_",
-        "parameterDelta",
+        "stagedParameters_",
+        "prepareElementReplacement",
+        "replacingIds",
+        "onParameterRegistryCommitted",
+        "isReservedCompositionParameter",
         "instanceId",
         "ElementErrorCode",
         "CompositionLayers",
@@ -59,6 +72,7 @@ def main() -> int:
         errors.append("runtime composition layer must own its element privately")
     for token in (
         "runtime_.prepareElement",
+        "runtime_.prepareElementReplacement",
         "runtime_.adoptPreparedElement",
         "runtime_.releaseCompositionElement",
         "runtime_.resizeCompositionElements",
@@ -70,6 +84,16 @@ def main() -> int:
             errors.append(f"ofApp must delegate generic composition behavior: {token}")
     if "std::unique_ptr<Layer> element;" in runtime_header:
         errors.append("prepared element ownership must not be publicly transferable")
+    if "replacingIds" not in parameter_registry or "void swap(" not in parameter_registry:
+        errors.append("parameter registry is missing the strong replacement primitive")
+    if (
+        "onParameterRegistryCommitted" not in layer_header
+        or "noexcept" not in layer_header[
+            layer_header.find("onParameterRegistryCommitted"):
+            layer_header.find("onParameterRegistryCommitted") + 160
+        ]
+    ):
+        errors.append("element contract is missing the no-fail live-registry commit hook")
     clear_start = app.find("void ofApp::clearConsoleSlot")
     clear_end = app.find("ConsoleStore::State ofApp::captureConsoleState", clear_start)
     clear_body = app[clear_start:clear_end]
@@ -82,6 +106,52 @@ def main() -> int:
     for forbidden in ("LayerFactory::instance().create", "l->configure(", "l->setup("):
         if forbidden in add_body:
             errors.append(f"host add flow still performs generic lifecycle operation: {forbidden}")
+    replacement_prepare = add_body.find("runtime_.prepareElementReplacement")
+    replacement_adopt = add_body.find("runtime_.adoptPreparedElement")
+    destructive_clear = add_body.find("clearConsoleSlot(idx)")
+    registry_invalidation = add_body.find(
+        "invalidateParameterRegistryStorage",
+        replacement_adopt,
+    )
+    retired_reference_refresh = add_body.find(
+        "refreshLayerReferences()",
+        replacement_adopt,
+    )
+    visual_publish = add_body.find(
+        "slot.assetId.swap(nextAssetId)",
+        replacement_prepare,
+    )
+    if min(
+        replacement_prepare,
+        replacement_adopt,
+        destructive_clear,
+        registry_invalidation,
+        retired_reference_refresh,
+        visual_publish,
+    ) < 0:
+        errors.append("host visual replacement transaction is incomplete")
+    elif not (
+        replacement_prepare <
+        replacement_adopt <
+        registry_invalidation <=
+        retired_reference_refresh <
+        visual_publish <
+        destructive_clear
+    ):
+        errors.append(
+            "host must adopt, invalidate registry consumers and retired "
+            "references, then publish visual metadata without clearing the "
+            "new runtime element"
+        )
+    if "midi.unbindTargetsByPrefix(prefix)" not in add_body:
+        errors.append("replacement must preserve address-based MIDI/OSC maps")
+    if "paramRegistry.findFloat(paramId)" not in app:
+        errors.append("slot opacity registration must support same-address reuse")
+    if "invalidateParameterRegistryStorage() noexcept" not in control_hub_header:
+        errors.append(
+            "parameter consumers need synchronous no-throw invalidation after "
+            "registry storage replacement"
+        )
 
     for token in (
         "ConfigurationType>StaticLibrary",

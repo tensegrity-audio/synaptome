@@ -18,6 +18,8 @@ public:
         ParameterRegistry::Descriptor descriptor;
         descriptor.label = "Contract Value";
         registry.addFloat(registryPrefix() + ".value", &value_, 0.25f, descriptor);
+        descriptor.label = "Contract Gate";
+        registry.addBool(registryPrefix() + ".gate", &gate_, true, descriptor);
     }
     void update(const LayerUpdateParams&) override { ++updateCount; }
     void draw(const LayerDrawParams&) override { ++drawCount; }
@@ -37,6 +39,7 @@ public:
 
 private:
     float value_ = 0.25f;
+    bool gate_ = true;
     bool enabled_ = true;
 };
 
@@ -75,6 +78,127 @@ public:
 private:
     float value_ = 0.75f;
 };
+
+class DestructiveFailingElement final : public Layer {
+public:
+    void setup(ParameterRegistry& registry) override {
+        registry.removeById("host.live");
+        ParameterRegistry::Descriptor descriptor;
+        descriptor.label = "Partial Value";
+        registry.addFloat(
+            registryPrefix() + ".partial",
+            &value_,
+            0.5f,
+            descriptor);
+        throw std::runtime_error("destructive setup failure");
+    }
+    void update(const LayerUpdateParams&) override {}
+    void draw(const LayerDrawParams&) override {}
+
+private:
+    float value_ = 0.5f;
+};
+
+class RegistryAwareElement final : public Layer {
+public:
+    void setup(ParameterRegistry& registry) override {
+        setupRegistry = &registry;
+        ParameterRegistry::Descriptor descriptor;
+        descriptor.label = "Registry Aware Value";
+        registry.addFloat(
+            registryPrefix() + ".value",
+            &value_,
+            0.4f,
+            descriptor);
+    }
+    void onParameterRegistryCommitted(
+        ParameterRegistry& registry) noexcept override {
+        committedRegistry = &registry;
+        ++commitCount;
+    }
+    void update(const LayerUpdateParams&) override {
+        sawLiveRegistry =
+            committedRegistry &&
+            committedRegistry != setupRegistry &&
+            committedRegistry->findFloat(
+                registryPrefix() + ".value") != nullptr;
+    }
+    void draw(const LayerDrawParams&) override {}
+
+    ParameterRegistry* setupRegistry = nullptr;
+    ParameterRegistry* committedRegistry = nullptr;
+    int commitCount = 0;
+    bool sawLiveRegistry = false;
+
+private:
+    float value_ = 0.4f;
+};
+
+class ReservedOpacityElement final : public Layer {
+public:
+    void setup(ParameterRegistry& registry) override {
+        ParameterRegistry::Descriptor descriptor;
+        descriptor.label = "Element-owned Opacity";
+        registry.addFloat(
+            registryPrefix() + ".opacity",
+            &opacity_,
+            0.2f,
+            descriptor);
+    }
+    void update(const LayerUpdateParams&) override {}
+    void draw(const LayerDrawParams&) override {}
+
+private:
+    float opacity_ = 0.2f;
+};
+
+class HostCollisionElement final : public Layer {
+public:
+    void setup(ParameterRegistry& registry) override {
+        ParameterRegistry::Descriptor descriptor;
+        descriptor.label = "Host Collision";
+        registry.addFloat(
+            registryPrefix() + ".hostOwned",
+            &value_,
+            0.2f,
+            descriptor);
+    }
+    void update(const LayerUpdateParams&) override {}
+    void draw(const LayerDrawParams&) override {}
+
+private:
+    float value_ = 0.2f;
+};
+
+bool retainedRegistryDestructorRan = false;
+bool retainedRegistryWasAlive = false;
+
+class RetainedSetupRegistryElement final : public Layer {
+public:
+    ~RetainedSetupRegistryElement() override {
+        retainedRegistryDestructorRan = true;
+        retainedRegistryWasAlive =
+            setupRegistry_ &&
+            setupRegistry_->findFloat(registryPrefix() + ".retained") != nullptr;
+    }
+
+    void setup(ParameterRegistry& registry) override {
+        setupRegistry_ = &registry;
+        ParameterRegistry::Descriptor descriptor;
+        descriptor.label = "Retained Setup Registry";
+        registry.addFloat(
+            registryPrefix() + ".retained",
+            &value_,
+            0.3f,
+            descriptor);
+    }
+    void update(const LayerUpdateParams&) override {}
+    void draw(const LayerDrawParams&) override {}
+
+private:
+    ParameterRegistry* setupRegistry_ = nullptr;
+    float value_ = 0.3f;
+};
 }
 
 int main() {
@@ -91,6 +215,21 @@ int main() {
         });
         factory.registerType("tests.runtime.foreign", [] {
             return std::make_unique<ForeignParameterElement>();
+        });
+        factory.registerType("tests.runtime.destructive-failing", [] {
+            return std::make_unique<DestructiveFailingElement>();
+        });
+        factory.registerType("tests.runtime.registry-aware", [] {
+            return std::make_unique<RegistryAwareElement>();
+        });
+        factory.registerType("tests.runtime.reserved-opacity", [] {
+            return std::make_unique<ReservedOpacityElement>();
+        });
+        factory.registerType("tests.runtime.host-collision", [] {
+            return std::make_unique<HostCollisionElement>();
+        });
+        factory.registerType("tests.runtime.retained-registry", [] {
+            return std::make_unique<RetainedSetupRegistryElement>();
         });
 
         ParameterRegistry parameters;
@@ -133,8 +272,15 @@ int main() {
         require(prepared.element()->registryPrefix() == request.registryPrefix,
                 "registry prefix was not assigned");
         require(!prepared.element()->isEnabled(), "requested enable state was not applied");
+        require(parameters.findFloat("console.layer1.value") == nullptr,
+                "candidate setup mutated the live parameter registry");
+        require(
+            runtime.adoptPreparedElement(0, std::move(prepared)),
+            "runtime did not commit the prepared element");
         require(parameters.findFloat("console.layer1.value") != nullptr,
-                "setup parameter was not registered");
+                "adoption did not commit staged parameters");
+        require(parameters.findBool("console.layer1.gate") != nullptr,
+                "adoption did not commit staged bool parameters");
         float hostOpacity = 0.8f;
         ParameterRegistry::Descriptor hostDescriptor;
         hostDescriptor.label = "Host Opacity";
@@ -152,10 +298,13 @@ int main() {
         require(parameters.findFloat("console.layer1.value") != nullptr,
                 "prefix collision damaged the live registration");
 
-        runtime.releasePreparedElement(prepared);
-        require(!prepared, "release did not destroy the element");
+        runtime.releaseCompositionElement(0);
+        require(!runtime.compositionLayer(0)->hasElement(),
+                "release did not destroy the element");
         require(parameters.findFloat("console.layer1.value") == nullptr,
                 "release did not remove instance parameters");
+        require(parameters.findBool("console.layer1.gate") == nullptr,
+                "release did not remove instance bool parameters");
         require(parameters.findFloat("console.layer1.opacity") != nullptr,
                 "release removed a host-owned layer parameter");
         parameters.removeById("console.layer1.opacity");
@@ -164,7 +313,9 @@ int main() {
         auto reloaded = runtime.prepareElement(request);
         require(static_cast<bool>(reloaded),
                 "slot prefix could not be reused after host-owned cleanup");
-        runtime.releasePreparedElement(reloaded);
+        require(runtime.adoptPreparedElement(0, std::move(reloaded)),
+                "reloaded element was not adopted");
+        runtime.releaseCompositionElement(0);
         require(parameters.findFloat("console.layer10.float") != nullptr,
                 "release removed a sibling float namespace");
         require(parameters.findBool("console.layer10.bool") != nullptr,
@@ -202,6 +353,56 @@ int main() {
         require(parameters.findFloat("foreign.value") == nullptr,
                 "contract violation leaked its foreign registration");
 
+        request.typeId = "tests.runtime.reserved-opacity";
+        request.definitionId = "tests.definition.reserved-opacity";
+        request.instanceId = "tests.instance.reserved-opacity";
+        request.registryPrefix = "console.layer2";
+        auto reservedOpacity = runtime.prepareElement(request);
+        require(!reservedOpacity,
+                "element claimed the layer-container opacity parameter");
+        require(
+            reservedOpacity.errorCode ==
+                synaptome::runtime::Runtime::ElementErrorCode::ContractViolation,
+            "reserved opacity did not report a contract violation");
+        require(
+            reservedOpacity.error.find("layer-container reserved") !=
+                std::string::npos,
+            "reserved opacity did not explain the ownership violation");
+        require(parameters.findFloat("console.layer2.opacity") == nullptr,
+                "reserved opacity leaked into the live registry");
+
+        retainedRegistryDestructorRan = false;
+        retainedRegistryWasAlive = false;
+        request.typeId = "tests.runtime.retained-registry";
+        request.definitionId = "tests.definition.retained-registry";
+        request.instanceId = "tests.instance.retained-registry";
+        request.registryPrefix = "console.layer2";
+        {
+            auto retained = runtime.prepareElement(request);
+            require(static_cast<bool>(retained), retained.error);
+        }
+        require(
+            retainedRegistryDestructorRan && retainedRegistryWasAlive,
+            "prepared element was not destroyed before its staging registry");
+
+        retainedRegistryDestructorRan = false;
+        retainedRegistryWasAlive = false;
+        synaptome::runtime::Runtime::ElementResult outlivesRuntime;
+        {
+            ParameterRegistry temporaryParameters;
+            synaptome::runtime::Runtime temporaryRuntime(
+                factory,
+                temporaryParameters);
+            auto retained = temporaryRuntime.prepareElement(request);
+            require(static_cast<bool>(retained), retained.error);
+            outlivesRuntime = std::move(retained);
+        }
+        outlivesRuntime =
+            synaptome::runtime::Runtime::ElementResult{};
+        require(
+            retainedRegistryDestructorRan && retainedRegistryWasAlive,
+            "expired Runtime destroyed staging before its prepared element");
+
         request.typeId = "tests.runtime.empty";
         request.definitionId = "tests.definition.empty";
         request.instanceId = "tests.instance.empty";
@@ -219,8 +420,8 @@ int main() {
         {
             auto abandoned = runtime.prepareElement(request);
             require(static_cast<bool>(abandoned), "abandoned result did not prepare");
-            require(parameters.findFloat("console.layer4.value") != nullptr,
-                    "abandoned result did not register parameters");
+            require(parameters.findFloat("console.layer4.value") == nullptr,
+                    "abandoned candidate mutated live parameters");
         }
         require(parameters.findFloat("console.layer4.value") == nullptr,
                 "abandoned result did not release owned parameters");
@@ -255,8 +456,8 @@ int main() {
                     std::move(foreignRuntimeCandidate)),
                 "runtime adopted an element owned by another runtime");
             require(
-                foreignParameters.findFloat("console.layer1.value") != nullptr,
-                "cross-runtime rejection damaged source ownership");
+                foreignParameters.findFloat("console.layer1.value") == nullptr,
+                "cross-runtime candidate escaped its staging registry");
         }
         require(
             foreignParameters.findFloat("console.layer1.value") == nullptr,
@@ -277,6 +478,136 @@ int main() {
             dynamic_cast<ContractElement*>(compositionLayer->element());
         require(compositionElement != nullptr,
                 "composition element type was not preserved");
+
+        float liveHostValue = 0.65f;
+        ParameterRegistry::Descriptor liveHostDescriptor;
+        liveHostDescriptor.label = "Live Host Value";
+        parameters.addFloat(
+            "host.live",
+            &liveHostValue,
+            liveHostValue,
+            liveHostDescriptor);
+        request.typeId = "tests.runtime.destructive-failing";
+        request.definitionId = "tests.definition.failed-replacement";
+        request.instanceId = "tests.instance.failed-replacement";
+        auto failedReplacement = runtime.prepareElementReplacement(
+            request,
+            *compositionLayer->element());
+        require(!failedReplacement,
+                "throwing replacement was reported as prepared");
+        require(compositionLayer->element() == compositionElement,
+                "failed replacement destroyed the live element");
+        require(parameters.findFloat("console.layer1.value") != nullptr,
+                "failed replacement removed the live element parameter");
+        require(parameters.findFloat("console.layer1.partial") == nullptr,
+                "failed replacement leaked a staged parameter");
+        require(parameters.findFloat("host.live") != nullptr &&
+                    liveHostValue == 0.65f,
+                "failed replacement mutated a live host registration");
+
+        request.typeId = "tests.runtime.good";
+        request.definitionId = "tests.definition.abandoned-replacement";
+        request.instanceId = "tests.instance.abandoned-replacement";
+        {
+            auto abandonedReplacement = runtime.prepareElementReplacement(
+                request,
+                *compositionLayer->element());
+            require(static_cast<bool>(abandonedReplacement),
+                    abandonedReplacement.error);
+        }
+        require(
+            compositionLayer->element() == compositionElement &&
+                parameters.findFloat("console.layer1.value") != nullptr,
+            "abandoned replacement disturbed the live slot");
+
+        modifier::Modifier stableModifier;
+        auto& stableRuntimeModifier = parameters.addFloatModifier(
+            "console.layer1.value",
+            stableModifier);
+        stableRuntimeModifier.ownerTag = "tests.stable-slot-mapping";
+        auto& stableBoolRuntimeModifier = parameters.addBoolModifier(
+            "console.layer1.gate",
+            stableModifier);
+        stableBoolRuntimeModifier.ownerTag = "tests.stable-bool-mapping";
+
+        float replacementOpacity = 0.72f;
+        ParameterRegistry::Descriptor replacementHostDescriptor;
+        replacementHostDescriptor.label = "Host Opacity";
+        parameters.addFloat(
+            "console.layer1.opacity",
+            &replacementOpacity,
+            replacementOpacity,
+            replacementHostDescriptor);
+        float hostOwnedValue = 0.91f;
+        parameters.addFloat(
+            "console.layer1.hostOwned",
+            &hostOwnedValue,
+            hostOwnedValue,
+            replacementHostDescriptor);
+        request.typeId = "tests.runtime.host-collision";
+        request.definitionId = "tests.definition.conflicting";
+        request.instanceId = "tests.instance.conflicting";
+        {
+            auto conflictingReplacement = runtime.prepareElementReplacement(
+                request,
+                *compositionLayer->element());
+            require(static_cast<bool>(conflictingReplacement),
+                    conflictingReplacement.error);
+            require(
+                !runtime.adoptPreparedElement(
+                    0,
+                    std::move(conflictingReplacement)),
+                "replacement overwrote a host-owned parameter");
+            require(compositionLayer->element() == compositionElement,
+                    "failed commit replaced the live element");
+            require(
+                parameters.findFloat("console.layer1.value") != nullptr &&
+                    parameters.findFloat("console.layer1.opacity") != nullptr &&
+                    parameters.findFloat("console.layer1.hostOwned") != nullptr &&
+                    replacementOpacity == 0.72f &&
+                    hostOwnedValue == 0.91f,
+                "failed commit mutated the live registry");
+        }
+        parameters.removeById("console.layer1.hostOwned");
+        request.typeId = "tests.runtime.good";
+        request.definitionId = "tests.definition.replacement";
+        request.instanceId = "tests.instance.replacement";
+        auto replacement = runtime.prepareElementReplacement(
+            request,
+            *compositionLayer->element());
+        require(static_cast<bool>(replacement), replacement.error);
+        require(compositionLayer->element() == compositionElement,
+                "preparation replaced the live element before commit");
+        require(runtime.adoptPreparedElement(0, std::move(replacement)),
+                "same-address replacement did not commit");
+        auto* replacementElement =
+            dynamic_cast<ContractElement*>(compositionLayer->element());
+        require(replacementElement != nullptr &&
+                    replacementElement != compositionElement,
+                "replacement did not swap the live element");
+        compositionElement = replacementElement;
+        require(parameters.findFloat("console.layer1.value") != nullptr,
+                "replacement did not install candidate parameters");
+        const auto* replacementModifiers =
+            parameters.floatModifiers("console.layer1.value");
+        require(
+            replacementModifiers &&
+                replacementModifiers->size() == 1 &&
+                replacementModifiers->front().ownerTag ==
+                    "tests.stable-slot-mapping",
+            "replacement did not preserve matching slot modifiers");
+        const auto* replacementBoolModifiers =
+            parameters.boolModifiers("console.layer1.gate");
+        require(
+            replacementBoolModifiers &&
+                replacementBoolModifiers->size() == 1 &&
+                replacementBoolModifiers->front().ownerTag ==
+                    "tests.stable-bool-mapping",
+            "replacement did not preserve matching bool modifiers");
+        require(parameters.findFloat("console.layer1.opacity") != nullptr &&
+                    replacementOpacity == 0.72f,
+                "replacement removed a host-owned same-address parameter");
+
         runtime.updateCompositionElements(LayerUpdateParams{});
         runtime.resizeCompositionElements(1280, 720);
         ofCamera camera;
@@ -297,9 +628,37 @@ int main() {
                 "runtime did not release its composition element");
         require(parameters.findFloat("console.layer1.value") == nullptr,
                 "composition release leaked element parameters");
+        require(parameters.findFloat("console.layer1.opacity") != nullptr,
+                "composition release removed the host-owned opacity parameter");
+        parameters.removeById("console.layer1.opacity");
+        parameters.removeById("host.live");
 
+        request.typeId = "tests.runtime.registry-aware";
+        request.definitionId = "tests.definition.registry-aware";
+        request.instanceId = "tests.instance.registry-aware";
+        request.registryPrefix = "console.layer2";
+        auto registryAwarePrepared = runtime.prepareElement(request);
+        require(
+            runtime.adoptPreparedElement(1, std::move(registryAwarePrepared)),
+            "runtime did not adopt the registry-aware element");
+        auto* registryAware = dynamic_cast<RegistryAwareElement*>(
+            runtime.compositionLayer(1)->element());
+        require(
+            registryAware &&
+                registryAware->commitCount == 1 &&
+                registryAware->committedRegistry == &parameters &&
+                registryAware->setupRegistry != &parameters,
+            "runtime did not rebind the staged registry after commit");
+        runtime.compositionLayer(1)->active = true;
+        runtime.updateCompositionElements(LayerUpdateParams{});
+        require(registryAware->sawLiveRegistry,
+                "registry-aware update did not observe the live registry");
+        runtime.releaseCompositionElement(1);
+
+        request.typeId = "tests.runtime.good";
         request.definitionId = "tests.definition.shutdown";
         request.instanceId = "tests.instance.shutdown";
+        request.registryPrefix = "console.layer1";
         auto shutdownPrepared = runtime.prepareElement(request);
         require(
             runtime.adoptPreparedElement(0, std::move(shutdownPrepared)),
