@@ -9,6 +9,7 @@
   ],
   "sources": [
     "synaptome/src/ofApp.cpp",
+    "synaptome/src/runtime/BuiltinElements.cpp",
     "synaptome/src/visuals/**/*.cpp",
     "synaptome/bin/data/layers/**/*.json"
   ],
@@ -23612,7 +23613,7 @@
       "suffix": "alpha",
       "source": {
         "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
-        "line": 94
+        "line": 97
       },
       "sourceClass": "SignalBloomLayer"
     },
@@ -23623,7 +23624,7 @@
       "suffix": "bgColorB",
       "source": {
         "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
-        "line": 132
+        "line": 135
       },
       "sourceClass": "SignalBloomLayer"
     },
@@ -23634,7 +23635,7 @@
       "suffix": "bgColorG",
       "source": {
         "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
-        "line": 130
+        "line": 133
       },
       "sourceClass": "SignalBloomLayer"
     },
@@ -23645,7 +23646,7 @@
       "suffix": "bgColorR",
       "source": {
         "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
-        "line": 128
+        "line": 131
       },
       "sourceClass": "SignalBloomLayer"
     },
@@ -23656,7 +23657,7 @@
       "suffix": "bpmMultiplier",
       "source": {
         "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
-        "line": 75
+        "line": 78
       },
       "sourceClass": "SignalBloomLayer"
     },
@@ -23667,7 +23668,7 @@
       "suffix": "bpmSync",
       "source": {
         "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
-        "line": 67
+        "line": 70
       },
       "sourceClass": "SignalBloomLayer"
     },
@@ -23678,7 +23679,7 @@
       "suffix": "colorB",
       "source": {
         "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
-        "line": 125
+        "line": 128
       },
       "sourceClass": "SignalBloomLayer"
     },
@@ -23689,7 +23690,7 @@
       "suffix": "colorG",
       "source": {
         "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
-        "line": 123
+        "line": 126
       },
       "sourceClass": "SignalBloomLayer"
     },
@@ -23700,7 +23701,7 @@
       "suffix": "colorR",
       "source": {
         "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
-        "line": 121
+        "line": 124
       },
       "sourceClass": "SignalBloomLayer"
     },
@@ -23711,7 +23712,7 @@
       "suffix": "gain",
       "source": {
         "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
-        "line": 105
+        "line": 108
       },
       "sourceClass": "SignalBloomLayer"
     },
@@ -23722,7 +23723,7 @@
       "suffix": "lineOpacity",
       "source": {
         "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
-        "line": 113
+        "line": 116
       },
       "sourceClass": "SignalBloomLayer"
     },
@@ -23733,7 +23734,7 @@
       "suffix": "rotationDeg",
       "source": {
         "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
-        "line": 92
+        "line": 95
       },
       "sourceClass": "SignalBloomLayer"
     },
@@ -23744,7 +23745,7 @@
       "suffix": "scale",
       "source": {
         "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
-        "line": 83
+        "line": 86
       },
       "sourceClass": "SignalBloomLayer"
     },
@@ -23755,7 +23756,7 @@
       "suffix": "speed",
       "source": {
         "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
-        "line": 59
+        "line": 62
       },
       "sourceClass": "SignalBloomLayer"
     },
@@ -23766,7 +23767,7 @@
       "suffix": "speedInput",
       "source": {
         "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
-        "line": 144
+        "line": 147
       },
       "sourceClass": "SignalBloomLayer"
     },
@@ -23777,7 +23778,7 @@
       "suffix": "visible",
       "source": {
         "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
-        "line": 56
+        "line": 59
       },
       "sourceClass": "SignalBloomLayer"
     },
@@ -23788,7 +23789,7 @@
       "suffix": "xInput",
       "source": {
         "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
-        "line": 140
+        "line": 143
       },
       "sourceClass": "SignalBloomLayer"
     },
@@ -23799,7 +23800,7 @@
       "suffix": "yInput",
       "source": {
         "path": "synaptome/src/visuals/SignalBloomLayer.cpp",
-        "line": 142
+        "line": 145
       },
       "sourceClass": "SignalBloomLayer"
     },

@@ -9,6 +9,7 @@ python tools\validate_layer_authoring.py adaptive-trail
 python tools\validate_layer_authoring.py collective-motion
 python tools\validate_layer_authoring.py cellular-fields
 python tools\validate_layer_authoring.py circuit-lenia
+python tools\validate_layer_authoring.py signal-bloom-sdk
 ```
 
 The fast stage checks the family source contract, registered parameter
@@ -27,6 +28,18 @@ repository's openFrameworks stubs rather than compiling `openframeworksLib`.
 The target contains only family-owned, render-independent native contracts.
 Broader BrowserFlow coverage remains part of integration rather than the
 per-edit authoring loop.
+
+The Signal Bloom SDK profile is the first build-boundary profile:
+
+```powershell
+python tools\validate_layer_authoring.py signal-bloom-sdk --native
+```
+
+It compiles the public example through SDK-only compatibility includes using
+the headless stubs, compiles the shipping static library against the pinned
+openFrameworks toolchain, builds the lifecycle bench against the shared
+registration entrypoint, and runs that bench. Add `--incremental-app` to prove
+the host links the shipping element target.
 
 Circuit Trace currently has an isolated eight-direction native contract:
 

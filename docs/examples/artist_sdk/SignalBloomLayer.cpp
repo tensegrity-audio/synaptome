@@ -1,11 +1,14 @@
 #include "SignalBloomLayer.h"
-#include "LayerParameterBuilder.h"
+#include <synaptome/element/compat/LayerParameterBuilder.h>
 #include "ofGraphics.h"
 #include "ofMath.h"
 #include <algorithm>
 #include <cmath>
 
 namespace {
+    constexpr float kTwoPi = 6.28318530717958647692f;
+    constexpr float kDegreesToRadians = 0.01745329251994329577f;
+
     float normalizedDefault(const ofJson& defaults, const char* key, float fallback) {
         return ofClamp(defaults.value(key, fallback), 0.0f, 1.0f);
     }
@@ -157,11 +160,11 @@ void SignalBloomLayer::update(const LayerUpdateParams& params) {
     float modulation = 1.0f + ofClamp(speedInput_, 0.0f, 1.0f) * gain_ * 2.0f;
     phase_ += params.dt * transportRate * modulation * std::max(0.0f, params.speed);
 
-    const float twist = ofDegToRad(rotationDeg_);
+    const float twist = rotationDeg_ * kDegreesToRadians;
     for (std::size_t i = 0; i < points_.size(); ++i) {
         float t = static_cast<float>(i) / static_cast<float>(std::max<std::size_t>(1, points_.size() - 1));
-        float angle = t * TWO_PI * 6.0f + phase_ + twist;
-        float pulse = std::sin(phase_ * 2.0f + t * TWO_PI);
+        float angle = t * kTwoPi * 6.0f + phase_ + twist;
+        float pulse = std::sin(phase_ * 2.0f + t * kTwoPi);
         float radius = (0.18f + t * 0.72f) * scale_ * (1.0f + pulse * 0.12f * gain_);
         float xDrift = (xInput_ - 0.5f) * 0.35f;
         float yDrift = (yInput_ - 0.5f) * 0.35f;

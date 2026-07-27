@@ -111,8 +111,8 @@ def add_unique(entries: dict[str, dict[str, Any]], entry: dict[str, Any]) -> Non
         existing_sources.append(source)
 
 
-def parse_factory_types(of_app: Path) -> dict[str, str]:
-    text = of_app.read_text(encoding="utf-8")
+def parse_factory_types(*sources: Path) -> dict[str, str]:
+    text = "\n".join(source.read_text(encoding="utf-8") for source in sources)
     pattern = re.compile(
         r'registerType\(\s*"([^"]+)"\s*,\s*\[\]\(\)\s*\{\s*return\s+std::make_unique<([^>]+)>',
         re.MULTILINE,
@@ -289,7 +289,8 @@ def build_manifest(
     package_roots: list[Path] | tuple[Path, ...] | None = None,
 ) -> dict[str, Any]:
     of_app = APP_ROOT / "src" / "ofApp.cpp"
-    factory_types = parse_factory_types(of_app)
+    builtin_elements = APP_ROOT / "src" / "runtime" / "BuiltinElements.cpp"
+    factory_types = parse_factory_types(of_app, builtin_elements)
     layer_templates, explicit_parameters = parse_layer_templates(factory_types)
 
     parameters: dict[str, dict[str, Any]] = {}
@@ -470,6 +471,7 @@ def build_manifest(
         ],
         "sources": [
             "synaptome/src/ofApp.cpp",
+            "synaptome/src/runtime/BuiltinElements.cpp",
             "synaptome/src/visuals/**/*.cpp",
             "synaptome/bin/data/layers/**/*.json",
         ],

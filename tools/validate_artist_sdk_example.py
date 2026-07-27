@@ -22,6 +22,13 @@ SCENE_PATH = EXAMPLE_ROOT / "signal_bloom.scene.json"
 RUNTIME_HEADER_PATH = REPO_ROOT / "synaptome" / "src" / "visuals" / "SignalBloomLayer.h"
 RUNTIME_SOURCE_PATH = REPO_ROOT / "synaptome" / "src" / "visuals" / "SignalBloomLayer.cpp"
 RUNTIME_PROJECT_PATH = REPO_ROOT / "synaptome" / "Synaptome.vcxproj"
+ELEMENT_PROJECT_PATH = (
+    REPO_ROOT
+    / "synaptome"
+    / "elements"
+    / "signal_bloom"
+    / "Element_SignalBloom.vcxproj"
+)
 
 EXPECTED_ASSET_ID = "examples.signal_bloom"
 EXPECTED_TYPE = "example.signalBloom"
@@ -250,6 +257,7 @@ def build_contract() -> tuple[dict[str, Any], list[str]]:
             RUNTIME_HEADER_PATH,
             RUNTIME_SOURCE_PATH,
             RUNTIME_PROJECT_PATH,
+            ELEMENT_PROJECT_PATH,
         )
         if not path.exists()
     ]
@@ -262,6 +270,7 @@ def build_contract() -> tuple[dict[str, Any], list[str]]:
     runtime_header_text = RUNTIME_HEADER_PATH.read_text(encoding="utf-8")
     runtime_source_text = RUNTIME_SOURCE_PATH.read_text(encoding="utf-8")
     runtime_project_text = RUNTIME_PROJECT_PATH.read_text(encoding="utf-8")
+    element_project_text = ELEMENT_PROJECT_PATH.read_text(encoding="utf-8")
     registration_text = REGISTRATION_PATH.read_text(encoding="utf-8")
     catalog = load_json(CATALOG_PATH)
     scene = load_json(SCENE_PATH)
@@ -319,13 +328,22 @@ def build_contract() -> tuple[dict[str, Any], list[str]]:
     if runtime_source_text != source_text:
         errors.append("runtime SignalBloomLayer.cpp must match the public SDK example")
 
-    runtime_project_entries = (
-        r'ClCompile Include="src\visuals\SignalBloomLayer.cpp"',
-        r'ClInclude Include="src\visuals\SignalBloomLayer.h"',
+    if r'ClCompile Include="src\visuals\SignalBloomLayer.cpp"' in runtime_project_text:
+        errors.append("host project must not compile Signal Bloom directly")
+    if (
+        r'ProjectReference Include="elements\signal_bloom\Element_SignalBloom.vcxproj"'
+        not in runtime_project_text
+    ):
+        errors.append("host project must reference the shipping Signal Bloom element target")
+    element_project_entries = (
+        r'ClCompile Include="$(SynaptomeAppRoot)\src\visuals\SignalBloomLayer.cpp"',
+        r'ClInclude Include="$(SynaptomeAppRoot)\src\visuals\SignalBloomLayer.h"',
     )
-    for entry in runtime_project_entries:
-        if entry not in runtime_project_text:
-            errors.append(f"runtime project is missing build-local entry: {entry}")
+    for entry in element_project_entries:
+        if entry not in element_project_text:
+            errors.append(f"Signal Bloom element project is missing source entry: {entry}")
+    if "Synaptome.ElementSdk.props" not in element_project_text:
+        errors.append("Signal Bloom element project must compile through the public SDK include root")
     if r'..\docs\examples\artist_sdk\SignalBloomLayer' in runtime_project_text:
         errors.append("runtime project must not compile Signal Bloom through the repository docs path")
     if runtime_project_text.count("<MultiProcessorCompilation>true</MultiProcessorCompilation>") < 2:

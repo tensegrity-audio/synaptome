@@ -2,6 +2,11 @@
 
 Status: Frozen architecture decision for SEAC-2, 2026-07-26.
 
+Implementation status: SEAC-3 in progress. Signal Bloom now has a shipping
+static-library target, a separate stub compile-contract target, public
+compatibility include paths, and a controlled built-in registration entrypoint.
+The runtime facade and runtime-core target are not yet extracted.
+
 This document records the dependency inventory and the minimum Element SDK v1
 contract that must exist before Synaptome moves code into new build targets.
 It refines the canonical

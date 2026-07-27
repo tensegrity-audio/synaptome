@@ -1,10 +1,6 @@
 #pragma once
 
-#if __has_include("Layer.h")
-#include "Layer.h"
-#else
-#include "../../../synaptome/src/visuals/Layer.h"
-#endif
+#include <synaptome/element/compat/Layer.h>
 #include <vector>
 
 class SignalBloomLayer : public Layer {

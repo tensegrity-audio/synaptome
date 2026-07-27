@@ -2,6 +2,25 @@
 
 This changelog records Project Ops and administrative workflow changes. Product release versioning remains governed by `docs/release_policy.md`.
 
+## 2026-07-26 - architecture - seac3_signal_bloom_build_boundary
+
+- Request ID: `spine_element_architecture_convergence`
+- Phase / Milestone: SEAC-3 in progress
+- Summary: Added the transitional public Element SDK include root and shared
+  build properties. Signal Bloom now builds as its own pinned-openFrameworks
+  static library and as a separate stub compile contract. The host links the
+  shipping target and calls a controlled registration unit shared with the
+  lifecycle bench; neither `ofApp.cpp` nor the bench textually includes the
+  concrete implementation.
+- Compatibility: Public IDs, package activation, parameters, scenes, mappings,
+  and rendered behavior are unchanged. The current `Layer` and parameter
+  builder forwarders are explicitly transitional until SEAC-4.
+- Validation: Signal Bloom SDK profile passed all fast, native, lifecycle, and
+  app-link stages; public app passed 17 contracts; pytest passed 8 tests plus 2
+  subtests; BrowserFlow passed 32 tests; Project Ops audits passed.
+- Next: Introduce the Runtime facade and move generic composition-layer
+  lifecycle ownership out of `ofApp`.
+
 ## 2026-07-26 - architecture - element_sdk_v1_boundary
 
 - Request ID: `spine_element_architecture_convergence`

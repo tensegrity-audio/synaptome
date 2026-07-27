@@ -16,10 +16,10 @@
 inline float ofDegToRad(float degrees) { return degrees * 0.01745329251994329577f; }
 
 #define private public
-#include "../docs/examples/artist_sdk/SignalBloomLayer.h"
+#include "../synaptome/src/visuals/SignalBloomLayer.h"
 #undef private
-#include "../docs/examples/artist_sdk/SignalBloomLayer.cpp"
-#include "../synaptome/src/visuals/LayerFactory.cpp"
+#include "../synaptome/src/runtime/BuiltinElements.h"
+#include "../synaptome/src/visuals/LayerFactory.h"
 
 namespace {
 void require(bool condition, const std::string& message) {
@@ -32,9 +32,7 @@ void require(bool condition, const std::string& message) {
 int main() {
     try {
         LayerFactory& factory = LayerFactory::instance();
-        factory.registerType("example.signalBloom", [] {
-            return std::make_unique<SignalBloomLayer>();
-        });
+        synaptome::runtime::registerBuiltinElements(factory);
 
         auto layer = factory.create("example.signalBloom");
         require(layer != nullptr, "factory did not create Signal Bloom");

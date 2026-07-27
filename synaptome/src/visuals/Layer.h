@@ -2,7 +2,7 @@
 
 #include "ofMain.h"
 #include "../core/ParameterRegistry.h"
-#include "ofJson.h"
+#include "../ofJson.h"
 #include <string>
 
 struct LayerUpdateParams {

@@ -126,9 +126,9 @@ State Summary
 - Phase: EXECUTION
 - Status: In Progress
 - Steps Complete: 2 / 12
-- Progress: The canonical model is accepted and the current host, build, registration, parameter, service, and test dependencies are inventoried. Element SDK v1 is frozen as a compiler-matched source/static-link boundary with runtime-core ownership, generated registration, scoped services, explicit lifecycle, and a no-output-change extraction order.
-- Last Step Outcome: 2026-07-26 - Completed SEAC-2 and published `docs/architecture/element_sdk_v1_boundary.md` as the dependency and ownership decision record.
-- Next Step: Begin SEAC-3 with shared build properties and an SDK compile-contract target for Signal Bloom, then introduce the runtime facade without changing output.
+- Progress: SEAC-3 is in progress. Signal Bloom compiles as a shipping static library and through a separate SDK-only stub contract, the host links rather than compiles it, and host plus bench use one controlled registration entrypoint. Runtime facade/core extraction remains.
+- Last Step Outcome: 2026-07-26 - Completed the first SEAC-3 vertical slice with public compatibility includes, shared build properties, focused element/contract targets, controlled registration, and restored public/golden factory scans.
+- Next Step: Introduce the no-output-change Runtime facade and move composition-layer ownership plus generic create/configure/setup/update/render/clear behavior behind it.
 - Dependencies / Overlap: `show_readiness_operator_stability`, `layer_package_compatibility_bench_scaffolding`, `docs/architecture/synaptome_spine_element_model.md`, `docs/architecture/synaptome_layer_system_roadmap.md`, `docs/architecture/synaptome_artist_sdk.md`, parameter/scene/mapping contracts, and layer-authoring tests.
 - Primary Scope: runtime
 - Secondary Scopes: contracts, artist-sdk, tests, docs, release
@@ -138,8 +138,8 @@ State Summary
 - Priority Lane: Fast-Track
 - Ready State: Ready
 - Ready Gate: The architecture direction, compatibility policy, ordered tasks, and stop conditions are explicit; the operator accepted residual show-validation risk and authorized execution.
-- Project Ops / Roadmap Updates (timestamped): 2026-07-26 - Added the canonical model and subordinated package/discovery work to its contract and build gates. 2026-07-26 - Promoted SEAC to execution after dual-screen validation was deferred. 2026-07-26 - Completed the dependency inventory and froze the Element SDK v1 source/static-link boundary.
-- Resume From: Phase EXECUTION, State In Progress, Next Action add the shared SDK build properties and Signal Bloom compile-contract target.
+- Project Ops / Roadmap Updates (timestamped): 2026-07-26 - Added the canonical model and subordinated package/discovery work to its contract and build gates. 2026-07-26 - Promoted SEAC to execution after dual-screen validation was deferred. 2026-07-26 - Completed the dependency inventory and froze the Element SDK v1 source/static-link boundary. 2026-07-26 - Landed the first SEAC-3 build and registration slice.
+- Resume From: Phase EXECUTION, State In Progress, Next Action introduce the Runtime facade and composition-layer ownership seam.
 Request Doc: docs/project_ops/in_progress/spine_element_architecture_convergence.md
 
 Current Direction

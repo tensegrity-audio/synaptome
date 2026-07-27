@@ -1,6 +1,9 @@
 # Artist SDK Example Fixture
 
-Status: Public SDK fixture for the first source/catalog/scene authoring slice. Source registration is the first public path; no-source-edit plugin loading is a future package seam.
+Status: Public SDK fixture for the first source/catalog/scene authoring slice.
+The example now compiles through the transitional public SDK include root and
+its shipping static-library target. Generated registration and no-source-edit
+installation remain later package seams.
 
 Validator:
 
@@ -12,18 +15,18 @@ This fixture shows the smallest honest public path for an openFrameworks artist:
 
 ```text
 SignalBloomLayer source
-  -> LayerFactory type registration
+  -> controlled built-in type registration
   -> Browser catalog entry
   -> Console scene slot
   -> parameters targeted by MIDI/OSC/sensor mappings
   -> media layer paired in the same saved scene
 ```
 
-The fixture is installed through explicit source registration. The runtime
-project compiles a build-local mirror under `synaptome/src/visuals` so the
-normal openFrameworks `apps/myApps` junction does not depend on repository
-paths outside the application directory. The validator requires the public
-fixture and runtime mirror to remain identical.
+The runtime mirror remains under `synaptome/src/visuals`, but it is compiled by
+`Element_SignalBloom.vcxproj` and linked into the host rather than compiled
+directly by `Synaptome.vcxproj`. The public fixture and shipping mirror remain
+byte-identical. Both use the transitional
+`<synaptome/element/compat/...>` include surface.
 
 ## Files
 
@@ -36,7 +39,8 @@ fixture and runtime mirror to remain identical.
 
 ## Current Registration Requirement
 
-Until the public extension seam exists, a layer type still has to be registered in app source:
+Until generated registration exists, a type still needs one controlled static
+registration record:
 
 ```cpp
 factory.registerType("example.signalBloom", []() {
@@ -44,7 +48,17 @@ factory.registerType("example.signalBloom", []() {
 });
 ```
 
-The final public package mechanism must preserve this contract without requiring artists to edit unrelated app internals. Until then, public docs should present this as source registration, not hot-loaded plugins.
+The host and isolated lifecycle bench now call the same
+`registerBuiltinElements()` entrypoint; `ofApp.cpp` no longer knows the Signal
+Bloom concrete class. Adding a new type still requires updating the controlled
+registration unit until SEAC-8 generates it. This is source/static
+registration, not hot-loaded plug-ins.
+
+Run the complete focused boundary check with:
+
+```powershell
+python tools\validate_layer_authoring.py signal-bloom-sdk --native --incremental-app
+```
 
 For a multi-asset example backed by one configurable runtime type, see
 [`circuit_trace_family.md`](circuit_trace_family.md). It uses three standard

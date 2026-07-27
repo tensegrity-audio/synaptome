@@ -1,0 +1,78 @@
+{
+  "name": "Signal Bloom Element SDK boundary",
+  "stages": {
+    "fast": [
+      {
+        "label": "public example and package contract",
+        "command": [
+          "{python}",
+          "tools/validate_artist_sdk_example.py"
+        ]
+      },
+      {
+        "label": "SDK include, build, and registration boundary",
+        "command": [
+          "{python}",
+          "tools/validate_element_sdk_boundary.py"
+        ]
+      }
+    ],
+    "native": [
+      {
+        "label": "public SDK compile contract",
+        "command": [
+          "{msbuild}",
+          "synaptome/tests/ElementSdkCompileContract/ElementSdkCompileContract.vcxproj",
+          "/t:Rebuild",
+          "/p:Configuration=Release",
+          "/p:Platform=x64",
+          "/m",
+          "/v:minimal"
+        ]
+      },
+      {
+        "label": "shipping Signal Bloom static library",
+        "command": [
+          "{msbuild}",
+          "synaptome/elements/signal_bloom/Element_SignalBloom.vcxproj",
+          "/t:Rebuild",
+          "/p:Configuration=Release",
+          "/p:Platform=x64",
+          "/m",
+          "/v:minimal"
+        ]
+      },
+      {
+        "label": "shared-registration lifecycle bench",
+        "command": [
+          "{msbuild}",
+          "synaptome/tests/LayerPackageBench/LayerPackageBench.vcxproj",
+          "/t:Rebuild",
+          "/p:Configuration=Release",
+          "/p:Platform=x64",
+          "/m",
+          "/v:minimal"
+        ]
+      },
+      {
+        "label": "Signal Bloom lifecycle contract",
+        "command": [
+          "synaptome/tests/LayerPackageBench/x64/Release/LayerPackageBench.exe"
+        ]
+      }
+    ],
+    "incrementalApp": [
+      {
+        "label": "incremental Synaptome app build",
+        "command": [
+          "{msbuild}",
+          "synaptome/Synaptome.vcxproj",
+          "/p:Configuration=Release",
+          "/p:Platform=x64",
+          "/m",
+          "/v:minimal"
+        ]
+      }
+    ]
+  }
+}

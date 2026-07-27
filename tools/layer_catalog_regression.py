@@ -36,8 +36,14 @@ def load_json(path: Path) -> Any:
 
 
 def parse_factory_types() -> dict[str, str]:
-    of_app = APP_ROOT / "src" / "ofApp.cpp"
-    text = of_app.read_text(encoding="utf-8", errors="replace")
+    sources = (
+        APP_ROOT / "src" / "ofApp.cpp",
+        APP_ROOT / "src" / "runtime" / "BuiltinElements.cpp",
+    )
+    text = "\n".join(
+        source.read_text(encoding="utf-8", errors="replace")
+        for source in sources
+    )
     pattern = re.compile(
         r'registerType\(\s*"([^"]+)"\s*,\s*\[\]\(\)\s*\{\s*return\s+std::make_unique<([^>]+)>',
         re.MULTILINE,
@@ -191,6 +197,7 @@ def build_catalog(
             rel(root),
             "synaptome/src/visuals/LayerLibrary.cpp",
             "synaptome/src/ofApp.cpp",
+            "synaptome/src/runtime/BuiltinElements.cpp",
         ],
         "counts": {
             "entries": len(entries),

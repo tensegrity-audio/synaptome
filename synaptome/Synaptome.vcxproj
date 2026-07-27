@@ -135,6 +135,7 @@
 		<Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
 
 		<Import Project="$(SynaptomeOpenFrameworksRoot)\libs\openFrameworksCompiled\project\vs\openFrameworksRelease.props" />
+		<Import Project="$(MSBuildThisFileDirectory)build\Synaptome.ElementSdk.props" />
 
 	</ImportGroup>
 
@@ -143,6 +144,7 @@
 		<Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
 
 		<Import Project="$(SynaptomeOpenFrameworksRoot)\libs\openFrameworksCompiled\project\vs\openFrameworksDebug.props" />
+		<Import Project="$(MSBuildThisFileDirectory)build\Synaptome.ElementSdk.props" />
 
 	</ImportGroup>
 
@@ -499,8 +501,8 @@
 		<ClCompile Include="src\main.cpp" />
 
 		<ClCompile Include="src\ofApp.cpp" />
+		<ClCompile Include="src\runtime\BuiltinElements.cpp" />
 		<ClCompile Include="src\visuals\CircuitTraceLayer.cpp" />
-		<ClCompile Include="src\visuals\SignalBloomLayer.cpp" />
 
 		<ClCompile Include="src\io\MidiRouter.cpp" />
 
@@ -689,6 +691,7 @@
 
 		<ClInclude Include="src\ofApp.h" />
 		<ClInclude Include="src\core\OptionProviderRegistry.h" />
+		<ClInclude Include="src\runtime\BuiltinElements.h" />
 		<ClInclude Include="src\visuals\CircuitTraceLayer.h" />
 		<ClInclude Include="src\visuals\EightDirectionMotion.h" />
 		<ClInclude Include="src\visuals\SignalBloomLayer.h" />
@@ -2792,6 +2795,10 @@
 
 			<Project>{5837595d-aca9-485c-8e76-729040ce4b0b}</Project>
 
+		</ProjectReference>
+		<ProjectReference Include="elements\signal_bloom\Element_SignalBloom.vcxproj">
+			<Project>{d9f5486b-17a6-4ebe-8b51-443948e223c4}</Project>
+			<LinkLibraryDependencies>true</LinkLibraryDependencies>
 		</ProjectReference>
 
 	</ItemGroup>

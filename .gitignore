@@ -36,6 +36,8 @@ synaptome/bin/data/config/**/*.bak
 synaptome/bin/data/config/layer-packages.local.json
 synaptome/obj/
 synaptome/x64/
+synaptome/elements/**/bin/
+synaptome/elements/**/obj/
 synaptome/src/thirdparty/*.exp
 synaptome/tests/**/Debug/
 synaptome/tests/**/Release/

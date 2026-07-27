@@ -16,7 +16,7 @@
 #include "ui/WindowMonitorPlacement.h"
 #include "ui/ControlHubEventBridge_clean.h"
 #include "visuals/CircuitTraceLayer.h"
-#include "visuals/SignalBloomLayer.h"
+#include "runtime/BuiltinElements.h"
 #ifdef _WIN32
 #ifndef NOMINMAX
 #define NOMINMAX
@@ -2018,7 +2018,7 @@ void ofApp::setup() {
     // The public SDK example is compiled as an explicit source-registration
     // example. It remains absent from the catalog unless package activation is
     // enabled in config/layer-packages.json.
-    factory.registerType("example.signalBloom", []() { return std::make_unique<SignalBloomLayer>(); });
+    synaptome::runtime::registerBuiltinElements(factory);
 
     std::string layersRoot = ofToDataPath("layers", true);
     layerLibrary.reload(layersRoot);

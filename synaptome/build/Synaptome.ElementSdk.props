@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <SynaptomeElementSdkIncludeRoot Condition="'$(SynaptomeElementSdkIncludeRoot)'==''">$(SynaptomeAppRoot)\sdk\include</SynaptomeElementSdkIncludeRoot>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(SynaptomeElementSdkIncludeRoot);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+</Project>

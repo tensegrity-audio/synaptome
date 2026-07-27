@@ -5,40 +5,47 @@
     <ProjectConfiguration Include="Release|x64"><Configuration>Release</Configuration><Platform>x64</Platform></ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{37E9D181-C77E-4E42-A541-82C2483B65CE}</ProjectGuid>
+    <ProjectGuid>{E1D31AC8-A090-4D5F-9EF4-3F85E55D03E2}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>LayerPackageBench</RootNamespace>
+    <RootNamespace>ElementSdkCompileContract</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType><UseDebugLibraries>true</UseDebugLibraries>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset Condition="'$(PlatformToolset)'=='' and Exists('$(VCTargetsPath)\Platforms\$(Platform)\PlatformToolsets\v145\Toolset.props')">v145</PlatformToolset>
     <PlatformToolset Condition="'$(PlatformToolset)'==''">v143</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType><UseDebugLibraries>false</UseDebugLibraries>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset Condition="'$(PlatformToolset)'=='' and Exists('$(VCTargetsPath)\Platforms\$(Platform)\PlatformToolsets\v145\Toolset.props')">v145</PlatformToolset>
     <PlatformToolset Condition="'$(PlatformToolset)'==''">v143</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(SynaptomeAppRoot)\build\Synaptome.Cpp.props" />
+    <Import Project="$(SynaptomeAppRoot)\build\Synaptome.ElementSdk.props" />
+  </ImportGroup>
+  <PropertyGroup>
+    <OutDir>$(MSBuildThisFileDirectory)bin\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(MSBuildThisFileDirectory)obj\$(Platform)\$(Configuration)\</IntDir>
+  </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>$(SynaptomeElementSdkIncludeRoot);$(SynaptomeThirdPartyRoot);$(SynaptomeTestRoot)\stubs;$(SynaptomeTestRoot);$(SynaptomeAppRoot)\src;$(SynaptomeAppRoot)\src\core;$(SynaptomeAppRoot)\src\visuals;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SynaptomeRepoRoot)\docs\examples\artist_sdk;$(SynaptomeTestRoot)\stubs;$(SynaptomeThirdPartyRoot);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="$(SynaptomeTestRoot)\layer_package_bench_main.cpp" />
-    <ClCompile Include="$(SynaptomeAppRoot)\src\runtime\BuiltinElements.cpp" />
-    <ClCompile Include="$(SynaptomeAppRoot)\src\visuals\LayerFactory.cpp" />
+    <ClCompile Include="$(SynaptomeRepoRoot)\docs\examples\artist_sdk\SignalBloomLayer.cpp" />
+    <ClCompile Include="$(SynaptomeTestRoot)\element_sdk_compile_contract.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="$(SynaptomeAppRoot)\tests\ElementSdkCompileContract\ElementSdkCompileContract.vcxproj">
-      <Project>{E1D31AC8-A090-4D5F-9EF4-3F85E55D03E2}</Project>
-      <LinkLibraryDependencies>true</LinkLibraryDependencies>
-    </ProjectReference>
+    <ClInclude Include="$(SynaptomeRepoRoot)\docs\examples\artist_sdk\SignalBloomLayer.h" />
+    <ClInclude Include="$(SynaptomeElementSdkIncludeRoot)\synaptome\element\compat\Layer.h" />
+    <ClInclude Include="$(SynaptomeElementSdkIncludeRoot)\synaptome\element\compat\LayerParameterBuilder.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

@@ -19,6 +19,7 @@
     <SynaptomeThirdPartyRoot Condition="'$(SynaptomeThirdPartyRoot)'==''">$(SynaptomeRepoRoot)\thirdparty</SynaptomeThirdPartyRoot>
     <SynaptomeTestRoot Condition="'$(SynaptomeTestRoot)'==''">$(SynaptomeRepoRoot)\tests</SynaptomeTestRoot>
     <SynaptomeUnityTestRoot Condition="'$(SynaptomeUnityTestRoot)'==''">$(SynaptomeRepoRoot)\test</SynaptomeUnityTestRoot>
+    <SynaptomeElementSdkIncludeRoot Condition="'$(SynaptomeElementSdkIncludeRoot)'==''">$(SynaptomeAppRoot)\sdk\include</SynaptomeElementSdkIncludeRoot>
 
     <TensegrityRepoRoot Condition="'$(TensegrityRepoRoot)'==''">$(SynaptomeRepoRoot)</TensegrityRepoRoot>
     <TensegrityAppRoot Condition="'$(TensegrityAppRoot)'==''">$(SynaptomeAppRoot)</TensegrityAppRoot>

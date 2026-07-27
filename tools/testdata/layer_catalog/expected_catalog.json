@@ -4,7 +4,8 @@
   "sources": [
     "synaptome/bin/data/layers",
     "synaptome/src/visuals/LayerLibrary.cpp",
-    "synaptome/src/ofApp.cpp"
+    "synaptome/src/ofApp.cpp",
+    "synaptome/src/runtime/BuiltinElements.cpp"
   ],
   "counts": {
     "entries": 65,
