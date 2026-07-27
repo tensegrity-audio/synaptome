@@ -15,9 +15,13 @@ adoption validates its source runtime and canonical `console.layerN` address,
 and explicit shutdown releases elements and FBO resources while the graphics
 context is live. Candidate setup now writes to an isolated parameter registry;
 same-address adoption commits the registry and element together, while failed
-setup or commit leaves the live layer unchanged. The host still adapts effect
-compositing and compatibility inspection through named host-only seams while
-persistence and mapping consumers read copied snapshots. Element type
+setup or commit leaves the live layer unchanged. Replacement preparation now
+selects the current element by zero-based composition-layer index inside
+Runtime; the host no longer obtains a mutable element pointer for the generic
+replacement transaction. The caller-held prepared result retains the retired
+element after commit until host invalidation is complete. The host still adapts
+effect compositing and compatibility inspection through named host-only seams
+while persistence and mapping consumers read copied snapshots. Element type
 registration is now scoped per Runtime:
 the legacy-named `LayerFactory` has no process-global singleton, the host and
 each bench own an independent registry, scene validation uses non-constructing
@@ -289,11 +293,15 @@ Rules:
   rebind and performs no allocation or device work;
 - the old live instance remains active until a replacement has configured and
   set up successfully;
+- replacement preparation identifies the live element by zero-based
+  composition-layer index; out-of-range, empty, effect, and overlay layers fail
+  validation before the element factory is called;
 - adoption rejects host-owned ID collisions before mutation, swaps the staged
   registry and element as one commit, preserves modifiers on matching stable
   parameter IDs, and leaves candidate defaults/base values authoritative;
 - after adoption, the host synchronously invalidates pointer-bearing parameter
-  views and retired element routes before publishing layer metadata;
+  views and retired element routes while the caller-held prepared result keeps
+  the retired element alive;
 - activation and deactivation are explicit;
 - shutdown is explicit, idempotent, and releases registrations/resources owned
   by the instance;
@@ -443,8 +451,14 @@ composition aggregate or public `CompositionLayer` accessor crosses the
 boundary. Per-layer render FBOs remain available through
 `CompositionRenderTargets`; read-only element inspection uses
 `compositionElementForHost`, while mutable type-specific compatibility actions
-use `legacyCompositionElementForHost`. These three host-only methods remain
-SEAC-3 migration debt and are not public Element SDK headers.
+use `legacyCompositionElementForHost`. Generic replacement no longer uses that
+mutable seam: `Runtime::prepareCompositionElementReplacement()` selects the
+live element by zero-based layer index and preserves the two-phase
+prepare/adopt transaction. The mutable seam now has exactly two host consumer
+areas: optional post-install Perlin/Game of Life MIDI and randomize actions, and
+`refreshLayerReferences()` caching of derived Grid/Geodesic/Perlin/Game of Life
+pointers for legacy consumers. The three host-only methods remain SEAC-3
+migration debt and are not public Element SDK headers.
 
 ## SEAC-3 Extraction Sequence
 

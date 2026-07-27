@@ -5,9 +5,9 @@ State Summary
 - Phase: EXECUTION
 - Status: In Progress
 - Steps Complete: 2 / 12
-- Progress: SEAC-3 is in progress. `SynaptomeRuntimeCore` now owns staged element setup, atomic same-address registry/element replacement, the fixed eight composition records, FBO state, exact parameter ownership, generic lifecycle/render routing, zero-based effect coverage-window policy, the composition mutation control plane, and immutable by-value composition queries. Host metadata consumers use `CompositionSnapshot` or a bounds-checked optional `CompositionLayerSnapshot`; no live aggregate or public `CompositionLayer` accessor remains. Named render-target, read-only element, and mutable legacy-element seams still support the host compositor and type-specific compatibility work.
-- Last Step Outcome: 2026-07-27 - Added pointer-free `CompositionLayerSnapshot` / `CompositionSnapshot` DTOs and by-value Runtime queries, migrated host metadata consumers, and removed the public live composition aggregate and layer accessor without changing the Element SDK or effect ABI policy.
-- Next Step: Move remaining compositor and element-specific compatibility consumers behind narrower Runtime, parameter, and action contracts so `compositionRenderTargetsForHost`, `compositionElementForHost`, and `legacyCompositionElementForHost` can shrink or retire.
+- Progress: SEAC-3 is in progress. `SynaptomeRuntimeCore` now owns staged element setup, atomic same-address registry/element replacement, the fixed eight composition records, FBO state, exact parameter ownership, generic lifecycle/render routing, zero-based effect coverage-window policy, the composition mutation control plane, and immutable by-value composition queries. Generic replacement preparation is addressed by zero-based composition-layer index, rejects invalid or non-element layers before construction, and keeps the retired element alive through host invalidation after commit. The host no longer requests mutable element access for generic replacement. `legacyCompositionElementForHost` remains only for optional Perlin/Game of Life post-install actions and derived Grid/Geodesic/Perlin/Game of Life pointer-cache refresh.
+- Last Step Outcome: 2026-07-27 - Added `prepareCompositionElementReplacement`, migrated generic host replacement away from mutable live-element access, and covered bounds, empty/effect/overlay rejection, abort, commit, retired-element guard lifetime, cross-layer rejection, and stale-candidate rollback.
+- Next Step: Replace the two remaining mutable legacy-element consumer areas with narrow Runtime/parameter/action contracts, then continue reducing the render-target and read-only inspection seams. Typed descriptor/catalog ownership remains a later candidate.
 - Dependencies / Overlap: `show_readiness_operator_stability`, `layer_package_compatibility_bench_scaffolding`, `docs/architecture/synaptome_spine_element_model.md`, `docs/architecture/synaptome_layer_system_roadmap.md`, `docs/architecture/synaptome_artist_sdk.md`, parameter/scene/mapping contracts, and layer-authoring tests.
 - Primary Scope: runtime
 - Secondary Scopes: contracts, artist-sdk, tests, docs, release
@@ -17,8 +17,8 @@ State Summary
 - Priority Lane: Fast-Track
 - Ready State: Ready
 - Ready Gate: The architecture direction, compatibility policy, ordered tasks, and stop conditions are explicit; the operator accepted residual show-validation risk and authorized execution.
-- Project Ops / Roadmap Updates (timestamped): 2026-07-26 - Added the canonical model and subordinated package/discovery work to its contract and build gates. 2026-07-26 - Promoted SEAC to execution after dual-screen validation was deferred. 2026-07-26 - Completed the dependency inventory and froze the Element SDK v1 source/static-link boundary. 2026-07-26 - Landed the first SEAC-3 build and registration slice. 2026-07-26 - Moved generic element preparation/release and exact registration ownership behind the first Runtime facade seam. 2026-07-26 - Linked the first runtime-core library and moved fixed composition storage plus generic update/draw/resize ownership behind it. 2026-07-26 - Added isolated parameter staging and transactional same-address visual-element replacement. 2026-07-26 - Hardened reserved opacity ownership, prepared-result lifetime, FX/UI-to-visual adoption, bool modifier migration, and registry-consumer invalidation. 2026-07-26 - Removed the global element factory and proved per-Runtime type-registry isolation. 2026-07-26 - Moved zero-based effect coverage-window policy into Runtime and removed the duplicate `PostEffectChain` resolver without expanding the Element SDK. 2026-07-26 - Added the Runtime composition mutation control plane, Runtime-owned layer opacity, a const-only host view, and narrow render/legacy-element seams. 2026-07-27 - Replaced the const live host view with pointer-free by-value snapshots and removed public live composition access.
-- Resume From: Phase EXECUTION, State In Progress, Next Action reduce or retire the remaining render-target, read-only element, and mutable legacy-element host seams.
+- Project Ops / Roadmap Updates (timestamped): 2026-07-26 - Added the canonical model and subordinated package/discovery work to its contract and build gates. 2026-07-26 - Promoted SEAC to execution after dual-screen validation was deferred. 2026-07-26 - Completed the dependency inventory and froze the Element SDK v1 source/static-link boundary. 2026-07-26 - Landed the first SEAC-3 build and registration slice. 2026-07-26 - Moved generic element preparation/release and exact registration ownership behind the first Runtime facade seam. 2026-07-26 - Linked the first runtime-core library and moved fixed composition storage plus generic update/draw/resize ownership behind it. 2026-07-26 - Added isolated parameter staging and transactional same-address visual-element replacement. 2026-07-26 - Hardened reserved opacity ownership, prepared-result lifetime, FX/UI-to-visual adoption, bool modifier migration, and registry-consumer invalidation. 2026-07-26 - Removed the global element factory and proved per-Runtime type-registry isolation. 2026-07-26 - Moved zero-based effect coverage-window policy into Runtime and removed the duplicate `PostEffectChain` resolver without expanding the Element SDK. 2026-07-26 - Added the Runtime composition mutation control plane, Runtime-owned layer opacity, a const-only host view, and narrow render/legacy-element seams. 2026-07-27 - Replaced the const live host view with pointer-free by-value snapshots and removed public live composition access. 2026-07-27 - Replaced pointer-addressed generic element replacement with a zero-based composition-layer transaction and narrowed mutable legacy access to two compatibility areas.
+- Resume From: Phase EXECUTION, State In Progress, Next Action replace the two remaining mutable legacy-element consumers with narrow Runtime/parameter/action contracts.
 
 ## Milestone Synthesis
 
@@ -358,6 +358,15 @@ source-code archaeology or private host knowledge.
   and `CompositionLayer` accessor were removed. Read-only element inspection,
   mutable legacy element actions, and render targets remain separate named
   host-only seams.
+- 2026-07-27 - Added
+  `Runtime::prepareCompositionElementReplacement(zeroBasedIndex, request)`.
+  Runtime now resolves the live replacement target internally and rejects
+  out-of-range, empty, effect, and overlay layers before factory construction.
+  Generic replacement no longer asks the host for a mutable element pointer.
+  After commit, the caller-held prepared result guards the retired element
+  through parameter and derived-pointer invalidation. Mutable legacy access
+  remains only for optional Perlin/Game of Life post-install actions and
+  `refreshLayerReferences()` derived-pointer caching.
 
 ## Validation
 
@@ -406,9 +415,15 @@ source-code archaeology or private host knowledge.
 - Passed: RuntimeCore proves snapshot capacity and bounds, empty/element/effect/
   overlay projection, copy isolation, mutation freshness, clear behavior, and
   no element construction during query.
+- Passed: RuntimeCore covers slot-addressed replacement bounds, empty/effect/
+  overlay rejection before construction, live-state preservation during
+  preparation and abort, cross-layer and stale-candidate rejection, atomic
+  commit, lifecycle progress, retired-element guard lifetime, clear/reuse
+  generation changes, and candidate cleanup after Runtime expiry.
 - Open Gate: Reduce or retire `compositionRenderTargetsForHost`,
-  `compositionElementForHost`, and `legacyCompositionElementForHost` by moving
-  remaining renderer and compatibility consumers behind narrower contracts.
+  `compositionElementForHost`, and `legacyCompositionElementForHost`. The
+  mutable element seam has only two remaining consumer areas: optional
+  Perlin/Game of Life post-install actions and derived-pointer cache refresh.
 - Not Run: Live dual-screen hardware rehearsal remains explicitly deferred.
 - Manual Evidence: User approved the architecture direction and requested a prioritized Project Ops roadmap.
 

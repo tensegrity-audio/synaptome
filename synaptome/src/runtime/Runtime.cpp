@@ -51,6 +51,8 @@ Runtime::ElementResult::ElementResult(ElementResult&& other) noexcept
       stagedParameters_(std::move(other.stagedParameters_)),
       element_(std::move(other.element_)),
       replacementElement_(std::exchange(other.replacementElement_, nullptr)),
+      replacementElementRevision_(
+          std::exchange(other.replacementElementRevision_, 0)),
       ownsPrefixReservation_(
           std::exchange(other.ownsPrefixReservation_, false)),
       runtime_(std::exchange(other.runtime_, nullptr)),
@@ -66,6 +68,8 @@ Runtime::ElementResult& Runtime::ElementResult::operator=(
     stagedParameters_ = std::move(other.stagedParameters_);
     replacementElement_ =
         std::exchange(other.replacementElement_, nullptr);
+    replacementElementRevision_ =
+        std::exchange(other.replacementElementRevision_, 0);
     ownsPrefixReservation_ =
         std::exchange(other.ownsPrefixReservation_, false);
     errorCode = other.errorCode;
@@ -147,11 +151,35 @@ Runtime::ElementResult Runtime::prepareElement(
     return prepareElementImpl(request, nullptr, progress);
 }
 
-Runtime::ElementResult Runtime::prepareElementReplacement(
+Runtime::ElementResult Runtime::prepareCompositionElementReplacement(
+    std::size_t zeroBasedIndex,
     const ElementRequest& request,
-    Layer& replacing,
     const ProgressCallback& progress) {
-    return prepareElementImpl(request, &replacing, progress);
+    if (zeroBasedIndex >= compositionLayers_.size() ||
+        compositionLayers_[zeroBasedIndex].kind != CompositionKind::Element ||
+        !compositionLayers_[zeroBasedIndex].element_) {
+        ElementResult result;
+        result.errorCode = ElementErrorCode::InvalidRequest;
+        result.stage = "validate";
+        result.typeId = request.typeId;
+        result.definitionId = request.definitionId;
+        result.instanceId = request.instanceId;
+        result.registryPrefix = request.registryPrefix;
+        result.enabled = request.enabled;
+        result.error = zeroBasedIndex >= compositionLayers_.size()
+            ? "composition layer index is out of range"
+            : "composition layer does not contain a replaceable element";
+        return result;
+    }
+    auto result = prepareElementImpl(
+        request,
+        compositionLayers_[zeroBasedIndex].element_.get(),
+        progress);
+    if (result) {
+        result.replacementElementRevision_ =
+            compositionLayers_[zeroBasedIndex].elementRevision_;
+    }
+    return result;
 }
 
 bool Runtime::hasElementType(const std::string& typeId) const noexcept {
@@ -319,6 +347,7 @@ void Runtime::releasePreparedElement(ElementResult& prepared) noexcept {
     prepared.element_.reset();
     prepared.stagedParameters_.reset();
     prepared.replacementElement_ = nullptr;
+    prepared.replacementElementRevision_ = 0;
     prepared.ownsPrefixReservation_ = false;
     prepared.runtime_ = nullptr;
     prepared.runtimeLifetime_.reset();
@@ -410,7 +439,11 @@ CompositionCoverage Runtime::normalizeCoverage(
 
 void Runtime::forceClearCompositionLayerNoexcept(
     CompositionLayer& layer) noexcept {
+    const bool hadElement = layer.element_ != nullptr;
     releaseElement(layer.element_);
+    if (hadElement) {
+        ++layer.elementRevision_;
+    }
     if (!layer.opacityParameterId_.empty()) {
         parameters_.removeById(layer.opacityParameterId_);
     }
@@ -530,6 +563,12 @@ CompositionMutationResult Runtime::adoptPreparedElementImpl(
     assignment.coverage = CompositionCoverage();
 
     Layer* const oldElement = layer->element_.get();
+    if (prepared.replacementElement_ &&
+        layer->elementRevision_ != prepared.replacementElementRevision_) {
+        return fail(
+            CompositionMutationError::ElementMismatch,
+            "prepared replacement generation is stale");
+    }
     if (oldElement != prepared.replacementElement_) {
         return fail(
             CompositionMutationError::ElementMismatch,
@@ -613,6 +652,7 @@ CompositionMutationResult Runtime::adoptPreparedElementImpl(
         ownership_.swap(nextOwnership);
         activePrefixes_.swap(nextActivePrefixes);
         layer->element_.swap(prepared.element_);
+        ++layer->elementRevision_;
         layer->assetId.swap(assignment.definitionId);
         layer->label.swap(assignment.label);
         layer->type.swap(assignment.typeId);
@@ -626,6 +666,7 @@ CompositionMutationResult Runtime::adoptPreparedElementImpl(
 
         prepared.stagedParameters_.reset();
         prepared.replacementElement_ = nullptr;
+        prepared.replacementElementRevision_ = 0;
         prepared.ownsPrefixReservation_ = false;
         prepared.runtime_ = nullptr;
         prepared.runtimeLifetime_.reset();
@@ -862,6 +903,9 @@ CompositionMutationResult Runtime::clearCompositionLayer(
         activePrefixes_.swap(nextActivePrefixes);
         std::unique_ptr<Layer> retiredElement;
         retiredElement.swap(layer->element_);
+        if (oldElement) {
+            ++layer->elementRevision_;
+        }
         layer->assetId.clear();
         layer->label.clear();
         layer->type.clear();

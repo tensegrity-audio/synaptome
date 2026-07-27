@@ -1,3 +1,4 @@
+#include <array>
 #include <cmath>
 #include <exception>
 #include <iostream>
@@ -88,6 +89,43 @@ public:
     void setup(ParameterRegistry&) override {}
     void update(const LayerUpdateParams&) override {}
     void draw(const LayerDrawParams&) override {}
+};
+
+struct SlotReplacementLifetimeState {
+    int constructionCount = 0;
+    std::array<bool, 12> destroyed{};
+};
+
+class SlotReplacementLifetimeElement final : public Layer {
+public:
+    SlotReplacementLifetimeElement(
+        SlotReplacementLifetimeState& state,
+        int serial)
+        : state_(state),
+          serial_(serial) {}
+
+    ~SlotReplacementLifetimeElement() override {
+        state_.destroyed[static_cast<std::size_t>(serial_)] = true;
+    }
+
+    void setup(ParameterRegistry& registry) override {
+        ParameterRegistry::Descriptor descriptor;
+        descriptor.label = "Slot Replacement Lifetime";
+        registry.addFloat(
+            registryPrefix() + ".value",
+            &value_,
+            value_,
+            descriptor);
+    }
+    void update(const LayerUpdateParams&) override {}
+    void draw(const LayerDrawParams&) override {}
+
+    int serial() const noexcept { return serial_; }
+
+private:
+    SlotReplacementLifetimeState& state_;
+    int serial_ = 0;
+    float value_ = 0.25f;
 };
 
 class ForeignParameterElement final : public Layer {
@@ -577,12 +615,320 @@ void RunCompositionSnapshotScenario() {
             constructionCount == 1,
         "idempotent clear or snapshot query constructed an element");
 }
+
+void RunCompositionSlotReplacementScenario() {
+    LayerFactory factory;
+    SlotReplacementLifetimeState lifetime;
+    factory.registerType("tests.runtime.slot-replacement", [&] {
+        const int serial = lifetime.constructionCount++;
+        return std::make_unique<SlotReplacementLifetimeElement>(
+            lifetime,
+            serial);
+    });
+    ParameterRegistry parameters;
+    synaptome::runtime::Runtime runtime(factory, parameters);
+
+    synaptome::runtime::Runtime::ElementRequest request;
+    request.typeId = "tests.runtime.slot-replacement";
+    request.definitionId = "tests.definition.slot-initial";
+    request.instanceId = "tests.instance.slot-initial";
+    request.registryPrefix = "console.layer1";
+    request.enabled = true;
+
+    const auto outOfBounds =
+        runtime.prepareCompositionElementReplacement(
+            synaptome::runtime::kCompositionLayerCount,
+            request);
+    const auto empty =
+        runtime.prepareCompositionElementReplacement(0, request);
+    require(
+        !outOfBounds &&
+            outOfBounds.errorCode ==
+                synaptome::runtime::Runtime::ElementErrorCode::
+                    InvalidRequest &&
+            outOfBounds.stage == "validate" &&
+            outOfBounds.typeId == request.typeId &&
+            outOfBounds.definitionId == request.definitionId &&
+            outOfBounds.instanceId == request.instanceId &&
+            outOfBounds.registryPrefix == request.registryPrefix &&
+            !empty &&
+            empty.errorCode ==
+                synaptome::runtime::Runtime::ElementErrorCode::
+                    InvalidRequest &&
+            empty.stage == "validate" &&
+            lifetime.constructionCount == 0,
+        "slot replacement bounds or empty-slot validation constructed an element");
+
+    synaptome::runtime::CompositionAssignment nonElement;
+    nonElement.kind = synaptome::runtime::CompositionKind::Effect;
+    nonElement.definitionId = "tests.effect.slot-replacement";
+    nonElement.label = "Replacement Effect";
+    nonElement.typeId = "fx.slot-replacement";
+    nonElement.registryPrefix = "effects.slot-replacement";
+    nonElement.active = true;
+    require(runtime.assignCompositionEntry(1, nonElement),
+            "slot replacement scenario could not assign its effect");
+    auto effectReplacement =
+        runtime.prepareCompositionElementReplacement(1, request);
+    require(
+        !effectReplacement &&
+            effectReplacement.errorCode ==
+                synaptome::runtime::Runtime::ElementErrorCode::
+                    InvalidRequest &&
+            lifetime.constructionCount == 0,
+        "effect slot replacement constructed an element");
+    require(runtime.clearCompositionLayer(1),
+            "slot replacement scenario could not clear its effect");
+
+    nonElement.kind = synaptome::runtime::CompositionKind::Overlay;
+    nonElement.definitionId = "tests.overlay.slot-replacement";
+    nonElement.typeId = "ui.slot-replacement";
+    nonElement.registryPrefix = "ui.slot-replacement";
+    require(runtime.assignCompositionEntry(1, nonElement),
+            "slot replacement scenario could not assign its overlay");
+    auto overlayReplacement =
+        runtime.prepareCompositionElementReplacement(1, request);
+    require(
+        !overlayReplacement &&
+            overlayReplacement.errorCode ==
+                synaptome::runtime::Runtime::ElementErrorCode::
+                    InvalidRequest &&
+            lifetime.constructionCount == 0,
+        "overlay slot replacement constructed an element");
+    require(runtime.clearCompositionLayer(1),
+            "slot replacement scenario could not clear its overlay");
+
+    auto initial = runtime.prepareElement(request);
+    require(initial && lifetime.constructionCount == 1,
+            "slot replacement scenario did not prepare its initial element");
+    require(
+        runtime.adoptPreparedElement(
+            0,
+            std::move(initial),
+            assignmentFor(request, "Slot Initial", 0.41f)),
+        "slot replacement scenario did not adopt its initial element");
+    const Layer* const initialLive =
+        runtime.compositionElementForHost(0);
+
+    auto wrongPrefixRequest = request;
+    wrongPrefixRequest.registryPrefix = "console.layer2";
+    auto wrongPrefix =
+        runtime.prepareCompositionElementReplacement(
+            0,
+            wrongPrefixRequest);
+    require(
+        !wrongPrefix &&
+            wrongPrefix.errorCode ==
+                synaptome::runtime::Runtime::ElementErrorCode::
+                    InvalidRequest &&
+            lifetime.constructionCount == 1 &&
+            runtime.compositionElementForHost(0) == initialLive,
+        "slot replacement accepted a mismatched prefix or changed the live element");
+
+    {
+        auto abandoned =
+            runtime.prepareCompositionElementReplacement(0, request);
+        require(
+            abandoned &&
+                lifetime.constructionCount == 2 &&
+                runtime.compositionElementForHost(0) == initialLive,
+            "slot replacement preparation changed the live element");
+    }
+    require(
+        lifetime.destroyed[1] &&
+            !lifetime.destroyed[0] &&
+            runtime.compositionElementForHost(0) == initialLive,
+        "aborting slot replacement damaged the live element or leaked its candidate");
+
+    request.definitionId = "tests.definition.slot-replacement";
+    request.instanceId = "tests.instance.slot-replacement";
+    std::vector<std::string> progress;
+    {
+        auto prepared =
+            runtime.prepareCompositionElementReplacement(
+                0,
+                request,
+                [&](std::string_view step) {
+                    progress.emplace_back(step);
+                });
+        require(
+            prepared &&
+                lifetime.constructionCount == 3 &&
+                runtime.compositionElementForHost(0) == initialLive &&
+                parameters.findFloat("console.layer1.value") != nullptr,
+            "slot replacement preparation published candidate state");
+        const auto wrongSlotAdoption = runtime.adoptPreparedElement(
+            1,
+            std::move(prepared),
+            assignmentFor(request, "Slot Replacement", 0.67f));
+        require(
+            !wrongSlotAdoption &&
+                prepared &&
+                runtime.compositionElementForHost(0) == initialLive,
+            "cross-slot adoption consumed or replaced the prepared candidate");
+        require(
+            runtime.adoptPreparedElement(
+                0,
+                std::move(prepared),
+                assignmentFor(request, "Slot Replacement", 0.67f)),
+            "slot-based replacement did not commit");
+        const auto* replacementLive =
+            dynamic_cast<const SlotReplacementLifetimeElement*>(
+                runtime.compositionElementForHost(0));
+        const auto* retired =
+            dynamic_cast<const SlotReplacementLifetimeElement*>(
+                prepared.element());
+        require(
+            replacementLive &&
+                replacementLive->serial() == 2 &&
+                retired &&
+                retired->serial() == 0 &&
+                !lifetime.destroyed[0] &&
+                parameters.findFloat("console.layer1.value") != nullptr &&
+                parameters.findFloat("console.layer1.opacity") != nullptr,
+            "slot adoption did not retain the retired element through invalidation");
+    }
+    require(
+        lifetime.destroyed[0] &&
+            progress ==
+                std::vector<std::string>(
+                    {"create", "configure", "setup", "enable"}),
+        "slot replacement retirement or lifecycle progress ordering drifted");
+
+    request.definitionId = "tests.definition.slot-stale";
+    request.instanceId = "tests.instance.slot-stale";
+    {
+        const auto staleRequest = request;
+        auto stale =
+            runtime.prepareCompositionElementReplacement(
+                0,
+                staleRequest);
+        request.definitionId = "tests.definition.slot-winner";
+        request.instanceId = "tests.instance.slot-winner";
+        auto winner =
+            runtime.prepareCompositionElementReplacement(0, request);
+        require(stale && winner && lifetime.constructionCount == 5,
+                "parallel slot replacement preparation failed");
+        require(
+            runtime.adoptPreparedElement(
+                0,
+                std::move(winner),
+                assignmentFor(request, "Slot Winner", 0.79f)),
+            "winning slot replacement did not commit");
+        const Layer* const winnerLive =
+            runtime.compositionElementForHost(0);
+        const auto staleCommit = runtime.adoptPreparedElement(
+            0,
+            std::move(stale),
+            assignmentFor(
+                staleRequest,
+                "Slot Stale",
+                0.79f));
+        require(
+            !staleCommit &&
+                staleCommit.errorCode ==
+                    synaptome::runtime::CompositionMutationError::
+                        ElementMismatch &&
+                staleCommit.error ==
+                    "prepared replacement generation is stale" &&
+                runtime.compositionElementForHost(0) == winnerLive &&
+                !lifetime.destroyed[2],
+            "stale slot replacement changed the winning live element");
+        runtime.releasePreparedElement(stale);
+        require(
+            lifetime.destroyed[3] &&
+                !lifetime.destroyed[2],
+            "stale candidate abort destroyed the winner's retired element");
+    }
+    require(
+        lifetime.destroyed[2],
+        "winning replacement did not retain its retired element guard");
+
+    request.definitionId = "tests.definition.slot-clear-stale";
+    request.instanceId = "tests.instance.slot-clear-stale";
+    auto clearStale =
+        runtime.prepareCompositionElementReplacement(0, request);
+    require(
+        clearStale &&
+            lifetime.constructionCount == 6 &&
+            runtime.clearCompositionLayer(0),
+        "clear-stale replacement setup failed");
+    const auto clearStaleCommit = runtime.adoptPreparedElement(
+        0,
+        std::move(clearStale),
+        assignmentFor(
+            request,
+            "Slot Clear Stale",
+            0.79f));
+    require(
+        !clearStaleCommit &&
+            clearStaleCommit.errorCode ==
+                synaptome::runtime::CompositionMutationError::
+                    ElementMismatch &&
+            clearStaleCommit.error ==
+                "prepared replacement generation is stale" &&
+            !runtime.compositionLayerSnapshot(0)->occupied,
+        "cleared slot accepted a stale replacement token");
+    runtime.releasePreparedElement(clearStale);
+    require(
+        lifetime.destroyed[4] &&
+            lifetime.destroyed[5],
+        "clear-stale replacement leaked its live or candidate element");
+
+    synaptome::runtime::Runtime::ElementResult outlivesRuntime;
+    ParameterRegistry expiryParameters;
+    {
+        synaptome::runtime::Runtime expiryRuntime(
+            factory,
+            expiryParameters);
+        auto expiryRequest = request;
+        expiryRequest.definitionId =
+            "tests.definition.slot-expiry-live";
+        expiryRequest.instanceId =
+            "tests.instance.slot-expiry-live";
+        auto expiryInitial =
+            expiryRuntime.prepareElement(expiryRequest);
+        require(
+            expiryRuntime.adoptPreparedElement(
+                0,
+                std::move(expiryInitial),
+                assignmentFor(
+                    expiryRequest,
+                    "Slot Expiry Live")),
+            "Runtime-expiry scenario did not adopt its live element");
+        expiryRequest.definitionId =
+            "tests.definition.slot-expiry-candidate";
+        expiryRequest.instanceId =
+            "tests.instance.slot-expiry-candidate";
+        outlivesRuntime =
+            expiryRuntime.prepareCompositionElementReplacement(
+                0,
+                expiryRequest);
+        require(
+            outlivesRuntime &&
+                lifetime.constructionCount == 8 &&
+                !lifetime.destroyed[6] &&
+                !lifetime.destroyed[7],
+            "Runtime-expiry replacement preparation failed");
+    }
+    require(
+        lifetime.destroyed[6] &&
+            !lifetime.destroyed[7] &&
+            static_cast<bool>(outlivesRuntime),
+        "Runtime expiry destroyed or invalidated its prepared replacement");
+    outlivesRuntime =
+        synaptome::runtime::Runtime::ElementResult{};
+    require(
+        lifetime.destroyed[7],
+        "expired Runtime replacement did not release its candidate safely");
+}
 }
 
 int main() {
     try {
         RunScopedElementTypeRegistryIsolationScenario();
         RunCompositionSnapshotScenario();
+        RunCompositionSlotReplacementScenario();
 
         LayerFactory factory;
         factory.registerType("tests.runtime.good", [] {
@@ -873,8 +1219,8 @@ int main() {
         require(runtime.setCompositionLayerActive(0, true),
                 "runtime did not activate the composition element");
         auto* compositionElement =
-            dynamic_cast<ContractElement*>(
-                runtime.legacyCompositionElementForHost(0));
+            dynamic_cast<const ContractElement*>(
+                runtime.compositionElementForHost(0));
         require(compositionElement != nullptr,
                 "composition element type was not preserved");
 
@@ -889,9 +1235,8 @@ int main() {
         request.typeId = "tests.runtime.destructive-failing";
         request.definitionId = "tests.definition.failed-replacement";
         request.instanceId = "tests.instance.failed-replacement";
-        auto failedReplacement = runtime.prepareElementReplacement(
-            request,
-            *runtime.legacyCompositionElementForHost(0));
+        auto failedReplacement =
+            runtime.prepareCompositionElementReplacement(0, request);
         require(!failedReplacement,
                 "throwing replacement was reported as prepared");
         require(runtime.compositionElementForHost(0) == compositionElement,
@@ -908,9 +1253,8 @@ int main() {
         request.definitionId = "tests.definition.abandoned-replacement";
         request.instanceId = "tests.instance.abandoned-replacement";
         {
-            auto abandonedReplacement = runtime.prepareElementReplacement(
-                request,
-                *runtime.legacyCompositionElementForHost(0));
+            auto abandonedReplacement =
+                runtime.prepareCompositionElementReplacement(0, request);
             require(static_cast<bool>(abandonedReplacement),
                     abandonedReplacement.error);
         }
@@ -948,9 +1292,8 @@ int main() {
         request.definitionId = "tests.definition.conflicting";
         request.instanceId = "tests.instance.conflicting";
         {
-            auto conflictingReplacement = runtime.prepareElementReplacement(
-                request,
-                *runtime.legacyCompositionElementForHost(0));
+            auto conflictingReplacement =
+                runtime.prepareCompositionElementReplacement(0, request);
             require(static_cast<bool>(conflictingReplacement),
                     conflictingReplacement.error);
             require(
@@ -976,9 +1319,8 @@ int main() {
         request.definitionId = "tests.definition.replacement";
         request.instanceId = "tests.instance.replacement";
         request.enabled = true;
-        auto replacement = runtime.prepareElementReplacement(
-            request,
-            *runtime.legacyCompositionElementForHost(0));
+        auto replacement =
+            runtime.prepareCompositionElementReplacement(0, request);
         require(static_cast<bool>(replacement), replacement.error);
         require(runtime.compositionElementForHost(0) == compositionElement,
                 "preparation replaced the live element before commit");
@@ -989,8 +1331,8 @@ int main() {
                 assignmentFor(request, "Replacement Element", 0.72f)),
                 "same-address replacement did not commit");
         auto* replacementElement =
-            dynamic_cast<ContractElement*>(
-                runtime.legacyCompositionElementForHost(0));
+            dynamic_cast<const ContractElement*>(
+                runtime.compositionElementForHost(0));
         require(replacementElement != nullptr &&
                     replacementElement != compositionElement,
                 "replacement did not swap the live element");
@@ -1062,8 +1404,9 @@ int main() {
                 std::move(registryAwarePrepared),
                 assignmentFor(request, "Registry Aware")),
             "runtime did not adopt the registry-aware element");
-        auto* registryAware = dynamic_cast<RegistryAwareElement*>(
-            runtime.legacyCompositionElementForHost(1));
+        auto* registryAware =
+            dynamic_cast<const RegistryAwareElement*>(
+                runtime.compositionElementForHost(1));
         require(
             registryAware &&
                 registryAware->commitCount == 1 &&
@@ -1140,9 +1483,8 @@ int main() {
         request.definitionId = "tests.definition.control-plane-b";
         request.instanceId = "tests.instance.control-plane-b";
         request.enabled = false;
-        auto replacementPrepared = runtime.prepareElementReplacement(
-            request,
-            *runtime.legacyCompositionElementForHost(2));
+        auto replacementPrepared =
+            runtime.prepareCompositionElementReplacement(2, request);
         synaptome::runtime::CompositionAssignment replacementAssignment;
         replacementAssignment.kind =
             synaptome::runtime::CompositionKind::Element;
@@ -1171,9 +1513,8 @@ int main() {
 
         request.definitionId = "tests.definition.control-plane-c";
         request.instanceId = "tests.instance.control-plane-c";
-        auto mismatchedPrepared = runtime.prepareElementReplacement(
-            request,
-            *runtime.legacyCompositionElementForHost(2));
+        auto mismatchedPrepared =
+            runtime.prepareCompositionElementReplacement(2, request);
         auto mismatchedAssignment = replacementAssignment;
         mismatchedAssignment.definitionId = "tests.definition.wrong";
         const Layer* const elementBeforeRejectedCommit =

@@ -5,6 +5,7 @@
 #include <synaptome/element/compat/Layer.h>
 
 #include <array>
+#include <cstdint>
 #include <functional>
 #include <memory>
 #include <optional>
@@ -67,6 +68,9 @@ public:
         std::unique_ptr<ParameterRegistry> stagedParameters_;
         std::unique_ptr<Layer> element_;
         Layer* replacementElement_ = nullptr;
+        // Paired with replacementElement_ so commit never relies on pointer
+        // identity alone after a slot has changed.
+        std::uint64_t replacementElementRevision_ = 0;
         bool ownsPrefixReservation_ = false;
         Runtime* runtime_ = nullptr;
         std::weak_ptr<void> runtimeLifetime_;
@@ -85,9 +89,9 @@ public:
     ElementResult prepareElement(
         const ElementRequest& request,
         const ProgressCallback& progress = {});
-    ElementResult prepareElementReplacement(
+    ElementResult prepareCompositionElementReplacement(
+        std::size_t zeroBasedIndex,
         const ElementRequest& request,
-        Layer& replacing,
         const ProgressCallback& progress = {});
     bool hasElementType(const std::string& typeId) const noexcept;
 

@@ -140,11 +140,22 @@ element, FBO, parameter-registry, creator, or host pointers, and changing a copy
 cannot mutate Runtime. One bounds-checked optional layer query supports focused
 consumers without exposing the live aggregate.
 
+Generic same-address element replacement is also layer-addressed. The host
+passes a zero-based composition-layer index to
+`prepareCompositionElementReplacement`; Runtime resolves the current element,
+rejects out-of-range, empty, effect, or overlay layers before construction, and
+keeps the old instance live through candidate setup. Adoption is the commit
+point. After commit, the caller-held prepared result keeps the retired element
+alive until parameter and derived-pointer consumers have been invalidated.
+
 Mutable FBO access, read-only element inspection, and mutable element-specific
 compatibility actions still use three separate named host seams. Those seams are
-SEAC-3 migration debt. The next boundary moves their remaining renderer and
-legacy consumers behind narrower Runtime/parameter/action contracts so the
-seams can shrink or retire.
+SEAC-3 migration debt. Generic replacement no longer consumes the mutable
+element seam. Its two remaining host consumer areas are optional post-install
+Perlin/Game of Life actions and derived Grid/Geodesic/Perlin/Game of Life
+pointer-cache refresh for legacy consumers. The next boundary moves those
+actions and cached consumers behind narrower Runtime/parameter/action contracts
+so the mutable seam can retire.
 
 The spine does not:
 

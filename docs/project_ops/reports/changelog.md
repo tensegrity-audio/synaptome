@@ -2,6 +2,37 @@
 
 This changelog records Project Ops and administrative workflow changes. Product release versioning remains governed by `docs/release_policy.md`.
 
+## 2026-07-27 - architecture - seac3_slot_addressed_element_replacement
+
+- Request ID: `spine_element_architecture_convergence`
+- Phase / Milestone: SEAC-3 in progress
+- Transaction: Added
+  `Runtime::prepareCompositionElementReplacement(zeroBasedIndex, request)`.
+  Runtime resolves the live element internally; the removed pointer-addressed
+  API can no longer accept a host-selected mutable element.
+- Validation boundary: Out-of-range, empty, effect, and overlay layers reject
+  replacement before factory construction. Preparation leaves the live element
+  and parameters unchanged; adoption remains the atomic commit point.
+- Lifetime: After a successful adoption, the caller-held prepared result owns
+  the retired element until parameter consumers, derived-pointer caches, and
+  routes have been invalidated. Abort, cross-layer adoption, and stale prepared
+  candidates preserve the current live element.
+- Host boundary: Generic replacement no longer calls
+  `legacyCompositionElementForHost`. Mutable legacy access remains only for
+  optional Perlin/Game of Life post-install MIDI/randomize actions and
+  `refreshLayerReferences()` derived-pointer caching.
+- Compatibility: Public IDs, scenes, mappings, parameter addresses, rendering,
+  Element SDK headers, and effect ABI policy remain unchanged.
+- Validation: RuntimeCore covers bounds, empty/effect/overlay rejection without
+  construction, prepare/abort isolation, commit, lifecycle progress,
+  retired-element guard lifetime, cross-layer rejection, and stale-candidate
+  rollback, including clear/reuse generation changes and candidates that
+  outlive Runtime. Boundary validation pins the index-addressed API and the two
+  remaining mutable compatibility areas.
+- Remaining gate: Replace those two mutable consumers with narrow
+  Runtime/parameter/action contracts. Typed descriptor/catalog ownership
+  remains a later candidate rather than part of this slice.
+
 ## 2026-07-27 - architecture - seac3_immutable_composition_snapshot
 
 - Request ID: `spine_element_architecture_convergence`

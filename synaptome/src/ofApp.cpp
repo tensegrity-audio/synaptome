@@ -5317,18 +5317,15 @@ bool ofApp::addAssetToConsoleLayer(int layerIndex,
         request.config = layerConfig;
         request.enabled = activate;
 
-        Layer* const replacingLayer =
-            runtime_.legacyCompositionElementForHost(
-                static_cast<std::size_t>(idx));
-        const bool replacingElement = replacingLayer != nullptr;
+        const bool replacingElement = slot.hasElement;
         const std::string retiredType = slot.typeId;
         auto progressCallback = [&](std::string_view step) {
             logSceneLoadInstallStep(std::string(step));
         };
         auto prepared = replacingElement
-            ? runtime_.prepareElementReplacement(
+            ? runtime_.prepareCompositionElementReplacement(
+                static_cast<std::size_t>(idx),
                 request,
-                *replacingLayer,
                 progressCallback)
             : runtime_.prepareElement(request, progressCallback);
         if (!prepared) {
@@ -5358,8 +5355,9 @@ bool ofApp::addAssetToConsoleLayer(int layerIndex,
         }
 
         // Runtime adoption atomically publishes the element, metadata, and new
-        // ParameterRegistry storage. Invalidate pointer-bearing host consumers
-        // before any later host path can observe the replacement.
+        // ParameterRegistry storage. The prepared transaction retains the
+        // retired element until this install scope exits, so invalidate
+        // pointer-bearing host consumers before that retirement guard drops.
         if (adoption.parametersChanged && controlMappingHub) {
             controlMappingHub->invalidateParameterRegistryStorage();
         }

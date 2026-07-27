@@ -4,6 +4,7 @@
 
 #include <synaptome/element/compat/Layer.h>
 
+#include <cstdint>
 #include <memory>
 #include <string>
 
@@ -33,6 +34,9 @@ private:
     friend class Runtime;
     std::unique_ptr<Layer> element_;
     std::string opacityParameterId_;
+    // Invalidates prepared replacement tokens even if an allocator later
+    // reuses the retired element's address.
+    std::uint64_t elementRevision_ = 0;
 };
 
 } // namespace synaptome::runtime

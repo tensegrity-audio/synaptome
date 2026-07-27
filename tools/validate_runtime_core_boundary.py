@@ -81,7 +81,7 @@ def main() -> int:
         "removeById",
         "activePrefixes_",
         "stagedParameters_",
-        "prepareElementReplacement",
+        "prepareCompositionElementReplacement",
         "replacingIds",
         "onParameterRegistryCommitted",
         "isReservedCompositionParameter",
@@ -188,6 +188,7 @@ def main() -> int:
         if token in snapshot_surface:
             errors.append(f"composition snapshot DTOs expose forbidden ownership: {token}")
     for token in (
+        "ElementResult prepareCompositionElementReplacement(",
         "CompositionSnapshot compositionSnapshot() const",
         "std::optional<CompositionLayerSnapshot> compositionLayerSnapshot(",
         "const Layer* compositionElementForHost(",
@@ -196,6 +197,24 @@ def main() -> int:
     ):
         if token not in runtime_header:
             errors.append(f"Runtime immutable query/host seam is missing {token}")
+    if re.search(
+        r"\bprepareElementReplacement\s*\(",
+        runtime_header + runtime_source + app + runtime_test,
+    ):
+        errors.append(
+            "pointer-addressed element replacement API must remain removed"
+        )
+    if not re.search(
+        r"ElementResult\s+prepareCompositionElementReplacement\s*\(\s*"
+        r"std::size_t\s+zeroBasedIndex\s*,\s*"
+        r"const\s+ElementRequest&\s+request\s*,\s*"
+        r"const\s+ProgressCallback&\s+progress\s*=\s*\{\}\s*\)",
+        runtime_header,
+    ):
+        errors.append(
+            "Runtime replacement preparation must be addressed by zero-based "
+            "composition-layer index"
+        )
     if "struct ConsoleSlot" in app_header:
         errors.append("ofApp still defines the composition-layer storage record")
     if "CompositionLayerSnapshot" not in app_header:
@@ -248,7 +267,7 @@ def main() -> int:
                 )
     for token in (
         "runtime_.prepareElement",
-        "runtime_.prepareElementReplacement",
+        "runtime_.prepareCompositionElementReplacement",
         "runtime_.adoptPreparedElement",
         "runtime_.assignCompositionEntry",
         "runtime_.setCompositionLayerActive",
@@ -271,10 +290,13 @@ def main() -> int:
             "remaining read-only element inspection must use the named "
             "composition-element seam"
         )
-    if "runtime_.legacyCompositionElementForHost" not in app:
+    legacy_mutable_use_count = app.count(
+        "runtime_.legacyCompositionElementForHost"
+    )
+    if legacy_mutable_use_count != 2:
         errors.append(
-            "remaining element-specific host adapters must use the named "
-            "legacy composition-element seam"
+            "mutable legacy composition-element access must remain limited to "
+            "the two documented compatibility areas"
         )
     if "runtime_.compositionLayer(" in app or "runtime_.releaseCompositionElement" in app:
         errors.append("ofApp still calls a transitional mutable Runtime composition API")
@@ -332,7 +354,9 @@ def main() -> int:
     for forbidden in ("LayerFactory::instance().create", "l->configure(", "l->setup("):
         if forbidden in add_body:
             errors.append(f"host add flow still performs generic lifecycle operation: {forbidden}")
-    replacement_prepare = add_body.find("runtime_.prepareElementReplacement")
+    replacement_prepare = add_body.find(
+        "runtime_.prepareCompositionElementReplacement"
+    )
     replacement_adopt = add_body.find("runtime_.adoptPreparedElement")
     destructive_clear = add_body.find("clearConsoleSlot(idx)")
     registry_invalidation = add_body.find(
@@ -343,12 +367,17 @@ def main() -> int:
         "refreshLayerReferences()",
         replacement_adopt,
     )
+    post_adoption_legacy_adapter = add_body.find(
+        "runtime_.legacyCompositionElementForHost",
+        replacement_adopt,
+    )
     if min(
         replacement_prepare,
         replacement_adopt,
         destructive_clear,
         registry_invalidation,
         retired_reference_refresh,
+        post_adoption_legacy_adapter,
     ) < 0:
         errors.append("host visual replacement transaction is incomplete")
     elif not (
@@ -356,12 +385,38 @@ def main() -> int:
         replacement_adopt <
         registry_invalidation <=
         retired_reference_refresh <
+        post_adoption_legacy_adapter <
         destructive_clear
     ):
         errors.append(
             "host must adopt, invalidate registry consumers and retired "
-            "references, and keep destructive non-element clear after the "
-            "atomic Runtime adoption path"
+            "references, run only post-adoption legacy adapters, and keep "
+            "destructive non-element clear after the atomic Runtime path"
+        )
+    if add_body.find(
+        "runtime_.legacyCompositionElementForHost",
+        replacement_prepare,
+        replacement_adopt,
+    ) >= 0:
+        errors.append(
+            "generic replacement preparation must not request a mutable live "
+            "element from the host seam"
+        )
+    refresh_start = app.find("void ofApp::refreshLayerReferences")
+    refresh_end = app.find(
+        "std::string ofApp::canonicalScenePath",
+        refresh_start,
+    )
+    refresh_body = app[refresh_start:refresh_end]
+    if (
+        refresh_start < 0
+        or refresh_body.count("runtime_.legacyCompositionElementForHost") != 1
+        or "dynamic_cast<GridLayer*>" not in refresh_body
+        or "dynamic_cast<GameOfLifeLayer*>" not in refresh_body
+    ):
+        errors.append(
+            "the second mutable legacy seam use must remain isolated to "
+            "derived-pointer cache refresh"
         )
     direct_metadata_write = re.compile(
         r"(?:\bslot|consoleSlots\s*(?:\[[^\]]+\]|\.at\([^)]*\)))"
@@ -462,6 +517,17 @@ def main() -> int:
         errors.append("RuntimeCore test is missing effect coverage-window coverage")
     for token in (
         "RunCompositionSnapshotScenario",
+        "RunCompositionSlotReplacementScenario",
+        "prepareCompositionElementReplacement",
+        "slot replacement bounds or empty-slot validation constructed an element",
+        "effect slot replacement constructed an element",
+        "overlay slot replacement constructed an element",
+        "slot replacement preparation changed the live element",
+        "slot adoption did not retain the retired element through invalidation",
+        "stale slot replacement changed the winning live element",
+        "prepared replacement generation is stale",
+        "Runtime expiry destroyed or invalidated its prepared replacement",
+        "expired Runtime replacement did not release its candidate safely",
         "compositionSnapshot",
         "compositionLayerSnapshot",
         "caller.mutated",
@@ -486,7 +552,7 @@ def main() -> int:
         return 1
     print(
         "[runtime-core-boundary] PASS linked RuntimeCore lifecycle and "
-        "immutable composition query/control plane"
+        "immutable composition query/control/replacement plane"
     )
     return 0
 
