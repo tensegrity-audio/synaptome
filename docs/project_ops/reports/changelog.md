@@ -2,6 +2,34 @@
 
 This changelog records Project Ops and administrative workflow changes. Product release versioning remains governed by `docs/release_policy.md`.
 
+## 2026-07-27 - architecture - seac4_authoritative_builtin_parameter_contracts
+
+- Request ID: `spine_element_architecture_convergence`
+- Phase / Milestone: SEAC-4 complete; 4 of 12 roadmap steps complete.
+- Authority: All 23 built-in element types now have construction-free static
+  declarations covering 786 parameters. A type has one stable surface across
+  asset variants; assets may change starting values, not parameter metadata or
+  kinds.
+- Runtime boundary: Runtime publishes declaration-owned metadata/defaults and
+  requires exact live ID, kind, and storage parity. Signal Bloom uses explicit
+  bind-only storage. The other 22 built-ins use a checked
+  `LegacySetupAdapter`; setup initializes storage/resources while its metadata
+  is discarded.
+- Generated views: One reviewed snapshot generates the compiled Runtime
+  declaration payload, machine catalog, human parameter reference, Browser
+  groups/counts, and compatibility parameter manifests.
+- Validation: Release app build passed. Live validation passed 23 types and 55
+  catalog assets. RuntimeCore and LayerPackageBench passed. BrowserFlow passed
+  all 36 scenarios. Boundary and generated-artifact checks passed.
+- Compatibility: No public parameter IDs or persisted formats changed. Direct
+  bind-only conversion of the 22 compatibility adapters remains internal
+  cleanup, not an authority gap.
+- Manual/deferred evidence: The operator reports the Release app and
+  dual-screen mode working. Physical MIDI and the complete show-machine
+  recovery rehearsal remain deferred.
+- Next gate: SEAC-5 versioned state ownership, value provenance,
+  compatibility readers, and migrations.
+
 ## 2026-07-27 - architecture - seac4b2_live_parameter_binding
 
 - Request ID: `spine_element_architecture_convergence`

@@ -124,6 +124,7 @@ From the repo root:
 python tools\validate_synaptome_extraction_manifest.py --check --strict-review
 python tools\validate_osc_route_patterns.py
 python tools\validate_configs.py --public-app
+python tools\gen_builtin_element_contracts.py --check
 python tools\check_app_independence.py
 & 'C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\amd64\MSBuild.exe' `
   'synaptome\tests\BrowserFlowTest\BrowserFlowTest.vcxproj' `
@@ -135,10 +136,11 @@ Expected current signals:
 
 - Public extraction manifest reports no review-gated or unclassified files.
 - Built-in OSC route globs match mesh-style sample addresses.
-- Public app contracts report `validated=17`.
+- Public app contracts report `validated=18` against committed fixtures.
+- Built-in parameter generation reports 23 types and 786 parameters.
 - App independence audit reports no firmware implementation references.
 - BrowserFlowTest builds with warnings tracked as cleanup, but 0 errors.
-- BrowserFlow reports all 33 scenarios passed.
+- BrowserFlow reports all 36 scenarios passed.
 - Generated test outputs and runtime logs remain ignored by Git.
 
 ## Docs
@@ -150,6 +152,8 @@ Expected current signals:
 - [Release Policy](docs/release_policy.md)
 - [Spine, Element, and Layer Model](docs/architecture/synaptome_spine_element_model.md)
 - [Element SDK v1 Boundary](docs/architecture/element_sdk_v1_boundary.md)
+- [Built-In Element Parameter Contract](docs/contracts/builtin_element_parameter_contract.md)
+- [Generated Element Parameter Reference](docs/element_parameter_reference.md)
 - [Artist SDK](docs/architecture/synaptome_artist_sdk.md)
 - [Current roadmap and pre-media safety gate](docs/project_ops/roadmap.md)
 - [External Contracts](docs/architecture/synaptome_external_contracts.md)

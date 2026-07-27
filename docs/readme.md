@@ -37,6 +37,8 @@ priority by themselves.
 ## Contracts And Examples
 
 - [Contract index](contracts/README.md)
+- [Built-in element parameter contract](contracts/builtin_element_parameter_contract.md)
+- [Generated element parameter reference](element_parameter_reference.md)
 - [Contract gaps](contracts/contract_gaps.md)
 - [Fixtures](contracts/fixtures.md)
 - [Signal Control integration](contracts/signal_control_integration.md)

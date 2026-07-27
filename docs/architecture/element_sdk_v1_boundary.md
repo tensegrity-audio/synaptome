@@ -128,7 +128,7 @@ architecture.
 | Parameters | Public pointer-free DTOs and authoritative declarations now cover all 23 shipping types and 786 controls. Runtime publishes declaration metadata/defaults and enforces exact live ID/kind/storage parity. Signal Bloom uses explicit bind-only storage; 22 existing implementations use a checked setup-storage adapter whose metadata is discarded. | Direct bind-only migration remains cleanup. Versioned value ownership, provenance, and migrations belong to SEAC-5. |
 | Services | Elements reach global services such as audio analysis, video catalog, and text state directly. | Isolated tests can still depend on hidden process state. |
 | Inspection | Type/kind/action/group/parameter inspection is construction-free for every registration. Browser counts/groups, the machine catalog, compatibility manifest, compiled declarations, and human reference come from the same reviewed snapshot. | Dynamic option providers remain runtime services, and package ownership/version inspection belongs to later phases. |
-| Tests | The package bench proves stub-backed element lifecycle/draw dispatch. Browser tests still use private app internals. `HostCompositionRendererTest` separately compiles the production renderer/Runtime sources against FBO/GL stubs. | The renderer harness proves traversal/policy/failure behavior, not pixels, shader execution, or a real GL context; Browser execution is deferred with dual-screen testing. |
+| Tests | The package bench proves stub-backed element lifecycle/draw dispatch. Browser tests still use private app internals. `HostCompositionRendererTest` separately compiles the production renderer/Runtime sources against FBO/GL stubs. BrowserFlow passes 36 scenarios, and the operator reports successful Release and dual-screen use. | The renderer harness proves traversal/policy/failure behavior, not pixels, shader execution, or a real GL context; physical MIDI and a complete show-machine recovery rehearsal remain deferred. |
 
 The inventory also identifies two state risks that later tasks must preserve:
 
@@ -790,19 +790,19 @@ This decision does not promise or implement:
 - native hot loading or unloading;
 - automatic package discovery or activation;
 - the complete Scene v2/state-provenance model;
-- live bind-only parameter storage or retirement of current setup metadata;
-- runtime metadata authority and declared-default precedence;
-- Browser, catalog, parameter-manifest, or documentation generation from the
-  declared contract;
-- migration of the remaining 22 shipping registrations;
+- direct bind-only conversion of the 22 compatibility-adapted built-ins;
 - scene, preset, or mapping migration to the declared parameter contract;
 - display label, implementation/package version or owner, capabilities,
   dependencies, resources, and persistence fields in `ElementDescriptor`;
 - serialization of the runtime descriptor into packages;
 - generated registration;
 - persisted MIDI/OSC action targets and action mappings;
-- live dual-screen hardware validation.
+- physical MIDI validation and a complete show-machine recovery rehearsal;
+- real pixel, shader, and graphics-context confidence tests.
 
-Those remain separate gated tasks. A raw openFrameworks experiment must first
+Those remain separate gated tasks. Parameter declaration and Runtime metadata
+authority are complete; see
+[`../contracts/builtin_element_parameter_contract.md`](../contracts/builtin_element_parameter_contract.md).
+A raw openFrameworks experiment must first
 be wrapped behind the lifecycle; it gains scenes, mappings, presets, and
 Browser control only as it declares the corresponding stable contract.

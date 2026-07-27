@@ -20,6 +20,27 @@ State Summary
 - Project Ops / Roadmap Updates (timestamped): 2026-07-26 - Added the canonical model and subordinated package/discovery work to its contract and build gates. 2026-07-26 - Promoted SEAC to execution after dual-screen validation was deferred. 2026-07-26 - Completed the dependency inventory and froze the Element SDK v1 source/static-link boundary. 2026-07-26 - Landed the first SEAC-3 build and registration slice. 2026-07-26 - Moved generic element preparation/release and exact registration ownership behind the first Runtime facade seam. 2026-07-26 - Linked the first runtime-core library and moved fixed composition storage plus generic update/draw/resize ownership behind it. 2026-07-26 - Added isolated parameter staging and transactional same-address visual-element replacement. 2026-07-26 - Hardened reserved opacity ownership, prepared-result lifetime, FX/UI-to-visual adoption, bool modifier migration, and registry-consumer invalidation. 2026-07-26 - Removed the global element factory and proved per-Runtime type-registry isolation. 2026-07-26 - Moved zero-based effect coverage-window policy into Runtime and removed the duplicate `PostEffectChain` resolver without expanding the Element SDK. 2026-07-26 - Added the Runtime composition mutation control plane, Runtime-owned layer opacity, a const-only host view, and narrow render/legacy-element seams. 2026-07-27 - Replaced the const live host view with pointer-free by-value snapshots and removed public live composition access. 2026-07-27 - Replaced pointer-addressed generic element replacement with a zero-based composition-layer transaction and narrowed mutable legacy access to two compatibility areas. 2026-07-27 - Removed the derived element cache and moved ordinary built-in views, bindings, and parameter actions to snapshot-addressed registry access. 2026-07-27 - Added live-instance action registration, pointer-free snapshot discovery, and generic slot-addressed invocation without adding persisted action mappings. 2026-07-27 - Replaced read-only concrete element inspection with separate on-demand typed telemetry and made Geodesic subdivision durable parameter state. 2026-07-27 - Consolidated host creator bindings in the controlled aggregate and shared Signal Bloom's package leaf registrar with its bench without claiming generated registration. 2026-07-27 - Isolated legacy Text host parameters and font synchronization behind `BuiltinElementHostBindings` without claiming singleton retirement or authoritative declarations. 2026-07-27 - Closed SEAC-3R by extracting host-only composition rendering/GPU-target ownership, retiring the raw mutable target seam, and adding a dedicated stub-backed renderer policy harness. 2026-07-27 - Closed SEAC-4A with minimal static type/kind/action descriptor authority, atomic descriptor-plus-creator registration, construction-free inspection, exact live handler binding, and shipping registration migration. 2026-07-27 - Completed SEAC-4B1 with the pointer-free parameter DTO, explicit declared-versus-legacy registry state, and a construction-free five-group/18-parameter Signal Bloom declaration with exact package/static parity plus compatible live ID/kind/range registration. 2026-07-27 - Completed SEAC-4B2 for Signal Bloom with bind-only live storage and declaration-owned runtime metadata/defaults.
 - Resume From: Phase EXECUTION, State In Progress, Next Action begin SEAC-5 state ownership and provenance.
 
+## Fresh-Context Handoff
+
+- Last completed checkpoint: commit `3dd827c`, SEAC-4 authoritative built-in
+  parameter contracts. The user reports that checkpoint was pushed.
+- Verified baseline: 23 built-in types, 786 declared parameters, exact live
+  parity across 55 catalog assets, 36 passing BrowserFlow scenarios, passing
+  RuntimeCore and LayerPackageBench suites, and a clean Release app build.
+- Manual evidence: the Release app and dual-screen mode work. Physical MIDI
+  and the complete show-machine recovery rehearsal have not been tested.
+- Do not promote operator-local runtime files into fixtures accidentally.
+  In particular, local MIDI maps, saved scenes, backups, and runtime logs may
+  be dirty without representing architecture changes.
+- Resume with SEAC-5. First produce the state-ownership/provenance matrix, then
+  freeze versioned compatibility rules for defaults, element presets, scenes,
+  mapping banks, machine profiles, and operator preferences before changing
+  persistence code.
+- Keep later work in its lane: package descriptor serialization is SEAC-7,
+  controlled/generated registration is SEAC-8, and mapping-edit UI is SEAC-9.
+- The parameter maintenance and live-validation procedure is documented in
+  [`../../contracts/builtin_element_parameter_contract.md`](../../contracts/builtin_element_parameter_contract.md).
+
 ## Milestone Synthesis
 
 - Milestone ID: spine-element-architecture-convergence
@@ -476,8 +497,8 @@ source-code archaeology or private host knowledge.
   preserved promotion baseline.
 - Passed: `python tools/validate_layer_authoring.py signal-bloom-sdk --native
   --incremental-app`.
-- Passed: Public app validation (17 contracts), `pytest` (8 tests plus 2
-  subtests), and BrowserFlow Release (35 scenarios). The former duplicated
+- Passed: Public app validation (18 committed-fixture contracts), `pytest` (8
+  tests plus 2 subtests), and BrowserFlow Release (36 scenarios). The former duplicated
   host-side coverage-window scenario moved to focused RuntimeCore coverage.
   BrowserFlow now also covers live/base/range registry views and MIDI rebind
   snap/step fidelity across element replacement.
@@ -553,7 +574,7 @@ source-code archaeology or private host knowledge.
   boundary, cellular, circuit, catalog, canonical/combined parameter-manifest,
   and diff checks pass. Signal Bloom remains present with 23 registered factory
   types and unchanged parameter IDs/counts.
-- Passed: Public-app validates all 17 contracts, including the static scene and
+- Passed: Public-app validates all 18 committed-fixture contracts, including the static scene and
   display contract; the explicit scene/display transaction check also passes.
 - Passed: The Element SDK boundary validator enforces the host-only Text bridge,
   exact 12-ID binding set, absence of direct Text dependencies from `ofApp`,
@@ -562,8 +583,8 @@ source-code archaeology or private host knowledge.
   identical apart from binding-source provenance and retain their parameter
   counts.
 - Passed: The Release host and BrowserFlow Release target compile and link with
-  the host-binding adapter. BrowserFlow execution remains intentionally deferred
-  because the suite includes the postponed dual-screen path.
+  the host-binding adapter. BrowserFlow executes successfully with all 36
+  scenarios passing; the operator also reports successful dual-screen use.
 - Passed: `HostCompositionRendererTest` Release builds and reports PASS for
   stub-backed traversal, coverage, fail-open, target reuse, release, and
   allocation-status behavior. This is policy/draw-dispatch evidence, not

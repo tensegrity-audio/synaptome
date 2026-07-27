@@ -1,6 +1,6 @@
 # Synaptome Element System Roadmap
 
-Status: Active supporting architecture; reviewed 2026-07-25. Current priority
+Status: Active supporting architecture; reviewed 2026-07-27. Current priority
 and execution state are owned by
 [`../project_ops/roadmap.md`](../project_ops/roadmap.md). This document owns the
 implementation sequence for packages, folder discovery, generated layer
@@ -261,7 +261,7 @@ indexes them, but this document owns their meaning and next actions.
 | CG-13 | Manifest generation from package parameters | Package-derived parameter manifest snapshots expand package suffixes through `registryPrefix`; `gen_parameter_manifest.py --include-packages` now writes/checks a draft combined manifest without changing the canonical manifest. | Decide when package-derived entries become part of the canonical `parameter_manifest.json` rather than a draft combined gate. |
 | CG-14 | Dropdown option metadata and dynamic providers | Matching live package parameters use one labeled picker for static `options[]` and registered `optionsSource` choices. Selection updates the existing registry value, provider revisions close stale pickers, and unavailable current values remain preserved until explicit replacement. | Reuse the same metadata/picker path on the next packaged layer and keep raw numeric/string editing available only where no choices are declared. |
 | CG-15 | Layer preset package contract | Package-owned suffix-based presets and ordered banks are schema-validated. The Browser persists a stable bank/preset selection in the operator-local override and applies it on the next layer load with tested precedence and rollback. | Keep current scene values authoritative; consider live preset application only after value provenance and transactional rollback exist. |
-| CG-16 | Single-layer package validator and runtime bench | Signal Bloom now passes a focused static check and native stub-backed lifecycle/draw-dispatch bench. Before construction, the bench inspects one copied `Visual` runtime descriptor with an empty action declaration and proves enumeration-copy isolation. Package-vs-runtime parameter/full-descriptor comparison and pixel/non-blank output checks remain. | Complete SEAC-4B parameter/catalog authority, then serialize and compare the broader package descriptor in SEAC-7 before adding optional rendered-output assertions. |
+| CG-16 | Single-layer package validator and runtime bench | Signal Bloom passes a focused static check and native stub-backed lifecycle/draw-dispatch bench. Built-in parameter declarations are now authoritative and live-validated for all 23 types; package serialization, full package/runtime descriptor comparison, and pixel/non-blank output checks remain. | Serialize and compare the broader package descriptor in SEAC-7 before adding optional rendered-output assertions. |
 | CG-17 | Folder-driven discovery and file-backed generated layers | Current catalog behavior relies on explicit layer JSON entries; STL-style dropped files do not yet have a standard generated asset/template path. | Define discovery roots, folder-to-Browser rules, stable generated IDs, sidecar overrides, and template schemas for file-backed generated layers. |
 | CG-18 | Package OSC mapping presets | Packages can ship validated suffix-based OSC/audio/control mapping suggestions, and activation records but never applies the chosen mapping preset. Editable Browser mapping rows do not exist yet. | Add explicit apply/edit controls with slot expansion, conflict preview, and rollback while retaining scene/operator ownership. |
 
@@ -524,10 +524,13 @@ without pretending Synaptome has hot-loaded plugins before it does.
 
 ## Immediate Next Step
 
-The current architecture gate is SEAC-4B: make parameter declarations and
-catalog views authoritative without changing the SEAC-4A minimal
-type/kind/action descriptor. Then serialize the broader package descriptor in
-SEAC-7, generate controlled registration in SEAC-8, and add transactional
+SEAC-4 is complete: built-in parameter declarations and generated catalog
+views are authoritative without expanding the minimal type/kind/action
+descriptor. The current architecture gate is SEAC-5: define versioned state
+ownership, value provenance, compatibility readers, and migrations for
+defaults, presets, scenes, mappings, machine profiles, and operator
+preferences. Then serialize the broader package descriptor in SEAC-7,
+generate controlled registration in SEAC-8, and add transactional
 parameter/action mapping controls in SEAC-9.
 
 Keep package scanning and generated/plugin registration disabled until their
