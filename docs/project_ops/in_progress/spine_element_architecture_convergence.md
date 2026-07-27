@@ -5,20 +5,20 @@ State Summary
 - Phase: EXECUTION
 - Status: In Progress
 - Steps Complete: 2 / 12
-- Progress: SEAC-3 is in progress. `SynaptomeRuntimeCore` now owns staged element setup, atomic same-address registry/element replacement, the fixed eight composition records, FBO state, exact parameter ownership, and generic lifecycle/render routing. Failed candidates preserve the live layer, metadata, parameters, modifiers, mappings, and FBOs. Layer opacity is explicitly spine-owned, prepared lifetime ordering is safe, and pointer-bearing host consumers are invalidated synchronously after registry replacement. Element type registries are explicitly owned by each host/test/bench scope and injected read-only into Runtime; the host still adapts typed catalog metadata, effect compositing, persistence, mappings, and compatibility inspection.
-- Last Step Outcome: 2026-07-26 - Removed the process-global element factory, injected isolated registries into app/tests/bench, switched scene validation to non-constructing type lookup, and narrowed Control & Mapping to a behaviorally tested offline creator callback.
-- Next Step: Reduce the host-only mutable composition view and move the next generic effect/compositing boundary behind Runtime while preserving the scoped registry seam.
+- Progress: SEAC-3 is in progress. `SynaptomeRuntimeCore` now owns staged element setup, atomic same-address registry/element replacement, the fixed eight composition records, FBO state, exact parameter ownership, generic lifecycle/render routing, and zero-based effect coverage-window policy. Failed candidates preserve the live layer, metadata, parameters, modifiers, mappings, and FBOs. Layer opacity is explicitly spine-owned, prepared lifetime ordering is safe, and pointer-bearing host consumers are invalidated synchronously after registry replacement. Element type registries are explicitly owned by each host/test/bench scope and injected read-only into Runtime; the host still adapts typed catalog metadata, concrete effect execution, persistence, mappings, and compatibility inspection.
+- Last Step Outcome: 2026-07-26 - Moved effect coverage-window policy into Runtime through `CompositionCoverageWindow` and `Runtime::resolveEffectCoverage`, switched `drawConsole` to the zero-based half-open result, and removed the duplicate resolver from `PostEffectChain` without changing the public Element SDK or claiming an effect ABI.
+- Next Step: Replace the mutable composition-array alias with an immutable by-value query model and explicit Runtime assignment/layer controls, while isolating the remaining mutable FBO and legacy-element access in a named internal host render bridge.
 - Dependencies / Overlap: `show_readiness_operator_stability`, `layer_package_compatibility_bench_scaffolding`, `docs/architecture/synaptome_spine_element_model.md`, `docs/architecture/synaptome_layer_system_roadmap.md`, `docs/architecture/synaptome_artist_sdk.md`, parameter/scene/mapping contracts, and layer-authoring tests.
 - Primary Scope: runtime
 - Secondary Scopes: contracts, artist-sdk, tests, docs, release
-- Blocking Issues / Unknowns: Native binary modules remain an optional architecture decision rather than a promised deliverable. Typed descriptor/package catalog ownership and the remaining host effect/compositing adapters are the next SEAC-3 boundaries.
+- Blocking Issues / Unknowns: Native binary modules remain an optional architecture decision rather than a promised deliverable. Typed descriptor/package catalog ownership, the mutable host composition view, and concrete host effect execution remain SEAC-3 boundaries.
 - Impact / Priority Notes: This is the active architecture lane and precedes automatic discovery, broader package activation, or new content-family expansion.
 - Priority Score: N/A
 - Priority Lane: Fast-Track
 - Ready State: Ready
 - Ready Gate: The architecture direction, compatibility policy, ordered tasks, and stop conditions are explicit; the operator accepted residual show-validation risk and authorized execution.
-- Project Ops / Roadmap Updates (timestamped): 2026-07-26 - Added the canonical model and subordinated package/discovery work to its contract and build gates. 2026-07-26 - Promoted SEAC to execution after dual-screen validation was deferred. 2026-07-26 - Completed the dependency inventory and froze the Element SDK v1 source/static-link boundary. 2026-07-26 - Landed the first SEAC-3 build and registration slice. 2026-07-26 - Moved generic element preparation/release and exact registration ownership behind the first Runtime facade seam. 2026-07-26 - Linked the first runtime-core library and moved fixed composition storage plus generic update/draw/resize ownership behind it. 2026-07-26 - Added isolated parameter staging and transactional same-address visual-element replacement. 2026-07-26 - Hardened reserved opacity ownership, prepared-result lifetime, FX/UI-to-visual adoption, bool modifier migration, and registry-consumer invalidation. 2026-07-26 - Removed the global element factory and proved per-Runtime type-registry isolation.
-- Resume From: Phase EXECUTION, State In Progress, Next Action reduce the host-only mutable composition view and extract the next effect/compositing boundary.
+- Project Ops / Roadmap Updates (timestamped): 2026-07-26 - Added the canonical model and subordinated package/discovery work to its contract and build gates. 2026-07-26 - Promoted SEAC to execution after dual-screen validation was deferred. 2026-07-26 - Completed the dependency inventory and froze the Element SDK v1 source/static-link boundary. 2026-07-26 - Landed the first SEAC-3 build and registration slice. 2026-07-26 - Moved generic element preparation/release and exact registration ownership behind the first Runtime facade seam. 2026-07-26 - Linked the first runtime-core library and moved fixed composition storage plus generic update/draw/resize ownership behind it. 2026-07-26 - Added isolated parameter staging and transactional same-address visual-element replacement. 2026-07-26 - Hardened reserved opacity ownership, prepared-result lifetime, FX/UI-to-visual adoption, bool modifier migration, and registry-consumer invalidation. 2026-07-26 - Removed the global element factory and proved per-Runtime type-registry isolation. 2026-07-26 - Moved zero-based effect coverage-window policy into Runtime and removed the duplicate `PostEffectChain` resolver without expanding the Element SDK.
+- Resume From: Phase EXECUTION, State In Progress, Next Action introduce the immutable composition query/control plane and isolate the temporary internal render bridge.
 
 ## Milestone Synthesis
 
@@ -337,6 +337,12 @@ source-code archaeology or private host knowledge.
 - 2026-07-26 - Changed the host replacement path to prepare/adopt before
   publishing slot metadata. Target pointers are rebound after commit while
   MIDI/OSC mapping definitions and per-layer FBOs remain intact.
+- 2026-07-26 - Added `CompositionCoverageWindow` and
+  `Runtime::resolveEffectCoverage` as the Runtime-owned, zero-based half-open
+  coverage policy. `drawConsole` now consumes that result, while the duplicate
+  `PostEffectChain::CoverageWindow` and `resolveCoverageWindow` policy were
+  removed. `PostEffectChain` remains the concrete built-in shader and parameter
+  executor; no public Element SDK or effect ABI surface was added.
 
 ## Validation
 
@@ -350,7 +356,8 @@ source-code archaeology or private host knowledge.
 - Passed: `python tools/validate_layer_authoring.py signal-bloom-sdk --native
   --incremental-app`.
 - Passed: Public app validation (17 contracts), `pytest` (8 tests plus 2
-  subtests), and BrowserFlow Release (34 tests).
+  subtests), and BrowserFlow Release (33 scenarios). The former duplicated
+  host-side coverage-window scenario moved to focused RuntimeCore coverage.
 - Passed: Element boundary policy, public/shipping source parity, shared
   registration, generated manifest, and catalog golden checks.
 - Passed: `python tools/validate_layer_authoring.py runtime-core --native
@@ -368,8 +375,11 @@ source-code archaeology or private host knowledge.
   process-global fallback; scene validation checks registration without
   constructing an element; BrowserFlow covers injected offline hydration and
   the no-creator case.
-- Open Gate: Typed descriptor/package catalog ownership and the remaining
-  host-only effect/compositing adapters are the next SEAC-3 extraction.
+- Passed: RuntimeCore covers all-prior, nearest-layer, fractional, first-layer,
+  negative, invalid-index, and half-open effect coverage-window behavior.
+- Open Gate: Replace the mutable composition-array alias with an immutable
+  query/control plane and isolate remaining FBO and legacy-element access in a
+  named internal host render bridge.
 - Not Run: Live dual-screen hardware rehearsal remains explicitly deferred.
 - Manual Evidence: User approved the architecture direction and requested a prioritized Project Ops roadmap.
 

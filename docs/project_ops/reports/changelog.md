@@ -2,6 +2,30 @@
 
 This changelog records Project Ops and administrative workflow changes. Product release versioning remains governed by `docs/release_policy.md`.
 
+## 2026-07-26 - architecture - seac3_runtime_effect_coverage_policy
+
+- Request ID: `spine_element_architecture_convergence`
+- Phase / Milestone: SEAC-3 in progress
+- Ownership: Added `CompositionCoverageWindow` and
+  `Runtime::resolveEffectCoverage` as RuntimeCore's zero-based, half-open
+  effect coverage-window policy. `drawConsole` now consumes the Runtime result.
+- Host adapter: Removed the duplicate `PostEffectChain::CoverageWindow` and
+  `resolveCoverageWindow` policy. `PostEffectChain` still owns concrete
+  built-in effect defaults, coverage-mask parameters, FBO/shader execution,
+  and type-specific application.
+- Compatibility: Coverage behavior, public IDs, scenes, mappings, and public
+  Element SDK headers remain unchanged. This compiler-matched source/static
+  extraction introduces no public Effect SDK, stable binary ABI, native
+  plug-in, or hot-loading claim.
+- Validation: RuntimeCore now covers all-prior, nearest-layer, fractional,
+  first-layer, negative, invalid-index, and half-open coverage behavior.
+  BrowserFlow remains 33 scenarios after removal of its duplicated host-side
+  coverage-policy scenario.
+- Remaining gate: Replace the mutable composition-array alias with an immutable
+  by-value query model and explicit Runtime assignment/layer controls, then
+  isolate mutable FBO and legacy-element access in a named internal host render
+  bridge.
+
 ## 2026-07-26 - architecture - seac3_scoped_element_type_registry
 
 - Request ID: `spine_element_architecture_convergence`

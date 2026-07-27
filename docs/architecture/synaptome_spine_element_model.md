@@ -104,6 +104,24 @@ The spine owns:
 - resource ownership, failure containment, and performance evidence,
 - versioned schemas, migrations, fixtures, and confidence gates.
 
+For effects placed in composition layers, the spine resolves which earlier
+layers feed the effect. The current coverage contract uses zero-based layer
+indices and a half-open range
+`[firstInputLayerIndex, inputEndLayerIndex)`, where
+`inputEndLayerIndex` equals the effect layer index. Non-positive coverage means
+all prior layers; non-finite coverage resolves the same way. Positive
+fractional values are floored, and a request at least as large as the number of
+prior layers also means all prior layers. An invalid effect-layer index
+produces an empty window that does not claim to include all prior layers.
+
+Runtime owns this routing math. The current host-side `PostEffectChain` still
+owns concrete built-in effect defaults, coverage-mask parameters, render
+targets, shaders, and type-specific execution. That adapter is transitional
+implementation, not a public Effect SDK and not evidence that arbitrary effects
+can be dropped in or hot-loaded. The public Element SDK remains the
+compiler-matched source/static-link boundary described by the SDK decision
+record.
+
 The spine does not:
 
 - dictate an element's creative algorithm,

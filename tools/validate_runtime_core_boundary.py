@@ -16,6 +16,9 @@ def main() -> int:
     composition_header = (
         ROOT / "synaptome/src/runtime/CompositionLayer.h"
     ).read_text(encoding="utf-8")
+    composition_types = (
+        ROOT / "synaptome/src/runtime/CompositionTypes.h"
+    ).read_text(encoding="utf-8")
     parameter_registry = (
         ROOT / "synaptome/src/core/ParameterRegistry.h"
     ).read_text(encoding="utf-8")
@@ -31,6 +34,18 @@ def main() -> int:
     layer_factory_source = (
         ROOT / "synaptome/src/visuals/LayerFactory.cpp"
     ).read_text(encoding="utf-8")
+    post_effect_header = (
+        ROOT / "synaptome/src/visuals/effects/PostEffectChain.h"
+    ).read_text(encoding="utf-8")
+    post_effect_source = (
+        ROOT / "synaptome/src/visuals/effects/PostEffectChain.cpp"
+    ).read_text(encoding="utf-8")
+    sdk_include_root = ROOT / "synaptome/sdk/include"
+    sdk_public_headers = sorted(
+        path
+        for path in sdk_include_root.rglob("*")
+        if path.is_file() and path.suffix.lower() in {".h", ".hpp"}
+    )
     project = (ROOT / "synaptome/Synaptome.vcxproj").read_text(encoding="utf-8")
     solution = (ROOT / "synaptome/Synaptome.sln").read_text(encoding="utf-8")
     core_project = (
@@ -46,7 +61,7 @@ def main() -> int:
         ROOT / "tests/layer_package_bench_main.cpp"
     ).read_text(encoding="utf-8")
 
-    for token in ("ofApp", "../ui/", "../io/"):
+    for token in ("ofApp", "../ui/", "../io/", "PostEffectChain"):
         if token in runtime_header or token in runtime_source:
             errors.append(f"runtime lifecycle seam depends on forbidden host surface: {token}")
     for token in ('"../visuals/', '"../ofJson.h"'):
@@ -73,6 +88,7 @@ def main() -> int:
         "updateCompositionElements",
         "drawCompositionElement",
         "shutdownComposition",
+        "resolveEffectCoverage",
     ):
         if token not in runtime_source and token not in runtime_header:
             errors.append(f"runtime lifecycle seam is missing {token}")
@@ -87,6 +103,30 @@ def main() -> int:
         errors.append("ofApp must own and inject one scoped element type registry")
     if "std::unique_ptr<Layer> element_" not in composition_header:
         errors.append("runtime composition layer must own its element privately")
+    if "struct CompositionCoverageWindow" not in composition_types:
+        errors.append("runtime composition types are missing the effect coverage window")
+    for token in ("CoverageWindow", "resolveCoverageWindow"):
+        if token in post_effect_header or token in post_effect_source:
+            errors.append(
+                f"PostEffectChain still owns legacy composition policy: {token}"
+            )
+    if "postEffects.resolveCoverageWindow" in app:
+        errors.append(
+            "host still resolves effect coverage through PostEffectChain"
+        )
+    for header_path in sdk_public_headers:
+        header_text = header_path.read_text(encoding="utf-8")
+        for token in (
+            "CompositionCoverageWindow",
+            "resolveEffectCoverage",
+            "PostEffectChain",
+        ):
+            if token in header_text:
+                relative_path = header_path.relative_to(ROOT)
+                errors.append(
+                    f"public Element SDK header leaks runtime composition "
+                    f"ownership ({token}): {relative_path}"
+                )
     for token in (
         "runtime_.prepareElement",
         "runtime_.prepareElementReplacement",
@@ -95,6 +135,7 @@ def main() -> int:
         "runtime_.resizeCompositionElements",
         "runtime_.updateCompositionElements",
         "runtime_.drawCompositionElement",
+        "runtime_.resolveEffectCoverage",
         "runtime_.shutdownComposition",
     ):
         if token not in app:
@@ -231,6 +272,8 @@ def main() -> int:
             errors.append(f"runtime-core test bypasses the shipping link/header seam: {token}")
     if "SynaptomeRuntimeCore" not in solution:
         errors.append("runtime-core library must be a first-class solution target")
+    if "RunEffectCoverageWindowScenario" not in runtime_test:
+        errors.append("RuntimeCore test is missing effect coverage-window coverage")
 
     if errors:
         print("[runtime-core-boundary] FAIL")

@@ -4305,12 +4305,8 @@ void ofApp::drawConsole(glm::ivec2 viewport, float beatPhase) {
             const int effectColumn = static_cast<int>(i) + 1;
             float coverageValue = slot.coverage.defined ? slot.coverageParamValue
                                                         : postEffects.defaultCoverageForType(slot.type);
-            auto window = postEffects.resolveCoverageWindow(effectColumn, coverageValue);
-            auto columnInWindow = [&](int columnIndex) -> bool {
-                if (window.lastColumn == 0) return false;
-                if (window.includesAll) return columnIndex < effectColumn;
-                return columnIndex >= window.firstColumn && columnIndex <= window.lastColumn;
-            };
+            const auto window =
+                runtime_.resolveEffectCoverage(i, coverageValue);
             std::vector<int> processedColumns;
             std::vector<int> passthroughColumns;
 
@@ -4323,7 +4319,8 @@ void ofApp::drawConsole(glm::ivec2 viewport, float beatPhase) {
             ofEnableBlendMode(OF_BLENDMODE_ALPHA);
             bool haveInput = false;
             for (int column = 1; column < effectColumn; ++column) {
-                if (!columnInWindow(column)) continue;
+                if (!window.contains(
+                        static_cast<std::size_t>(column - 1))) continue;
                 if (!slotVisible[column - 1]) continue;
                 const auto& upstreamSlot = consoleSlots[column - 1];
                 if (!upstreamSlot.active) continue;
@@ -4359,7 +4356,8 @@ void ofApp::drawConsole(glm::ivec2 viewport, float beatPhase) {
             slot.layerFbo.begin();
             ofEnableBlendMode(OF_BLENDMODE_ALPHA);
             for (int column = 1; column < effectColumn; ++column) {
-                if (columnInWindow(column)) continue;
+                if (window.contains(
+                        static_cast<std::size_t>(column - 1))) continue;
                 if (!slotVisible[column - 1]) continue;
                 const auto& upstreamSlot = consoleSlots[column - 1];
                 if (!upstreamSlot.active) continue;

@@ -1685,49 +1685,6 @@ bool RunConsoleSlotHotkeyScenario() {
     return true;
 }
 
-bool RunCoverageWindowLogicScenario() {
-    PostEffectChain chain;
-    auto expectWindow = [&](int effectColumn,
-                            float coverage,
-                            int expectedFirst,
-                            int expectedLast,
-                            bool expectedAll) {
-        auto window = chain.resolveCoverageWindow(effectColumn, coverage);
-        if (window.firstColumn != expectedFirst || window.lastColumn != expectedLast) {
-            std::ostringstream oss;
-            oss << "Coverage window mismatch for column " << effectColumn << " value " << coverage
-                << " (first=" << window.firstColumn << ", last=" << window.lastColumn
-                << ", expected " << expectedFirst << "-" << expectedLast << ")";
-            throw std::runtime_error(oss.str());
-        }
-        if (window.includesAll != expectedAll) {
-            std::ostringstream oss;
-            oss << "Coverage includesAll mismatch for column " << effectColumn << " value " << coverage;
-            throw std::runtime_error(oss.str());
-        }
-    };
-
-    expectWindow(4, 0.0f, 1, 3, true);
-    expectWindow(4, 1.0f, 3, 3, false);
-    expectWindow(5, 2.0f, 3, 4, false);
-    expectWindow(5, 10.0f, 1, 4, true);
-
-    auto window = chain.resolveCoverageWindow(5, 2.0f);
-    auto columnInWindow = [&](int columnIndex) -> bool {
-        if (window.lastColumn == 0) return false;
-        if (window.includesAll) return columnIndex < 5;
-        return columnIndex >= window.firstColumn && columnIndex <= window.lastColumn;
-    };
-    if (!columnInWindow(3) || !columnInWindow(4)) {
-        throw std::runtime_error("Coverage window failed to include the two nearest upstream columns");
-    }
-    if (columnInWindow(2) || columnInWindow(5)) {
-        throw std::runtime_error("Coverage window incorrectly included columns outside the requested range");
-    }
-
-    return true;
-}
-
 bool RunSceneParameterPersistenceScenario() {
     ParameterRegistry registry;
     ParameterRegistry::Descriptor meta;

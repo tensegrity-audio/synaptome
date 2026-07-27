@@ -60,7 +60,6 @@ int main() {
                  "tests/artifacts/osc_ingest_flow.json");
          } },
         { "console_slot_hotkeys", browser_flow::RunConsoleSlotHotkeyScenario },
-        { "coverage_window_logic", browser_flow::RunCoverageWindowLogicScenario },
         { "scene_parameter_persistence", browser_flow::RunSceneParameterPersistenceScenario },
         { "mapping_snapshot_round_trip", browser_flow::RunMappingSnapshotRoundTripScenario },
         { "console_store_persistence", browser_flow::RunConsoleStorePersistenceScenario },

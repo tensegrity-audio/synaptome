@@ -100,6 +100,9 @@ public:
     }
     CompositionLayer* compositionLayer(std::size_t zeroBasedIndex);
     const CompositionLayer* compositionLayer(std::size_t zeroBasedIndex) const;
+    CompositionCoverageWindow resolveEffectCoverage(
+        std::size_t effectLayerIndex,
+        float coverage) const noexcept;
 
     bool adoptPreparedElement(
         std::size_t zeroBasedIndex,

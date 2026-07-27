@@ -21,7 +21,12 @@ temporary internal view. Element type registration is now scoped per Runtime:
 the legacy-named `LayerFactory` has no process-global singleton, the host and
 each bench own an independent registry, scene validation uses non-constructing
 type lookup, and Control & Mapping receives only a narrow offline creator.
-Typed descriptor/catalog ownership is not yet complete.
+Runtime now owns the pure, zero-based effect coverage-window policy through
+`CompositionCoverageWindow` and `Runtime::resolveEffectCoverage`; `drawConsole`
+consumes its half-open input range. `PostEffectChain` remains the host-side
+concrete shader and parameter executor. This extraction adds no Element SDK
+type, effect interface, dynamic-loading surface, or ABI promise. Typed
+descriptor/catalog ownership is not yet complete.
 
 This document records the dependency inventory and the minimum Element SDK v1
 contract that must exist before Synaptome moves code into new build targets.
@@ -110,8 +115,9 @@ Depends on the Element SDK and owns:
 - element registration, descriptors, compatibility checks, and catalog/package
   resolution;
 - element lifecycle, instance ownership, and failure-safe replacement;
-- the eight ordered composition layers, render targets, effects routing, and
-  graphics-state containment;
+- the eight ordered composition layers, render targets, composition/effect
+  routing policy, including coverage-window resolution, and graphics-state
+  containment;
 - parameter values, modifiers, options, banks, transport, telemetry, resource
   service implementations, and control target exposure;
 - mapping resolution and provenance;
@@ -121,6 +127,9 @@ Depends on the Element SDK and owns:
   performance accounting.
 
 Runtime core must not depend on concrete elements, `ofApp`, or operator UI.
+During SEAC-3, concrete built-in effect selection, default values, coverage-mask
+parameters, and shader execution remain in the host's `PostEffectChain`
+adapter. Runtime core must not include that adapter.
 
 ### `SynaptomeHost`
 
@@ -396,6 +405,11 @@ create/configure/setup/update/render/clear behavior.
 
 UI calls runtime commands and reads snapshots. It does not receive a raw
 `ofApp*` as its service API.
+
+`Runtime::resolveEffectCoverage` is an in-repository RuntimeCore composition
+policy API. It is not part of the public Element SDK, does not define a public
+effect interface, and does not change the compiler-matched source/static-link
+compatibility decision.
 
 ## SEAC-3 Extraction Sequence
 

@@ -2579,31 +2579,6 @@ void PostEffectChain::ensureBuffers(int width, int height) {
     pongFbo_.allocate(settings);
 }
 
-PostEffectChain::CoverageWindow PostEffectChain::resolveCoverageWindow(int effectColumnIndex,
-                                                                       float coverageParamValue) const {
-    CoverageWindow window;
-    window.effectColumn = std::max(1, effectColumnIndex);
-    window.lastColumn = std::max(0, window.effectColumn - 1);
-    window.requestedColumns = coverageParamValue <= 0.0f
-                                  ? 0
-                                  : static_cast<int>(std::floor(coverageParamValue + 0.0001f));
-
-    if (window.lastColumn == 0) {
-        window.firstColumn = 1;
-        window.includesAll = true;
-        return window;
-    }
-
-    if (window.requestedColumns <= 0 || window.requestedColumns >= window.lastColumn) {
-        window.firstColumn = 1;
-        window.includesAll = true;
-    } else {
-        window.includesAll = false;
-        window.firstColumn = std::max(1, window.effectColumn - window.requestedColumns);
-    }
-    return window;
-}
-
 void PostEffectChain::process(ofFbo& fbo, const std::vector<Effect*>& effects) {
     if (effects.empty()) return;
     ensureBuffers(fbo.getWidth(), fbo.getHeight());

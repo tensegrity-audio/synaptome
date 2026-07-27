@@ -308,6 +308,54 @@ void RunScopedElementTypeRegistryIsolationScenario() {
                     TypeNotRegistered,
         "runtime B observed a type registered only in runtime A's scope");
 }
+
+void RunEffectCoverageWindowScenario(
+    const synaptome::runtime::Runtime& runtime) {
+    auto expectWindow = [&](std::size_t effectLayerIndex,
+                            float coverage,
+                            std::size_t expectedFirst,
+                            std::size_t expectedEnd,
+                            int expectedRequested,
+                            bool expectedAll) {
+        const auto window =
+            runtime.resolveEffectCoverage(effectLayerIndex, coverage);
+        require(
+            window.effectLayerIndex == effectLayerIndex &&
+                window.firstInputLayerIndex == expectedFirst &&
+                window.inputEndLayerIndex == expectedEnd &&
+                window.requestedLayers == expectedRequested &&
+                window.includesAllPrior == expectedAll,
+            "runtime effect coverage window did not match the requested range");
+        return window;
+    };
+
+    expectWindow(3, 0.0f, 0, 3, 0, true);
+    expectWindow(3, 1.0f, 2, 3, 1, false);
+    const auto nearestTwo =
+        expectWindow(4, 2.0f, 2, 4, 2, false);
+    expectWindow(4, 10.0f, 0, 4, 10, true);
+    expectWindow(4, 2.9f, 2, 4, 2, false);
+    expectWindow(0, 2.0f, 0, 0, 2, true);
+    expectWindow(2, -1.0f, 0, 2, 0, true);
+
+    require(
+        nearestTwo.contains(2) &&
+            nearestTwo.contains(3) &&
+            !nearestTwo.contains(1) &&
+            !nearestTwo.contains(4),
+        "runtime effect coverage window boundaries were not half-open");
+
+    const auto invalid = runtime.resolveEffectCoverage(
+        synaptome::runtime::kCompositionLayerCount,
+        2.0f);
+    require(
+        invalid.firstInputLayerIndex == 0 &&
+            invalid.inputEndLayerIndex == 0 &&
+            invalid.requestedLayers == 0 &&
+            !invalid.includesAllPrior &&
+            !invalid.contains(0),
+        "runtime effect coverage accepted an out-of-range effect layer");
+}
 }
 
 int main() {
@@ -366,6 +414,7 @@ int main() {
             siblingDescriptor);
 
         synaptome::runtime::Runtime runtime(factory, parameters);
+        RunEffectCoverageWindowScenario(runtime);
         synaptome::runtime::Runtime::ElementRequest request;
         request.typeId = "tests.runtime.good";
         request.definitionId = "tests.definition.good";

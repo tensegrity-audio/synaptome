@@ -4,7 +4,9 @@
 #include "../visuals/LayerFactory.h"
 
 #include <algorithm>
+#include <cmath>
 #include <exception>
+#include <limits>
 #include <utility>
 
 namespace synaptome::runtime {
@@ -324,6 +326,40 @@ const CompositionLayer* Runtime::compositionLayer(
     std::size_t zeroBasedIndex) const {
     if (zeroBasedIndex >= compositionLayers_.size()) return nullptr;
     return &compositionLayers_[zeroBasedIndex];
+}
+
+CompositionCoverageWindow Runtime::resolveEffectCoverage(
+    std::size_t effectLayerIndex,
+    float coverage) const noexcept {
+    CompositionCoverageWindow window;
+    window.effectLayerIndex = effectLayerIndex;
+    if (effectLayerIndex >= compositionLayers_.size()) {
+        return window;
+    }
+
+    window.inputEndLayerIndex = effectLayerIndex;
+    if (std::isfinite(coverage) && coverage > 0.0f) {
+        const double requested = std::floor(
+            static_cast<double>(coverage) + 0.0001);
+        window.requestedLayers =
+            requested >= static_cast<double>(std::numeric_limits<int>::max())
+            ? std::numeric_limits<int>::max()
+            : static_cast<int>(requested);
+    } else if (coverage > 0.0f) {
+        window.requestedLayers = std::numeric_limits<int>::max();
+    }
+
+    const auto priorLayerCount = effectLayerIndex;
+    if (window.requestedLayers <= 0 ||
+        static_cast<std::size_t>(window.requestedLayers) >= priorLayerCount) {
+        window.firstInputLayerIndex = 0;
+        window.includesAllPrior = true;
+    } else {
+        window.firstInputLayerIndex =
+            priorLayerCount -
+            static_cast<std::size_t>(window.requestedLayers);
+    }
+    return window;
 }
 
 bool Runtime::adoptPreparedElement(

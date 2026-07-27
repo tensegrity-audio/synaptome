@@ -155,15 +155,6 @@ private:
     ParameterRegistry* registry_ = nullptr;
 
 public:
-    struct CoverageWindow {
-        int effectColumn = 0;
-        int firstColumn = 1;
-        int lastColumn = 0;
-        int requestedColumns = 0;
-        bool includesAll = true;
-    };
-
-public:
     float* ditherRouteParamPtr() { return &ditherRoute_; }
     const float* ditherRouteParamPtr() const { return &ditherRoute_; }
     float* ditherCoverageParamPtr() { return &ditherCoverage_; }
@@ -302,5 +293,4 @@ public:
     MotionExtractProcessor* motionProcessor() { return motionProcessor_.get(); }
     const MotionExtractProcessor* motionProcessor() const { return motionProcessor_.get(); }
 
-    CoverageWindow resolveCoverageWindow(int effectColumnIndex, float coverageParamValue) const;
 };
