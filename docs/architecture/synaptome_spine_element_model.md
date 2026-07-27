@@ -122,6 +122,25 @@ can be dropped in or hot-loaded. The public Element SDK remains the
 compiler-matched source/static-link boundary described by the SDK decision
 record.
 
+Composition changes cross one Runtime control plane. An assignment declares its
+kind (`Element`, `Effect`, or `Overlay`), stable definition and type identities,
+registry prefix, label, active state, opacity, and effect coverage where
+applicable. Runtime validates the assignment, commits element and parameter
+ownership together, normalizes layer state, and reports a typed mutation result.
+The host does not publish layer metadata by writing the composition record
+directly. Runtime owns the stable `console.layerN.opacity` address for element
+assignments; effect and overlay assignments do not create a competing
+per-assignment opacity parameter.
+
+The current read seam is intentionally transitional: the host receives a const
+live view of the eight Runtime-owned composition records, not a copied immutable
+snapshot. Mutable FBO access and mutable element-specific compatibility actions
+use separate named host seams. The live view still exposes const element
+pointers for read-only compatibility inspection, but query consumers cannot
+mutate assignment metadata through it. The next query gate replaces the live
+aggregate with a by-value immutable model and continues shrinking those
+host-only seams.
+
 The spine does not:
 
 - dictate an element's creative algorithm,

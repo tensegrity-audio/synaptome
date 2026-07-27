@@ -328,7 +328,7 @@ public:
 
     // Console container: fixed-size 8 layers managed independently of legacy decks.
     using ConsoleSlot = synaptome::runtime::CompositionLayer;
-    synaptome::runtime::Runtime::CompositionLayers& consoleSlots =
+    const synaptome::runtime::Runtime::CompositionLayers& consoleSlots =
         runtime_.compositionLayersForHost();
     std::string consoleConfigPath;
     std::string activeScenePath_;
@@ -589,29 +589,28 @@ private:
                                 bool activate,
                                 std::optional<float> opacityOverride = std::nullopt);
     void openAssetBrowserForConsole(int layerIndex);
-    void clearConsoleSlot(int index);
-    void clearAllConsoleSlots();
+    bool clearConsoleSlot(int index);
+    bool clearAllConsoleSlots();
     void seedConsoleDefaultsIfEmpty();
     void persistConsoleAssignments();
     bool loadConsoleLayoutFromScene(const ofJson& consoleNode);
     void writeConsoleLayoutToScene(ofJson& scene) const;
     void writeConsoleParametersToScene(ofJson& slotNode, const ConsoleSlot& slot) const;
-    ConsoleSlot* consoleSlotForIndex(int layerIndex);
     const ConsoleSlot* consoleSlotForIndex(int layerIndex) const;
     int findConsoleSlotByAsset(const std::string& assetId) const;
     std::string consoleSlotPrefix(int layerIndex) const;
-    void registerConsoleLayerOpacityParam(int layerIndex, ConsoleSlot& slot);
-    void registerConsoleLayerCoverageParam(int layerIndex, ConsoleSlot& slot);
+    void registerConsoleLayerOpacityParam(int layerIndex);
+    void registerConsoleLayerCoverageParam(int layerIndex);
     void unregisterConsoleLayerCoverageParam(int layerIndex);
     void importConsoleCoverageFromInfo(int layerIndex, const ConsoleLayerCoverageInfo& coverage);
     void propagateEffectCoverageChange(const std::string& effectType, float coverage);
-    void applyEffectCoverageDefaults(ConsoleSlot& slot, const std::string& effectType);
+    void applyEffectCoverageDefaults(int layerIndex, const std::string& effectType);
     float consoleSlotBaseOpacity(int layerIndex) const;
     void updateConsoleLayers(const LayerUpdateParams& params);
     void drawConsole(glm::ivec2 viewport, float beatPhase);
     void ensureConsoleLayerViewports(glm::ivec2 viewport);
     void ensureSlotFbo(ofFbo& fbo, glm::ivec2 viewport);
-    bool applyEffectSlot(ConsoleSlot& slot, ofFbo& src, ofFbo& dst);
+    bool applyEffectSlot(const ConsoleSlot& slot, ofFbo& src, ofFbo& dst);
     void handleHudVisibilityChanged(bool visible);
     bool toggleHudTools(MenuController& controller);
     bool openHudLayoutEditor(MenuController& controller);

@@ -45,6 +45,7 @@ public:
         std::string definitionId;
         std::string instanceId;
         std::string registryPrefix;
+        bool enabled = true;
         std::string error;
 
         ElementResult() = default;
@@ -94,20 +95,52 @@ public:
     using CompositionLayers =
         std::array<CompositionLayer, kCompositionLayerCount>;
 
-    CompositionLayers& compositionLayersForHost() { return compositionLayers_; }
+    std::size_t compositionLayerCount() const noexcept {
+        return compositionLayers_.size();
+    }
+
     const CompositionLayers& compositionLayersForHost() const {
         return compositionLayers_;
     }
-    CompositionLayer* compositionLayer(std::size_t zeroBasedIndex);
     const CompositionLayer* compositionLayer(std::size_t zeroBasedIndex) const;
+
+    struct CompositionRenderTargets {
+        ofFbo* layer = nullptr;
+        ofFbo* upstream = nullptr;
+        ofFbo* effect = nullptr;
+
+        explicit operator bool() const noexcept {
+            return layer && upstream && effect;
+        }
+    };
+
+    CompositionRenderTargets compositionRenderTargetsForHost(
+        std::size_t zeroBasedIndex) noexcept;
+    Layer* legacyCompositionElementForHost(
+        std::size_t zeroBasedIndex) noexcept;
     CompositionCoverageWindow resolveEffectCoverage(
         std::size_t effectLayerIndex,
         float coverage) const noexcept;
 
-    bool adoptPreparedElement(
+    CompositionMutationResult adoptPreparedElement(
         std::size_t zeroBasedIndex,
-        ElementResult&& prepared);
-    void releaseCompositionElement(std::size_t zeroBasedIndex) noexcept;
+        ElementResult&& prepared,
+        CompositionAssignment assignment);
+    CompositionMutationResult assignCompositionEntry(
+        std::size_t zeroBasedIndex,
+        CompositionAssignment assignment);
+    CompositionMutationResult setCompositionLayerActive(
+        std::size_t zeroBasedIndex,
+        bool active);
+    CompositionMutationResult setCompositionLayerLabel(
+        std::size_t zeroBasedIndex,
+        std::string label);
+    CompositionMutationResult setCompositionLayerCoverage(
+        std::size_t zeroBasedIndex,
+        CompositionCoverage coverage);
+    CompositionMutationResult clearCompositionLayer(
+        std::size_t zeroBasedIndex);
+
     void resizeCompositionElements(int width, int height);
     void updateCompositionElements(const LayerUpdateParams& params);
     void drawCompositionElement(
@@ -145,6 +178,17 @@ private:
         const ElementRequest& request,
         Layer* replacing,
         const ProgressCallback& progress);
+    CompositionLayer* mutableCompositionLayer(
+        std::size_t zeroBasedIndex) noexcept;
+    CompositionMutationResult adoptPreparedElementImpl(
+        std::size_t zeroBasedIndex,
+        ElementResult&& prepared,
+        CompositionAssignment& assignment);
+    static CompositionCoverage normalizeCoverage(
+        CompositionCoverage coverage);
+    static float normalizeOpacity(float opacity) noexcept;
+    void forceClearCompositionLayerNoexcept(
+        CompositionLayer& layer) noexcept;
     void removeParameters(const std::vector<ParameterKey>& parameters) noexcept;
     void releaseTrackedElement(Layer* element) noexcept;
     void releaseElement(std::unique_ptr<Layer>& element) noexcept;

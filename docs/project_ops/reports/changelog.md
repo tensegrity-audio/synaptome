@@ -2,6 +2,39 @@
 
 This changelog records Project Ops and administrative workflow changes. Product release versioning remains governed by `docs/release_policy.md`.
 
+## 2026-07-26 - architecture - seac3_composition_control_plane
+
+- Request ID: `spine_element_architecture_convergence`
+- Phase / Milestone: SEAC-3 in progress
+- Control plane: Added `CompositionKind`, `CompositionAssignment`,
+  `CompositionMutationError`, and `CompositionMutationResult`. Runtime now
+  owns transactional element adoption, effect/overlay assignment, active state,
+  label, coverage, and whole-layer clear.
+- Parameter ownership: Runtime registers the stable
+  `console.layerN.opacity` parameter during element adoption, preserves its
+  address and modifiers across replacement, and removes it with the exact layer
+  ownership on clear or Runtime teardown.
+- Host boundary: `ofApp` reads a const live Runtime composition view and no
+  longer writes assignment metadata directly. Mutable FBO access is isolated
+  behind `CompositionRenderTargets`; remaining mutable type-specific adapters
+  use the named `legacyCompositionElementForHost` seam. Read-only compatibility
+  inspection still follows const element pointers exposed by the live view.
+- Query status: The const aggregate is a transitional live view, not the target
+  immutable by-value snapshot. The render and legacy-element methods are
+  host-only migration seams, not Element SDK services.
+- Compatibility: Public IDs, scene/mapping addresses, effect behavior, and
+  public Element SDK headers remain unchanged. No Effect SDK, stable native ABI,
+  dynamic plug-in, or hot-loading claim is introduced.
+- Validation: RuntimeCore covers composition bounds, render-target bounds,
+  assignment validation and rollback, all three composition kinds, active,
+  label, coverage, clear, and stable opacity/modifier preservation. Boundary
+  validation rejects direct host metadata writes and public SDK leakage. Failed
+  Runtime clears leave live MIDI/OSC mappings intact and propagate through host
+  unload, reassignment, bulk-clear, and scene-publication paths.
+- Remaining gate: Replace the const live aggregate with an immutable by-value
+  query model, then reduce or retire the remaining renderer and legacy-element
+  host seams.
+
 ## 2026-07-26 - architecture - seac3_runtime_effect_coverage_policy
 
 - Request ID: `spine_element_architecture_convergence`

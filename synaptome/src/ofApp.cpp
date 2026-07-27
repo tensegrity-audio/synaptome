@@ -2116,13 +2116,18 @@ void ofApp::setup() {
         consoleConfigNeedsUpgrade = persisted.version < 3 || !persisted.overlaysDefined || !persisted.dualDisplayDefined || !persisted.secondaryDisplayDefined || !persisted.controllerFocusDefined;
         for (const auto& info : persisted.layers) {
             if (addAssetToConsoleLayer(info.index, info.assetId, info.active, info.opacity)) {
-                if (auto* slot = consoleSlotForIndex(info.index)) {
-                    if (!info.label.empty()) {
-                        slot->label = info.label;
+                if (!info.label.empty()) {
+                    const auto labelResult = runtime_.setCompositionLayerLabel(
+                        static_cast<std::size_t>(info.index - 1),
+                        info.label);
+                    if (!labelResult) {
+                        ofLogWarning("ofApp")
+                            << "Runtime rejected persisted label for slot "
+                            << info.index << ": " << labelResult.error;
                     }
-                    if (info.coverage.defined) {
-                        importConsoleCoverageFromInfo(info.index, info.coverage);
-                    }
+                }
+                if (info.coverage.defined) {
+                    importConsoleCoverageFromInfo(info.index, info.coverage);
                 }
             }
         }
@@ -2252,9 +2257,10 @@ void ofApp::setup() {
             ofLogWarning("Console") << "Cannot clear console layer " << layerIndex << " (out of range)";
             return;
         }
-        clearConsoleSlot(idx);
-        persistConsoleAssignments();
-        menuController.requestViewModelRefresh();
+        if (clearConsoleSlot(idx)) {
+            persistConsoleAssignments();
+            menuController.requestViewModelRefresh();
+        }
     });
     consoleState->setQueryLayerCallback([this](int layerIndex) -> ConsoleLayerInfo {
         ConsoleLayerInfo info;
@@ -2503,7 +2509,9 @@ void ofApp::setup() {
             if (layerIndex < 1 || layerIndex > static_cast<int>(consoleSlots.size())) {
                 return false;
             }
-            clearConsoleSlot(layerIndex - 1);
+            if (!clearConsoleSlot(layerIndex - 1)) {
+                return false;
+            }
             persistConsoleAssignments();
             return true;
         });
@@ -4291,8 +4299,13 @@ void ofApp::drawConsole(glm::ivec2 viewport, float beatPhase) {
 
     ofPushStyle();
     for (std::size_t i = 0; i < consoleSlots.size(); ++i) {
-        auto& slot = consoleSlots[i];
+        const auto& slot = consoleSlots[i];
         if (!slot.active) {
+            continue;
+        }
+        auto renderTargets =
+            runtime_.compositionRenderTargetsForHost(i);
+        if (!renderTargets) {
             continue;
         }
 
@@ -4303,18 +4316,19 @@ void ofApp::drawConsole(glm::ivec2 viewport, float beatPhase) {
             }
 
             const int effectColumn = static_cast<int>(i) + 1;
-            float coverageValue = slot.coverage.defined ? slot.coverageParamValue
-                                                        : postEffects.defaultCoverageForType(slot.type);
+            float coverageValue = slot.coverage.defined
+                ? static_cast<float>(slot.coverage.columns)
+                : postEffects.defaultCoverageForType(slot.type);
             const auto window =
                 runtime_.resolveEffectCoverage(i, coverageValue);
             std::vector<int> processedColumns;
             std::vector<int> passthroughColumns;
 
-            ensureSlotFbo(slot.layerFbo, viewport);
-            ensureSlotFbo(slot.upstreamFbo, viewport);
-            ensureSlotFbo(slot.effectFbo, viewport);
+            ensureSlotFbo(*renderTargets.layer, viewport);
+            ensureSlotFbo(*renderTargets.upstream, viewport);
+            ensureSlotFbo(*renderTargets.effect, viewport);
 
-            slot.upstreamFbo.begin();
+            renderTargets.upstream->begin();
             ofClear(0, 0, 0, 0);
             ofEnableBlendMode(OF_BLENDMODE_ALPHA);
             bool haveInput = false;
@@ -4324,36 +4338,48 @@ void ofApp::drawConsole(glm::ivec2 viewport, float beatPhase) {
                 if (!slotVisible[column - 1]) continue;
                 const auto& upstreamSlot = consoleSlots[column - 1];
                 if (!upstreamSlot.active) continue;
-                if (!upstreamSlot.layerFbo.isAllocated()) continue;
-                upstreamSlot.layerFbo.draw(0, 0, viewport.x, viewport.y);
+                auto upstreamTargets =
+                    runtime_.compositionRenderTargetsForHost(
+                        static_cast<std::size_t>(column - 1));
+                if (!upstreamTargets ||
+                    !upstreamTargets.layer->isAllocated()) continue;
+                upstreamTargets.layer->draw(
+                    0,
+                    0,
+                    viewport.x,
+                    viewport.y);
                 processedColumns.push_back(column - 1);
                 haveInput = true;
             }
             ofDisableBlendMode();
-            slot.upstreamFbo.end();
+            renderTargets.upstream->end();
 
-            slot.layerFbo.begin();
+            renderTargets.layer->begin();
             ofClear(0, 0, 0, 0);
             ofDisableBlendMode();
-            slot.layerFbo.end();
+            renderTargets.layer->end();
 
             if (haveInput) {
-                slot.effectFbo.begin();
+                renderTargets.effect->begin();
                 ofClear(0, 0, 0, 0);
-                slot.effectFbo.end();
+                renderTargets.effect->end();
             }
 
             bool effectApplied = false;
-            if (haveInput && applyEffectSlot(slot, slot.upstreamFbo, slot.effectFbo)) {
+            if (haveInput &&
+                applyEffectSlot(
+                    slot,
+                    *renderTargets.upstream,
+                    *renderTargets.effect)) {
                 effectApplied = true;
-                slot.layerFbo.begin();
+                renderTargets.layer->begin();
                 ofEnableBlendMode(OF_BLENDMODE_ALPHA);
-                slot.effectFbo.draw(0, 0, viewport.x, viewport.y);
+                renderTargets.effect->draw(0, 0, viewport.x, viewport.y);
                 ofDisableBlendMode();
-                slot.layerFbo.end();
+                renderTargets.layer->end();
             }
 
-            slot.layerFbo.begin();
+            renderTargets.layer->begin();
             ofEnableBlendMode(OF_BLENDMODE_ALPHA);
             for (int column = 1; column < effectColumn; ++column) {
                 if (window.contains(
@@ -4361,12 +4387,20 @@ void ofApp::drawConsole(glm::ivec2 viewport, float beatPhase) {
                 if (!slotVisible[column - 1]) continue;
                 const auto& upstreamSlot = consoleSlots[column - 1];
                 if (!upstreamSlot.active) continue;
-                if (!upstreamSlot.layerFbo.isAllocated()) continue;
-                upstreamSlot.layerFbo.draw(0, 0, viewport.x, viewport.y);
+                auto upstreamTargets =
+                    runtime_.compositionRenderTargetsForHost(
+                        static_cast<std::size_t>(column - 1));
+                if (!upstreamTargets ||
+                    !upstreamTargets.layer->isAllocated()) continue;
+                upstreamTargets.layer->draw(
+                    0,
+                    0,
+                    viewport.x,
+                    viewport.y);
                 passthroughColumns.push_back(column - 1);
             }
             ofDisableBlendMode();
-            slot.layerFbo.end();
+            renderTargets.layer->end();
 
             if (effectApplied || !passthroughColumns.empty()) {
                 if (effectApplied) {
@@ -4380,9 +4414,9 @@ void ofApp::drawConsole(glm::ivec2 viewport, float beatPhase) {
                 slotVisible[i] = true;
             }
         } else if (slot.element()) {
-            ensureSlotFbo(slot.layerFbo, viewport);
+            ensureSlotFbo(*renderTargets.layer, viewport);
             float slotOpacity = ofClamp(slot.opacity, 0.0f, 1.0f);
-            slot.layerFbo.begin();
+            renderTargets.layer->begin();
             ofClear(0, 0, 0, 0);
             ofEnableBlendMode(OF_BLENDMODE_ALPHA);
             LayerDrawParams params{
@@ -4394,10 +4428,10 @@ void ofApp::drawConsole(glm::ivec2 viewport, float beatPhase) {
             };
             runtime_.drawCompositionElement(i, params);
             ofDisableBlendMode();
-            slot.layerFbo.end();
+            renderTargets.layer->end();
             slotVisible[i] = true;
         } else {
-            clearFbo(slot.layerFbo);
+            clearFbo(*renderTargets.layer);
         }
     }
     ofPopStyle();
@@ -4410,9 +4444,12 @@ void ofApp::drawConsole(glm::ivec2 viewport, float beatPhase) {
         if (!slotVisible[i]) continue;
         const auto& slot = consoleSlots[i];
         if (!slot.active) continue;
-        if (!slot.layerFbo.isAllocated()) continue;
+        auto renderTargets =
+            runtime_.compositionRenderTargetsForHost(i);
+        if (!renderTargets ||
+            !renderTargets.layer->isAllocated()) continue;
         ofSetColor(255);
-        slot.layerFbo.draw(0, 0, viewport.x, viewport.y);
+        renderTargets.layer->draw(0, 0, viewport.x, viewport.y);
     }
     ofDisableBlendMode();
     ofPopStyle();
@@ -5160,7 +5197,7 @@ bool ofApp::addAssetToConsoleLayer(int layerIndex,
     float requestedOpacity = opacityOverride.has_value()
                                  ? static_cast<float>(std::clamp<double>(*opacityOverride, 0.0, 1.0))
                                  : defaultOpacity;
-    ConsoleSlot& slot = consoleSlots[idx];
+    const ConsoleSlot& slot = consoleSlots[idx];
     auto finish = [&](bool success) {
         if (success) {
             if (controlMappingHub) {
@@ -5203,17 +5240,31 @@ bool ofApp::addAssetToConsoleLayer(int layerIndex,
     };
 
     if (slot.assetId == assetId) {
-        slot.label = entryLabel;
-        if (slot.element()) {
-            slot.element()->setExternalEnabled(activate);
-        } else if (isFxType(slot.type)) {
+        const auto labelResult = runtime_.setCompositionLayerLabel(
+            static_cast<std::size_t>(idx),
+            entryLabel);
+        if (!labelResult) {
+            ofLogWarning("ofApp")
+                << "Runtime rejected label update for " << assetId
+                << ": " << labelResult.error;
+            return false;
+        }
+        const auto activeResult = runtime_.setCompositionLayerActive(
+            static_cast<std::size_t>(idx),
+            activate);
+        if (!activeResult) {
+            ofLogWarning("ofApp")
+                << "Runtime rejected active-state update for " << assetId
+                << ": " << activeResult.error;
+            return false;
+        }
+        if (isFxType(slot.type)) {
             setFxRouteForType(slot.type, activate ? 1.0f : 0.0f);
             if (!slot.coverage.defined) {
-                applyEffectCoverageDefaults(slot, slot.type);
+                applyEffectCoverageDefaults(layerIndex, slot.type);
             }
-            registerConsoleLayerCoverageParam(layerIndex, slot);
+            registerConsoleLayerCoverageParam(layerIndex);
         }
-        slot.active = activate;
         return finish(true);
     }
 
@@ -5230,19 +5281,18 @@ bool ofApp::addAssetToConsoleLayer(int layerIndex,
         request.config = layerConfig;
         request.enabled = activate;
 
-        const bool replacingElement = slot.hasElement();
+        Layer* const replacingLayer =
+            runtime_.legacyCompositionElementForHost(
+                static_cast<std::size_t>(idx));
+        const bool replacingElement = replacingLayer != nullptr;
         const std::string retiredType = slot.type;
-        std::string nextAssetId = entry->id;
-        std::string nextLabel = entryLabel;
-        std::string nextType = entry->type;
-        std::string nextPrefix = prefix;
         auto progressCallback = [&](std::string_view step) {
             logSceneLoadInstallStep(std::string(step));
         };
         auto prepared = replacingElement
             ? runtime_.prepareElementReplacement(
                 request,
-                *slot.element(),
+                *replacingLayer,
                 progressCallback)
             : runtime_.prepareElement(request, progressCallback);
         if (!prepared) {
@@ -5251,19 +5301,30 @@ bool ofApp::addAssetToConsoleLayer(int layerIndex,
             return false;
         }
 
-        if (!runtime_.adoptPreparedElement(
-                static_cast<std::size_t>(idx),
-                std::move(prepared))) {
+        synaptome::runtime::CompositionAssignment assignment;
+        assignment.kind =
+            synaptome::runtime::CompositionKind::Element;
+        assignment.definitionId = entry->id;
+        assignment.label = entryLabel;
+        assignment.typeId = entry->type;
+        assignment.registryPrefix = prefix;
+        assignment.active = activate;
+        assignment.opacity = requestedOpacity;
+        const auto adoption = runtime_.adoptPreparedElement(
+            static_cast<std::size_t>(idx),
+            std::move(prepared),
+            std::move(assignment));
+        if (!adoption) {
             ofLogWarning("ofApp")
                 << "Runtime rejected prepared element adoption for "
-                << assetId;
+                << assetId << ": " << adoption.error;
             return false;
         }
 
-        // Runtime adoption replaces ParameterRegistry vector storage. Invalidate
-        // pointer-bearing consumers and all retired element routes before any
-        // fallible host-side publication can let the old element be destroyed.
-        if (controlMappingHub) {
+        // Runtime adoption atomically publishes the element, metadata, and new
+        // ParameterRegistry storage. Invalidate pointer-bearing host consumers
+        // before any later host path can observe the replacement.
+        if (adoption.parametersChanged && controlMappingHub) {
             controlMappingHub->invalidateParameterRegistryStorage();
         }
         if (replacingElement) {
@@ -5298,16 +5359,8 @@ bool ofApp::addAssetToConsoleLayer(int layerIndex,
             }
         }
 
-        slot.assetId.swap(nextAssetId);
-        slot.label.swap(nextLabel);
-        slot.type.swap(nextType);
-        slot.paramPrefix.swap(nextPrefix);
-        slot.active = activate;
-        slot.opacity = requestedOpacity;
-        slot.coverage = ConsoleLayerCoverageInfo();
-        slot.coverageParamValue = 0.0f;
-
-        Layer* layerPtr = slot.element();
+        Layer* layerPtr = runtime_.legacyCompositionElementForHost(
+            static_cast<std::size_t>(idx));
         try {
             if (auto* perlin = dynamic_cast<PerlinNoiseLayer*>(layerPtr)) {
                 registerPerlinMidi(perlin);
@@ -5326,28 +5379,50 @@ bool ofApp::addAssetToConsoleLayer(int layerIndex,
                 << "Failed to install optional legacy controls for "
                 << assetId;
         }
-        registerConsoleLayerOpacityParam(layerIndex, slot);
+        registerConsoleLayerOpacityParam(layerIndex);
         return finish(true);
     }
 
-    clearConsoleSlot(idx);
+    if (!clearConsoleSlot(idx)) {
+        return false;
+    }
     logSceneLoadInstallStep("clear");
-    slot.assetId = entry->id;
-    slot.label = entryLabel;
-    slot.type = entry->type;
-    slot.opacity = requestedOpacity;
-    slot.active = activate;
+    synaptome::runtime::CompositionAssignment assignment;
+    assignment.kind = nextIsFx
+        ? synaptome::runtime::CompositionKind::Effect
+        : synaptome::runtime::CompositionKind::Overlay;
+    assignment.definitionId = entry->id;
+    assignment.label = entryLabel;
+    assignment.typeId = entry->type;
+    assignment.registryPrefix =
+        entry->registryPrefix.empty() ? entry->id : entry->registryPrefix;
+    assignment.active = activate;
+    assignment.opacity = requestedOpacity;
+    if (nextIsFx) {
+        assignment.coverage.defined = true;
+        assignment.coverage.mode = "upstream";
+        assignment.coverage.columns = std::max(
+            0,
+            static_cast<int>(std::round(
+                postEffects.defaultCoverageForType(entry->type))));
+    }
+    const auto assignmentResult = runtime_.assignCompositionEntry(
+        static_cast<std::size_t>(idx),
+        std::move(assignment));
+    if (!assignmentResult) {
+        ofLogWarning("ofApp")
+            << "Runtime rejected console assignment for " << assetId
+            << ": " << assignmentResult.error;
+        return false;
+    }
 
     if (nextIsFx) {
-        slot.paramPrefix = entry->registryPrefix.empty() ? entry->id : entry->registryPrefix;
-        applyEffectCoverageDefaults(slot, entry->type);
-        registerConsoleLayerCoverageParam(layerIndex, slot);
+        registerConsoleLayerCoverageParam(layerIndex);
         setFxRouteForType(entry->type, activate ? 1.0f : 0.0f);
         return finish(true);
     }
 
     if (nextIsUiOverlay) {
-        slot.paramPrefix = entry->registryPrefix.empty() ? entry->id : entry->registryPrefix;
         return finish(true);
     }
     return false;
@@ -5389,42 +5464,44 @@ void ofApp::openAssetBrowserForConsole(int layerIndex) {
     menuController.pushState(assetBrowser);
 }
 
-void ofApp::clearConsoleSlot(int index) {
-    if (index < 0 || index >= static_cast<int>(consoleSlots.size())) return;
-    ConsoleSlot& slot = consoleSlots[index];
-    bool changedRouteTargets = !slot.paramPrefix.empty();
-    unregisterConsoleLayerCoverageParam(index + 1);
-    if (slot.element()) {
-        std::string oldPrefix = slot.element()->registryPrefix();
-        midi.unbindByPrefix(oldPrefix);
-        paramRegistry.removeById(oldPrefix + ".opacity");
-        Layer* ptr = slot.element();
-        if (ptr == gridLayer) gridLayer = nullptr;
-        if (ptr == geodesicLayer) geodesicLayer = nullptr;
-        if (ptr == perlinLayer) perlinLayer = nullptr;
-        if (ptr == gameOfLifeLayer) gameOfLifeLayer = nullptr;
-        runtime_.releaseCompositionElement(static_cast<std::size_t>(index));
-    } else if (!slot.assetId.empty()) {
-        if (const auto* entry = layerLibrary.find(slot.assetId)) {
-            if (isFxType(entry->type)) {
-                setFxRouteForType(entry->type, 0.0f);
-            }
-        }
+bool ofApp::clearConsoleSlot(int index) {
+    if (index < 0 || index >= static_cast<int>(consoleSlots.size())) {
+        return false;
     }
-    slot.assetId.clear();
-    slot.label.clear();
-    slot.type.clear();
-    slot.paramPrefix.clear();
-    slot.active = false;
-    slot.opacity = 1.0f;
-    slot.coverage = ConsoleLayerCoverageInfo();
-    slot.coverageParamValue = 0.0f;
+    const ConsoleSlot& slot = consoleSlots[index];
+    bool changedRouteTargets = !slot.paramPrefix.empty();
+    const std::string retiredAssetId = slot.assetId;
+    const std::string retiredType = slot.type;
+    const std::string retiredElementPrefix =
+        slot.element() ? slot.element()->registryPrefix() : std::string();
+    const auto clearResult = runtime_.clearCompositionLayer(
+        static_cast<std::size_t>(index));
+    if (!clearResult) {
+        ofLogWarning("ofApp")
+            << "Runtime rejected clear for console slot " << (index + 1)
+            << ": " << clearResult.error;
+        return false;
+    }
+    if (clearResult.parametersChanged && controlMappingHub) {
+        controlMappingHub->invalidateParameterRegistryStorage();
+    }
+    if (!retiredElementPrefix.empty()) {
+        midi.unbindByPrefix(retiredElementPrefix);
+    }
+    unregisterConsoleLayerCoverageParam(index + 1);
+    if (clearResult.elementChanged) {
+        refreshLayerReferences();
+    }
+    if (!retiredAssetId.empty() && isFxType(retiredType)) {
+        setFxRouteForType(retiredType, 0.0f);
+    }
     if (changedRouteTargets) {
         rebuildDynamicOscRoutes();
     }
     if (controlMappingHub) {
         controlMappingHub->markConsoleSlotsDirty();
     }
+    return true;
 }
 
 void ofApp::persistConsoleAssignments() {
@@ -5526,10 +5603,13 @@ void ofApp::persistConsoleAssignments() {
     ConsoleStore::saveState(consoleConfigPath, state);
 }
 
-void ofApp::clearAllConsoleSlots() {
+bool ofApp::clearAllConsoleSlots() {
     for (int i = 0; i < static_cast<int>(consoleSlots.size()); ++i) {
-        clearConsoleSlot(i);
+        if (!clearConsoleSlot(i)) {
+            return false;
+        }
     }
+    return true;
 }
 
 void ofApp::seedConsoleDefaultsIfEmpty() {
@@ -5564,7 +5644,9 @@ void ofApp::seedConsoleDefaultsIfEmpty() {
     }
 
     if (assignedCount == 1 && onlyGameOfLife) {
-        clearAllConsoleSlots();
+        if (!clearAllConsoleSlots()) {
+            return;
+        }
         installSeeds();
     }
 }
@@ -5576,7 +5658,9 @@ bool ofApp::loadConsoleLayoutFromScene(const ofJson& consoleNode) {
     if (!consoleNode.contains("slots") || !consoleNode["slots"].is_array()) {
         return false;
     }
-    clearAllConsoleSlots();
+    if (!clearAllConsoleSlots()) {
+        return false;
+    }
     bool appliedAllSlots = true;
     for (const auto& slotNode : consoleNode["slots"]) {
         if (!slotNode.contains("index") || !slotNode.contains("assetId")) continue;
@@ -5597,13 +5681,18 @@ bool ofApp::loadConsoleLayoutFromScene(const ofJson& consoleNode) {
             }
         }
         if (addAssetToConsoleLayer(index, assetId, active, opacity)) {
-            if (auto* slot = consoleSlotForIndex(index)) {
-                if (!label.empty()) {
-                    slot->label = label;
+            if (!label.empty()) {
+                const auto labelResult = runtime_.setCompositionLayerLabel(
+                    static_cast<std::size_t>(index - 1),
+                    label);
+                if (!labelResult) {
+                    ofLogWarning("ofApp")
+                        << "Runtime rejected scene label for slot "
+                        << index << ": " << labelResult.error;
                 }
-                if (coverage.defined) {
-                    importConsoleCoverageFromInfo(index, coverage);
-                }
+            }
+            if (coverage.defined) {
+                importConsoleCoverageFromInfo(index, coverage);
             }
         } else {
             appliedAllSlots = false;
@@ -5682,12 +5771,6 @@ void ofApp::writeConsoleParametersToScene(ofJson& slotNode, const ConsoleSlot& s
     }
 }
 
-ofApp::ConsoleSlot* ofApp::consoleSlotForIndex(int layerIndex) {
-    int idx = layerIndex - 1;
-    if (idx < 0 || idx >= static_cast<int>(consoleSlots.size())) return nullptr;
-    return &consoleSlots[idx];
-}
-
 const ofApp::ConsoleSlot* ofApp::consoleSlotForIndex(int layerIndex) const {
     int idx = layerIndex - 1;
     if (idx < 0 || idx >= static_cast<int>(consoleSlots.size())) return nullptr;
@@ -5721,48 +5804,31 @@ std::string ofApp::consoleSlotPrefix(int layerIndex) const {
     return std::string();
 }
 
-void ofApp::registerConsoleLayerOpacityParam(int layerIndex, ConsoleSlot& slot) {
-    if (slot.paramPrefix.empty()) {
+void ofApp::registerConsoleLayerOpacityParam(int layerIndex) {
+    const ConsoleSlot* slot = consoleSlotForIndex(layerIndex);
+    if (!slot || slot->paramPrefix.empty()) {
         return;
     }
-    float defaultValue = ofClamp(slot.opacity, 0.0f, 1.0f);
-    slot.opacity = defaultValue;
-    ParameterRegistry::Descriptor meta;
-    meta.label = "Visibility: Layer Opacity";
-    meta.group = "Visibility";
-    meta.description = "Base opacity for this layer before FX or modifiers are applied";
-    meta.range.min = 0.0f;
-    meta.range.max = 1.0f;
-    meta.range.step = 0.01f;
-    meta.quickAccess = true;
-    meta.quickAccessOrder = 0;
-    const std::string paramId = slot.paramPrefix + ".opacity";
+    const std::string paramId = slot->paramPrefix + ".opacity";
     try {
-        if (auto* existing = paramRegistry.findFloat(paramId)) {
-            existing->meta = meta;
-            existing->meta.id = paramId;
-            existing->value = &slot.opacity;
-            existing->defaultValue = defaultValue;
-            existing->baseValue = defaultValue;
-            existing->applyBaseToLive();
-        } else {
-            paramRegistry.addFloat(
-                paramId,
-                &slot.opacity,
-                defaultValue,
-                meta);
+        auto* opacityParam = paramRegistry.findFloat(paramId);
+        if (!opacityParam || !opacityParam->value) {
+            ofLogWarning("ofApp")
+                << "Runtime omitted layer opacity parameter for slot "
+                << layerIndex;
+            return;
         }
         midi.bindFloat(paramId,
-                       &slot.opacity,
-                       meta.range.min,
-                       meta.range.max,
+                       opacityParam->value,
+                       opacityParam->meta.range.min,
+                       opacityParam->meta.range.max,
                        false,
-                       meta.range.step);
+                       opacityParam->meta.range.step);
     } catch (const std::exception& ex) {
         ofLogWarning("ofApp") << "Failed to register opacity parameter for slot " << layerIndex << ": " << ex.what();
     }
 
-    const std::string visibleId = slot.paramPrefix + ".visible";
+    const std::string visibleId = slot->paramPrefix + ".visible";
     if (auto* visibleParam = paramRegistry.findBool(visibleId)) {
         if (visibleParam->value) {
             midi.bindBool(visibleId, visibleParam->value, MidiRouter::BoolMode::Toggle);
@@ -5770,59 +5836,93 @@ void ofApp::registerConsoleLayerOpacityParam(int layerIndex, ConsoleSlot& slot) 
     }
 }
 
-void ofApp::registerConsoleLayerCoverageParam(int layerIndex, ConsoleSlot& slot) {
-    if (!isFxType(slot.type)) {
+void ofApp::registerConsoleLayerCoverageParam(int layerIndex) {
+    const ConsoleSlot* slot = consoleSlotForIndex(layerIndex);
+    if (!slot || !isFxType(slot->type)) {
         unregisterConsoleLayerCoverageParam(layerIndex);
         return;
     }
-    if (!slot.coverage.defined) {
-        slot.coverage.defined = true;
+    ConsoleLayerCoverageInfo coverage = slot->coverage;
+    coverage.defined = true;
+    if (coverage.mode.empty()) {
+        coverage.mode = "upstream";
     }
-    if (slot.coverage.mode.empty()) {
-        slot.coverage.mode = "upstream";
+    coverage.columns = std::max(0, coverage.columns);
+    const auto result = runtime_.setCompositionLayerCoverage(
+        static_cast<std::size_t>(layerIndex - 1),
+        std::move(coverage));
+    if (!result) {
+        ofLogWarning("ofApp")
+            << "Runtime rejected coverage for slot " << layerIndex
+            << ": " << result.error;
     }
-    slot.coverage.columns = std::max(0, slot.coverage.columns);
-    slot.coverageParamValue = static_cast<float>(slot.coverage.columns);
 }
 
 void ofApp::unregisterConsoleLayerCoverageParam(int layerIndex) {}
 
 void ofApp::importConsoleCoverageFromInfo(int layerIndex, const ConsoleLayerCoverageInfo& coverage) {
-    ConsoleSlot* slot = consoleSlotForIndex(layerIndex);
+    const ConsoleSlot* slot = consoleSlotForIndex(layerIndex);
     if (!slot || !isFxType(slot->type)) {
         return;
     }
-    slot->coverage = coverage;
-    slot->coverage.defined = true;
-    if (slot->coverage.mode.empty()) {
-        slot->coverage.mode = "upstream";
+    ConsoleLayerCoverageInfo nextCoverage = coverage;
+    nextCoverage.defined = true;
+    if (nextCoverage.mode.empty()) {
+        nextCoverage.mode = "upstream";
     }
-    slot->coverage.columns = std::max(0, slot->coverage.columns);
-    slot->coverageParamValue = static_cast<float>(slot->coverage.columns);
-    registerConsoleLayerCoverageParam(layerIndex, *slot);
+    nextCoverage.columns = std::max(0, nextCoverage.columns);
+    const auto result = runtime_.setCompositionLayerCoverage(
+        static_cast<std::size_t>(layerIndex - 1),
+        std::move(nextCoverage));
+    if (!result) {
+        ofLogWarning("ofApp")
+            << "Runtime rejected imported coverage for slot " << layerIndex
+            << ": " << result.error;
+    }
 }
 
-void ofApp::applyEffectCoverageDefaults(ConsoleSlot& slot, const std::string& effectType) {
-    slot.coverage.defined = true;
-    slot.coverage.mode = "upstream";
-    slot.coverage.columns = std::max(0, static_cast<int>(std::round(postEffects.defaultCoverageForType(effectType))));
-    slot.coverageParamValue = static_cast<float>(slot.coverage.columns);
+void ofApp::applyEffectCoverageDefaults(
+    int layerIndex,
+    const std::string& effectType) {
+    ConsoleLayerCoverageInfo coverage;
+    coverage.defined = true;
+    coverage.mode = "upstream";
+    coverage.columns = std::max(
+        0,
+        static_cast<int>(std::round(
+            postEffects.defaultCoverageForType(effectType))));
+    const auto result = runtime_.setCompositionLayerCoverage(
+        static_cast<std::size_t>(layerIndex - 1),
+        std::move(coverage));
+    if (!result) {
+        ofLogWarning("ofApp")
+            << "Runtime rejected default coverage for slot " << layerIndex
+            << ": " << result.error;
+    }
 }
 
 void ofApp::propagateEffectCoverageChange(const std::string& effectType, float coverage) {
     int columns = std::max(0, static_cast<int>(std::round(coverage)));
     bool changed = false;
     for (std::size_t i = 0; i < consoleSlots.size(); ++i) {
-        auto& slot = consoleSlots[i];
+        const auto& slot = consoleSlots[i];
         if (slot.type != effectType) {
             continue;
         }
-        slot.coverage.defined = true;
-        slot.coverage.mode = "upstream";
-        slot.coverage.columns = columns;
-        slot.coverageParamValue = static_cast<float>(columns);
-        registerConsoleLayerCoverageParam(static_cast<int>(i) + 1, slot);
-        changed = true;
+        ConsoleLayerCoverageInfo nextCoverage;
+        nextCoverage.defined = true;
+        nextCoverage.mode = "upstream";
+        nextCoverage.columns = columns;
+        const auto result = runtime_.setCompositionLayerCoverage(
+            i,
+            std::move(nextCoverage));
+        if (result) {
+            changed = true;
+        } else {
+            ofLogWarning("ofApp")
+                << "Runtime rejected propagated coverage for slot "
+                << (i + 1) << ": " << result.error;
+        }
     }
     if (changed) {
         persistConsoleAssignments();
@@ -5832,7 +5932,10 @@ void ofApp::propagateEffectCoverageChange(const std::string& effectType, float c
     }
 }
 
-bool ofApp::applyEffectSlot(ConsoleSlot& slot, ofFbo& src, ofFbo& dst) {
+bool ofApp::applyEffectSlot(
+    const ConsoleSlot& slot,
+    ofFbo& src,
+    ofFbo& dst) {
     if (!src.isAllocated() || !dst.isAllocated()) {
         return false;
     }
@@ -6110,9 +6213,9 @@ void ofApp::refreshLayerReferences() {
     perlinLayer = nullptr;
     gameOfLifeLayer = nullptr;
 
-    for (auto& slot : consoleSlots) {
-        if (!slot.element()) continue;
-        Layer* base = slot.element();
+    for (std::size_t i = 0; i < consoleSlots.size(); ++i) {
+        Layer* base = runtime_.legacyCompositionElementForHost(i);
+        if (!base) continue;
         if (!gridLayer) gridLayer = dynamic_cast<GridLayer*>(base);
         if (!geodesicLayer) geodesicLayer = dynamic_cast<GeodesicLayer*>(base);
         if (!perlinLayer) perlinLayer = dynamic_cast<PerlinNoiseLayer*>(base);

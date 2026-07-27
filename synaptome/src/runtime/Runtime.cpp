@@ -46,6 +46,7 @@ Runtime::ElementResult::ElementResult(ElementResult&& other) noexcept
       definitionId(std::move(other.definitionId)),
       instanceId(std::move(other.instanceId)),
       registryPrefix(std::move(other.registryPrefix)),
+      enabled(other.enabled),
       error(std::move(other.error)),
       stagedParameters_(std::move(other.stagedParameters_)),
       element_(std::move(other.element_)),
@@ -73,6 +74,7 @@ Runtime::ElementResult& Runtime::ElementResult::operator=(
     definitionId = std::move(other.definitionId);
     instanceId = std::move(other.instanceId);
     registryPrefix = std::move(other.registryPrefix);
+    enabled = other.enabled;
     error = std::move(other.error);
     runtime_ = std::exchange(other.runtime_, nullptr);
     runtimeLifetime_ = std::move(other.runtimeLifetime_);
@@ -87,6 +89,11 @@ Runtime::Runtime(
 
 Runtime::~Runtime() noexcept {
     lifetime_.reset();
+    for (auto& layer : compositionLayers_) {
+        if (!layer.opacityParameterId_.empty()) {
+            parameters_.removeById(layer.opacityParameterId_);
+        }
+    }
     for (const auto& entry : ownership_) {
         removeParameters(entry.second.parameters);
     }
@@ -161,6 +168,7 @@ Runtime::ElementResult Runtime::prepareElementImpl(
     result.definitionId = request.definitionId;
     result.instanceId = request.instanceId;
     result.registryPrefix = request.registryPrefix;
+    result.enabled = request.enabled;
     if (request.typeId.empty()) {
         result.errorCode = ElementErrorCode::InvalidRequest;
         result.error = "element type ID is empty";
@@ -316,8 +324,8 @@ void Runtime::releasePreparedElement(ElementResult& prepared) noexcept {
     prepared.runtimeLifetime_.reset();
 }
 
-CompositionLayer* Runtime::compositionLayer(
-    std::size_t zeroBasedIndex) {
+CompositionLayer* Runtime::mutableCompositionLayer(
+    std::size_t zeroBasedIndex) noexcept {
     if (zeroBasedIndex >= compositionLayers_.size()) return nullptr;
     return &compositionLayers_[zeroBasedIndex];
 }
@@ -326,6 +334,57 @@ const CompositionLayer* Runtime::compositionLayer(
     std::size_t zeroBasedIndex) const {
     if (zeroBasedIndex >= compositionLayers_.size()) return nullptr;
     return &compositionLayers_[zeroBasedIndex];
+}
+
+Runtime::CompositionRenderTargets Runtime::compositionRenderTargetsForHost(
+    std::size_t zeroBasedIndex) noexcept {
+    auto* layer = mutableCompositionLayer(zeroBasedIndex);
+    if (!layer) return {};
+    return {
+        &layer->layerFbo,
+        &layer->upstreamFbo,
+        &layer->effectFbo,
+    };
+}
+
+Layer* Runtime::legacyCompositionElementForHost(
+    std::size_t zeroBasedIndex) noexcept {
+    auto* layer = mutableCompositionLayer(zeroBasedIndex);
+    return layer ? layer->element_.get() : nullptr;
+}
+
+float Runtime::normalizeOpacity(float opacity) noexcept {
+    return std::isfinite(opacity)
+        ? std::clamp(opacity, 0.0f, 1.0f)
+        : 1.0f;
+}
+
+CompositionCoverage Runtime::normalizeCoverage(
+    CompositionCoverage coverage) {
+    if (coverage.mode.empty()) {
+        coverage.mode = "upstream";
+    }
+    coverage.columns = std::max(0, coverage.columns);
+    return coverage;
+}
+
+void Runtime::forceClearCompositionLayerNoexcept(
+    CompositionLayer& layer) noexcept {
+    releaseElement(layer.element_);
+    if (!layer.opacityParameterId_.empty()) {
+        parameters_.removeById(layer.opacityParameterId_);
+    }
+    layer.assetId.clear();
+    layer.label.clear();
+    layer.type.clear();
+    layer.paramPrefix.clear();
+    layer.opacityParameterId_.clear();
+    layer.coverage.mode.clear();
+    layer.kind = CompositionKind::Element;
+    layer.active = false;
+    layer.opacity = 1.0f;
+    layer.coverage.defined = false;
+    layer.coverage.columns = 0;
 }
 
 CompositionCoverageWindow Runtime::resolveEffectCoverage(
@@ -362,26 +421,93 @@ CompositionCoverageWindow Runtime::resolveEffectCoverage(
     return window;
 }
 
-bool Runtime::adoptPreparedElement(
+CompositionMutationResult Runtime::adoptPreparedElement(
     std::size_t zeroBasedIndex,
-    ElementResult&& prepared) {
-    auto* layer = compositionLayer(zeroBasedIndex);
-    if (!layer ||
-        !prepared.element_ ||
+    ElementResult&& prepared,
+    CompositionAssignment assignment) {
+    return adoptPreparedElementImpl(
+        zeroBasedIndex,
+        std::move(prepared),
+        assignment);
+}
+
+CompositionMutationResult Runtime::adoptPreparedElementImpl(
+    std::size_t zeroBasedIndex,
+    ElementResult&& prepared,
+    CompositionAssignment& assignment) {
+    auto fail = [](
+        CompositionMutationError code,
+        std::string error) {
+        CompositionMutationResult result;
+        result.errorCode = code;
+        result.error = std::move(error);
+        return result;
+    };
+
+    auto* layer = mutableCompositionLayer(zeroBasedIndex);
+    if (!layer) {
+        return fail(
+            CompositionMutationError::IndexOutOfRange,
+            "composition layer index is out of range");
+    }
+    if (!prepared.element_ ||
         !prepared.stagedParameters_ ||
         prepared.runtime_ != this ||
-        prepared.runtimeLifetime_.expired() ||
-        prepared.registryPrefix !=
-            "console.layer" + std::to_string(zeroBasedIndex + 1)) {
-        return false;
+        prepared.runtimeLifetime_.expired()) {
+        return fail(
+            CompositionMutationError::ElementMismatch,
+            "prepared element is not owned by this Runtime");
     }
+
+    const std::string expectedPrefix =
+        "console.layer" + std::to_string(zeroBasedIndex + 1);
+    if (prepared.registryPrefix != expectedPrefix) {
+        return fail(
+            CompositionMutationError::ElementMismatch,
+            "prepared element registry prefix does not match the composition layer");
+    }
+    if (assignment.kind != CompositionKind::Element) {
+        return fail(
+            CompositionMutationError::KindMismatch,
+            "prepared elements require an Element composition assignment");
+    }
+    if (assignment.definitionId.empty() ||
+        assignment.typeId.empty() ||
+        assignment.registryPrefix.empty()) {
+        return fail(
+            CompositionMutationError::InvalidAssignment,
+            "composition assignment identity is incomplete");
+    }
+    if (assignment.definitionId != prepared.definitionId ||
+        assignment.typeId != prepared.typeId ||
+        assignment.registryPrefix != prepared.registryPrefix ||
+        assignment.active != prepared.enabled) {
+        return fail(
+            CompositionMutationError::ElementMismatch,
+            "composition assignment does not match the prepared element");
+    }
+    assignment.opacity = normalizeOpacity(assignment.opacity);
+    assignment.coverage = CompositionCoverage();
+
     Layer* const oldElement = layer->element_.get();
-    if (oldElement != prepared.replacementElement_) return false;
+    if (oldElement != prepared.replacementElement_) {
+        return fail(
+            CompositionMutationError::ElementMismatch,
+            "prepared replacement does not match the live composition element");
+    }
 
     const auto oldOwnership =
         oldElement ? ownership_.find(oldElement) : ownership_.end();
-    if (oldElement && oldOwnership == ownership_.end()) return false;
-    if (!oldElement && prepared.replacementElement_) return false;
+    if (oldElement && oldOwnership == ownership_.end()) {
+        return fail(
+            CompositionMutationError::ElementMismatch,
+            "live composition element has no Runtime ownership record");
+    }
+    if (!oldElement && prepared.replacementElement_) {
+        return fail(
+            CompositionMutationError::ElementMismatch,
+            "prepared result unexpectedly targets a missing element");
+    }
 
     try {
         std::vector<std::string> removedIds;
@@ -406,28 +532,320 @@ bool Runtime::adoptPreparedElement(
         auto nextActivePrefixes = activePrefixes_;
         nextActivePrefixes.insert(prepared.registryPrefix);
 
+        ParameterRegistry::FloatParam* nextOpacityParam = nullptr;
+        float stagedOpacity = 1.0f;
+        stagedOpacity = assignment.opacity;
+        std::string opacityId =
+            assignment.registryPrefix + ".opacity";
+        ParameterRegistry::Descriptor opacityDescriptor;
+        opacityDescriptor.label = "Visibility: Layer Opacity";
+        opacityDescriptor.group = "Visibility";
+        opacityDescriptor.description =
+            "Base opacity for this layer before FX or modifiers are applied";
+        opacityDescriptor.range.min = 0.0f;
+        opacityDescriptor.range.max = 1.0f;
+        opacityDescriptor.range.step = 0.01f;
+        opacityDescriptor.quickAccess = true;
+        opacityDescriptor.quickAccessOrder = 0;
+
+        nextOpacityParam = nextParameters.findFloat(opacityId);
+        if (!nextOpacityParam) {
+            nextOpacityParam = &nextParameters.addFloat(
+                opacityId,
+                &stagedOpacity,
+                stagedOpacity,
+                opacityDescriptor);
+        } else {
+            nextOpacityParam->meta = opacityDescriptor;
+            nextOpacityParam->meta.id = opacityId;
+            nextOpacityParam->defaultValue = stagedOpacity;
+            nextOpacityParam->baseValue = stagedOpacity;
+        }
+
+        // All potentially throwing staging is complete. From here through the
+        // ownership/element swaps, commit only pointer/scalar writes and swaps.
+        if (nextOpacityParam) {
+            nextOpacityParam->value = &layer->opacity;
+            layer->opacity = stagedOpacity;
+        }
         parameters_.swap(nextParameters);
         candidate->onParameterRegistryCommitted(parameters_);
         ownership_.swap(nextOwnership);
         activePrefixes_.swap(nextActivePrefixes);
         layer->element_.swap(prepared.element_);
+        layer->assetId.swap(assignment.definitionId);
+        layer->label.swap(assignment.label);
+        layer->type.swap(assignment.typeId);
+        layer->paramPrefix.swap(assignment.registryPrefix);
+        layer->opacityParameterId_.swap(opacityId);
+        layer->kind = CompositionKind::Element;
+        layer->active = assignment.active;
+        layer->coverage.defined = false;
+        layer->coverage.mode.swap(assignment.coverage.mode);
+        layer->coverage.columns = 0;
 
         prepared.stagedParameters_.reset();
         prepared.replacementElement_ = nullptr;
         prepared.ownsPrefixReservation_ = false;
         prepared.runtime_ = nullptr;
         prepared.runtimeLifetime_.reset();
-        return true;
+        CompositionMutationResult result;
+        result.elementChanged = true;
+        result.parametersChanged = true;
+        return result;
     } catch (...) {
-        return false;
+        return fail(
+            CompositionMutationError::LifecycleFailure,
+            "failed to stage or commit the composition element");
     }
 }
 
-void Runtime::releaseCompositionElement(
-    std::size_t zeroBasedIndex) noexcept {
-    auto* layer = compositionLayer(zeroBasedIndex);
-    if (!layer) return;
-    releaseElement(layer->element_);
+CompositionMutationResult Runtime::assignCompositionEntry(
+    std::size_t zeroBasedIndex,
+    CompositionAssignment assignment) {
+    auto* layer = mutableCompositionLayer(zeroBasedIndex);
+    if (!layer) {
+        return {
+            CompositionMutationError::IndexOutOfRange,
+            false,
+            false,
+            "composition layer index is out of range",
+        };
+    }
+    if (assignment.kind == CompositionKind::Element) {
+        return {
+            CompositionMutationError::KindMismatch,
+            false,
+            false,
+            "element assignments require a prepared element",
+        };
+    }
+    if (layer->element_) {
+        return {
+            CompositionMutationError::ElementMismatch,
+            false,
+            false,
+            "non-element assignment cannot replace a live element",
+        };
+    }
+    if (assignment.definitionId.empty() ||
+        assignment.typeId.empty() ||
+        assignment.registryPrefix.empty()) {
+        return {
+            CompositionMutationError::InvalidAssignment,
+            false,
+            false,
+            "composition assignment identity is incomplete",
+        };
+    }
+
+    try {
+        assignment.opacity = normalizeOpacity(assignment.opacity);
+        assignment.coverage =
+            assignment.kind == CompositionKind::Effect
+            ? normalizeCoverage(std::move(assignment.coverage))
+            : CompositionCoverage();
+
+        layer->assetId.swap(assignment.definitionId);
+        layer->label.swap(assignment.label);
+        layer->type.swap(assignment.typeId);
+        layer->paramPrefix.swap(assignment.registryPrefix);
+        layer->opacityParameterId_.clear();
+        layer->coverage.mode.swap(assignment.coverage.mode);
+        layer->kind = assignment.kind;
+        layer->active = assignment.active;
+        layer->opacity = assignment.opacity;
+        layer->coverage.defined = assignment.coverage.defined;
+        layer->coverage.columns = assignment.coverage.columns;
+        return {};
+    } catch (...) {
+        return {
+            CompositionMutationError::LifecycleFailure,
+            false,
+            false,
+            "failed to assign the composition entry",
+        };
+    }
+}
+
+CompositionMutationResult Runtime::setCompositionLayerActive(
+    std::size_t zeroBasedIndex,
+    bool active) {
+    auto* layer = mutableCompositionLayer(zeroBasedIndex);
+    if (!layer) {
+        return {
+            CompositionMutationError::IndexOutOfRange,
+            false,
+            false,
+            "composition layer index is out of range",
+        };
+    }
+    if (layer->assetId.empty()) {
+        return {
+            CompositionMutationError::InvalidAssignment,
+            false,
+            false,
+            "empty composition layer has no active state",
+        };
+    }
+    try {
+        if (layer->element_) {
+            layer->element_->setExternalEnabled(active);
+        }
+        layer->active = active;
+        return {};
+    } catch (...) {
+        return {
+            CompositionMutationError::LifecycleFailure,
+            false,
+            false,
+            "element rejected the active-state change",
+        };
+    }
+}
+
+CompositionMutationResult Runtime::setCompositionLayerLabel(
+    std::size_t zeroBasedIndex,
+    std::string label) {
+    auto* layer = mutableCompositionLayer(zeroBasedIndex);
+    if (!layer) {
+        return {
+            CompositionMutationError::IndexOutOfRange,
+            false,
+            false,
+            "composition layer index is out of range",
+        };
+    }
+    if (layer->assetId.empty()) {
+        return {
+            CompositionMutationError::InvalidAssignment,
+            false,
+            false,
+            "empty composition layer has no label",
+        };
+    }
+    layer->label.swap(label);
+    return {};
+}
+
+CompositionMutationResult Runtime::setCompositionLayerCoverage(
+    std::size_t zeroBasedIndex,
+    CompositionCoverage coverage) {
+    auto* layer = mutableCompositionLayer(zeroBasedIndex);
+    if (!layer) {
+        return {
+            CompositionMutationError::IndexOutOfRange,
+            false,
+            false,
+            "composition layer index is out of range",
+        };
+    }
+    if (layer->kind != CompositionKind::Effect) {
+        return {
+            CompositionMutationError::KindMismatch,
+            false,
+            false,
+            "coverage is valid only for Effect composition entries",
+        };
+    }
+    try {
+        coverage = normalizeCoverage(std::move(coverage));
+        layer->coverage.mode.swap(coverage.mode);
+        layer->coverage.defined = coverage.defined;
+        layer->coverage.columns = coverage.columns;
+        return {};
+    } catch (...) {
+        return {
+            CompositionMutationError::LifecycleFailure,
+            false,
+            false,
+            "failed to update composition coverage",
+        };
+    }
+}
+
+CompositionMutationResult Runtime::clearCompositionLayer(
+    std::size_t zeroBasedIndex) {
+    auto* layer = mutableCompositionLayer(zeroBasedIndex);
+    if (!layer) {
+        return {
+            CompositionMutationError::IndexOutOfRange,
+            false,
+            false,
+            "composition layer index is out of range",
+        };
+    }
+
+    Layer* const oldElement = layer->element_.get();
+    const auto oldOwnership =
+        oldElement ? ownership_.find(oldElement) : ownership_.end();
+    if (oldElement && oldOwnership == ownership_.end()) {
+        return {
+            CompositionMutationError::ElementMismatch,
+            false,
+            false,
+            "live composition element has no Runtime ownership record",
+        };
+    }
+
+    try {
+        std::vector<std::string> removedIds;
+        if (oldOwnership != ownership_.end()) {
+            removedIds.reserve(oldOwnership->second.parameters.size() + 1);
+            for (const auto& parameter : oldOwnership->second.parameters) {
+                removedIds.push_back(parameter.id);
+            }
+        }
+        if (!layer->opacityParameterId_.empty() &&
+            parameters_.findFloat(layer->opacityParameterId_)) {
+            removedIds.push_back(layer->opacityParameterId_);
+        }
+
+        ParameterRegistry nextParameters;
+        if (!removedIds.empty()) {
+            ParameterRegistry noAdditions;
+            nextParameters =
+                parameters_.replacingIds(removedIds, noAdditions);
+        }
+        auto nextOwnership = ownership_;
+        if (oldElement) nextOwnership.erase(oldElement);
+        auto nextActivePrefixes = activePrefixes_;
+        if (oldOwnership != ownership_.end()) {
+            nextActivePrefixes.erase(oldOwnership->second.prefix);
+        }
+        CompositionCoverage emptyCoverage;
+
+        if (!removedIds.empty()) {
+            parameters_.swap(nextParameters);
+        }
+        ownership_.swap(nextOwnership);
+        activePrefixes_.swap(nextActivePrefixes);
+        std::unique_ptr<Layer> retiredElement;
+        retiredElement.swap(layer->element_);
+        layer->assetId.clear();
+        layer->label.clear();
+        layer->type.clear();
+        layer->paramPrefix.clear();
+        layer->opacityParameterId_.clear();
+        layer->coverage.mode.swap(emptyCoverage.mode);
+        layer->kind = CompositionKind::Element;
+        layer->active = false;
+        layer->opacity = 1.0f;
+        layer->coverage.defined = false;
+        layer->coverage.columns = 0;
+
+        CompositionMutationResult result;
+        result.elementChanged = oldElement != nullptr;
+        result.parametersChanged = !removedIds.empty();
+        return result;
+    } catch (...) {
+        return {
+            CompositionMutationError::LifecycleFailure,
+            false,
+            false,
+            "failed to clear the composition layer",
+        };
+    }
 }
 
 void Runtime::resizeCompositionElements(int width, int height) {
@@ -448,14 +866,21 @@ void Runtime::updateCompositionElements(const LayerUpdateParams& params) {
 void Runtime::drawCompositionElement(
     std::size_t zeroBasedIndex,
     const LayerDrawParams& params) {
-    auto* layer = compositionLayer(zeroBasedIndex);
+    auto* layer = mutableCompositionLayer(zeroBasedIndex);
     if (!layer || !layer->active || !layer->element_) return;
     layer->element_->draw(params);
 }
 
 void Runtime::shutdownComposition() {
-    for (auto& layer : compositionLayers_) {
-        releaseElement(layer.element_);
+    for (std::size_t i = 0; i < compositionLayers_.size(); ++i) {
+        const auto cleared = clearCompositionLayer(i);
+        auto& layer = compositionLayers_[i];
+        if (!cleared) {
+            // Shutdown must not retain element/parameter ownership merely
+            // because the transactional clear could not allocate its staging
+            // registry.
+            forceClearCompositionLayerNoexcept(layer);
+        }
         layer.layerFbo.clear();
         layer.upstreamFbo.clear();
         layer.effectFbo.clear();

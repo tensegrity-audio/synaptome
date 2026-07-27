@@ -33,6 +33,15 @@ def main() -> int:
     example_source = read(EXAMPLE / "SignalBloomLayer.cpp", errors)
     runtime_header = read(RUNTIME_SIGNAL / "SignalBloomLayer.h", errors)
     runtime_source = read(RUNTIME_SIGNAL / "SignalBloomLayer.cpp", errors)
+    public_sdk_headers = sorted(
+        path
+        for path in (APP / "sdk" / "include").rglob("*")
+        if path.is_file() and path.suffix.lower() in {".h", ".hpp"}
+    )
+    public_sdk_surfaces = public_sdk_headers + [
+        APP / "src" / "visuals" / "Layer.h",
+        APP / "src" / "visuals" / "LayerParameterBuilder.h",
+    ]
     contract_project = read(
         APP / "tests" / "ElementSdkCompileContract" / "ElementSdkCompileContract.vcxproj",
         errors,
@@ -55,6 +64,23 @@ def main() -> int:
         includes = direct_includes(text)
         if includes != [expected]:
             errors.append(f"{name} must be the one documented compatibility forwarder")
+
+    for header in public_sdk_surfaces:
+        text = read(header, errors)
+        for token in (
+            "CompositionKind",
+            "CompositionAssignment",
+            "CompositionMutationError",
+            "CompositionMutationResult",
+            "CompositionRenderTargets",
+            "CompositionCoverageWindow",
+            "PostEffectChain",
+        ):
+            if token in text:
+                errors.append(
+                    "public Element SDK leaks Runtime composition/effect "
+                    f"surface {token}: {header.relative_to(ROOT)}"
+                )
 
     for name, text in {
         "public SignalBloomLayer.h": example_header,
@@ -135,7 +161,8 @@ def main() -> int:
         return 1
     print(
         "[element-sdk-boundary] PASS public includes, shipping static library, "
-        "controlled registration, and compile-contract roots"
+        "controlled registration, compile-contract roots, and no Runtime "
+        "composition leak"
     )
     return 0
 

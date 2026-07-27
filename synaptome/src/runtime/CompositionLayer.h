@@ -21,10 +21,10 @@ public:
     std::string label;
     std::string type;
     std::string paramPrefix;
+    CompositionKind kind = CompositionKind::Element;
     bool active = false;
     float opacity = 1.0f;
     CompositionCoverage coverage;
-    float coverageParamValue = 0.0f;
     ofFbo layerFbo;
     ofFbo upstreamFbo;
     ofFbo effectFbo;
@@ -32,6 +32,7 @@ public:
 private:
     friend class Runtime;
     std::unique_ptr<Layer> element_;
+    std::string opacityParameterId_;
 };
 
 } // namespace synaptome::runtime

@@ -26,6 +26,15 @@ Runtime now owns the pure, zero-based effect coverage-window policy through
 consumes its half-open input range. `PostEffectChain` remains the host-side
 concrete shader and parameter executor. This extraction adds no Element SDK
 type, effect interface, dynamic-loading surface, or ABI promise. Typed
+composition mutation now goes through `CompositionAssignment`,
+`CompositionMutationResult`, and explicit Runtime commands for element
+adoption, effect/overlay assignment, active state, label, coverage, and clear.
+Runtime also owns the canonical `console.layerN.opacity` registration and its
+transactional replacement. The host observes a transitional const live
+composition view, reaches mutable FBOs through a named render seam, and reaches
+mutable legacy element instances through a named compatibility seam. The const
+view still exposes const element pointers for read-only compatibility
+inspection; it is not the target immutable by-value snapshot. Typed
 descriptor/catalog ownership is not yet complete.
 
 This document records the dependency inventory and the minimum Element SDK v1
@@ -130,6 +139,12 @@ Runtime core must not depend on concrete elements, `ofApp`, or operator UI.
 During SEAC-3, concrete built-in effect selection, default values, coverage-mask
 parameters, and shader execution remain in the host's `PostEffectChain`
 adapter. Runtime core must not include that adapter.
+
+The current control-plane extraction exposes `CompositionKind`,
+`CompositionAssignment`, `CompositionMutationError`, and
+`CompositionMutationResult` inside RuntimeCore. These types describe the fixed
+built-in composition kinds and mutation outcomes; they do not define an Element
+SDK interface or a dynamically loadable effect contract.
 
 ### `SynaptomeHost`
 
@@ -410,6 +425,16 @@ UI calls runtime commands and reads snapshots. It does not receive a raw
 policy API. It is not part of the public Element SDK, does not define a public
 effect interface, and does not change the compiler-matched source/static-link
 compatibility decision.
+
+During the current migration, host reads use a const live
+`CompositionLayers` view. Writes use Runtime's transactional adoption,
+assignment, active, label, coverage, and clear commands. Per-layer render FBOs
+are available only through `CompositionRenderTargets`, and the remaining
+mutable element-specific host adapters use a named legacy-element seam.
+Read-only compatibility inspection may still follow const element pointers in
+the live view. The live view and both host seams are transitional implementation
+surfaces; they are not the immutable query snapshot promised by the target
+facade and are not public Element SDK headers.
 
 ## SEAC-3 Extraction Sequence
 

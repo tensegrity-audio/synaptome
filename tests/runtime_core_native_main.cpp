@@ -1,3 +1,4 @@
+#include <cmath>
 #include <exception>
 #include <iostream>
 #include <stdexcept>
@@ -10,6 +11,30 @@
 namespace {
 void require(bool condition, const std::string& message) {
     if (!condition) throw std::runtime_error(message);
+}
+
+void require(
+    const synaptome::runtime::CompositionMutationResult& result,
+    const std::string& message) {
+    if (!result) {
+        throw std::runtime_error(
+            message + (result.error.empty() ? "" : ": " + result.error));
+    }
+}
+
+synaptome::runtime::CompositionAssignment assignmentFor(
+    const synaptome::runtime::Runtime::ElementRequest& request,
+    const std::string& label = "RuntimeCore Element",
+    float opacity = 1.0f) {
+    synaptome::runtime::CompositionAssignment assignment;
+    assignment.kind = synaptome::runtime::CompositionKind::Element;
+    assignment.definitionId = request.definitionId;
+    assignment.label = label;
+    assignment.typeId = request.typeId;
+    assignment.registryPrefix = request.registryPrefix;
+    assignment.active = request.enabled;
+    assignment.opacity = opacity;
+    return assignment;
 }
 
 class ContractElement final : public Layer {
@@ -414,6 +439,8 @@ int main() {
             siblingDescriptor);
 
         synaptome::runtime::Runtime runtime(factory, parameters);
+        const auto& compositionLayers =
+            runtime.compositionLayersForHost();
         RunEffectCoverageWindowScenario(runtime);
         synaptome::runtime::Runtime::ElementRequest request;
         request.typeId = "tests.runtime.good";
@@ -435,20 +462,17 @@ int main() {
         require(parameters.findFloat("console.layer1.value") == nullptr,
                 "candidate setup mutated the live parameter registry");
         require(
-            runtime.adoptPreparedElement(0, std::move(prepared)),
+            runtime.adoptPreparedElement(
+                0,
+                std::move(prepared),
+                assignmentFor(request, "Good Element", 0.8f)),
             "runtime did not commit the prepared element");
         require(parameters.findFloat("console.layer1.value") != nullptr,
                 "adoption did not commit staged parameters");
         require(parameters.findBool("console.layer1.gate") != nullptr,
                 "adoption did not commit staged bool parameters");
-        float hostOpacity = 0.8f;
-        ParameterRegistry::Descriptor hostDescriptor;
-        hostDescriptor.label = "Host Opacity";
-        parameters.addFloat(
-            "console.layer1.opacity",
-            &hostOpacity,
-            hostOpacity,
-            hostDescriptor);
+        require(parameters.findFloat("console.layer1.opacity") != nullptr,
+                "adoption did not register spine-owned opacity");
         require(
             progress == std::vector<std::string>({"create", "configure", "setup", "enable"}),
             "lifecycle progress order drifted");
@@ -458,24 +482,30 @@ int main() {
         require(parameters.findFloat("console.layer1.value") != nullptr,
                 "prefix collision damaged the live registration");
 
-        runtime.releaseCompositionElement(0);
-        require(!runtime.compositionLayer(0)->hasElement(),
-                "release did not destroy the element");
+        const auto firstClear = runtime.clearCompositionLayer(0);
+        require(
+            firstClear &&
+                !runtime.compositionLayersForHost()[0].hasElement(),
+            "clear did not destroy the element");
         require(parameters.findFloat("console.layer1.value") == nullptr,
-                "release did not remove instance parameters");
+                "clear did not remove instance parameters");
         require(parameters.findBool("console.layer1.gate") == nullptr,
-                "release did not remove instance bool parameters");
-        require(parameters.findFloat("console.layer1.opacity") != nullptr,
-                "release removed a host-owned layer parameter");
-        parameters.removeById("console.layer1.opacity");
+                "clear did not remove instance bool parameters");
+        require(parameters.findFloat("console.layer1.opacity") == nullptr,
+                "clear retained spine-owned opacity");
         request.definitionId = "tests.definition.reloaded";
         request.instanceId = "tests.instance.reloaded";
         auto reloaded = runtime.prepareElement(request);
         require(static_cast<bool>(reloaded),
-                "slot prefix could not be reused after host-owned cleanup");
-        require(runtime.adoptPreparedElement(0, std::move(reloaded)),
+                "slot prefix could not be reused after Runtime clear");
+        require(
+            runtime.adoptPreparedElement(
+                0,
+                std::move(reloaded),
+                assignmentFor(request)),
                 "reloaded element was not adopted");
-        runtime.releaseCompositionElement(0);
+        require(runtime.clearCompositionLayer(0),
+                "reloaded element was not cleared");
         require(parameters.findFloat("console.layer10.float") != nullptr,
                 "release removed a sibling float namespace");
         require(parameters.findBool("console.layer10.bool") != nullptr,
@@ -595,7 +625,10 @@ int main() {
             require(static_cast<bool>(mismatched),
                     "mismatched composition candidate did not prepare");
             require(
-                !runtime.adoptPreparedElement(0, std::move(mismatched)),
+                !runtime.adoptPreparedElement(
+                    0,
+                    std::move(mismatched),
+                    assignmentFor(request)),
                 "runtime accepted a candidate for the wrong composition address");
         }
         require(parameters.findFloat("console.layer5.value") == nullptr,
@@ -613,7 +646,8 @@ int main() {
             require(
                 !runtime.adoptPreparedElement(
                     0,
-                    std::move(foreignRuntimeCandidate)),
+                    std::move(foreignRuntimeCandidate),
+                    assignmentFor(request)),
                 "runtime adopted an element owned by another runtime");
             require(
                 foreignParameters.findFloat("console.layer1.value") == nullptr,
@@ -628,14 +662,19 @@ int main() {
         request.registryPrefix = "console.layer1";
         auto compositionPrepared = runtime.prepareElement(request);
         require(
-            runtime.adoptPreparedElement(0, std::move(compositionPrepared)),
+            runtime.adoptPreparedElement(
+                0,
+                std::move(compositionPrepared),
+                assignmentFor(request, "Composition Element", 0.72f)),
             "runtime did not adopt the prepared composition element");
-        auto* compositionLayer = runtime.compositionLayer(0);
-        require(compositionLayer != nullptr && compositionLayer->hasElement(),
+        const auto* compositionLayer = &compositionLayers[0];
+        require(compositionLayer && compositionLayer->hasElement(),
                 "runtime did not retain composition element ownership");
-        compositionLayer->active = true;
+        require(runtime.setCompositionLayerActive(0, true),
+                "runtime did not activate the composition element");
         auto* compositionElement =
-            dynamic_cast<ContractElement*>(compositionLayer->element());
+            dynamic_cast<ContractElement*>(
+                runtime.legacyCompositionElementForHost(0));
         require(compositionElement != nullptr,
                 "composition element type was not preserved");
 
@@ -652,7 +691,7 @@ int main() {
         request.instanceId = "tests.instance.failed-replacement";
         auto failedReplacement = runtime.prepareElementReplacement(
             request,
-            *compositionLayer->element());
+            *runtime.legacyCompositionElementForHost(0));
         require(!failedReplacement,
                 "throwing replacement was reported as prepared");
         require(compositionLayer->element() == compositionElement,
@@ -671,7 +710,7 @@ int main() {
         {
             auto abandonedReplacement = runtime.prepareElementReplacement(
                 request,
-                *compositionLayer->element());
+                *runtime.legacyCompositionElementForHost(0));
             require(static_cast<bool>(abandonedReplacement),
                     abandonedReplacement.error);
         }
@@ -690,14 +729,15 @@ int main() {
             stableModifier);
         stableBoolRuntimeModifier.ownerTag = "tests.stable-bool-mapping";
 
-        float replacementOpacity = 0.72f;
         ParameterRegistry::Descriptor replacementHostDescriptor;
         replacementHostDescriptor.label = "Host Opacity";
-        parameters.addFloat(
-            "console.layer1.opacity",
-            &replacementOpacity,
-            replacementOpacity,
-            replacementHostDescriptor);
+        const auto* replacementOpacityParam =
+            parameters.findFloat("console.layer1.opacity");
+        require(
+            replacementOpacityParam &&
+                replacementOpacityParam->value &&
+                std::fabs(*replacementOpacityParam->value - 0.72f) < 0.0001f,
+            "Runtime-owned replacement opacity was not available");
         float hostOwnedValue = 0.91f;
         parameters.addFloat(
             "console.layer1.hostOwned",
@@ -710,21 +750,24 @@ int main() {
         {
             auto conflictingReplacement = runtime.prepareElementReplacement(
                 request,
-                *compositionLayer->element());
+                *runtime.legacyCompositionElementForHost(0));
             require(static_cast<bool>(conflictingReplacement),
                     conflictingReplacement.error);
             require(
                 !runtime.adoptPreparedElement(
                     0,
-                    std::move(conflictingReplacement)),
+                    std::move(conflictingReplacement),
+                    assignmentFor(request, "Conflicting Element", 0.2f)),
                 "replacement overwrote a host-owned parameter");
             require(compositionLayer->element() == compositionElement,
                     "failed commit replaced the live element");
             require(
-                parameters.findFloat("console.layer1.value") != nullptr &&
+                    parameters.findFloat("console.layer1.value") != nullptr &&
                     parameters.findFloat("console.layer1.opacity") != nullptr &&
                     parameters.findFloat("console.layer1.hostOwned") != nullptr &&
-                    replacementOpacity == 0.72f &&
+                    std::fabs(
+                        *parameters.findFloat("console.layer1.opacity")->value -
+                        0.72f) < 0.0001f &&
                     hostOwnedValue == 0.91f,
                 "failed commit mutated the live registry");
         }
@@ -732,16 +775,22 @@ int main() {
         request.typeId = "tests.runtime.good";
         request.definitionId = "tests.definition.replacement";
         request.instanceId = "tests.instance.replacement";
+        request.enabled = true;
         auto replacement = runtime.prepareElementReplacement(
             request,
-            *compositionLayer->element());
+            *runtime.legacyCompositionElementForHost(0));
         require(static_cast<bool>(replacement), replacement.error);
         require(compositionLayer->element() == compositionElement,
                 "preparation replaced the live element before commit");
-        require(runtime.adoptPreparedElement(0, std::move(replacement)),
+        require(
+            runtime.adoptPreparedElement(
+                0,
+                std::move(replacement),
+                assignmentFor(request, "Replacement Element", 0.72f)),
                 "same-address replacement did not commit");
         auto* replacementElement =
-            dynamic_cast<ContractElement*>(compositionLayer->element());
+            dynamic_cast<ContractElement*>(
+                runtime.legacyCompositionElementForHost(0));
         require(replacementElement != nullptr &&
                     replacementElement != compositionElement,
                 "replacement did not swap the live element");
@@ -764,9 +813,14 @@ int main() {
                 replacementBoolModifiers->front().ownerTag ==
                     "tests.stable-bool-mapping",
             "replacement did not preserve matching bool modifiers");
-        require(parameters.findFloat("console.layer1.opacity") != nullptr &&
-                    replacementOpacity == 0.72f,
-                "replacement removed a host-owned same-address parameter");
+        const auto* committedReplacementOpacity =
+            parameters.findFloat("console.layer1.opacity");
+        require(
+            committedReplacementOpacity &&
+                committedReplacementOpacity->value &&
+                std::fabs(*committedReplacementOpacity->value - 0.72f) <
+                    0.0001f,
+            "replacement lost spine-owned same-address opacity");
 
         runtime.updateCompositionElements(LayerUpdateParams{});
         runtime.resizeCompositionElements(1280, 720);
@@ -783,14 +837,15 @@ int main() {
                 compositionElement->lastWidth == 1280 &&
                 compositionElement->lastHeight == 720,
             "runtime did not route composition resize");
-        runtime.releaseCompositionElement(0);
-        require(!compositionLayer->hasElement(),
-                "runtime did not release its composition element");
+        const auto compositionClear = runtime.clearCompositionLayer(0);
+        require(
+            compositionClear &&
+                !compositionLayer->hasElement(),
+            "runtime did not clear its composition element");
         require(parameters.findFloat("console.layer1.value") == nullptr,
-                "composition release leaked element parameters");
-        require(parameters.findFloat("console.layer1.opacity") != nullptr,
-                "composition release removed the host-owned opacity parameter");
-        parameters.removeById("console.layer1.opacity");
+                "composition clear leaked element parameters");
+        require(parameters.findFloat("console.layer1.opacity") == nullptr,
+                "composition clear retained spine-owned opacity");
         parameters.removeById("host.live");
 
         request.typeId = "tests.runtime.registry-aware";
@@ -799,21 +854,238 @@ int main() {
         request.registryPrefix = "console.layer2";
         auto registryAwarePrepared = runtime.prepareElement(request);
         require(
-            runtime.adoptPreparedElement(1, std::move(registryAwarePrepared)),
+            runtime.adoptPreparedElement(
+                1,
+                std::move(registryAwarePrepared),
+                assignmentFor(request, "Registry Aware")),
             "runtime did not adopt the registry-aware element");
         auto* registryAware = dynamic_cast<RegistryAwareElement*>(
-            runtime.compositionLayer(1)->element());
+            runtime.legacyCompositionElementForHost(1));
         require(
             registryAware &&
                 registryAware->commitCount == 1 &&
                 registryAware->committedRegistry == &parameters &&
                 registryAware->setupRegistry != &parameters,
             "runtime did not rebind the staged registry after commit");
-        runtime.compositionLayer(1)->active = true;
+        require(runtime.setCompositionLayerActive(1, true),
+                "runtime did not activate the registry-aware element");
         runtime.updateCompositionElements(LayerUpdateParams{});
         require(registryAware->sawLiveRegistry,
                 "registry-aware update did not observe the live registry");
-        runtime.releaseCompositionElement(1);
+        require(runtime.clearCompositionLayer(1),
+                "runtime did not clear the registry-aware element");
+
+        require(runtime.compositionLayerCount() == 8,
+                "runtime composition capacity drifted");
+        require(
+            static_cast<bool>(runtime.compositionRenderTargetsForHost(2)) &&
+                !runtime.compositionRenderTargetsForHost(99),
+            "runtime render-target access did not enforce composition bounds");
+
+        request.typeId = "tests.runtime.good";
+        request.definitionId = "tests.definition.control-plane-a";
+        request.instanceId = "tests.instance.control-plane-a";
+        request.registryPrefix = "console.layer3";
+        request.enabled = true;
+        synaptome::runtime::CompositionAssignment assignment;
+        assignment.kind = synaptome::runtime::CompositionKind::Element;
+        assignment.definitionId = request.definitionId;
+        assignment.label = "Control Plane A";
+        assignment.typeId = request.typeId;
+        assignment.registryPrefix = request.registryPrefix;
+        assignment.active = request.enabled;
+        assignment.opacity = 0.42f;
+        auto controlPlanePrepared = runtime.prepareElement(request);
+        const auto controlPlaneCommit = runtime.adoptPreparedElement(
+            2,
+            std::move(controlPlanePrepared),
+            assignment);
+        require(
+            controlPlaneCommit &&
+                controlPlaneCommit.elementChanged &&
+                controlPlaneCommit.parametersChanged,
+            "control-plane adoption did not report its committed mutation");
+        const auto* controlPlaneLayer = &compositionLayers[2];
+        require(
+            controlPlaneLayer &&
+                controlPlaneLayer->hasElement() &&
+                controlPlaneLayer->kind ==
+                    synaptome::runtime::CompositionKind::Element &&
+                controlPlaneLayer->assetId == assignment.definitionId &&
+                controlPlaneLayer->label == assignment.label &&
+                controlPlaneLayer->type == assignment.typeId &&
+                controlPlaneLayer->paramPrefix == assignment.registryPrefix &&
+                controlPlaneLayer->active &&
+                std::fabs(controlPlaneLayer->opacity - 0.42f) < 0.0001f,
+            "control-plane adoption did not publish the assignment");
+        auto* controlPlaneOpacity =
+            parameters.findFloat("console.layer3.opacity");
+        require(
+            controlPlaneOpacity &&
+                controlPlaneOpacity->value == &compositionLayers[2].opacity &&
+                std::fabs(controlPlaneOpacity->baseValue - 0.42f) < 0.0001f,
+            "Runtime did not bind spine-owned opacity to stable slot storage");
+        float* const stableOpacityAddress = controlPlaneOpacity->value;
+        modifier::Modifier opacityModifier;
+        auto& opacityRuntimeModifier = parameters.addFloatModifier(
+            "console.layer3.opacity",
+            opacityModifier);
+        opacityRuntimeModifier.ownerTag = "tests.stable-opacity-mapping";
+
+        request.definitionId = "tests.definition.control-plane-b";
+        request.instanceId = "tests.instance.control-plane-b";
+        request.enabled = false;
+        auto replacementPrepared = runtime.prepareElementReplacement(
+            request,
+            *runtime.legacyCompositionElementForHost(2));
+        synaptome::runtime::CompositionAssignment replacementAssignment;
+        replacementAssignment.kind =
+            synaptome::runtime::CompositionKind::Element;
+        replacementAssignment.definitionId = request.definitionId;
+        replacementAssignment.label = "Control Plane B";
+        replacementAssignment.typeId = request.typeId;
+        replacementAssignment.registryPrefix = request.registryPrefix;
+        replacementAssignment.active = request.enabled;
+        replacementAssignment.opacity = 0.73f;
+        const auto replacementCommit = runtime.adoptPreparedElement(
+            2,
+            std::move(replacementPrepared),
+            replacementAssignment);
+        require(static_cast<bool>(replacementCommit),
+                "control-plane replacement was rejected");
+        controlPlaneOpacity = parameters.findFloat("console.layer3.opacity");
+        require(
+            controlPlaneOpacity &&
+                controlPlaneOpacity->value == stableOpacityAddress &&
+                std::fabs(*stableOpacityAddress - 0.73f) < 0.0001f &&
+                std::fabs(controlPlaneOpacity->baseValue - 0.73f) < 0.0001f &&
+                controlPlaneOpacity->modifiers.size() == 1 &&
+                controlPlaneOpacity->modifiers.front().ownerTag ==
+                    "tests.stable-opacity-mapping",
+            "replacement did not preserve opacity address and modifiers");
+
+        request.definitionId = "tests.definition.control-plane-c";
+        request.instanceId = "tests.instance.control-plane-c";
+        auto mismatchedPrepared = runtime.prepareElementReplacement(
+            request,
+            *runtime.legacyCompositionElementForHost(2));
+        auto mismatchedAssignment = replacementAssignment;
+        mismatchedAssignment.definitionId = "tests.definition.wrong";
+        const Layer* const elementBeforeRejectedCommit =
+            compositionLayers[2].element();
+        const auto rejectedCommit = runtime.adoptPreparedElement(
+            2,
+            std::move(mismatchedPrepared),
+            mismatchedAssignment);
+        require(
+            !rejectedCommit &&
+                rejectedCommit.errorCode ==
+                    synaptome::runtime::CompositionMutationError::
+                        ElementMismatch &&
+                compositionLayers[2].element() ==
+                    elementBeforeRejectedCommit &&
+                compositionLayers[2].assetId ==
+                    replacementAssignment.definitionId &&
+                parameters.findFloat("console.layer3.opacity")->value ==
+                    stableOpacityAddress,
+            "rejected assignment changed live control-plane state");
+
+        require(
+            runtime.setCompositionLayerLabel(2, "Performance Layer") &&
+                compositionLayers[2].label == "Performance Layer",
+            "Runtime label command did not update presentation state");
+        require(
+            runtime.setCompositionLayerActive(2, true) &&
+                compositionLayers[2].active &&
+                compositionLayers[2].element()->isEnabled(),
+            "Runtime active command did not update element state");
+
+        float siblingState = 0.25f;
+        ParameterRegistry::Descriptor controlPlaneSiblingDescriptor;
+        controlPlaneSiblingDescriptor.label = "Sibling State";
+        parameters.addFloat(
+            "console.layer30.keep",
+            &siblingState,
+            siblingState,
+            controlPlaneSiblingDescriptor);
+        const auto clearElement = runtime.clearCompositionLayer(2);
+        require(
+            clearElement &&
+                clearElement.elementChanged &&
+                clearElement.parametersChanged &&
+                !compositionLayers[2].hasElement() &&
+                compositionLayers[2].assetId.empty() &&
+                parameters.findFloat("console.layer3.value") == nullptr &&
+                parameters.findFloat("console.layer3.opacity") == nullptr &&
+                parameters.findFloat("console.layer30.keep") != nullptr,
+            "Runtime clear did not reset exact element/container ownership");
+
+        float sharedEffectRoute = 1.0f;
+        parameters.addFloat(
+            "effects.tests.route",
+            &sharedEffectRoute,
+            sharedEffectRoute,
+            controlPlaneSiblingDescriptor);
+        synaptome::runtime::CompositionAssignment effectAssignment;
+        effectAssignment.kind =
+            synaptome::runtime::CompositionKind::Effect;
+        effectAssignment.definitionId = "fx.tests";
+        effectAssignment.label = "Test Effect";
+        effectAssignment.typeId = "fx.tests";
+        effectAssignment.registryPrefix = "effects.tests";
+        effectAssignment.active = true;
+        effectAssignment.opacity = 0.6f;
+        effectAssignment.coverage.defined = true;
+        effectAssignment.coverage.mode.clear();
+        effectAssignment.coverage.columns = -4;
+        require(
+            static_cast<bool>(
+                runtime.assignCompositionEntry(2, effectAssignment)),
+                "Runtime rejected a valid effect assignment");
+        require(
+            compositionLayers[2].kind ==
+                    synaptome::runtime::CompositionKind::Effect &&
+                compositionLayers[2].coverage.defined &&
+                compositionLayers[2].coverage.mode == "upstream" &&
+                compositionLayers[2].coverage.columns == 0 &&
+                parameters.findFloat("effects.tests.opacity") == nullptr,
+            "effect assignment normalization or opacity ownership drifted");
+        synaptome::runtime::CompositionCoverage effectCoverage;
+        effectCoverage.defined = true;
+        effectCoverage.mode.clear();
+        effectCoverage.columns = 3;
+        require(
+            runtime.setCompositionLayerCoverage(2, effectCoverage) &&
+                compositionLayers[2].coverage.mode == "upstream" &&
+                compositionLayers[2].coverage.columns == 3,
+            "Runtime coverage command did not normalize effect coverage");
+        const auto clearEffect = runtime.clearCompositionLayer(2);
+        require(
+            clearEffect &&
+                !clearEffect.elementChanged &&
+                !clearEffect.parametersChanged &&
+                parameters.findFloat("effects.tests.route") != nullptr,
+            "clearing an effect removed shared effect parameters");
+
+        synaptome::runtime::CompositionAssignment overlayAssignment;
+        overlayAssignment.kind =
+            synaptome::runtime::CompositionKind::Overlay;
+        overlayAssignment.definitionId = "ui.tests";
+        overlayAssignment.label = "Test Overlay";
+        overlayAssignment.typeId = "ui.tests";
+        overlayAssignment.registryPrefix = "ui.tests";
+        overlayAssignment.active = true;
+        require(
+            runtime.assignCompositionEntry(2, overlayAssignment) &&
+                compositionLayers[2].kind ==
+                    synaptome::runtime::CompositionKind::Overlay &&
+                !runtime.setCompositionLayerCoverage(2, effectCoverage),
+            "overlay assignment accepted effect-only coverage");
+        require(
+            static_cast<bool>(runtime.clearCompositionLayer(2)),
+                "Runtime did not clear the overlay assignment");
+        parameters.removeById("effects.tests.route");
+        parameters.removeById("console.layer30.keep");
 
         request.typeId = "tests.runtime.good";
         request.definitionId = "tests.definition.shutdown";
@@ -821,14 +1093,55 @@ int main() {
         request.registryPrefix = "console.layer1";
         auto shutdownPrepared = runtime.prepareElement(request);
         require(
-            runtime.adoptPreparedElement(0, std::move(shutdownPrepared)),
+            runtime.adoptPreparedElement(
+                0,
+                std::move(shutdownPrepared),
+                assignmentFor(request, "Shutdown Element")),
             "runtime did not adopt the shutdown contract element");
         runtime.shutdownComposition();
         require(!compositionLayer->hasElement(),
                 "composition shutdown retained an element");
         require(parameters.findFloat("console.layer1.value") == nullptr,
                 "composition shutdown leaked element parameters");
+        require(parameters.findFloat("console.layer1.opacity") == nullptr,
+                "composition shutdown leaked spine-owned opacity");
         runtime.shutdownComposition();
+
+        ParameterRegistry destructorParameters;
+        {
+            synaptome::runtime::Runtime destructorRuntime(
+                factory,
+                destructorParameters);
+            synaptome::runtime::Runtime::ElementRequest destructorRequest;
+            destructorRequest.typeId = "tests.runtime.good";
+            destructorRequest.definitionId =
+                "tests.definition.runtime-destructor";
+            destructorRequest.instanceId =
+                "tests.instance.runtime-destructor";
+            destructorRequest.registryPrefix = "console.layer1";
+            destructorRequest.enabled = true;
+            auto destructorPrepared =
+                destructorRuntime.prepareElement(destructorRequest);
+            require(
+                destructorRuntime.adoptPreparedElement(
+                    0,
+                    std::move(destructorPrepared),
+                    assignmentFor(
+                        destructorRequest,
+                        "Runtime Destructor Element",
+                        0.55f)),
+                "destructor cleanup element was not adopted");
+            require(
+                destructorParameters.findFloat(
+                    "console.layer1.opacity") != nullptr,
+                "destructor cleanup setup lacked spine-owned opacity");
+        }
+        require(
+            destructorParameters.findFloat("console.layer1.value") == nullptr &&
+                destructorParameters.findBool("console.layer1.gate") == nullptr &&
+                destructorParameters.findFloat(
+                    "console.layer1.opacity") == nullptr,
+            "Runtime destructor left element/container parameter pointers live");
 
         std::cout << "[runtime_core] PASS lifecycle, ownership, composition routing\n";
         return 0;
