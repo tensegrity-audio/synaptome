@@ -87,7 +87,8 @@ def main() -> int:
         "isReservedCompositionParameter",
         "instanceId",
         "ElementErrorCode",
-        "CompositionLayers",
+        "compositionSnapshot",
+        "compositionLayerSnapshot",
         "adoptPreparedElement",
         "releasePreparedElement",
         "updateCompositionElements",
@@ -100,6 +101,7 @@ def main() -> int:
         "setCompositionLayerCoverage",
         "clearCompositionLayer",
         "compositionRenderTargetsForHost",
+        "compositionElementForHost",
         "legacyCompositionElementForHost",
     ):
         if token not in runtime_source and token not in runtime_header:
@@ -107,16 +109,14 @@ def main() -> int:
     for token in (
         "enum class CompositionKind",
         "struct CompositionAssignment",
+        "struct CompositionLayerSnapshot",
+        "struct CompositionSnapshot",
         "enum class CompositionMutationError",
         "struct CompositionMutationResult",
     ):
         if token not in composition_types:
             errors.append(f"runtime composition control plane is missing {token}")
     for pattern, description in (
-        (
-            r"(?m)^\s*CompositionLayers&\s+compositionLayersForHost\s*\(",
-            "mutable composition aggregate view",
-        ),
         (
             r"(?m)^\s*CompositionLayer\*\s+compositionLayer\s*\(",
             "mutable composition-layer accessor",
@@ -132,22 +132,82 @@ def main() -> int:
     ):
         if re.search(pattern, runtime_header):
             errors.append(f"Runtime still exposes transitional {description}")
+    for token, description in (
+        ("using CompositionLayers", "public live composition-array alias"),
+        ("compositionLayersForHost", "live composition aggregate accessor"),
+    ):
+        if token in runtime_header:
+            errors.append(f"Runtime still exposes transitional {description}")
+    if re.search(
+        r"(?m)^\s*const\s+CompositionLayer\s*\*\s+compositionLayer\s*\(",
+        runtime_header,
+    ):
+        errors.append("Runtime still exposes a public live CompositionLayer accessor")
     if "coverageParamValue" in composition_header:
         errors.append(
             "composition record still duplicates typed coverage as a host float"
         )
-    if "const CompositionLayers& compositionLayersForHost() const" not in runtime_header:
-        errors.append("Runtime must expose only the transitional const live composition view")
+    snapshot_start = composition_types.find("struct CompositionLayerSnapshot")
+    snapshot_end = composition_types.find(
+        "enum class CompositionMutationError",
+        snapshot_start,
+    )
+    if snapshot_start < 0 or snapshot_end < 0:
+        errors.append("could not inspect Runtime composition snapshot DTOs")
+        snapshot_surface = ""
+    else:
+        snapshot_surface = composition_types[snapshot_start:snapshot_end]
+    for token in (
+        "zeroBasedIndex",
+        "occupied",
+        "hasElement",
+        "kind",
+        "definitionId",
+        "label",
+        "typeId",
+        "registryPrefix",
+        "active",
+        "opacity",
+        "coverage",
+        "std::array<CompositionLayerSnapshot",
+    ):
+        if token not in snapshot_surface:
+            errors.append(f"composition snapshot DTOs are missing {token}")
+    for token in (
+        "*",
+        "&",
+        "ofFbo",
+        "ParameterRegistry",
+        "LayerFactory",
+        "std::function",
+        "Creator",
+        "ofApp",
+        "unique_ptr",
+        "shared_ptr",
+    ):
+        if token in snapshot_surface:
+            errors.append(f"composition snapshot DTOs expose forbidden ownership: {token}")
+    for token in (
+        "CompositionSnapshot compositionSnapshot() const",
+        "std::optional<CompositionLayerSnapshot> compositionLayerSnapshot(",
+        "const Layer* compositionElementForHost(",
+        "Layer* legacyCompositionElementForHost(",
+        "CompositionRenderTargets compositionRenderTargetsForHost(",
+    ):
+        if token not in runtime_header:
+            errors.append(f"Runtime immutable query/host seam is missing {token}")
     if "struct ConsoleSlot" in app_header:
         errors.append("ofApp still defines the composition-layer storage record")
-    if (
-        "const synaptome::runtime::Runtime::CompositionLayers& consoleSlots"
-        not in app_header
+    if "CompositionLayerSnapshot" not in app_header:
+        errors.append("ofApp metadata helpers must consume composition snapshots")
+    for token in (
+        "Runtime::CompositionLayers",
+        "compositionLayersForHost",
     ):
-        errors.append(
-            "ofApp compatibility view must be const-only over runtime-owned "
-            "composition layers"
-        )
+        if token in app_header or token in app:
+            errors.append(f"ofApp still consumes the live composition surface: {token}")
+    if re.search(r"runtime::CompositionLayer(?!Snapshot)", app_header):
+        errors.append("ofApp still names the live Runtime composition record")
     if (
         "LayerFactory elementTypes_" not in app_header
         or "Runtime runtime_{elementTypes_, paramRegistry}" not in app_header
@@ -171,6 +231,8 @@ def main() -> int:
         for token in (
             "CompositionKind",
             "CompositionAssignment",
+            "CompositionLayerSnapshot",
+            "CompositionSnapshot",
             "CompositionMutationError",
             "CompositionMutationResult",
             "CompositionRenderTargets",
@@ -193,6 +255,8 @@ def main() -> int:
         "runtime_.setCompositionLayerLabel",
         "runtime_.setCompositionLayerCoverage",
         "runtime_.clearCompositionLayer",
+        "runtime_.compositionSnapshot",
+        "runtime_.compositionLayerSnapshot",
         "runtime_.compositionRenderTargetsForHost",
         "runtime_.resizeCompositionElements",
         "runtime_.updateCompositionElements",
@@ -202,6 +266,11 @@ def main() -> int:
     ):
         if token not in app:
             errors.append(f"ofApp must delegate generic composition behavior: {token}")
+    if "runtime_.compositionElementForHost" not in app:
+        errors.append(
+            "remaining read-only element inspection must use the named "
+            "composition-element seam"
+        )
     if "runtime_.legacyCompositionElementForHost" not in app:
         errors.append(
             "remaining element-specific host adapters must use the named "
@@ -392,6 +461,12 @@ def main() -> int:
     if "RunEffectCoverageWindowScenario" not in runtime_test:
         errors.append("RuntimeCore test is missing effect coverage-window coverage")
     for token in (
+        "RunCompositionSnapshotScenario",
+        "compositionSnapshot",
+        "compositionLayerSnapshot",
+        "caller.mutated",
+        "mutating a composition snapshot changed Runtime state",
+        "composition snapshot constructed an extra element",
         "CompositionMutationError::",
         "assignCompositionEntry",
         "setCompositionLayerActive",
@@ -411,7 +486,7 @@ def main() -> int:
         return 1
     print(
         "[runtime-core-boundary] PASS linked RuntimeCore lifecycle and "
-        "composition control plane"
+        "immutable composition query/control plane"
     )
     return 0
 

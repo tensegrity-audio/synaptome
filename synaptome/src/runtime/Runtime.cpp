@@ -330,10 +330,44 @@ CompositionLayer* Runtime::mutableCompositionLayer(
     return &compositionLayers_[zeroBasedIndex];
 }
 
-const CompositionLayer* Runtime::compositionLayer(
+CompositionLayerSnapshot Runtime::snapshotCompositionLayer(
+    const CompositionLayer& layer,
+    std::size_t zeroBasedIndex) {
+    CompositionLayerSnapshot state;
+    state.zeroBasedIndex = zeroBasedIndex;
+    state.occupied = !layer.assetId.empty();
+    if (!state.occupied) {
+        return state;
+    }
+    state.hasElement = layer.element_ != nullptr;
+    state.kind = layer.kind;
+    state.definitionId = layer.assetId;
+    state.label = layer.label;
+    state.typeId = layer.type;
+    state.registryPrefix = layer.paramPrefix;
+    state.active = layer.active;
+    state.opacity = layer.opacity;
+    state.coverage = layer.coverage;
+    return state;
+}
+
+CompositionSnapshot Runtime::compositionSnapshot() const {
+    CompositionSnapshot snapshot;
+    for (std::size_t i = 0; i < compositionLayers_.size(); ++i) {
+        snapshot.layers[i] =
+            snapshotCompositionLayer(compositionLayers_[i], i);
+    }
+    return snapshot;
+}
+
+std::optional<CompositionLayerSnapshot> Runtime::compositionLayerSnapshot(
     std::size_t zeroBasedIndex) const {
-    if (zeroBasedIndex >= compositionLayers_.size()) return nullptr;
-    return &compositionLayers_[zeroBasedIndex];
+    if (zeroBasedIndex >= compositionLayers_.size()) {
+        return std::nullopt;
+    }
+    return snapshotCompositionLayer(
+        compositionLayers_[zeroBasedIndex],
+        zeroBasedIndex);
 }
 
 Runtime::CompositionRenderTargets Runtime::compositionRenderTargetsForHost(
@@ -345,6 +379,12 @@ Runtime::CompositionRenderTargets Runtime::compositionRenderTargetsForHost(
         &layer->upstreamFbo,
         &layer->effectFbo,
     };
+}
+
+const Layer* Runtime::compositionElementForHost(
+    std::size_t zeroBasedIndex) const noexcept {
+    if (zeroBasedIndex >= compositionLayers_.size()) return nullptr;
+    return compositionLayers_[zeroBasedIndex].element_.get();
 }
 
 Layer* Runtime::legacyCompositionElementForHost(

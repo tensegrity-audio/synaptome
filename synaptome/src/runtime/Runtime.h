@@ -7,6 +7,7 @@
 #include <array>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -92,17 +93,13 @@ public:
 
     void releasePreparedElement(ElementResult& prepared) noexcept;
 
-    using CompositionLayers =
-        std::array<CompositionLayer, kCompositionLayerCount>;
-
     std::size_t compositionLayerCount() const noexcept {
         return compositionLayers_.size();
     }
 
-    const CompositionLayers& compositionLayersForHost() const {
-        return compositionLayers_;
-    }
-    const CompositionLayer* compositionLayer(std::size_t zeroBasedIndex) const;
+    CompositionSnapshot compositionSnapshot() const;
+    std::optional<CompositionLayerSnapshot> compositionLayerSnapshot(
+        std::size_t zeroBasedIndex) const;
 
     struct CompositionRenderTargets {
         ofFbo* layer = nullptr;
@@ -116,6 +113,8 @@ public:
 
     CompositionRenderTargets compositionRenderTargetsForHost(
         std::size_t zeroBasedIndex) noexcept;
+    const Layer* compositionElementForHost(
+        std::size_t zeroBasedIndex) const noexcept;
     Layer* legacyCompositionElementForHost(
         std::size_t zeroBasedIndex) noexcept;
     CompositionCoverageWindow resolveEffectCoverage(
@@ -187,6 +186,9 @@ private:
     static CompositionCoverage normalizeCoverage(
         CompositionCoverage coverage);
     static float normalizeOpacity(float opacity) noexcept;
+    static CompositionLayerSnapshot snapshotCompositionLayer(
+        const CompositionLayer& layer,
+        std::size_t zeroBasedIndex);
     void forceClearCompositionLayerNoexcept(
         CompositionLayer& layer) noexcept;
     void removeParameters(const std::vector<ParameterKey>& parameters) noexcept;
@@ -198,7 +200,7 @@ private:
     std::unordered_map<Layer*, ElementOwnership> ownership_;
     std::unordered_set<std::string> activePrefixes_;
     std::shared_ptr<void> lifetime_ = std::make_shared<int>(0);
-    CompositionLayers compositionLayers_;
+    std::array<CompositionLayer, kCompositionLayerCount> compositionLayers_;
 };
 
 } // namespace synaptome::runtime

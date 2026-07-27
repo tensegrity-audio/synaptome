@@ -142,7 +142,7 @@ If every specific scene, model, shader, video, and post effect were removed, Syn
 | --- | --- | --- |
 | Performance shell | Launches the app, manages projection/control windows, keeps operator UI separate from output. | `synaptome/src/main.cpp`, `synaptome/src/ofApp.*`. |
 | Three-band control window | Gives a stable operator layout: HUD, Console, Browser. | `ThreeBandLayout`, `MenuController`, HUD/console/browser states. |
-| Eight-slot Console | Gives a fixed live deck for loading, replacing, muting, and composing visuals. | `ConsoleState::kSlotCount = 8`, `ofApp::consoleSlots`, `Ctrl+1..8` slot picker flow. |
+| Eight-layer Console | Gives a fixed live deck for loading, replacing, muting, and composing elements. | `ConsoleState::kSlotCount = 8`, Runtime `CompositionSnapshot` / `compositionLayerSnapshot`, `Ctrl+1..8` layer picker flow. |
 | Layer authoring model | Lets a new visual become a loadable module with `setup`, `update`, `draw`, and declared parameters. | `src/visuals/Layer.h`, `LayerFactory`, `LayerLibrary`, `bin/data/layers/**/*.json`. |
 | Parameter registry | Creates a shared vocabulary of controllable values with labels, groups, ranges, quick access, defaults, and modifiers. | `src/core/ParameterRegistry.h`, `src/common/modifier.h`. |
 | Browser | Makes scenes, layers, media, parameters, mappings, device maps, and HUD controls browsable. | `ControlMappingHubState`, `AssetBrowser`, `LayerLibrary`, saved-scene callbacks. |
@@ -207,12 +207,12 @@ Synaptome may consume device data, but it must not depend on device implementati
 
 ### App Shell
 
-The current shell is `synaptome`, with `ofApp.cpp` acting as both composition root and too much runtime ownership. It wires openFrameworks lifecycle, windows, layer slots, parameter registration, UI states, MIDI/OSC routes, scene persistence, HUD, serial collector input, and tests.
+The current shell is `synaptome`. `ofApp.cpp` remains the host composition root for openFrameworks lifecycle, windows, UI, device adapters, persistence orchestration, and current compositor/effect adapters. `SynaptomeRuntimeCore` owns the fixed composition records, generic element lifecycle and control, exact parameter ownership, and immutable composition snapshots. The remaining host-only render-target, read-only element, and mutable legacy-element seams are named migration debt.
 
-This is the right runtime center, but it needs internal module boundaries before extraction:
+This is the right runtime center, but it still needs smaller internal service boundaries:
 
 - App composition: `main.cpp`, `ofApp.cpp`, `ofApp.h`.
-- Core state: `ParameterRegistry`, `BankRegistry`, `ConsoleStore`.
+- Core runtime state: `SynaptomeRuntimeCore`, `ParameterRegistry`, `BankRegistry`, `ConsoleStore`.
 - Runtime surfaces: projection draw, Console draw, Control Window draw, HUD/Browser layout.
 
 ### Layers

@@ -5,20 +5,20 @@ State Summary
 - Phase: EXECUTION
 - Status: In Progress
 - Steps Complete: 2 / 12
-- Progress: SEAC-3 is in progress. `SynaptomeRuntimeCore` now owns staged element setup, atomic same-address registry/element replacement, the fixed eight composition records, FBO state, exact parameter ownership, generic lifecycle/render routing, zero-based effect coverage-window policy, and the composition mutation control plane. Element adoption, effect/overlay assignment, active state, label, coverage, clear, and stable `console.layerN.opacity` registration now commit through Runtime. The host reads a transitional const live composition view and uses named render-target and legacy-element seams; it still adapts typed catalog metadata, concrete effect execution, persistence, mappings, and compatibility inspection.
-- Last Step Outcome: 2026-07-26 - Added `CompositionKind`, `CompositionAssignment`, typed mutation results, transactional element adoption, non-element assignment, active/label/coverage/clear commands, Runtime-owned layer opacity, a const-only host composition view, and narrow render/legacy-element seams; removed direct host composition-metadata writes without expanding the public Element SDK.
-- Next Step: Replace the transitional const live composition aggregate with an immutable by-value query model, then move remaining renderer and element-specific compatibility consumers so the named host seams can shrink or retire.
+- Progress: SEAC-3 is in progress. `SynaptomeRuntimeCore` now owns staged element setup, atomic same-address registry/element replacement, the fixed eight composition records, FBO state, exact parameter ownership, generic lifecycle/render routing, zero-based effect coverage-window policy, the composition mutation control plane, and immutable by-value composition queries. Host metadata consumers use `CompositionSnapshot` or a bounds-checked optional `CompositionLayerSnapshot`; no live aggregate or public `CompositionLayer` accessor remains. Named render-target, read-only element, and mutable legacy-element seams still support the host compositor and type-specific compatibility work.
+- Last Step Outcome: 2026-07-27 - Added pointer-free `CompositionLayerSnapshot` / `CompositionSnapshot` DTOs and by-value Runtime queries, migrated host metadata consumers, and removed the public live composition aggregate and layer accessor without changing the Element SDK or effect ABI policy.
+- Next Step: Move remaining compositor and element-specific compatibility consumers behind narrower Runtime, parameter, and action contracts so `compositionRenderTargetsForHost`, `compositionElementForHost`, and `legacyCompositionElementForHost` can shrink or retire.
 - Dependencies / Overlap: `show_readiness_operator_stability`, `layer_package_compatibility_bench_scaffolding`, `docs/architecture/synaptome_spine_element_model.md`, `docs/architecture/synaptome_layer_system_roadmap.md`, `docs/architecture/synaptome_artist_sdk.md`, parameter/scene/mapping contracts, and layer-authoring tests.
 - Primary Scope: runtime
 - Secondary Scopes: contracts, artist-sdk, tests, docs, release
-- Blocking Issues / Unknowns: Native binary modules remain an optional architecture decision rather than a promised deliverable. Typed descriptor/package catalog ownership, the transitional const live composition view, concrete host effect execution, and remaining renderer/legacy-element adapters remain SEAC-3 boundaries.
+- Blocking Issues / Unknowns: Native binary modules remain an optional architecture decision rather than a promised deliverable. Typed descriptor/package catalog ownership, concrete host effect execution, and the remaining render/read-only-element/mutable-legacy-element seams remain SEAC-3 boundaries.
 - Impact / Priority Notes: This is the active architecture lane and precedes automatic discovery, broader package activation, or new content-family expansion.
 - Priority Score: N/A
 - Priority Lane: Fast-Track
 - Ready State: Ready
 - Ready Gate: The architecture direction, compatibility policy, ordered tasks, and stop conditions are explicit; the operator accepted residual show-validation risk and authorized execution.
-- Project Ops / Roadmap Updates (timestamped): 2026-07-26 - Added the canonical model and subordinated package/discovery work to its contract and build gates. 2026-07-26 - Promoted SEAC to execution after dual-screen validation was deferred. 2026-07-26 - Completed the dependency inventory and froze the Element SDK v1 source/static-link boundary. 2026-07-26 - Landed the first SEAC-3 build and registration slice. 2026-07-26 - Moved generic element preparation/release and exact registration ownership behind the first Runtime facade seam. 2026-07-26 - Linked the first runtime-core library and moved fixed composition storage plus generic update/draw/resize ownership behind it. 2026-07-26 - Added isolated parameter staging and transactional same-address visual-element replacement. 2026-07-26 - Hardened reserved opacity ownership, prepared-result lifetime, FX/UI-to-visual adoption, bool modifier migration, and registry-consumer invalidation. 2026-07-26 - Removed the global element factory and proved per-Runtime type-registry isolation. 2026-07-26 - Moved zero-based effect coverage-window policy into Runtime and removed the duplicate `PostEffectChain` resolver without expanding the Element SDK. 2026-07-26 - Added the Runtime composition mutation control plane, Runtime-owned layer opacity, a const-only host view, and narrow render/legacy-element seams.
-- Resume From: Phase EXECUTION, State In Progress, Next Action replace the const live composition view with an immutable by-value query model and reduce the remaining host renderer/legacy-element seams.
+- Project Ops / Roadmap Updates (timestamped): 2026-07-26 - Added the canonical model and subordinated package/discovery work to its contract and build gates. 2026-07-26 - Promoted SEAC to execution after dual-screen validation was deferred. 2026-07-26 - Completed the dependency inventory and froze the Element SDK v1 source/static-link boundary. 2026-07-26 - Landed the first SEAC-3 build and registration slice. 2026-07-26 - Moved generic element preparation/release and exact registration ownership behind the first Runtime facade seam. 2026-07-26 - Linked the first runtime-core library and moved fixed composition storage plus generic update/draw/resize ownership behind it. 2026-07-26 - Added isolated parameter staging and transactional same-address visual-element replacement. 2026-07-26 - Hardened reserved opacity ownership, prepared-result lifetime, FX/UI-to-visual adoption, bool modifier migration, and registry-consumer invalidation. 2026-07-26 - Removed the global element factory and proved per-Runtime type-registry isolation. 2026-07-26 - Moved zero-based effect coverage-window policy into Runtime and removed the duplicate `PostEffectChain` resolver without expanding the Element SDK. 2026-07-26 - Added the Runtime composition mutation control plane, Runtime-owned layer opacity, a const-only host view, and narrow render/legacy-element seams. 2026-07-27 - Replaced the const live host view with pointer-free by-value snapshots and removed public live composition access.
+- Resume From: Phase EXECUTION, State In Progress, Next Action reduce or retire the remaining render-target, read-only element, and mutable legacy-element host seams.
 
 ## Milestone Synthesis
 
@@ -352,6 +352,12 @@ source-code archaeology or private host knowledge.
   compatibility adapters. Read-only compatibility inspection still follows
   const element pointers in the live view; `ofApp` no longer writes assignment
   metadata directly.
+- 2026-07-27 - Added `CompositionLayerSnapshot` and `CompositionSnapshot`.
+  Runtime now returns the fixed composition or one bounds-checked layer by
+  value. Host metadata consumers use those copies; the public live aggregate
+  and `CompositionLayer` accessor were removed. Read-only element inspection,
+  mutable legacy element actions, and render targets remain separate named
+  host-only seams.
 
 ## Validation
 
@@ -393,12 +399,16 @@ source-code archaeology or private host knowledge.
 - Passed: Failed Runtime clears preserve live MIDI/OSC mappings and propagate
   through reassignment, Console/Browser unload, bulk clear, and scene
   publication rather than reporting a destructive partial success.
-- Passed: RuntimeCore and Element SDK boundary validators enforce the const-only
-  live view, explicit mutation commands, named FBO/legacy-element seams, absence
-  of direct host metadata writes, and no public composition/effect SDK leak.
-- Open Gate: Replace the transitional const live composition aggregate with an
-  immutable by-value query model, then reduce or retire the named renderer and
-  legacy-element host seams.
+- Passed: RuntimeCore and Element SDK boundary validators enforce pointer-free
+  by-value snapshots, explicit mutation commands, named render/read-only/
+  mutable-legacy element seams, absence of live host aggregate access, and no
+  public composition/effect SDK leak.
+- Passed: RuntimeCore proves snapshot capacity and bounds, empty/element/effect/
+  overlay projection, copy isolation, mutation freshness, clear behavior, and
+  no element construction during query.
+- Open Gate: Reduce or retire `compositionRenderTargetsForHost`,
+  `compositionElementForHost`, and `legacyCompositionElementForHost` by moving
+  remaining renderer and compatibility consumers behind narrower contracts.
 - Not Run: Live dual-screen hardware rehearsal remains explicitly deferred.
 - Manual Evidence: User approved the architecture direction and requested a prioritized Project Ops roadmap.
 

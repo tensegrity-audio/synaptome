@@ -16,8 +16,9 @@ and explicit shutdown releases elements and FBO resources while the graphics
 context is live. Candidate setup now writes to an isolated parameter registry;
 same-address adoption commits the registry and element together, while failed
 setup or commit leaves the live layer unchanged. The host still adapts effect
-compositing, persistence, mappings, and compatibility inspection through a
-temporary internal view. Element type registration is now scoped per Runtime:
+compositing and compatibility inspection through named host-only seams while
+persistence and mapping consumers read copied snapshots. Element type
+registration is now scoped per Runtime:
 the legacy-named `LayerFactory` has no process-global singleton, the host and
 each bench own an independent registry, scene validation uses non-constructing
 type lookup, and Control & Mapping receives only a narrow offline creator.
@@ -30,12 +31,13 @@ composition mutation now goes through `CompositionAssignment`,
 `CompositionMutationResult`, and explicit Runtime commands for element
 adoption, effect/overlay assignment, active state, label, coverage, and clear.
 Runtime also owns the canonical `console.layerN.opacity` registration and its
-transactional replacement. The host observes a transitional const live
-composition view, reaches mutable FBOs through a named render seam, and reaches
-mutable legacy element instances through a named compatibility seam. The const
-view still exposes const element pointers for read-only compatibility
-inspection; it is not the target immutable by-value snapshot. Typed
-descriptor/catalog ownership is not yet complete.
+transactional replacement. The host observes composition through an immutable,
+by-value snapshot, or one bounds-checked optional layer snapshot.
+`CompositionLayerSnapshot` carries only assignment identity and layer state;
+it exposes no element, FBO, registry, creator, or host pointers. Read-only
+element inspection, mutable legacy element access, and mutable FBO access remain
+separate named host seams. The live aggregate and public `CompositionLayer`
+accessors are gone. Typed descriptor/catalog ownership is not yet complete.
 
 This document records the dependency inventory and the minimum Element SDK v1
 contract that must exist before Synaptome moves code into new build targets.
@@ -145,6 +147,14 @@ The current control-plane extraction exposes `CompositionKind`,
 `CompositionMutationResult` inside RuntimeCore. These types describe the fixed
 built-in composition kinds and mutation outcomes; they do not define an Element
 SDK interface or a dynamically loadable effect contract.
+
+The immutable query plane consists of `CompositionLayerSnapshot` and
+`CompositionSnapshot`. A layer snapshot copies its zero-based index, occupancy,
+element-presence flag, composition kind, definition/label/type/prefix identity,
+active state, opacity, and coverage. `Runtime::compositionSnapshot()` returns
+the fixed eight-layer aggregate by value;
+`Runtime::compositionLayerSnapshot()` returns a bounds-checked optional copy.
+Neither DTO carries executable or render-resource ownership.
 
 ### `SynaptomeHost`
 
@@ -426,15 +436,15 @@ policy API. It is not part of the public Element SDK, does not define a public
 effect interface, and does not change the compiler-matched source/static-link
 compatibility decision.
 
-During the current migration, host reads use a const live
-`CompositionLayers` view. Writes use Runtime's transactional adoption,
-assignment, active, label, coverage, and clear commands. Per-layer render FBOs
-are available only through `CompositionRenderTargets`, and the remaining
-mutable element-specific host adapters use a named legacy-element seam.
-Read-only compatibility inspection may still follow const element pointers in
-the live view. The live view and both host seams are transitional implementation
-surfaces; they are not the immutable query snapshot promised by the target
-facade and are not public Element SDK headers.
+Host metadata reads now use `Runtime::compositionSnapshot()` or
+`Runtime::compositionLayerSnapshot()`. Writes use Runtime's transactional
+adoption, assignment, active, label, coverage, and clear commands. No live
+composition aggregate or public `CompositionLayer` accessor crosses the
+boundary. Per-layer render FBOs remain available through
+`CompositionRenderTargets`; read-only element inspection uses
+`compositionElementForHost`, while mutable type-specific compatibility actions
+use `legacyCompositionElementForHost`. These three host-only methods remain
+SEAC-3 migration debt and are not public Element SDK headers.
 
 ## SEAC-3 Extraction Sequence
 

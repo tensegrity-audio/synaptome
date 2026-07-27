@@ -2,6 +2,36 @@
 
 This changelog records Project Ops and administrative workflow changes. Product release versioning remains governed by `docs/release_policy.md`.
 
+## 2026-07-27 - architecture - seac3_immutable_composition_snapshot
+
+- Request ID: `spine_element_architecture_convergence`
+- Phase / Milestone: SEAC-3 in progress
+- Query plane: Added pointer-free `CompositionLayerSnapshot` and
+  `CompositionSnapshot` DTOs. Runtime returns the fixed eight-layer composition
+  by value or one bounds-checked optional layer copy.
+- Host boundary: Metadata consumers now read snapshots. The public live
+  aggregate, permanent host alias, and public `CompositionLayer` accessor were
+  removed.
+- DTO contract: Snapshots contain only index, occupancy, element presence,
+  composition kind, definition/label/type/prefix identity, active state,
+  opacity, and coverage. They contain no element, FBO, parameter-registry,
+  creator, ownership, or host pointers.
+- Remaining seams: `compositionRenderTargetsForHost` exposes mutable render
+  targets, `compositionElementForHost` supports read-only element inspection,
+  and `legacyCompositionElementForHost` supports mutable legacy adapters. These
+  are explicit host-only SEAC-3 debt.
+- Compatibility: Public IDs, scenes, mappings, effect behavior, and public
+  Element SDK headers remain unchanged. The snapshot DTOs are RuntimeCore
+  query types, not an Effect SDK, stable native ABI, plug-in, or hot-load claim.
+- Validation: RuntimeCore covers capacity/bounds, all composition kinds, copy
+  isolation, mutation freshness, clear behavior, and query-without-
+  construction. Boundary validation rejects live host aggregate access, pointer
+  or resource-bearing DTOs, direct metadata reads outside snapshots, and public
+  SDK leakage.
+- Remaining gate: Move compositor and element-specific compatibility consumers
+  behind narrower Runtime, parameter, and action contracts so the three named
+  host seams can shrink or retire.
+
 ## 2026-07-26 - architecture - seac3_composition_control_plane
 
 - Request ID: `spine_element_architecture_convergence`
@@ -14,14 +44,16 @@ This changelog records Project Ops and administrative workflow changes. Product 
   `console.layerN.opacity` parameter during element adoption, preserves its
   address and modifiers across replacement, and removes it with the exact layer
   ownership on clear or Runtime teardown.
-- Host boundary: `ofApp` reads a const live Runtime composition view and no
-  longer writes assignment metadata directly. Mutable FBO access is isolated
-  behind `CompositionRenderTargets`; remaining mutable type-specific adapters
-  use the named `legacyCompositionElementForHost` seam. Read-only compatibility
-  inspection still follows const element pointers exposed by the live view.
-- Query status: The const aggregate is a transitional live view, not the target
-  immutable by-value snapshot. The render and legacy-element methods are
-  host-only migration seams, not Element SDK services.
+- Host boundary at this checkpoint: `ofApp` read a const live Runtime
+  composition view and no longer wrote assignment metadata directly. Mutable
+  FBO access was isolated behind `CompositionRenderTargets`; remaining mutable
+  type-specific adapters used the named `legacyCompositionElementForHost` seam.
+  Read-only compatibility inspection still followed const element pointers
+  exposed by the live view.
+- Query status at this checkpoint: The const aggregate was a transitional live
+  view, not the target immutable by-value snapshot. The render and
+  legacy-element methods were host-only migration seams, not Element SDK
+  services.
 - Compatibility: Public IDs, scene/mapping addresses, effect behavior, and
   public Element SDK headers remain unchanged. No Effect SDK, stable native ABI,
   dynamic plug-in, or hot-loading claim is introduced.
@@ -31,9 +63,9 @@ This changelog records Project Ops and administrative workflow changes. Product 
   validation rejects direct host metadata writes and public SDK leakage. Failed
   Runtime clears leave live MIDI/OSC mappings intact and propagate through host
   unload, reassignment, bulk-clear, and scene-publication paths.
-- Remaining gate: Replace the const live aggregate with an immutable by-value
-  query model, then reduce or retire the remaining renderer and legacy-element
-  host seams.
+- Remaining gate at this checkpoint (completed 2026-07-27): Replace the const
+  live aggregate with an immutable by-value query model, then reduce or retire
+  the remaining renderer and legacy-element host seams.
 
 ## 2026-07-26 - architecture - seac3_runtime_effect_coverage_policy
 
@@ -54,10 +86,10 @@ This changelog records Project Ops and administrative workflow changes. Product 
   first-layer, negative, invalid-index, and half-open coverage behavior.
   BrowserFlow remains 33 scenarios after removal of its duplicated host-side
   coverage-policy scenario.
-- Remaining gate: Replace the mutable composition-array alias with an immutable
-  by-value query model and explicit Runtime assignment/layer controls, then
-  isolate mutable FBO and legacy-element access in a named internal host render
-  bridge.
+- Remaining gate at this checkpoint (completed by later entries): Replace the
+  mutable composition-array alias with an immutable by-value query model and
+  explicit Runtime assignment/layer controls, then isolate mutable FBO and
+  legacy-element access in a named internal host render bridge.
 
 ## 2026-07-26 - architecture - seac3_scoped_element_type_registry
 

@@ -132,14 +132,19 @@ directly. Runtime owns the stable `console.layerN.opacity` address for element
 assignments; effect and overlay assignments do not create a competing
 per-assignment opacity parameter.
 
-The current read seam is intentionally transitional: the host receives a const
-live view of the eight Runtime-owned composition records, not a copied immutable
-snapshot. Mutable FBO access and mutable element-specific compatibility actions
-use separate named host seams. The live view still exposes const element
-pointers for read-only compatibility inspection, but query consumers cannot
-mutate assignment metadata through it. The next query gate replaces the live
-aggregate with a by-value immutable model and continues shrinking those
-host-only seams.
+The host reads composition metadata through copied DTOs. A
+`CompositionLayerSnapshot` contains only index, occupancy, element presence,
+kind, stable assignment identity, active state, opacity, and coverage;
+`CompositionSnapshot` contains the fixed eight-layer array. The DTOs carry no
+element, FBO, parameter-registry, creator, or host pointers, and changing a copy
+cannot mutate Runtime. One bounds-checked optional layer query supports focused
+consumers without exposing the live aggregate.
+
+Mutable FBO access, read-only element inspection, and mutable element-specific
+compatibility actions still use three separate named host seams. Those seams are
+SEAC-3 migration debt. The next boundary moves their remaining renderer and
+legacy consumers behind narrower Runtime/parameter/action contracts so the
+seams can shrink or retire.
 
 The spine does not:
 

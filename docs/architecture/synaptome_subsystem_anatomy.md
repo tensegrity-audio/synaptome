@@ -46,11 +46,11 @@ Everything below should support or clarify that spine.
 
 | Subsystem | Current Code Anchors | Current Role | Target Boundary |
 | --- | --- | --- | --- |
-| App shell | `synaptome/src/ofApp.*`, `main.cpp` | Composition root and too much runtime ownership. | Synaptome runtime host, with smaller services extracted internally. |
+| App shell | `synaptome/src/ofApp.*`, `main.cpp` | Host composition root for openFrameworks lifecycle and platform adapters; some rendering and persistence orchestration remains host-owned. | Synaptome runtime host, with smaller services extracted internally. |
 | Parameter runtime | `src/core/ParameterRegistry.h`, `src/common/modifier.h` | Shared controllable value registry. | Public core contract. |
 | Banks | `src/core/BankRegistry.h` | Groups controls by global, scene, and layer scope. | Public control-bank contract. |
 | Layer SDK | `src/visuals/Layer.h`, `LayerFactory.*`, `LayerLibrary.*` | Loadable visual/module contract and catalog. | Public layer authoring SDK. |
-| Console and slots | `src/ui/ConsoleState.*`, `src/io/ConsoleStore.*`, `ofApp::consoleSlots` | Eight-slot performance deck and persistence. | Public live deck model. |
+| Console and layers | `src/ui/ConsoleState.*`, `src/io/ConsoleStore.*`, Runtime `CompositionSnapshot` | Eight-layer performance deck and persistence. | Public live deck model. |
 | Browser | `src/ui/ControlMappingHubState.h`, `src/ui/AssetBrowser.*` | Main operator workbench for parameters, mappings, assets, scenes, HUD, devices. | Public Browser surface; internal legacy names phased down. |
 | Device Mapper | `src/ui/DevicesPanel.*`, `bin/data/device_maps/*.json` | Data-driven physical controller role mapping. | Public device-map contract. |
 | MIDI adapter | `src/io/MidiRouter.*`, `bin/data/config/midi-map.json` | MIDI targets, learning, banks, takeover, OSC-source persistence. | Replaceable input adapter targeting parameter IDs. |
@@ -65,7 +65,7 @@ Everything below should support or clarify that spine.
 
 The first subsystem audit pass surfaced these high-priority facts:
 
-- `ofApp` is still the primary composition root and owns most live services. That is acceptable for a working app, but Synaptome's public architecture should name smaller internal services around parameters, scenes, slots, Browser state, adapters, HUD, and persistence.
+- `ofApp` is still the primary host composition root and wires most platform-facing services. `SynaptomeRuntimeCore` now owns composition records, generic element lifecycle and control, exact parameter ownership, and immutable composition snapshots. Smaller internal services are still needed around scenes, Browser state, adapters, HUD, rendering, and persistence.
 - Browser is the public term. The implementation still carries legacy names such as `ControlMappingHubState`, `ControlHub`, `ui.hub.visible`, `overlay.hub.visible`, `control_hub_prefs.json`, and `tools/run_control_hub_flow.py`. These are compatibility/internal names, not language for public docs.
 - Parameter IDs are the central contract, but duplicate ID enforcement, range semantics, pointer lifetime, deprecation policy, and generated manifests need hardening before public release.
 - State boundaries are currently blended. Scene state, Console presentation state, window/display state, local operator preferences, mapping state, and runtime sensor snapshots all exist, but not every one has an explicit contract.
@@ -298,7 +298,7 @@ What it is:
 Current implementation:
 - The Console currently has eight slots.
 - `ConsoleState::kSlotCount = 8`.
-- `ofApp::consoleSlots` owns live slot runtime state.
+- `SynaptomeRuntimeCore` owns the live composition records; `ofApp` consumes immutable `CompositionSnapshot` values plus three named host-only migration seams for render targets and element adapters.
 - `ConsoleStore` persists slot inventory and presentation state.
 
 Slot state includes:

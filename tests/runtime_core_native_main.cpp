@@ -381,11 +381,208 @@ void RunEffectCoverageWindowScenario(
             !invalid.contains(0),
         "runtime effect coverage accepted an out-of-range effect layer");
 }
+
+void RunCompositionSnapshotScenario() {
+    LayerFactory factory;
+    int constructionCount = 0;
+    factory.registerType("tests.runtime.snapshot", [&] {
+        ++constructionCount;
+        return std::make_unique<ContractElement>();
+    });
+    ParameterRegistry parameters;
+    synaptome::runtime::Runtime runtime(factory, parameters);
+
+    auto emptySnapshot = runtime.compositionSnapshot();
+    require(
+        emptySnapshot.layers.size() ==
+            synaptome::runtime::kCompositionLayerCount &&
+            constructionCount == 0,
+        "empty composition snapshot constructed an element or changed capacity");
+    for (std::size_t i = 0; i < emptySnapshot.layers.size(); ++i) {
+        const auto& layer = emptySnapshot.layers[i];
+        require(
+            layer.zeroBasedIndex == i &&
+                !layer.occupied &&
+                !layer.hasElement &&
+                layer.kind == synaptome::runtime::CompositionKind::Element &&
+                layer.definitionId.empty() &&
+                layer.label.empty() &&
+                layer.typeId.empty() &&
+                layer.registryPrefix.empty() &&
+                !layer.active &&
+                std::fabs(layer.opacity - 1.0f) < 0.0001f &&
+                !layer.coverage.defined &&
+                layer.coverage.mode == "upstream" &&
+                layer.coverage.columns == 0,
+            "empty composition snapshot did not describe an empty layer");
+    }
+    require(
+        runtime.compositionLayerSnapshot(0).has_value() &&
+            !runtime.compositionLayerSnapshot(
+                synaptome::runtime::kCompositionLayerCount).has_value() &&
+            !runtime.compositionLayerSnapshot(
+                synaptome::runtime::kCompositionLayerCount + 100).has_value() &&
+            constructionCount == 0,
+        "single-layer snapshot bounds check constructed or returned a layer");
+
+    synaptome::runtime::Runtime::ElementRequest elementRequest;
+    elementRequest.typeId = "tests.runtime.snapshot";
+    elementRequest.definitionId = "tests.definition.snapshot";
+    elementRequest.instanceId = "tests.instance.snapshot";
+    elementRequest.registryPrefix = "console.layer1";
+    elementRequest.enabled = true;
+    auto prepared = runtime.prepareElement(elementRequest);
+    require(
+        runtime.adoptPreparedElement(
+            0,
+            std::move(prepared),
+            assignmentFor(
+                elementRequest,
+                "Snapshot Element",
+                0.37f)),
+        "snapshot scenario did not adopt its element");
+
+    synaptome::runtime::CompositionAssignment effect;
+    effect.kind = synaptome::runtime::CompositionKind::Effect;
+    effect.definitionId = "tests.effect.snapshot";
+    effect.label = "Snapshot Effect";
+    effect.typeId = "fx.snapshot";
+    effect.registryPrefix = "effects.snapshot";
+    effect.active = true;
+    effect.opacity = 0.64f;
+    effect.coverage.defined = true;
+    effect.coverage.mode = "upstream";
+    effect.coverage.columns = 2;
+    require(
+        runtime.assignCompositionEntry(1, effect),
+        "snapshot scenario did not assign its effect");
+
+    synaptome::runtime::CompositionAssignment overlay;
+    overlay.kind = synaptome::runtime::CompositionKind::Overlay;
+    overlay.definitionId = "tests.overlay.snapshot";
+    overlay.label = "Snapshot Overlay";
+    overlay.typeId = "ui.snapshot";
+    overlay.registryPrefix = "ui.snapshot";
+    overlay.active = false;
+    overlay.opacity = 0.83f;
+    require(
+        runtime.assignCompositionEntry(2, overlay),
+        "snapshot scenario did not assign its overlay");
+
+    auto assignedSnapshot = runtime.compositionSnapshot();
+    const auto& elementState = assignedSnapshot.layers[0];
+    const auto& effectState = assignedSnapshot.layers[1];
+    const auto& overlayState = assignedSnapshot.layers[2];
+    require(
+        elementState.occupied &&
+            elementState.hasElement &&
+            elementState.kind ==
+                synaptome::runtime::CompositionKind::Element &&
+            elementState.definitionId == elementRequest.definitionId &&
+            elementState.label == "Snapshot Element" &&
+            elementState.typeId == elementRequest.typeId &&
+            elementState.registryPrefix == elementRequest.registryPrefix &&
+            elementState.active &&
+            std::fabs(elementState.opacity - 0.37f) < 0.0001f,
+        "composition snapshot did not describe its element assignment");
+    require(
+        effectState.occupied &&
+            !effectState.hasElement &&
+            effectState.kind ==
+                synaptome::runtime::CompositionKind::Effect &&
+            effectState.definitionId == effect.definitionId &&
+            effectState.typeId == effect.typeId &&
+            effectState.registryPrefix == effect.registryPrefix &&
+            effectState.active &&
+            effectState.coverage.defined &&
+            effectState.coverage.mode == "upstream" &&
+            effectState.coverage.columns == 2,
+        "composition snapshot did not describe its effect assignment");
+    require(
+        overlayState.occupied &&
+            !overlayState.hasElement &&
+            overlayState.kind ==
+                synaptome::runtime::CompositionKind::Overlay &&
+            overlayState.definitionId == overlay.definitionId &&
+            overlayState.typeId == overlay.typeId &&
+            overlayState.registryPrefix == overlay.registryPrefix &&
+            !overlayState.active &&
+            !overlayState.coverage.defined,
+        "composition snapshot did not describe its overlay assignment");
+    require(
+        constructionCount == 1,
+        "composition snapshot constructed an extra element");
+
+    assignedSnapshot.layers[0].definitionId = "caller.mutated";
+    assignedSnapshot.layers[0].label = "Caller Mutated";
+    assignedSnapshot.layers[0].active = false;
+    assignedSnapshot.layers[1].coverage.mode = "caller-mutated";
+    const auto freshAfterCopyMutation = runtime.compositionSnapshot();
+    require(
+        freshAfterCopyMutation.layers[0].definitionId ==
+                elementRequest.definitionId &&
+            freshAfterCopyMutation.layers[0].label == "Snapshot Element" &&
+            freshAfterCopyMutation.layers[0].active &&
+            freshAfterCopyMutation.layers[1].coverage.mode == "upstream",
+        "mutating a composition snapshot changed Runtime state");
+
+    require(
+        runtime.setCompositionLayerLabel(0, "Runtime Mutation") &&
+            runtime.setCompositionLayerActive(0, false),
+        "snapshot scenario Runtime mutation failed");
+    synaptome::runtime::CompositionCoverage changedCoverage;
+    changedCoverage.defined = true;
+    changedCoverage.mode = "upstream";
+    changedCoverage.columns = 5;
+    require(
+        runtime.setCompositionLayerCoverage(1, changedCoverage),
+        "snapshot scenario coverage mutation failed");
+    parameters.setFloatBase("console.layer1.opacity", 0.58f, true);
+
+    const auto elementMutation = runtime.compositionLayerSnapshot(0);
+    const auto effectMutation = runtime.compositionLayerSnapshot(1);
+    require(
+        elementMutation &&
+            elementMutation->label == "Runtime Mutation" &&
+            !elementMutation->active &&
+            std::fabs(elementMutation->opacity - 0.58f) < 0.0001f &&
+            effectMutation &&
+            effectMutation->coverage.columns == 5,
+        "composition snapshots did not reflect Runtime or parameter mutation");
+
+    require(
+        runtime.clearCompositionLayer(0) &&
+            runtime.clearCompositionLayer(1) &&
+            runtime.clearCompositionLayer(2),
+        "snapshot scenario clear failed");
+    const auto clearedSnapshot = runtime.compositionSnapshot();
+    for (std::size_t i = 0; i < 3; ++i) {
+        const auto& layer = clearedSnapshot.layers[i];
+        require(
+            !layer.occupied &&
+                !layer.hasElement &&
+                layer.kind == synaptome::runtime::CompositionKind::Element &&
+                layer.definitionId.empty() &&
+                layer.typeId.empty() &&
+                layer.registryPrefix.empty() &&
+                !layer.active &&
+                std::fabs(layer.opacity - 1.0f) < 0.0001f &&
+                !layer.coverage.defined &&
+                layer.coverage.mode == "upstream" &&
+                layer.coverage.columns == 0,
+            "composition snapshot did not reflect a cleared assignment");
+    }
+    require(
+        runtime.clearCompositionLayer(0) &&
+            constructionCount == 1,
+        "idempotent clear or snapshot query constructed an element");
+}
 }
 
 int main() {
     try {
         RunScopedElementTypeRegistryIsolationScenario();
+        RunCompositionSnapshotScenario();
 
         LayerFactory factory;
         factory.registerType("tests.runtime.good", [] {
@@ -439,8 +636,6 @@ int main() {
             siblingDescriptor);
 
         synaptome::runtime::Runtime runtime(factory, parameters);
-        const auto& compositionLayers =
-            runtime.compositionLayersForHost();
         RunEffectCoverageWindowScenario(runtime);
         synaptome::runtime::Runtime::ElementRequest request;
         request.typeId = "tests.runtime.good";
@@ -483,9 +678,12 @@ int main() {
                 "prefix collision damaged the live registration");
 
         const auto firstClear = runtime.clearCompositionLayer(0);
+        const auto firstClearedSnapshot =
+            runtime.compositionLayerSnapshot(0);
         require(
             firstClear &&
-                !runtime.compositionLayersForHost()[0].hasElement(),
+                firstClearedSnapshot &&
+                !firstClearedSnapshot->hasElement,
             "clear did not destroy the element");
         require(parameters.findFloat("console.layer1.value") == nullptr,
                 "clear did not remove instance parameters");
@@ -667,8 +865,10 @@ int main() {
                 std::move(compositionPrepared),
                 assignmentFor(request, "Composition Element", 0.72f)),
             "runtime did not adopt the prepared composition element");
-        const auto* compositionLayer = &compositionLayers[0];
-        require(compositionLayer && compositionLayer->hasElement(),
+        require(
+            runtime.compositionElementForHost(0) != nullptr &&
+                runtime.compositionElementForHost(
+                    synaptome::runtime::kCompositionLayerCount) == nullptr,
                 "runtime did not retain composition element ownership");
         require(runtime.setCompositionLayerActive(0, true),
                 "runtime did not activate the composition element");
@@ -694,7 +894,7 @@ int main() {
             *runtime.legacyCompositionElementForHost(0));
         require(!failedReplacement,
                 "throwing replacement was reported as prepared");
-        require(compositionLayer->element() == compositionElement,
+        require(runtime.compositionElementForHost(0) == compositionElement,
                 "failed replacement destroyed the live element");
         require(parameters.findFloat("console.layer1.value") != nullptr,
                 "failed replacement removed the live element parameter");
@@ -715,7 +915,7 @@ int main() {
                     abandonedReplacement.error);
         }
         require(
-            compositionLayer->element() == compositionElement &&
+            runtime.compositionElementForHost(0) == compositionElement &&
                 parameters.findFloat("console.layer1.value") != nullptr,
             "abandoned replacement disturbed the live slot");
 
@@ -759,7 +959,7 @@ int main() {
                     std::move(conflictingReplacement),
                     assignmentFor(request, "Conflicting Element", 0.2f)),
                 "replacement overwrote a host-owned parameter");
-            require(compositionLayer->element() == compositionElement,
+            require(runtime.compositionElementForHost(0) == compositionElement,
                     "failed commit replaced the live element");
             require(
                     parameters.findFloat("console.layer1.value") != nullptr &&
@@ -780,7 +980,7 @@ int main() {
             request,
             *runtime.legacyCompositionElementForHost(0));
         require(static_cast<bool>(replacement), replacement.error);
-        require(compositionLayer->element() == compositionElement,
+        require(runtime.compositionElementForHost(0) == compositionElement,
                 "preparation replaced the live element before commit");
         require(
             runtime.adoptPreparedElement(
@@ -838,9 +1038,12 @@ int main() {
                 compositionElement->lastHeight == 720,
             "runtime did not route composition resize");
         const auto compositionClear = runtime.clearCompositionLayer(0);
+        const auto compositionClearedSnapshot =
+            runtime.compositionLayerSnapshot(0);
         require(
             compositionClear &&
-                !compositionLayer->hasElement(),
+                compositionClearedSnapshot &&
+                !compositionClearedSnapshot->hasElement,
             "runtime did not clear its composition element");
         require(parameters.findFloat("console.layer1.value") == nullptr,
                 "composition clear leaked element parameters");
@@ -905,16 +1108,17 @@ int main() {
                 controlPlaneCommit.elementChanged &&
                 controlPlaneCommit.parametersChanged,
             "control-plane adoption did not report its committed mutation");
-        const auto* controlPlaneLayer = &compositionLayers[2];
+        const auto controlPlaneLayer =
+            runtime.compositionLayerSnapshot(2);
         require(
             controlPlaneLayer &&
-                controlPlaneLayer->hasElement() &&
+                controlPlaneLayer->hasElement &&
                 controlPlaneLayer->kind ==
                     synaptome::runtime::CompositionKind::Element &&
-                controlPlaneLayer->assetId == assignment.definitionId &&
+                controlPlaneLayer->definitionId == assignment.definitionId &&
                 controlPlaneLayer->label == assignment.label &&
-                controlPlaneLayer->type == assignment.typeId &&
-                controlPlaneLayer->paramPrefix == assignment.registryPrefix &&
+                controlPlaneLayer->typeId == assignment.typeId &&
+                controlPlaneLayer->registryPrefix == assignment.registryPrefix &&
                 controlPlaneLayer->active &&
                 std::fabs(controlPlaneLayer->opacity - 0.42f) < 0.0001f,
             "control-plane adoption did not publish the assignment");
@@ -922,7 +1126,8 @@ int main() {
             parameters.findFloat("console.layer3.opacity");
         require(
             controlPlaneOpacity &&
-                controlPlaneOpacity->value == &compositionLayers[2].opacity &&
+                controlPlaneOpacity->value &&
+                std::fabs(*controlPlaneOpacity->value - 0.42f) < 0.0001f &&
                 std::fabs(controlPlaneOpacity->baseValue - 0.42f) < 0.0001f,
             "Runtime did not bind spine-owned opacity to stable slot storage");
         float* const stableOpacityAddress = controlPlaneOpacity->value;
@@ -972,32 +1177,44 @@ int main() {
         auto mismatchedAssignment = replacementAssignment;
         mismatchedAssignment.definitionId = "tests.definition.wrong";
         const Layer* const elementBeforeRejectedCommit =
-            compositionLayers[2].element();
+            runtime.compositionElementForHost(2);
         const auto rejectedCommit = runtime.adoptPreparedElement(
             2,
             std::move(mismatchedPrepared),
             mismatchedAssignment);
+        const auto rejectedCommitSnapshot =
+            runtime.compositionLayerSnapshot(2);
         require(
             !rejectedCommit &&
                 rejectedCommit.errorCode ==
                     synaptome::runtime::CompositionMutationError::
                         ElementMismatch &&
-                compositionLayers[2].element() ==
+                runtime.compositionElementForHost(2) ==
                     elementBeforeRejectedCommit &&
-                compositionLayers[2].assetId ==
+                rejectedCommitSnapshot &&
+                rejectedCommitSnapshot->definitionId ==
                     replacementAssignment.definitionId &&
                 parameters.findFloat("console.layer3.opacity")->value ==
                     stableOpacityAddress,
             "rejected assignment changed live control-plane state");
 
+        require(runtime.setCompositionLayerLabel(2, "Performance Layer"),
+                "Runtime label command rejected presentation state");
+        const auto relabeledSnapshot =
+            runtime.compositionLayerSnapshot(2);
         require(
-            runtime.setCompositionLayerLabel(2, "Performance Layer") &&
-                compositionLayers[2].label == "Performance Layer",
+            relabeledSnapshot &&
+                relabeledSnapshot->label == "Performance Layer",
             "Runtime label command did not update presentation state");
+        require(runtime.setCompositionLayerActive(2, true),
+                "Runtime active command rejected element state");
+        const auto activatedSnapshot =
+            runtime.compositionLayerSnapshot(2);
         require(
-            runtime.setCompositionLayerActive(2, true) &&
-                compositionLayers[2].active &&
-                compositionLayers[2].element()->isEnabled(),
+            activatedSnapshot &&
+                activatedSnapshot->active &&
+                runtime.compositionElementForHost(2) &&
+                runtime.compositionElementForHost(2)->isEnabled(),
             "Runtime active command did not update element state");
 
         float siblingState = 0.25f;
@@ -1009,12 +1226,16 @@ int main() {
             siblingState,
             controlPlaneSiblingDescriptor);
         const auto clearElement = runtime.clearCompositionLayer(2);
+        const auto clearedElementSnapshot =
+            runtime.compositionLayerSnapshot(2);
         require(
             clearElement &&
                 clearElement.elementChanged &&
                 clearElement.parametersChanged &&
-                !compositionLayers[2].hasElement() &&
-                compositionLayers[2].assetId.empty() &&
+                clearedElementSnapshot &&
+                !clearedElementSnapshot->hasElement &&
+                !clearedElementSnapshot->occupied &&
+                clearedElementSnapshot->definitionId.empty() &&
                 parameters.findFloat("console.layer3.value") == nullptr &&
                 parameters.findFloat("console.layer3.opacity") == nullptr &&
                 parameters.findFloat("console.layer30.keep") != nullptr,
@@ -1042,22 +1263,29 @@ int main() {
             static_cast<bool>(
                 runtime.assignCompositionEntry(2, effectAssignment)),
                 "Runtime rejected a valid effect assignment");
+        const auto assignedEffectSnapshot =
+            runtime.compositionLayerSnapshot(2);
         require(
-            compositionLayers[2].kind ==
+            assignedEffectSnapshot &&
+                assignedEffectSnapshot->kind ==
                     synaptome::runtime::CompositionKind::Effect &&
-                compositionLayers[2].coverage.defined &&
-                compositionLayers[2].coverage.mode == "upstream" &&
-                compositionLayers[2].coverage.columns == 0 &&
+                assignedEffectSnapshot->coverage.defined &&
+                assignedEffectSnapshot->coverage.mode == "upstream" &&
+                assignedEffectSnapshot->coverage.columns == 0 &&
                 parameters.findFloat("effects.tests.opacity") == nullptr,
             "effect assignment normalization or opacity ownership drifted");
         synaptome::runtime::CompositionCoverage effectCoverage;
         effectCoverage.defined = true;
         effectCoverage.mode.clear();
         effectCoverage.columns = 3;
+        require(runtime.setCompositionLayerCoverage(2, effectCoverage),
+                "Runtime coverage command rejected effect coverage");
+        const auto changedEffectSnapshot =
+            runtime.compositionLayerSnapshot(2);
         require(
-            runtime.setCompositionLayerCoverage(2, effectCoverage) &&
-                compositionLayers[2].coverage.mode == "upstream" &&
-                compositionLayers[2].coverage.columns == 3,
+            changedEffectSnapshot &&
+                changedEffectSnapshot->coverage.mode == "upstream" &&
+                changedEffectSnapshot->coverage.columns == 3,
             "Runtime coverage command did not normalize effect coverage");
         const auto clearEffect = runtime.clearCompositionLayer(2);
         require(
@@ -1075,9 +1303,13 @@ int main() {
         overlayAssignment.typeId = "ui.tests";
         overlayAssignment.registryPrefix = "ui.tests";
         overlayAssignment.active = true;
+        require(runtime.assignCompositionEntry(2, overlayAssignment),
+                "Runtime rejected a valid overlay assignment");
+        const auto overlaySnapshot =
+            runtime.compositionLayerSnapshot(2);
         require(
-            runtime.assignCompositionEntry(2, overlayAssignment) &&
-                compositionLayers[2].kind ==
+            overlaySnapshot &&
+                overlaySnapshot->kind ==
                     synaptome::runtime::CompositionKind::Overlay &&
                 !runtime.setCompositionLayerCoverage(2, effectCoverage),
             "overlay assignment accepted effect-only coverage");
@@ -1099,7 +1331,9 @@ int main() {
                 assignmentFor(request, "Shutdown Element")),
             "runtime did not adopt the shutdown contract element");
         runtime.shutdownComposition();
-        require(!compositionLayer->hasElement(),
+        const auto shutdownSnapshot =
+            runtime.compositionLayerSnapshot(0);
+        require(shutdownSnapshot && !shutdownSnapshot->hasElement,
                 "composition shutdown retained an element");
         require(parameters.findFloat("console.layer1.value") == nullptr,
                 "composition shutdown leaked element parameters");

@@ -326,10 +326,8 @@ public:
 
     LayerLibrary layerLibrary;
 
-    // Console container: fixed-size 8 layers managed independently of legacy decks.
-    using ConsoleSlot = synaptome::runtime::CompositionLayer;
-    const synaptome::runtime::Runtime::CompositionLayers& consoleSlots =
-        runtime_.compositionLayersForHost();
+    using ConsoleSlotSnapshot =
+        synaptome::runtime::CompositionLayerSnapshot;
     std::string consoleConfigPath;
     std::string activeScenePath_;
     std::string activeNamedScenePath_;
@@ -595,8 +593,11 @@ private:
     void persistConsoleAssignments();
     bool loadConsoleLayoutFromScene(const ofJson& consoleNode);
     void writeConsoleLayoutToScene(ofJson& scene) const;
-    void writeConsoleParametersToScene(ofJson& slotNode, const ConsoleSlot& slot) const;
-    const ConsoleSlot* consoleSlotForIndex(int layerIndex) const;
+    void writeConsoleParametersToScene(
+        ofJson& slotNode,
+        const ConsoleSlotSnapshot& slot) const;
+    std::optional<ConsoleSlotSnapshot> consoleSlotForIndex(
+        int layerIndex) const;
     int findConsoleSlotByAsset(const std::string& assetId) const;
     std::string consoleSlotPrefix(int layerIndex) const;
     void registerConsoleLayerOpacityParam(int layerIndex);
@@ -610,7 +611,10 @@ private:
     void drawConsole(glm::ivec2 viewport, float beatPhase);
     void ensureConsoleLayerViewports(glm::ivec2 viewport);
     void ensureSlotFbo(ofFbo& fbo, glm::ivec2 viewport);
-    bool applyEffectSlot(const ConsoleSlot& slot, ofFbo& src, ofFbo& dst);
+    bool applyEffectSlot(
+        const ConsoleSlotSnapshot& slot,
+        ofFbo& src,
+        ofFbo& dst);
     void handleHudVisibilityChanged(bool visible);
     bool toggleHudTools(MenuController& controller);
     bool openHudLayoutEditor(MenuController& controller);

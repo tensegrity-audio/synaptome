@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstddef>
 #include <string>
 
@@ -28,6 +29,24 @@ struct CompositionAssignment {
     bool active = false;
     float opacity = 1.0f;
     CompositionCoverage coverage;
+};
+
+struct CompositionLayerSnapshot {
+    std::size_t zeroBasedIndex = 0;
+    bool occupied = false;
+    bool hasElement = false;
+    CompositionKind kind = CompositionKind::Element;
+    std::string definitionId;
+    std::string label;
+    std::string typeId;
+    std::string registryPrefix;
+    bool active = false;
+    float opacity = 1.0f;
+    CompositionCoverage coverage;
+};
+
+struct CompositionSnapshot {
+    std::array<CompositionLayerSnapshot, kCompositionLayerCount> layers;
 };
 
 enum class CompositionMutationError {

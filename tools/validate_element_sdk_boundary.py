@@ -70,6 +70,8 @@ def main() -> int:
         for token in (
             "CompositionKind",
             "CompositionAssignment",
+            "CompositionLayerSnapshot",
+            "CompositionSnapshot",
             "CompositionMutationError",
             "CompositionMutationResult",
             "CompositionRenderTargets",
