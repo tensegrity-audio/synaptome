@@ -90,7 +90,10 @@ What the artist gains:
 
 Current gap:
 - The API exists, but there is no stable public SDK package or authoring template.
-- Registering a new `LayerFactory` type still requires source-level integration in app setup; a public extension mechanism does not exist yet.
+- Registering a new `LayerFactory` type still requires source-level integration
+  through a package leaf registrar plus the controlled built-in aggregate and
+  project; the creator binding no longer belongs in `ofApp.cpp`, but a public
+  no-source-edit extension mechanism does not exist yet.
 - `LayerFactory::registerType()` should diagnose duplicate type names before this becomes a public plugin surface.
 
 ### Level 2: Parametric Layer
@@ -167,17 +170,23 @@ The artist ships:
 - validation fixture.
 
 Target:
-- A Synaptome extension should be installable and testable without touching `ofApp.cpp`.
+- A Synaptome extension should be installable and testable without touching
+  `ofApp.cpp` or a handwritten host aggregate.
 
 Current gap:
-- No plugin/package layout exists yet.
-- Factory registration still requires source-level integration.
+- A draft package layout exists, but there is no automatic extension loader or
+  generated registration path.
+- Factory registration still requires a source-level package leaf, aggregate
+  call, and build-project integration.
 - Public dependency boundaries are not split from the current monolithic app.
-- Extension install and validation should eventually avoid editing `ofApp.cpp`.
+- Extension install and validation should eventually avoid editing the
+  controlled host aggregate or project files.
 
 First public decision:
 - The first public Synaptome repo may ship with an honest source-registration SDK path.
-- Artist examples should use a dedicated registration file/snippet, catalog JSON, scene fixture, and validator instead of implying hot-loaded plugins already exist.
+- Artist examples should use a dedicated package leaf registrar, catalog JSON,
+  scene fixture, and validator instead of implying hot-loaded plugins already
+  exist. Signal Bloom's leaf is shared by the host aggregate and package bench.
 - Synaptome must not claim no-source-edit installation until a generated registration, module manifest, or plugin/package loader is implemented and validated.
 - `LayerFactory::registerType()` must fail loudly for empty or duplicate type IDs so package collisions cannot silently replace layer implementations.
 
@@ -329,7 +338,12 @@ Validation:
 python tools\validate_artist_sdk_example.py --check
 ```
 
-This fixture proves the current honest path: a source-registered `Layer` subclass, a Browser catalog entry, a saved scene with a Console slot, reusable parameter suffixes, MIDI/OSC/sensor route targets, and a paired media layer. It is intentionally not the final extension mechanism; source registration remains explicit until Synaptome implements a generated registration or package loader.
+This fixture proves the current honest path: a source-registered `Layer`
+subclass, one package leaf registrar shared by the host aggregate and bench, a
+Browser catalog entry, a saved scene with a Console slot, reusable parameter
+suffixes, MIDI/OSC/sensor route targets, and a paired media layer. It is
+intentionally not the final extension mechanism; source registration remains
+explicit until Synaptome implements generated registration or a package loader.
 
 ## Existing oF Code Migration Checklist
 
@@ -368,7 +382,7 @@ For a normal openFrameworks sketch:
 | Public layer authoring guide | Architecture docs plus validated `docs/examples/artist_sdk/**` fixture. | Step-by-step guide expanded from the fixture. |
 | Parameter vocabulary | Implicit in code and examples. | Versioned reference plus generated manifest. |
 | Layer system roadmap | Layer package, folder discovery, file-backed generated layers, package params, options, presets, mapping presets, and bench work are larger than the SDK overview. | Use `synaptome_layer_system_roadmap.md` as the primary roadmap for improving the layer system. |
-| Factory registration | Source-level registration is the first public path; duplicate/empty type IDs now fail loudly. | Generated registration, plugin manifest, or module loader for no-source-edit installs. |
+| Factory registration | Source-level package leaf registration is the first public path; the host aggregate and package bench share Signal Bloom's leaf, while duplicate/empty type IDs fail loudly. | Generated registration, plugin manifest, or module loader that removes handwritten aggregate/project edits. |
 | Transport/reactivity contract | BPM and beat context exist, but clock source, confidence, onset/downbeat, and fallback policy are runtime concerns outside the layer roadmap. | Use `synaptome_transport_reactivity.md` for BPM, beat detection, and timing-source work. |
 | Catalog fixture | Golden static `LayerLibrary` ingestion snapshot plus validated artist-authored source/catalog/scene fixture. | Use both fixtures to tighten the public authoring guide and future package seam. |
 | Mapping lifecycle | Real Browser/MIDI/OSC flows. | Public docs for global/scene/local mapping ownership. |

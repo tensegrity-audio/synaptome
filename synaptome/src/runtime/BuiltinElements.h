@@ -4,8 +4,8 @@ class LayerFactory;
 
 namespace synaptome::runtime {
 
-// Controlled static-registration entrypoint. This file is intentionally
-// runtime-owned; element targets do not depend on LayerFactory.
+// Controlled host registration entrypoint. This file is intentionally
+// host-owned; element targets do not depend on LayerFactory.
 void registerBuiltinElements(LayerFactory& elementTypes);
 
 } // namespace synaptome::runtime

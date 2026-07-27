@@ -12,7 +12,7 @@ HEADER = ROOT / "synaptome/src/visuals/LeniaLayer.h"
 SOURCE = ROOT / "synaptome/src/visuals/LeniaLayer.cpp"
 CATALOG = ROOT / "synaptome/bin/data/layers/generative/circuit_lenia.json"
 ORGANIC_CATALOG = ROOT / "synaptome/bin/data/layers/generative/lenia.json"
-APP = ROOT / "synaptome/src/ofApp.cpp"
+REGISTRATION = ROOT / "synaptome/src/runtime/BuiltinElements.cpp"
 MIDI_MAP = ROOT / "synaptome/bin/data/config/midi-map.json"
 
 CIRCUIT_LENIA_OSC_DEFAULTS = {
@@ -53,7 +53,7 @@ def registered_parameters(source: str) -> set[str]:
 
 def validate() -> list[str]:
     errors: list[str] = []
-    for path in (HEADER, SOURCE, CATALOG, ORGANIC_CATALOG, APP, MIDI_MAP):
+    for path in (HEADER, SOURCE, CATALOG, ORGANIC_CATALOG, REGISTRATION, MIDI_MAP):
         if not path.exists():
             errors.append(f"missing required file: {path.relative_to(ROOT)}")
     if errors:
@@ -61,7 +61,7 @@ def validate() -> list[str]:
 
     header = HEADER.read_text(encoding="utf-8")
     source = SOURCE.read_text(encoding="utf-8")
-    app = APP.read_text(encoding="utf-8")
+    registration = REGISTRATION.read_text(encoding="utf-8")
     data = json.loads(CATALOG.read_text(encoding="utf-8"))
     organic = json.loads(ORGANIC_CATALOG.read_text(encoding="utf-8"))
     midi_map = json.loads(MIDI_MAP.read_text(encoding="utf-8"))
@@ -104,7 +104,10 @@ def validate() -> list[str]:
         errors.append("the established Lenia asset must retain organic presentation")
     if data.get("textureSize") != [160, 90]:
         errors.append("Circuit Lenia must use the coarse 160x90 field")
-    if 'registerType("lenia"' not in app or "std::make_unique<LeniaLayer>" not in app:
+    if (
+        'registerType("lenia"' not in registration
+        or "std::make_unique<LeniaLayer>" not in registration
+    ):
         errors.append("the shared Lenia runtime must remain factory registered")
 
     defaults = data.get("defaults")

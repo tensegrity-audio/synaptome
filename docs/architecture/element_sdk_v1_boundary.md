@@ -26,6 +26,14 @@ registration is now scoped per Runtime:
 the legacy-named `LayerFactory` has no process-global singleton, the host and
 each bench own an independent registry, scene validation uses non-constructing
 type lookup, and Control & Mapping receives only a narrow offline creator.
+All host registration is now composed through the controlled
+`BuiltinElements.cpp` aggregate instead of `ofApp.cpp`: 22 core creator
+bindings live in that aggregate, while Signal Bloom is delegated to the narrow
+package leaf registrar `registerSignalBloomElement()`, which is called by both
+the aggregate and the package bench. This is controlled, handwritten source
+registration, not generated registration or SEAC-8 completion.
+Registration-only concrete includes have left `ofApp`; direct `TextLayerState`
+font/state synchronization remains a separate named host coupling.
 Runtime now owns the pure, zero-based effect coverage-window policy through
 `CompositionCoverageWindow` and `Runtime::resolveEffectCoverage`; `drawConsole`
 consumes its half-open input range. `PostEffectChain` remains the host-side
@@ -81,11 +89,11 @@ architecture.
 
 | Area | Current evidence | Boundary problem |
 | --- | --- | --- |
-| Application root | `synaptome/src/ofApp.cpp` combines platform callbacks, element registration, composition, mappings, scenes, devices, and UI wiring. | The host is also the runtime and service container. |
+| Application root | `synaptome/src/ofApp.cpp` still combines platform callbacks, composition adaptation, mappings, scenes, devices, and UI wiring, but delegates all element creator binding to `registerBuiltinElements()`. | The host remains the service container and composition adapter even though registration ownership moved out. |
 | Compile graph | `synaptome/Synaptome.vcxproj:497` compiles the host, runtime facilities, UI, and every visual implementation into one executable. | A small element change rebuilds and relinks the application. |
 | Element API | `synaptome/src/visuals/Layer.h:3` includes `ofMain.h`, `ofJson`, and the concrete `ParameterRegistry`; its draw context exposes mutable `ofCamera&`. | The public seam is broad and tied to runtime internals. |
-| Concrete dependencies | `synaptome/src/ofApp.h:23` begins a run of concrete element includes; registrations are hand-written at `synaptome/src/ofApp.cpp:1995`. | Adding an element edits the host composition root. |
-| Type special cases | Element casts and element-specific bindings occur around `synaptome/src/ofApp.cpp:5254` and `synaptome/src/ofApp.cpp:5866`. | The generic factory contract is routinely bypassed. |
+| Concrete dependencies | Registration-only concrete headers and creator lambdas now live in the handwritten `BuiltinElements.cpp` aggregate. Signal Bloom's package leaf registrar is shared by that aggregate and its bench. `ofApp` still reaches `TextLayerState` for font/state synchronization. | Adding a built-in no longer adds a creator lambda to `ofApp`, but still edits the aggregate/project until SEAC-8 generation exists; text state remains direct host coupling. |
+| Type special cases | Mutable element-specific action and status casts have been replaced by registered parameters, live actions, and typed telemetry. Direct `TextLayerState` synchronization and the host render-target adapter remain named compatibility paths. | The generic control/query plane is established, but the last host-owned compatibility paths are not yet retired. |
 | Lifecycle | `synaptome/src/visuals/Layer.h:23` has configure, setup, update, draw, resize, and enable methods, then relies on destruction. | There is no setup result, explicit teardown, health, or transactional replacement. |
 | Composition | `ConsoleSlot` at `synaptome/src/ofApp.h:326` owns assignment state, element ownership, coverage, and render targets; `drawConsole` starts at `synaptome/src/ofApp.cpp:4219`. | The reusable composition engine is embedded in the host. |
 | Registry | At the SEAC-2 freeze, `LayerFactory` was process-global. It is now a Runtime-scoped type-to-creator map, but still has no descriptor, owner, version, enumeration, unregister, or atomic package registration. | Type creation is isolated; identity and package metadata still lack one typed authority. |
@@ -191,7 +199,9 @@ The executable owns:
 - Browser, Console, HUD, and other operator presentation/controllers.
 
 The host calls a runtime facade and consumes runtime query models. It does not
-include concrete element headers.
+own element creator bindings or registration-only concrete headers.
+`TextLayerState` font/state synchronization remains an explicit compatibility
+exception rather than evidence that registration still belongs in the host.
 
 ### Element Targets
 
@@ -206,12 +216,19 @@ Each element bench links the real element library and a reusable SDK test host.
 It must not include implementation `.cpp` files, redefine private access, or
 include the host source tree.
 
-### Generated Built-In Registration
+### Controlled Built-In Registration
 
-`SynaptomeBuiltinElements` is a generated translation unit or small static
-library. It is the only composition-time bridge that includes selected concrete
-element headers. The host and isolated benches invoke the same registration
-entrypoint.
+The current SEAC-3 bridge is a handwritten `BuiltinElements.cpp` aggregate. It
+is the only host composition-time unit that includes the selected concrete
+element headers and creator lambdas. Signal Bloom supplies a narrower
+`SignalBloomRegistration.cpp` package leaf; the aggregate and package bench
+invoke that same leaf registrar, so the reference package has one creator
+binding even though their top-level entrypoints differ.
+
+This consolidation removes registration ownership from `ofApp`, but does not
+yet make registration generated. SEAC-8 remains responsible for deriving the
+aggregate records from validated descriptor/package metadata so a new element
+does not require a handwritten aggregate or project edit.
 
 ## Element SDK v1 Contract
 
@@ -607,8 +624,10 @@ SEAC-3 must preserve output and proceed in this order:
    parsing, and parameter runtime ownership behind the new target.
 5. Build Signal Bloom as the first real `Element_<package>` static library and
    link its existing bench to that library.
-6. Generate `SynaptomeBuiltinElements`; remove Signal Bloom's concrete include,
-   compilation, and registration from the host.
+6. Consolidate current creator bindings in `SynaptomeBuiltinElements`; give
+   Signal Bloom one package leaf registrar shared by the host aggregate and
+   package bench; remove its registration-only concrete dependency from
+   `ofApp`. Deterministic generation of the aggregate remains SEAC-8.
 7. Replace element-specific host casts and MIDI helpers with parameter/action
    contracts.
 8. Inject audio, media/resource, logging, and path services; migrate singleton
@@ -627,9 +646,10 @@ No-output-change extraction is accepted only when:
 - an SDK header compile check rejects UI, host, adapter, catalog I/O, and
   concrete-element dependencies;
 - Signal Bloom builds through its element library, not by including its `.cpp`;
-- host and bench use the same registration entrypoint;
+- host aggregate and package bench use the same package leaf registrar;
 - runtime core has no concrete element or operator UI dependencies;
-- the host has no concrete element includes or casts for the migrated element;
+- the host has no registration-only concrete includes or casts for the migrated
+  element; direct `TextLayerState` synchronization remains separately tracked;
 - descriptor inspection does not instantiate the element;
 - live action snapshots expose descriptors but no handlers or element pointers;
 - invalid action registration rejects preparation, and action invocation

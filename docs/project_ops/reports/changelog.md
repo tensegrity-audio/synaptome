@@ -2,6 +2,37 @@
 
 This changelog records Project Ops and administrative workflow changes. Product release versioning remains governed by `docs/release_policy.md`.
 
+## 2026-07-27 - architecture - seac3r_controlled_registration_consolidation
+
+- Request ID: `spine_element_architecture_convergence`
+- Phase / Milestone: SEAC-3R in progress inside SEAC-3
+- Registration boundary: `ofApp` now delegates host registration to the
+  controlled `BuiltinElements.cpp` aggregate. Twenty-two core creator bindings
+  live in that aggregate; Signal Bloom delegates to one package leaf registrar
+  shared by the aggregate and package bench.
+- Host boundary: Registration-only concrete includes and creator ownership
+  moved out of `ofApp`. Direct `TextLayerState` font/state synchronization
+  remains an explicit host coupling, so this checkpoint does not claim that all
+  concrete host references are gone.
+- Build/test wiring: The Release host compiles the aggregate and Signal Bloom
+  leaf, while LayerPackageBench compiles only the narrow package registrar and
+  links the existing element target.
+- Contract tooling: Catalog and parameter-manifest scanners now follow the
+  controlled registration sources rather than inferring creator bindings from
+  `ofApp.cpp`. Canonical and combined parameter manifests retain the same IDs
+  and counts; their diffs contain the new source plus expected line shifts.
+- Roadmap boundary: This is controlled handwritten source registration, not
+  SEAC-8 generated registration. SEAC-3 remains open for the render-target
+  adapter; SEAC-4A descriptors/actions, SEAC-4B parameters,
+  SEAC-7 package serialization, SEAC-8 generation, and SEAC-9 persisted action
+  mappings remain ordered future gates.
+- Validation: Release host, LayerPackageBench build/run, BrowserFlow Release
+  build, Element SDK/RuntimeCore boundary, cellular/circuit, canonical catalog,
+  canonical/combined parameter-manifest, public-app 17-contract,
+  scene/display transaction, Project Ops, and diff checks pass. BrowserFlow
+  execution remains deferred with the dual-screen path; the render-target
+  adapter is the remaining SEAC-3R gate.
+
 ## 2026-07-27 - architecture - seac3_on_demand_element_telemetry
 
 - Request ID: `spine_element_architecture_convergence`

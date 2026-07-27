@@ -2,6 +2,7 @@
 """Validate the first physical Element SDK and Signal Bloom build boundary."""
 from __future__ import annotations
 
+import json
 import re
 import sys
 from pathlib import Path
@@ -60,7 +61,20 @@ def main() -> int:
     )
     app_project = read(APP / "Synaptome.vcxproj", errors)
     app_source = read(APP / "src" / "ofApp.cpp", errors)
+    app_header = read(APP / "src" / "ofApp.h", errors)
+    runtime_project = read(
+        APP / "runtime" / "SynaptomeRuntimeCore.vcxproj",
+        errors,
+    )
     builtin_source = read(APP / "src" / "runtime" / "BuiltinElements.cpp", errors)
+    signal_registration_source = read(
+        APP / "src" / "runtime" / "SignalBloomRegistration.cpp",
+        errors,
+    )
+    bench_project = read(
+        APP / "tests" / "LayerPackageBench" / "LayerPackageBench.vcxproj",
+        errors,
+    )
     bench_source = read(ROOT / "tests" / "layer_package_bench_main.cpp", errors)
 
     expected_forwarders = {
@@ -251,12 +265,97 @@ def main() -> int:
         errors.append("host must link the shipping Signal Bloom element project")
     if r'clcompile include="src\runtime\builtinelements.cpp"' not in app_lower:
         errors.append("host project must compile the controlled registration unit")
+    if r'clcompile include="src\runtime\signalbloomregistration.cpp"' not in app_lower:
+        errors.append("host project must compile the Signal Bloom registration bridge")
     if "SignalBloomLayer" in app_source:
         errors.append("ofApp.cpp must not know the Signal Bloom concrete class")
-    if "registerBuiltinElements(elementTypes)" not in app_source:
+    if ".registerType(" in app_source:
+        errors.append("ofApp.cpp must delegate all element type bindings")
+    if "registerBuiltinElements(elementTypes_)" not in app_source:
         errors.append("host must call the controlled built-in registration entrypoint")
-    if 'registerType("example.signalBloom"' not in builtin_source:
-        errors.append("built-in registration unit must own the Signal Bloom type binding")
+    if "registerSignalBloomElement(elementTypes)" not in builtin_source:
+        errors.append("built-in registration unit must compose the Signal Bloom bridge")
+    if 'registerType("example.signalBloom"' not in signal_registration_source:
+        errors.append("Signal Bloom registration bridge must own its type binding")
+    bench_project_lower = bench_project.lower()
+    if r"\src\runtime\builtinelements.cpp" in bench_project_lower:
+        errors.append("package bench must not compile the full host built-in registrar")
+    if r"\src\runtime\signalbloomregistration.cpp" not in bench_project_lower:
+        errors.append("package bench must compile the narrow Signal Bloom registrar")
+    if "registerSignalBloomElement(factory)" not in bench_source:
+        errors.append("package bench must call the narrow Signal Bloom registrar")
+
+    registered_types = set(
+        re.findall(
+            r'registerType\(\s*"([^"]+)"',
+            builtin_source + "\n" + signal_registration_source,
+        )
+    )
+    canonical_types: set[str] = set()
+    for catalog_path in (APP / "bin" / "data" / "layers").rglob("*.json"):
+        try:
+            catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        layer_type = catalog.get("type") if isinstance(catalog, dict) else None
+        if (
+            isinstance(layer_type, str)
+            and layer_type
+            and not layer_type.startswith("fx.")
+            and layer_type != "ui.hud.widget"
+        ):
+            canonical_types.add(layer_type)
+    allowed_types = set(canonical_types)
+    for package_path in (ROOT / "docs" / "examples" / "layer_packages").rglob(
+        "layer.package.json"
+    ):
+        try:
+            package = json.loads(package_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        asset = package.get("asset") if isinstance(package, dict) else None
+        layer_type = asset.get("type") if isinstance(asset, dict) else None
+        if isinstance(layer_type, str) and layer_type:
+            allowed_types.add(layer_type)
+    unexpected_registrations = sorted(registered_types - allowed_types)
+    if unexpected_registrations:
+        errors.append(
+            "registered types must be canonical catalog or opt-in package types: "
+            + ", ".join(unexpected_registrations)
+        )
+    missing_canonical_registrations = sorted(canonical_types - registered_types)
+    if missing_canonical_registrations:
+        errors.append(
+            "canonical runtime types must remain registered: "
+            + ", ".join(missing_canonical_registrations)
+        )
+
+    concrete_classes = set(
+        re.findall(
+            r"std::make_unique<([^>]+)>",
+            builtin_source + "\n" + signal_registration_source,
+        )
+    )
+    leaked_classes = sorted(
+        class_name
+        for class_name in concrete_classes
+        if class_name != "TextLayer" and re.search(
+            rf"\b{re.escape(class_name)}\b",
+            app_source + "\n" + app_header,
+        )
+    )
+    if leaked_classes:
+        errors.append(
+            "ofApp must not include or reference registration-only concrete elements: "
+            + ", ".join(leaked_classes)
+        )
+    runtime_project_lower = runtime_project.lower()
+    for registration_unit in ("builtinelements.cpp", "signalbloomregistration.cpp"):
+        if registration_unit in runtime_project_lower:
+            errors.append(
+                "RuntimeCore must exclude host registration unit "
+                + registration_unit
+            )
     if '#include "../docs/examples/artist_sdk/SignalBloomLayer.cpp"' in bench_source:
         errors.append("bench must link the compile-contract library instead of including .cpp")
     if '#include "../synaptome/src/visuals/LayerFactory.cpp"' in bench_source:

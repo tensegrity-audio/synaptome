@@ -290,7 +290,13 @@ def build_manifest(
 ) -> dict[str, Any]:
     of_app = APP_ROOT / "src" / "ofApp.cpp"
     builtin_elements = APP_ROOT / "src" / "runtime" / "BuiltinElements.cpp"
-    factory_types = parse_factory_types(of_app, builtin_elements)
+    signal_bloom_registration = (
+        APP_ROOT / "src" / "runtime" / "SignalBloomRegistration.cpp"
+    )
+    factory_types = parse_factory_types(
+        builtin_elements,
+        signal_bloom_registration,
+    )
     layer_templates, explicit_parameters = parse_layer_templates(factory_types)
 
     parameters: dict[str, dict[str, Any]] = {}
@@ -472,6 +478,7 @@ def build_manifest(
         "sources": [
             "synaptome/src/ofApp.cpp",
             "synaptome/src/runtime/BuiltinElements.cpp",
+            "synaptome/src/runtime/SignalBloomRegistration.cpp",
             "synaptome/src/visuals/**/*.cpp",
             "synaptome/bin/data/layers/**/*.json",
         ],

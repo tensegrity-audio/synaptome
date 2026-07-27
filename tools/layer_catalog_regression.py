@@ -37,8 +37,8 @@ def load_json(path: Path) -> Any:
 
 def parse_factory_types() -> dict[str, str]:
     sources = (
-        APP_ROOT / "src" / "ofApp.cpp",
         APP_ROOT / "src" / "runtime" / "BuiltinElements.cpp",
+        APP_ROOT / "src" / "runtime" / "SignalBloomRegistration.cpp",
     )
     text = "\n".join(
         source.read_text(encoding="utf-8", errors="replace")
@@ -196,8 +196,8 @@ def build_catalog(
         "sources": [
             rel(root),
             "synaptome/src/visuals/LayerLibrary.cpp",
-            "synaptome/src/ofApp.cpp",
             "synaptome/src/runtime/BuiltinElements.cpp",
+            "synaptome/src/runtime/SignalBloomRegistration.cpp",
         ],
         "counts": {
             "entries": len(entries),

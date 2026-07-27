@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 VISUALS = ROOT / "synaptome/src/visuals"
 CATALOG = ROOT / "synaptome/bin/data/layers/generative"
 PROJECT = ROOT / "synaptome/Synaptome.vcxproj"
-FACTORY = ROOT / "synaptome/src/ofApp.cpp"
+FACTORY = ROOT / "synaptome/src/runtime/BuiltinElements.cpp"
 
 
 @dataclass(frozen=True)

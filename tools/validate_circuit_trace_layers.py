@@ -13,7 +13,7 @@ HEADER = ROOT / "synaptome/src/visuals/CircuitTraceLayer.h"
 SOURCE = ROOT / "synaptome/src/visuals/CircuitTraceLayer.cpp"
 MOTION = ROOT / "synaptome/src/visuals/EightDirectionMotion.h"
 PROJECT = ROOT / "synaptome/Synaptome.vcxproj"
-APP = ROOT / "synaptome/src/ofApp.cpp"
+REGISTRATION = ROOT / "synaptome/src/runtime/BuiltinElements.cpp"
 CATALOG = ROOT / "synaptome/bin/data/layers"
 ASSETS = {
     "generative.circuitSlime": "circuitSlime",
@@ -60,7 +60,7 @@ def catalogs() -> tuple[dict[str, tuple[Path, dict[str, Any]]], list[str]]:
 
 def validate() -> list[str]:
     errors: list[str] = []
-    for path in (HEADER, SOURCE, MOTION, PROJECT, APP):
+    for path in (HEADER, SOURCE, MOTION, PROJECT, REGISTRATION):
         if not path.exists():
             errors.append(f"missing required file: {relative(path)}")
     if errors:
@@ -69,7 +69,7 @@ def validate() -> list[str]:
     source = SOURCE.read_text(encoding="utf-8")
     motion = MOTION.read_text(encoding="utf-8")
     project = PROJECT.read_text(encoding="utf-8")
-    app = APP.read_text(encoding="utf-8")
+    registration = REGISTRATION.read_text(encoding="utf-8")
 
     if "class CircuitTraceLayer : public Layer" not in header:
         errors.append("CircuitTraceLayer must be a modular Layer subclass")
@@ -186,9 +186,9 @@ def validate() -> list[str]:
     ):
         if entry not in project:
             errors.append(f"Synaptome.vcxproj missing {entry}")
-    if 'registerType("circuitTrace"' not in app:
+    if 'registerType("circuitTrace"' not in registration:
         errors.append("LayerFactory must register circuitTrace")
-    if "std::make_unique<CircuitTraceLayer>" not in app:
+    if "std::make_unique<CircuitTraceLayer>" not in registration:
         errors.append("circuitTrace registration must construct CircuitTraceLayer")
     return errors
 

@@ -11,6 +11,7 @@
   "sources": [
     "synaptome/src/ofApp.cpp",
     "synaptome/src/runtime/BuiltinElements.cpp",
+    "synaptome/src/runtime/SignalBloomRegistration.cpp",
     "synaptome/src/visuals/**/*.cpp",
     "synaptome/bin/data/layers/**/*.json",
     "docs/examples/layer_packages",
@@ -34,7 +35,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1845
+        "line": 1813
       }
     },
     {
@@ -45,7 +46,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1876
+        "line": 1844
       }
     },
     {
@@ -56,7 +57,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1882
+        "line": 1850
       }
     },
     {
@@ -67,7 +68,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1888
+        "line": 1856
       }
     },
     {
@@ -78,7 +79,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1900
+        "line": 1868
       }
     },
     {
@@ -89,7 +90,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1912
+        "line": 1880
       }
     },
     {
@@ -100,7 +101,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1906
+        "line": 1874
       }
     },
     {
@@ -111,7 +112,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1894
+        "line": 1862
       }
     },
     {
@@ -1333,7 +1334,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1844
+        "line": 1812
       }
     },
     {
@@ -21250,7 +21251,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1843
+        "line": 1811
       }
     },
     {
@@ -21261,7 +21262,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 2110
+        "line": 2078
       }
     },
     {
@@ -21272,7 +21273,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 2108
+        "line": 2076
       }
     },
     {
@@ -21283,7 +21284,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 2112
+        "line": 2080
       }
     },
     {
@@ -21294,7 +21295,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 2111
+        "line": 2079
       }
     },
     {
@@ -21305,7 +21306,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 2109
+        "line": 2077
       }
     },
     {
@@ -21512,7 +21513,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1940
+        "line": 1908
       }
     },
     {
@@ -21523,7 +21524,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1946
+        "line": 1914
       }
     },
     {
@@ -21534,7 +21535,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 2001
+        "line": 1969
       }
     },
     {
@@ -21545,7 +21546,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1995
+        "line": 1963
       }
     },
     {
@@ -21556,7 +21557,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1989
+        "line": 1957
       }
     },
     {
@@ -21567,7 +21568,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1922
+        "line": 1890
       }
     },
     {
@@ -21578,7 +21579,7 @@
       "units": "px",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1979
+        "line": 1947
       }
     },
     {
@@ -21589,7 +21590,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1952
+        "line": 1920
       }
     },
     {
@@ -21600,7 +21601,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1959
+        "line": 1927
       }
     },
     {
@@ -21611,7 +21612,7 @@
       "units": "px",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1969
+        "line": 1937
       }
     },
     {
@@ -21622,7 +21623,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1928
+        "line": 1896
       }
     },
     {
@@ -21633,7 +21634,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1934
+        "line": 1902
       }
     },
     {
@@ -21916,7 +21917,7 @@
       "units": "Hz",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 2019
+        "line": 1987
       }
     },
     {
@@ -21927,7 +21928,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 2017
+        "line": 1985
       }
     },
     {
@@ -21938,7 +21939,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 2015
+        "line": 1983
       }
     },
     {
@@ -21949,7 +21950,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 2018
+        "line": 1986
       }
     },
     {
@@ -21960,7 +21961,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 2020
+        "line": 1988
       }
     },
     {
@@ -21971,7 +21972,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 2016
+        "line": 1984
       }
     },
     {
@@ -21982,7 +21983,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 2021
+        "line": 1989
       }
     },
     {
@@ -21993,7 +21994,7 @@
       "units": "bpm",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1842
+        "line": 1810
       }
     },
     {
@@ -22004,7 +22005,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1848
+        "line": 1816
       }
     },
     {
@@ -22015,7 +22016,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1854
+        "line": 1822
       }
     },
     {
@@ -22026,7 +22027,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1847
+        "line": 1815
       }
     },
     {
@@ -22037,7 +22038,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1860
+        "line": 1828
       }
     },
     {
@@ -22048,7 +22049,7 @@
       "units": "",
       "source": {
         "path": "synaptome/src/ofApp.cpp",
-        "line": 1866
+        "line": 1834
       }
     }
   ],

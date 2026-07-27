@@ -31,7 +31,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="$(SynaptomeTestRoot)\layer_package_bench_main.cpp" />
-    <ClCompile Include="$(SynaptomeAppRoot)\src\runtime\BuiltinElements.cpp" />
+    <ClCompile Include="$(SynaptomeAppRoot)\src\runtime\SignalBloomRegistration.cpp" />
     <ClCompile Include="$(SynaptomeAppRoot)\src\visuals\LayerFactory.cpp" />
   </ItemGroup>
   <ItemGroup>
