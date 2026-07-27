@@ -1,5 +1,7 @@
 #pragma once
 
+#include <synaptome/element/Parameter.h>
+
 #include "ofMain.h"
 #include "ofJson.h"
 #include <string>
@@ -19,6 +21,8 @@ public:
         std::string registryPrefix;
         float opacity = 1.0f;
         ofJson config;
+        std::size_t parameterCount = 0;
+        std::vector<std::string> parameterGroups;
         struct ModeInfo {
             std::string id;
             std::string label;
@@ -47,6 +51,9 @@ public:
     // Loads only explicitly enabled, source-registered package catalog entries.
     // A missing/disabled activation file is a successful no-op.
     bool loadOptInPackages(const std::string& activationPath);
+    void applyElementParameterDeclarations(
+        const std::vector<
+            synaptome::element::ElementTypeContract>& contracts);
     // Resolves a package-global preset selection for a future layer
     // instantiation. The catalog entry and any current layer remain unchanged.
     bool configForPackagePreset(const std::string& assetId,

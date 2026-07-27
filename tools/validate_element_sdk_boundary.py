@@ -588,6 +588,17 @@ def main() -> int:
             builtin_source + "\n" + signal_registration_source,
         )
     )
+    registered_types.update(
+        re.findall(
+            r'registerBuiltin\(\s*ElementDescriptor\s*\{\s*"([^"]+)"',
+            builtin_source,
+        )
+    )
+    if (
+        "elementTypes.registerType(" in signal_registration_source
+        and "signalBloomTypeContract()" in signal_registration_source
+    ):
+        registered_types.add("example.signalBloom")
     canonical_types: set[str] = set()
     for catalog_path in (APP / "bin" / "data" / "layers").rglob("*.json"):
         try:

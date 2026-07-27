@@ -1920,6 +1920,17 @@ void ofApp::setup() {
             << localPackageActivationPath_;
     }
     layerLibrary.loadOptInPackages(packageActivationPath_);
+    {
+        std::vector<
+            synaptome::element::ElementTypeContract>
+            elementContracts;
+        for (const auto& record :
+             elementTypes_.typeContracts()) {
+            elementContracts.push_back(record.contract);
+        }
+        layerLibrary.applyElementParameterDeclarations(
+            elementContracts);
+    }
     packagePresetSelections_.clear();
     for (const auto& entry : layerLibrary.entries()) {
         const auto activation =

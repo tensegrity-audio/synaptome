@@ -457,6 +457,83 @@ public:
     void draw(const LayerDrawParams&) override {}
 };
 
+enum class LegacyAdapterMode {
+    Valid,
+    Missing,
+    Undeclared,
+    WrongKind,
+};
+
+class LegacyAdapterElement final : public Layer {
+public:
+    explicit LegacyAdapterElement(
+        LegacyAdapterMode mode = LegacyAdapterMode::Valid)
+        : mode_(mode) {}
+
+    void configure(const ofJson& config) override {
+        if (!config.contains("defaults") ||
+            !config["defaults"].is_object()) {
+            return;
+        }
+        const auto& defaults = config["defaults"];
+        amount_ = defaults.value("amount", amount_);
+        gate_ = defaults.value("gate", gate_);
+        name_ = defaults.value("name", name_);
+    }
+
+    void setup(ParameterRegistry& registry) override {
+        ParameterRegistry::Descriptor legacy;
+        legacy.group = "Legacy Metadata Must Be Ignored";
+        legacy.label = "Legacy Amount";
+        legacy.description = "This metadata is not authoritative.";
+        legacy.range.min = -100.0f;
+        legacy.range.max = 100.0f;
+        registry.addFloat(
+            registryPrefix() + ".amount",
+            &amount_,
+            amount_,
+            legacy);
+
+        if (mode_ == LegacyAdapterMode::WrongKind) {
+            registry.addFloat(
+                registryPrefix() + ".gate",
+                &extra_,
+                extra_,
+                legacy);
+        } else {
+            registry.addBool(
+                registryPrefix() + ".gate",
+                &gate_,
+                gate_,
+                legacy);
+        }
+        if (mode_ != LegacyAdapterMode::Missing) {
+            registry.addString(
+                registryPrefix() + ".name",
+                &name_,
+                name_,
+                legacy);
+        }
+        if (mode_ == LegacyAdapterMode::Undeclared) {
+            registry.addFloat(
+                registryPrefix() + ".unknown",
+                &extra_,
+                extra_,
+                legacy);
+        }
+    }
+
+    void update(const LayerUpdateParams&) override {}
+    void draw(const LayerDrawParams&) override {}
+
+private:
+    LegacyAdapterMode mode_ = LegacyAdapterMode::Valid;
+    float amount_ = 9.0f;
+    bool gate_ = false;
+    std::string name_ = "member drift";
+    float extra_ = 0.0f;
+};
+
 struct SlotReplacementLifetimeState {
     int constructionCount = 0;
     std::array<bool, 12> destroyed{};
@@ -3078,6 +3155,125 @@ void RunDeclaredParameterBindingScenario() {
         empty && empty.stage == "ready",
         "explicit declared-empty binding did not prepare");
 }
+
+void RunLegacyParameterAdapterScenario() {
+    LayerFactory factory;
+    const auto registerMode = [&](
+        const std::string& typeId,
+        LegacyAdapterMode mode) {
+        factory.registerType(
+            bindingParameterContract(typeId),
+            [mode] {
+                return std::make_unique<LegacyAdapterElement>(mode);
+            },
+            LayerFactory::ParameterBindingMode::LegacySetupAdapter);
+    };
+    registerMode(
+        "tests.runtime.adapter.valid",
+        LegacyAdapterMode::Valid);
+    registerMode(
+        "tests.runtime.adapter.missing",
+        LegacyAdapterMode::Missing);
+    registerMode(
+        "tests.runtime.adapter.undeclared",
+        LegacyAdapterMode::Undeclared);
+    registerMode(
+        "tests.runtime.adapter.wrongKind",
+        LegacyAdapterMode::WrongKind);
+
+    ParameterRegistry parameters;
+    synaptome::runtime::Runtime runtime(factory, parameters);
+    synaptome::runtime::Runtime::ElementRequest request;
+    request.typeId = "tests.runtime.adapter.valid";
+    request.definitionId = "tests.definition.adapter";
+    request.instanceId = "tests.instance.adapter";
+    request.registryPrefix = "console.layer1";
+    request.config["defaults"] = {
+        {"amount", 0.75f},
+        {"gate", false},
+        {"name", "configured"},
+    };
+
+    auto prepared = runtime.prepareElement(request);
+    require(
+        prepared && prepared.stage == "ready",
+        "legacy adapter did not prepare a valid element");
+    require(
+        runtime.adoptPreparedElement(
+            0,
+            std::move(prepared),
+            assignmentFor(request, "Legacy Adapter")),
+        "legacy adapter element did not adopt");
+
+    auto* amount = parameters.findFloat("console.layer1.amount");
+    auto* gate = parameters.findBool("console.layer1.gate");
+    auto* name = parameters.findString("console.layer1.name");
+    require(
+        amount &&
+            amount->meta.label == "Amount" &&
+            amount->meta.group == "Controls" &&
+            amount->meta.description == "Declared amount metadata." &&
+            amount->meta.range.min == 0.0f &&
+            amount->meta.range.max == 1.0f &&
+            amount->defaultValue == 0.5f &&
+            amount->baseValue == 0.75f &&
+            amount->value &&
+            *amount->value == 0.75f &&
+            gate &&
+            gate->meta.label == "Gate" &&
+            !gate->baseValue &&
+            name &&
+            name->meta.label == "Name" &&
+            name->baseValue == "configured",
+        "legacy setup metadata overrode declarations or configured values");
+
+    parameters.setFloatBase("console.layer1.amount", 0.25f, true);
+    parameters.setBoolBase("console.layer1.gate", true, true);
+    parameters.setStringBase("console.layer1.name", "operator", true);
+    require(
+        *amount->value == 0.25f &&
+            *gate->value &&
+            *name->value == "operator",
+        "legacy adapter did not retain live storage bindings");
+    require(
+        runtime.clearCompositionLayer(0) &&
+            parameters.findFloat("console.layer1.amount") == nullptr,
+        "legacy adapter cleanup leaked parameters");
+
+    const auto requireAdapterFailure = [&](
+        const std::string& typeId,
+        const std::string& errorFragment) {
+        request.typeId = typeId;
+        auto failed = runtime.prepareElement(request);
+        require(
+            !failed &&
+                failed.errorCode ==
+                    synaptome::runtime::Runtime::ElementErrorCode::
+                        ContractViolation &&
+                failed.stage == "setup" &&
+                failed.error.find(errorFragment) != std::string::npos &&
+                parameters.findFloat("console.layer1.amount") == nullptr,
+            "legacy adapter failure leaked state or lost diagnostics: " +
+                typeId);
+
+        request.typeId = "tests.runtime.adapter.valid";
+        auto reusable = runtime.prepareElement(request);
+        require(
+            static_cast<bool>(reusable),
+            "legacy adapter failure did not release its prefix: " +
+                typeId);
+    };
+
+    requireAdapterFailure(
+        "tests.runtime.adapter.missing",
+        "did not bind declared parameter");
+    requireAdapterFailure(
+        "tests.runtime.adapter.undeclared",
+        "undeclared parameter binding");
+    requireAdapterFailure(
+        "tests.runtime.adapter.wrongKind",
+        "wrong kind");
+}
 }
 
 int main() {
@@ -3089,6 +3285,7 @@ int main() {
         RunCompositionActionScenario();
         RunCompositionTelemetryScenario();
         RunDeclaredParameterBindingScenario();
+        RunLegacyParameterAdapterScenario();
 
         LayerFactory factory;
         factory.registerType(visualDescriptor("tests.runtime.good"), [] {

@@ -50,10 +50,13 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="$(SynaptomeAppRoot)\src\runtime\BuiltinElementParameterContracts.cpp" />
     <ClCompile Include="$(SynaptomeAppRoot)\src\runtime\Runtime.cpp" />
     <ClCompile Include="$(SynaptomeAppRoot)\src\visuals\LayerFactory.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="$(SynaptomeAppRoot)\src\runtime\BuiltinElementParameterContracts.generated.inc" />
+    <ClInclude Include="$(SynaptomeAppRoot)\src\runtime\BuiltinElementParameterContracts.h" />
     <ClInclude Include="$(SynaptomeAppRoot)\src\runtime\CompositionLayer.h" />
     <ClInclude Include="$(SynaptomeAppRoot)\src\runtime\CompositionTypes.h" />
     <ClInclude Include="$(SynaptomeAppRoot)\src\runtime\ElementActionTable.h" />

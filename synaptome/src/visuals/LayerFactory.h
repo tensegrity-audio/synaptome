@@ -20,9 +20,16 @@ public:
         Declared,
     };
 
+    enum class ParameterBindingMode {
+        Explicit,
+        LegacySetupAdapter,
+    };
+
     struct ElementTypeContractRecord {
         ParameterDeclarationState state =
             ParameterDeclarationState::LegacySetupDiscovery;
+        ParameterBindingMode bindingMode =
+            ParameterBindingMode::LegacySetupAdapter;
         synaptome::element::ElementTypeContract contract;
     };
 
@@ -37,7 +44,9 @@ public:
         Creator creator);
     void registerType(
         synaptome::element::ElementTypeContract contract,
-        Creator creator);
+        Creator creator,
+        ParameterBindingMode bindingMode =
+            ParameterBindingMode::Explicit);
     bool contains(std::string_view typeId) const noexcept;
     const synaptome::element::ElementDescriptor* descriptor(
         std::string_view typeId) const noexcept;

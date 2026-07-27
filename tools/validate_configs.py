@@ -607,6 +607,25 @@ CONTRACT_ENTRIES: tuple[ContractEntry, ...] = (
         public_app=True,
     ),
     ContractEntry(
+        name="Built-in element parameter declarations",
+        status="validated",
+        sources=(
+            Path("docs/contracts/builtin_element_parameters.json"),
+            Path("docs/contracts/element_parameter_catalog.json"),
+            Path("docs/element_parameter_reference.md"),
+            Path("synaptome/src/runtime/BuiltinElementParameterContracts.generated.inc"),
+            Path("tools/gen_builtin_element_contracts.py"),
+        ),
+        validator_command="python tools\\gen_builtin_element_contracts.py --check",
+        fixtures=(
+            Path("docs/contracts/builtin_element_parameters.json"),
+            Path("docs/contracts/element_parameter_catalog.json"),
+        ),
+        notes="Locks all built-in type-level parameter IDs, kinds, groups, metadata, defaults, option sources, compiled runtime declarations, and generated documentation to one reviewed snapshot.",
+        check_command=(sys.executable, "tools/gen_builtin_element_contracts.py", "--check"),
+        public_app=True,
+    ),
+    ContractEntry(
         name="Parameter ID manifest",
         status="validated",
         sources=(

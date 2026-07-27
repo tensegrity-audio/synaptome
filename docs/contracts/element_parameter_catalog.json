@@ -1,0 +1,6733 @@
+{
+  "schemaVersion": 1,
+  "status": "generated",
+  "generator": "tools/gen_builtin_element_contracts.py",
+  "source": "docs/contracts/builtin_element_parameters.json",
+  "counts": {
+    "types": 23,
+    "groups": 39,
+    "parameters": 786
+  },
+  "types": [
+    {
+      "typeId": "agentField",
+      "groupCount": 4,
+      "parameterCount": 28,
+      "groups": [
+        {
+          "description": "",
+          "id": "generative",
+          "label": "Generative"
+        },
+        {
+          "description": "",
+          "id": "trailLifecycle",
+          "label": "Trail Lifecycle"
+        },
+        {
+          "description": "",
+          "id": "trailBehavior",
+          "label": "Trail Behavior"
+        },
+        {
+          "description": "",
+          "id": "trailColor",
+          "label": "Trail Color"
+        }
+      ],
+      "parameters": [
+        {
+          "id": "speed",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Time: Field Speed",
+          "units": "",
+          "description": "",
+          "quickAccessOrder": 10
+        },
+        {
+          "id": "bpmMultiplier",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Time: BPM Mult",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "alpha",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Visibility: Field Opacity",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "seed",
+          "kind": "float",
+          "groupId": "trailLifecycle",
+          "label": "Seed: Deterministic Seed",
+          "units": "",
+          "description": "The same model, seed, and parameters reproduce the same initial field"
+        },
+        {
+          "id": "autoReseedEveryBeats",
+          "kind": "float",
+          "groupId": "trailLifecycle",
+          "label": "Time: Auto Reseed Beats",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "mode",
+          "kind": "float",
+          "groupId": "trailBehavior",
+          "label": "Action: Behavior Mode",
+          "units": "",
+          "description": "0=Balanced  1=Explore  2=Exploit",
+          "quickAccessOrder": 20
+        },
+        {
+          "id": "agentCount",
+          "kind": "float",
+          "groupId": "trailBehavior",
+          "label": "Count: Agents",
+          "units": "",
+          "description": "0=Balanced  1=Explore  2=Exploit"
+        },
+        {
+          "id": "stepSize",
+          "kind": "float",
+          "groupId": "trailBehavior",
+          "label": "Scale: Step Size",
+          "units": "",
+          "description": "0=Balanced  1=Explore  2=Exploit"
+        },
+        {
+          "id": "turnRate",
+          "kind": "float",
+          "groupId": "trailBehavior",
+          "label": "Motion: Turn Rate",
+          "units": "",
+          "description": "0=Balanced  1=Explore  2=Exploit"
+        },
+        {
+          "id": "sensorAngle",
+          "kind": "float",
+          "groupId": "trailBehavior",
+          "label": "Scale: Sensor Angle",
+          "units": "",
+          "description": "0=Balanced  1=Explore  2=Exploit"
+        },
+        {
+          "id": "sensorDistance",
+          "kind": "float",
+          "groupId": "trailBehavior",
+          "label": "Scale: Sensor Distance",
+          "units": "",
+          "description": "0=Balanced  1=Explore  2=Exploit"
+        },
+        {
+          "id": "deposit",
+          "kind": "float",
+          "groupId": "trailBehavior",
+          "label": "Force: Trail Deposit",
+          "units": "",
+          "description": "0=Balanced  1=Explore  2=Exploit"
+        },
+        {
+          "id": "decay",
+          "kind": "float",
+          "groupId": "trailBehavior",
+          "label": "Time: Trail Decay",
+          "units": "",
+          "description": "0=Balanced  1=Explore  2=Exploit"
+        },
+        {
+          "id": "diffuse",
+          "kind": "float",
+          "groupId": "trailBehavior",
+          "label": "Motion: Trail Diffusion",
+          "units": "",
+          "description": "0=Balanced  1=Explore  2=Exploit"
+        },
+        {
+          "id": "trailBoost",
+          "kind": "float",
+          "groupId": "trailBehavior",
+          "label": "Glow: Trail Boost",
+          "units": "",
+          "description": "0=Balanced  1=Explore  2=Exploit"
+        },
+        {
+          "id": "resetCoverage",
+          "kind": "float",
+          "groupId": "trailBehavior",
+          "label": "Scale: Reset Coverage",
+          "units": "",
+          "description": "Reset once this fraction of the field has grown in"
+        },
+        {
+          "id": "backgroundAlpha",
+          "kind": "float",
+          "groupId": "trailBehavior",
+          "label": "Visibility: Background Opacity",
+          "units": "",
+          "description": "Reset once this fraction of the field has grown in"
+        },
+        {
+          "id": "trailAlpha",
+          "kind": "float",
+          "groupId": "trailBehavior",
+          "label": "Visibility: Trail Opacity",
+          "units": "",
+          "description": "Reset once this fraction of the field has grown in"
+        },
+        {
+          "id": "bgR",
+          "kind": "float",
+          "groupId": "trailColor",
+          "label": "Color: Background R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bgG",
+          "kind": "float",
+          "groupId": "trailColor",
+          "label": "Color: Background G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bgB",
+          "kind": "float",
+          "groupId": "trailColor",
+          "label": "Color: Background B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "trailR",
+          "kind": "float",
+          "groupId": "trailColor",
+          "label": "Color: Trail R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "trailG",
+          "kind": "float",
+          "groupId": "trailColor",
+          "label": "Color: Trail G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "trailB",
+          "kind": "float",
+          "groupId": "trailColor",
+          "label": "Color: Trail B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "visible",
+          "kind": "bool",
+          "groupId": "generative",
+          "label": "Action: Visible",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bpmSync",
+          "kind": "bool",
+          "groupId": "generative",
+          "label": "Action: BPM Sync",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "autoReseed",
+          "kind": "bool",
+          "groupId": "trailLifecycle",
+          "label": "Action: Auto Reseed",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "reseed",
+          "kind": "bool",
+          "groupId": "trailLifecycle",
+          "label": "Action: Reseed",
+          "units": "",
+          "description": ""
+        }
+      ]
+    },
+    {
+      "typeId": "arcticAuroraScene",
+      "groupCount": 1,
+      "parameterCount": 64,
+      "groups": [
+        {
+          "description": "",
+          "id": "group3DArcticAurora",
+          "label": "3D Arctic Aurora"
+        }
+      ],
+      "parameters": [
+        {
+          "id": "alpha",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Visibility: Layer: Opacity",
+          "units": "normalized",
+          "description": ""
+        },
+        {
+          "id": "sceneScale",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Scale: Scene: Scale",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "sceneOffsetY",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Count: Scene: Offset Y",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "sceneOffsetZ",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Count: Scene: Offset Z",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "waterWidth",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Water: Diameter",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "waterNearZ",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Water: Near Z",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "waterFarZ",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Water: Far Z",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "waterLevel",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Water: Level",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "waterWaveIdle",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Water: Idle Wave",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "waterHighlight",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Water: Highlight",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "waterReflection",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Water: Reflection",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "waterHorizonFog",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Water: Horizon Fog",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "waterAlpha",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Water: Alpha",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "waterBrightness",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Water: Brightness",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "waterTranslucency",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Water: Translucency",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "waterCurvature",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Water: Curvature",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "waterHemisphereDepth",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Water: Hemisphere Depth",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "waterNoiseAmount",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Water: Noise Amount",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "waterNoiseScale",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Water: Noise Scale",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "waterRippleAmount",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Water: Ripple Amount",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "waterRippleRadius",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Water: Ripple Radius",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "waterAuroraLight",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Water: Aurora Light",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "icebergCount",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Icebergs: Count",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "icebergScale",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Icebergs: Scale",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "icebergSpread",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Icebergs: Spread",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "icebergRimLight",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Icebergs: Edge Lines",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "icebergBreakup",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Icebergs: Breakup",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "icebergBreakupSpeed",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Icebergs: Breakup Speed",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "auroraWidth",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Scale: Aurora: Arc Length",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "auroraBaseY",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Aurora: Base Y",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "auroraHeight",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Scale: Aurora: Height",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "auroraDepthNear",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Aurora: Inner Radius",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "auroraDepthFar",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Aurora: Outer Radius",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "auroraGlow",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Aurora: Glow",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "auroraBloom",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Aurora: Bloom",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "auroraFoldStrength",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Force: Aurora: Fold Strength",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "auroraRayDensity",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Aurora: Ray Density",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "auroraCurtainCount",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Count: Aurora: Curtain Count",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "audioAmount",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Audio: Signal: Amount",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "audioSmoothing",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Audio: Signal: Smoothing",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "seed",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Seed: Scene: Seed",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "skyTopR",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Sky: Top Color R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "skyTopG",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Sky: Top Color G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "skyTopB",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Sky: Top Color B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "skyHorizonR",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Sky: Horizon Color R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "skyHorizonG",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Sky: Horizon Color G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "skyHorizonB",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Sky: Horizon Color B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "waterR",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Water: Color R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "waterG",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Water: Color G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "waterB",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Water: Color B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "auroraR",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Aurora: Color R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "auroraG",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Aurora: Color G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "auroraB",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Aurora: Color B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "aurora2R",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Aurora: Secondary Color R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "aurora2G",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Aurora: Secondary Color G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "aurora2B",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Aurora: Secondary Color B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "iceRimR",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Ice: Rim Color R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "iceRimG",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Ice: Rim Color G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "iceRimB",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Ice: Rim Color B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "iceAccentR",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Ice: Accent Color R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "iceAccentG",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Ice: Accent Color G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "iceAccentB",
+          "kind": "float",
+          "groupId": "group3DArcticAurora",
+          "label": "Color: Ice: Accent Color B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "visible",
+          "kind": "bool",
+          "groupId": "group3DArcticAurora",
+          "label": "Visibility: Layer: Visible",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "reseed",
+          "kind": "bool",
+          "groupId": "group3DArcticAurora",
+          "label": "Action: Reseed",
+          "units": "",
+          "description": ""
+        }
+      ]
+    },
+    {
+      "typeId": "audioWaveform",
+      "groupCount": 1,
+      "parameterCount": 16,
+      "groups": [
+        {
+          "description": "",
+          "id": "audioWaveform",
+          "label": "Audio Waveform"
+        }
+      ],
+      "parameters": [
+        {
+          "id": "gain",
+          "kind": "float",
+          "groupId": "audioWaveform",
+          "label": "Audio: Waveform Gain",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "verticalScale",
+          "kind": "float",
+          "groupId": "audioWaveform",
+          "label": "Scale: Waveform",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "lineThickness",
+          "kind": "float",
+          "groupId": "audioWaveform",
+          "label": "Scale: Waveform Thickness",
+          "units": "px",
+          "description": ""
+        },
+        {
+          "id": "alpha",
+          "kind": "float",
+          "groupId": "audioWaveform",
+          "label": "Alpha: Waveform",
+          "units": "normalized",
+          "description": ""
+        },
+        {
+          "id": "smoothing",
+          "kind": "float",
+          "groupId": "audioWaveform",
+          "label": "Audio: Waveform Smoothing",
+          "units": "normalized",
+          "description": ""
+        },
+        {
+          "id": "bandHeight",
+          "kind": "float",
+          "groupId": "audioWaveform",
+          "label": "Scale: Band Height",
+          "units": "normalized",
+          "description": ""
+        },
+        {
+          "id": "bandAlpha",
+          "kind": "float",
+          "groupId": "audioWaveform",
+          "label": "Alpha: Bands",
+          "units": "normalized",
+          "description": ""
+        },
+        {
+          "id": "bgAlpha",
+          "kind": "float",
+          "groupId": "audioWaveform",
+          "label": "Alpha: Background",
+          "units": "normalized",
+          "description": ""
+        },
+        {
+          "id": "colorR",
+          "kind": "float",
+          "groupId": "audioWaveform",
+          "label": "Color: Waveform R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "colorG",
+          "kind": "float",
+          "groupId": "audioWaveform",
+          "label": "Color: Waveform G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "colorB",
+          "kind": "float",
+          "groupId": "audioWaveform",
+          "label": "Color: Waveform B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bgColorR",
+          "kind": "float",
+          "groupId": "audioWaveform",
+          "label": "Color: Background R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bgColorG",
+          "kind": "float",
+          "groupId": "audioWaveform",
+          "label": "Color: Background G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bgColorB",
+          "kind": "float",
+          "groupId": "audioWaveform",
+          "label": "Color: Background B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "visible",
+          "kind": "bool",
+          "groupId": "audioWaveform",
+          "label": "Action: Visible",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "showBands",
+          "kind": "bool",
+          "groupId": "audioWaveform",
+          "label": "Action: Show Bands",
+          "units": "",
+          "description": ""
+        }
+      ]
+    },
+    {
+      "typeId": "circuitTrace",
+      "groupCount": 5,
+      "parameterCount": 30,
+      "groups": [
+        {
+          "description": "",
+          "id": "circuitMotion",
+          "label": "Circuit Motion"
+        },
+        {
+          "description": "",
+          "id": "circuitTrace",
+          "label": "Circuit Trace"
+        },
+        {
+          "description": "",
+          "id": "circuitGrowth",
+          "label": "Circuit Growth"
+        },
+        {
+          "description": "",
+          "id": "circuitAppearance",
+          "label": "Circuit Appearance"
+        },
+        {
+          "description": "",
+          "id": "circuitColor",
+          "label": "Circuit Color"
+        }
+      ],
+      "parameters": [
+        {
+          "id": "speed",
+          "kind": "float",
+          "groupId": "circuitMotion",
+          "label": "Time: Growth Speed",
+          "units": "",
+          "description": "",
+          "quickAccessOrder": 10
+        },
+        {
+          "id": "bpmMultiplier",
+          "kind": "float",
+          "groupId": "circuitMotion",
+          "label": "Time: BPM Multiplier",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "alpha",
+          "kind": "float",
+          "groupId": "circuitTrace",
+          "label": "Visibility: Layer Opacity",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "seed",
+          "kind": "float",
+          "groupId": "circuitGrowth",
+          "label": "Seed: Pattern: Deterministic Seed",
+          "units": "",
+          "description": "The same seed and parameters reproduce the same network"
+        },
+        {
+          "id": "autoReseedEveryBeats",
+          "kind": "float",
+          "groupId": "circuitGrowth",
+          "label": "Time: Auto Reseed Beats",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "behavior",
+          "kind": "float",
+          "groupId": "circuitGrowth",
+          "label": "Color: Choice: Growth Behavior",
+          "units": "",
+          "description": "0=Balanced  1=Explore  2=Exploit",
+          "quickAccessOrder": 20
+        },
+        {
+          "id": "agentCount",
+          "kind": "float",
+          "groupId": "circuitGrowth",
+          "label": "Count: Growth Tips",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "stepSize",
+          "kind": "float",
+          "groupId": "circuitMotion",
+          "label": "Scale: Grid Step",
+          "units": "",
+          "description": "Integer pixels along one of eight compass directions"
+        },
+        {
+          "id": "sensorDistance",
+          "kind": "float",
+          "groupId": "circuitMotion",
+          "label": "Scale: Sensor Reach",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "turnChance",
+          "kind": "float",
+          "groupId": "circuitMotion",
+          "label": "Motion: Corner Chance",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "branchChance",
+          "kind": "float",
+          "groupId": "circuitGrowth",
+          "label": "Growth: Branch Chance",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "deposit",
+          "kind": "float",
+          "groupId": "circuitGrowth",
+          "label": "Growth: Signal Deposit",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "decay",
+          "kind": "float",
+          "groupId": "circuitGrowth",
+          "label": "Time: Signal Decay",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "diffuse",
+          "kind": "float",
+          "groupId": "circuitGrowth",
+          "label": "Growth: Signal Diffusion",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "tracePersistence",
+          "kind": "float",
+          "groupId": "circuitAppearance",
+          "label": "Time: Copper Persistence",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "traceWidth",
+          "kind": "float",
+          "groupId": "circuitAppearance",
+          "label": "Scale: Trace Width",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "glow",
+          "kind": "float",
+          "groupId": "circuitAppearance",
+          "label": "Glow: Signal Halo",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "viaChance",
+          "kind": "float",
+          "groupId": "circuitAppearance",
+          "label": "Growth: Via Chance",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "backgroundAlpha",
+          "kind": "float",
+          "groupId": "circuitAppearance",
+          "label": "Visibility: Background Opacity",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "trailAlpha",
+          "kind": "float",
+          "groupId": "circuitAppearance",
+          "label": "Visibility: Trace Opacity",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bgR",
+          "kind": "float",
+          "groupId": "circuitColor",
+          "label": "Color: Background R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bgG",
+          "kind": "float",
+          "groupId": "circuitColor",
+          "label": "Color: Background G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bgB",
+          "kind": "float",
+          "groupId": "circuitColor",
+          "label": "Color: Background B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "traceR",
+          "kind": "float",
+          "groupId": "circuitColor",
+          "label": "Color: Trace R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "traceG",
+          "kind": "float",
+          "groupId": "circuitColor",
+          "label": "Color: Trace G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "traceB",
+          "kind": "float",
+          "groupId": "circuitColor",
+          "label": "Color: Trace B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "visible",
+          "kind": "bool",
+          "groupId": "circuitTrace",
+          "label": "Action: Visible",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bpmSync",
+          "kind": "bool",
+          "groupId": "circuitMotion",
+          "label": "Action: BPM Sync",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "reseed",
+          "kind": "bool",
+          "groupId": "circuitGrowth",
+          "label": "Action: Rebuild From Seed",
+          "units": "",
+          "description": "Momentary action; rebuilding does not change Seed"
+        },
+        {
+          "id": "autoReseed",
+          "kind": "bool",
+          "groupId": "circuitGrowth",
+          "label": "Action: Auto Reseed",
+          "units": "",
+          "description": ""
+        }
+      ]
+    },
+    {
+      "typeId": "cosmosFormation",
+      "groupCount": 1,
+      "parameterCount": 74,
+      "groups": [
+        {
+          "description": "",
+          "id": "cosmosFormation",
+          "label": "Cosmos Formation"
+        }
+      ],
+      "parameters": [
+        {
+          "id": "alpha",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Visibility: Layer: Opacity",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "particleCount",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Color: Stars: Count",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "clusterCount",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Seed: Web: Seed Count",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "radius",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Color: Cosmos: Radius",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "originRadius",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Color: Formation: Singularity Radius",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "expansionRate",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Color: Formation: Expansion Rate",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "expansionForce",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Force: Expansion: Force",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "formationAge",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Action: Formation: Age",
+          "units": "",
+          "description": "Normalized lifecycle: 0 is singular burst, 1 is mature cosmic web."
+        },
+        {
+          "id": "formationTime",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Time: Formation: Duration",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "evolutionSpeed",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Time: Formation: Evolution Speed",
+          "units": "",
+          "description": "Master time scale for web drift, field evolution, and matter transport."
+        },
+        {
+          "id": "gravity",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Color: Nodes: Gravity",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "gravityDelay",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Color: Formation: Gravity Delay",
+          "units": "",
+          "description": "Lifecycle position before web-node attraction becomes strong."
+        },
+        {
+          "id": "gravityEmergence",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Color: Formation: Gravity Emergence",
+          "units": "",
+          "description": "How quickly latent web nodes become real gravitational wells."
+        },
+        {
+          "id": "clusterSwirl",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Force: Nodes: Swirl",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "clusterSpread",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Scale: Web: Spread",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "clusterDrift",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Force: Web: Drift",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "clusterSoftness",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Scale: Nodes: Softness",
+          "units": "",
+          "description": "Higher values make web nodes broader and less point-like."
+        },
+        {
+          "id": "substructureAmount",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Scale: Clusters: Detail Amount",
+          "units": "",
+          "description": "How much deterministic child structure each large web node contributes."
+        },
+        {
+          "id": "substructureScale",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Scale: Clusters: Detail Scale",
+          "units": "",
+          "description": "How far child nuclei and axons spread around each parent node."
+        },
+        {
+          "id": "substructureGlow",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Color: Clusters: Detail Glow",
+          "units": "",
+          "description": "How strongly child cluster detail contributes to field glow."
+        },
+        {
+          "id": "shear",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Action: Web: Shear",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "voidPressure",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Force: Void: Pressure",
+          "units": "",
+          "description": "Residual expansion that keeps matter from collapsing into fixed points."
+        },
+        {
+          "id": "turbulence",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Color: Stars: Turbulence",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "coolingRate",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Color: Formation: Cooling Rate",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "fieldLuminosity",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Glow: Field: Luminosity",
+          "units": "",
+          "description": "How strongly dense compressed field regions emit visible glow."
+        },
+        {
+          "id": "glowPersistence",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Color: Field: Glow Persistence",
+          "units": "",
+          "description": "How long dense field glow and signal excitation linger."
+        },
+        {
+          "id": "filamentMemory",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Time: Axons: Memory",
+          "units": "",
+          "description": "How long activated filaments remain stable after matter and signal move through them."
+        },
+        {
+          "id": "matterSize",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Color: Stars: Size",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "matterGlow",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Color: Stars: Glow",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "trailAlpha",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Visibility: Trails: Alpha",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "trailThickness",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Scale: Trails: Thickness",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "haloAlpha",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Visibility: Field: Alpha",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "haloRadius",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Color: Nodes: Atmosphere Radius",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "shockwaveCount",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Count: Shockwave: Count",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "shockwaveAlpha",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Visibility: Shockwave: Alpha",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "shockwaveWidth",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Force: Shockwave: Width",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "shockwaveSpeed",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Force: Shockwave: Speed",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "pressureAmount",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Force: Shockwave: Force",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "audioAmount",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Audio: Signal: Amount",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "audioAccretion",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Audio: Formation: Accretion",
+          "units": "",
+          "description": "How much signal modulation contributes to long-term web-node and filament formation."
+        },
+        {
+          "id": "audioGlow",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Color: Field: Glow Lift",
+          "units": "",
+          "description": "How much signal modulation boosts field, node, and matter glow."
+        },
+        {
+          "id": "audioTwinkle",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Color: Stars: Twinkle",
+          "units": "",
+          "description": "How much signal modulation affects star twinkle."
+        },
+        {
+          "id": "bassExpansion",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Color: Expansion: Signal Amount",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "midsTurbulence",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Color: Stars: Turbulence Lift",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "highsSparkle",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Color: Stars: Sparkle",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "waveformWarp",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Audio: Field: Warp",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "peakBangThreshold",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Audio: Shockwave: Peak Threshold",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "peakImpulse",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Audio: Shockwave: Peak Impulse",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "beatImpulse",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Color: Shockwave: Beat Impulse",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "audioSmoothing",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Audio: Signal: Smoothing",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "seed",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Seed: Cosmos: Seed",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bgAlpha",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Color: Background: Alpha",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bgR",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Color: Background: Color R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bgG",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Color: Background: Color G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bgB",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Color: Background: Color B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "hotR",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Color: Stars: Hot Color R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "hotG",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Color: Stars: Hot Color G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "hotB",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Color: Stars: Hot Color B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "matterR",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Color: Stars: Color R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "matterG",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Color: Stars: Color G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "matterB",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Color: Stars: Color B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "coolR",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Color: Stars: Cool Color R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "coolG",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Color: Stars: Cool Color G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "coolB",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Color: Stars: Cool Color B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "clusterR",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Color: Nodes: Color R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "clusterG",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Color: Nodes: Color G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "clusterB",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Color: Nodes: Color B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "waveR",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Color: Shockwave: Color R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "waveG",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Color: Shockwave: Color G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "waveB",
+          "kind": "float",
+          "groupId": "cosmosFormation",
+          "label": "Color: Shockwave: Color B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "visible",
+          "kind": "bool",
+          "groupId": "cosmosFormation",
+          "label": "Visibility: Layer: Visible",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "autoAdvance",
+          "kind": "bool",
+          "groupId": "cosmosFormation",
+          "label": "Action: Auto Advance",
+          "units": "",
+          "description": "Advance the formation lifecycle automatically after each bang."
+        },
+        {
+          "id": "bang",
+          "kind": "bool",
+          "groupId": "cosmosFormation",
+          "label": "Action: Bang Trigger",
+          "units": "",
+          "description": "Collapse matter back to the singularity and launch a new expansion."
+        },
+        {
+          "id": "reseed",
+          "kind": "bool",
+          "groupId": "cosmosFormation",
+          "label": "Action: Reseed",
+          "units": "",
+          "description": "Respawn matter and clusters using the current seed."
+        }
+      ]
+    },
+    {
+      "typeId": "example.signalBloom",
+      "groupCount": 5,
+      "parameterCount": 18,
+      "groups": [
+        {
+          "description": "",
+          "id": "example",
+          "label": "Example"
+        },
+        {
+          "description": "",
+          "id": "exampleMotion",
+          "label": "Example Motion"
+        },
+        {
+          "description": "",
+          "id": "exampleTransform",
+          "label": "Example Transform"
+        },
+        {
+          "description": "",
+          "id": "exampleColor",
+          "label": "Example Color"
+        },
+        {
+          "description": "",
+          "id": "exampleModulation",
+          "label": "Example Modulation"
+        }
+      ],
+      "parameters": [
+        {
+          "id": "visible",
+          "kind": "bool",
+          "groupId": "example",
+          "label": "Visible",
+          "units": "",
+          "description": "Whether the layer contributes to the current slot."
+        },
+        {
+          "id": "speed",
+          "kind": "float",
+          "groupId": "exampleMotion",
+          "label": "Speed",
+          "units": "multiplier",
+          "description": "Local signal motion speed."
+        },
+        {
+          "id": "bpmSync",
+          "kind": "bool",
+          "groupId": "exampleMotion",
+          "label": "BPM Sync",
+          "units": "",
+          "description": "Whether local motion follows the global transport BPM."
+        },
+        {
+          "id": "bpmMultiplier",
+          "kind": "float",
+          "groupId": "exampleMotion",
+          "label": "BPM Multiplier",
+          "units": "multiplier",
+          "description": "Multiplier applied to global transport BPM when sync is enabled. Browser inspection resolves the app-owned provider to labeled multiplier choices.",
+          "optionSource": {
+            "id": "transport.bpmMultipliers",
+            "labelField": "label",
+            "valueField": "multiplier"
+          }
+        },
+        {
+          "id": "scale",
+          "kind": "float",
+          "groupId": "exampleTransform",
+          "label": "Size",
+          "units": "multiplier",
+          "description": "Layer-local visual scale."
+        },
+        {
+          "id": "rotationDeg",
+          "kind": "float",
+          "groupId": "exampleTransform",
+          "label": "Rotation",
+          "units": "deg",
+          "description": "Layer-local rotation in degrees."
+        },
+        {
+          "id": "alpha",
+          "kind": "float",
+          "groupId": "exampleColor",
+          "label": "Alpha",
+          "units": "",
+          "description": "Legacy layer-local alpha exposed by the current SDK example."
+        },
+        {
+          "id": "gain",
+          "kind": "float",
+          "groupId": "exampleModulation",
+          "label": "Sensor Gain",
+          "units": "multiplier",
+          "description": "Gain applied to generic input modulation."
+        },
+        {
+          "id": "lineOpacity",
+          "kind": "float",
+          "groupId": "exampleColor",
+          "label": "Line Opacity",
+          "units": "",
+          "description": "Opacity for the signal line stroke."
+        },
+        {
+          "id": "colorR",
+          "kind": "float",
+          "groupId": "exampleColor",
+          "label": "Red",
+          "units": "",
+          "description": "Primary color red channel."
+        },
+        {
+          "id": "colorG",
+          "kind": "float",
+          "groupId": "exampleColor",
+          "label": "Green",
+          "units": "",
+          "description": "Primary color green channel."
+        },
+        {
+          "id": "colorB",
+          "kind": "float",
+          "groupId": "exampleColor",
+          "label": "Blue",
+          "units": "",
+          "description": "Primary color blue channel."
+        },
+        {
+          "id": "bgColorR",
+          "kind": "float",
+          "groupId": "exampleColor",
+          "label": "Background Red",
+          "units": "",
+          "description": "Background color red channel."
+        },
+        {
+          "id": "bgColorG",
+          "kind": "float",
+          "groupId": "exampleColor",
+          "label": "Background Green",
+          "units": "",
+          "description": "Background color green channel."
+        },
+        {
+          "id": "bgColorB",
+          "kind": "float",
+          "groupId": "exampleColor",
+          "label": "Background Blue",
+          "units": "",
+          "description": "Background color blue channel."
+        },
+        {
+          "id": "xInput",
+          "kind": "float",
+          "groupId": "exampleModulation",
+          "label": "X",
+          "units": "",
+          "description": "Generic horizontal modulation input."
+        },
+        {
+          "id": "yInput",
+          "kind": "float",
+          "groupId": "exampleModulation",
+          "label": "Y",
+          "units": "",
+          "description": "Generic vertical modulation input."
+        },
+        {
+          "id": "speedInput",
+          "kind": "float",
+          "groupId": "exampleModulation",
+          "label": "Speed",
+          "units": "",
+          "description": "Generic motion modulation input."
+        }
+      ]
+    },
+    {
+      "typeId": "excitableMedia",
+      "groupCount": 1,
+      "parameterCount": 37,
+      "groups": [
+        {
+          "description": "",
+          "id": "generative",
+          "label": "Generative"
+        }
+      ],
+      "parameters": [
+        {
+          "id": "speed",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Time: Simulation Speed",
+          "units": "",
+          "description": "",
+          "quickAccessOrder": 10
+        },
+        {
+          "id": "bpmMultiplier",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Time: BPM Mult",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "alpha",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Visibility: Layer Opacity",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "autoReseedEveryBeats",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Time: Auto Reseed Beats",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "seed",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Seed: Pattern Seed",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "seedDensity",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Seed: Spark Density",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "propagationRate",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Force: Propagation Rate",
+          "units": "",
+          "description": "",
+          "quickAccessOrder": 20
+        },
+        {
+          "id": "excitationThreshold",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Growth: Excitation Threshold",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "refractoryTime",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Time: Refractory Time",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "seedRate",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Growth: Spark Rate",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "wavefrontWidth",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Scale: Wavefront Width",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "sparkleAmount",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Glow: Sparkle Amount",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "fieldDiffusion",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Force: Field Diffusion",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "decayRate",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Time: Excitation Decay",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "injectionRadius",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Scale: Spark Radius",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "fieldScale",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Scale: Field Gain",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "backgroundAlpha",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Visibility: Background Opacity",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "excitationAlpha",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Visibility: Excitation Opacity",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "refractoryAlpha",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Visibility: Refractory Opacity",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "wavefrontOpacity",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Visibility: Wavefront Opacity",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bgR",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Background R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bgG",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Background G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bgB",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Background B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "exciteR",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Excitation R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "exciteG",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Excitation G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "exciteB",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Excitation B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "refractoryR",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Refractory R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "refractoryG",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Refractory G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "refractoryB",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Refractory B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "waveR",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Wavefront R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "waveG",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Wavefront G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "waveB",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Wavefront B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "visible",
+          "kind": "bool",
+          "groupId": "generative",
+          "label": "Action: Visible",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bpmSync",
+          "kind": "bool",
+          "groupId": "generative",
+          "label": "Action: BPM Sync",
+          "units": "",
+          "description": "Use transport BPM instead of free-running excitation updates."
+        },
+        {
+          "id": "paused",
+          "kind": "bool",
+          "groupId": "generative",
+          "label": "Action: Paused",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "reseed",
+          "kind": "bool",
+          "groupId": "generative",
+          "label": "Action: Reseed",
+          "units": "",
+          "description": "Reset the resting, excited, and refractory fields."
+        },
+        {
+          "id": "autoReseed",
+          "kind": "bool",
+          "groupId": "generative",
+          "label": "Action: Auto Reseed",
+          "units": "",
+          "description": "Reset on a transport-quantized cadence."
+        }
+      ]
+    },
+    {
+      "typeId": "flocking",
+      "groupCount": 2,
+      "parameterCount": 45,
+      "groups": [
+        {
+          "description": "",
+          "id": "generative",
+          "label": "Generative"
+        },
+        {
+          "description": "",
+          "id": "flockLifecycle",
+          "label": "Flock Lifecycle"
+        }
+      ],
+      "parameters": [
+        {
+          "id": "speed",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Time: Flock Speed",
+          "units": "",
+          "description": "",
+          "quickAccessOrder": 10
+        },
+        {
+          "id": "bpmMultiplier",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Time: BPM Mult",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "alpha",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Visibility: Flock Opacity",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "seed",
+          "kind": "float",
+          "groupId": "flockLifecycle",
+          "label": "Seed: Deterministic Seed",
+          "units": "",
+          "description": "The same model, seed, and parameters reproduce the same initial flock"
+        },
+        {
+          "id": "mode",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Action: Behavior Mode",
+          "units": "",
+          "description": "Select one of three model-specific behaviors. Schooling: 0=Gather, 1=Scatter, 2=Panic. Murmuration: 0=Fold, 1=Bloom, 2=Ripple.",
+          "quickAccessOrder": 20
+        },
+        {
+          "id": "boidCount",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Count: Prey",
+          "units": "",
+          "description": "Select one of three model-specific behaviors. Schooling: 0=Gather, 1=Scatter, 2=Panic. Murmuration: 0=Fold, 1=Bloom, 2=Ripple."
+        },
+        {
+          "id": "predatorCount",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Count: Predators",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "predatorPressure",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Force: Predator Pressure",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "fearPropagation",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Force: Fear Propagation",
+          "units": "",
+          "description": "Propagate predator pressure through nearby flock members without reseeding the simulation."
+        },
+        {
+          "id": "fearDecay",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Time: Fear Decay",
+          "units": "",
+          "description": "Propagate predator pressure through nearby flock members without reseeding the simulation."
+        },
+        {
+          "id": "fearRadius",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Scale: Fear Radius",
+          "units": "",
+          "description": "Local distance used for fear-wave propagation."
+        },
+        {
+          "id": "fearForce",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Force: Fear Steering",
+          "units": "",
+          "description": "Local distance used for fear-wave propagation."
+        },
+        {
+          "id": "fearTrailAlpha",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Visibility: Fear Wave Opacity",
+          "units": "",
+          "description": "Local distance used for fear-wave propagation."
+        },
+        {
+          "id": "neighborCount",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Scale: Neighborhood",
+          "units": "",
+          "description": "Controls metric neighborhood radius for schooling and nearest-neighbor count for murmuration."
+        },
+        {
+          "id": "cohesion",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Force: Cohesion",
+          "units": "",
+          "description": "Controls metric neighborhood radius for schooling and nearest-neighbor count for murmuration."
+        },
+        {
+          "id": "alignment",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Force: Alignment",
+          "units": "",
+          "description": "Controls metric neighborhood radius for schooling and nearest-neighbor count for murmuration."
+        },
+        {
+          "id": "separation",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Force: Prey Separation",
+          "units": "",
+          "description": "Controls metric neighborhood radius for schooling and nearest-neighbor count for murmuration."
+        },
+        {
+          "id": "predatorSeparation",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Force: Predator Separation",
+          "units": "",
+          "description": "Controls metric neighborhood radius for schooling and nearest-neighbor count for murmuration."
+        },
+        {
+          "id": "chase",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Force: Chase",
+          "units": "",
+          "description": "Controls metric neighborhood radius for schooling and nearest-neighbor count for murmuration."
+        },
+        {
+          "id": "evade",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Force: Evade",
+          "units": "",
+          "description": "Controls metric neighborhood radius for schooling and nearest-neighbor count for murmuration."
+        },
+        {
+          "id": "noise",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Motion: Noise",
+          "units": "",
+          "description": "Controls metric neighborhood radius for schooling and nearest-neighbor count for murmuration."
+        },
+        {
+          "id": "trailFade",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Time: Trail Fade",
+          "units": "",
+          "description": "Controls metric neighborhood radius for schooling and nearest-neighbor count for murmuration."
+        },
+        {
+          "id": "trailDeposit",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Glow: Trail Deposit",
+          "units": "",
+          "description": "Controls metric neighborhood radius for schooling and nearest-neighbor count for murmuration."
+        },
+        {
+          "id": "pointSize",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Scale: Point Size",
+          "units": "",
+          "description": "Controls metric neighborhood radius for schooling and nearest-neighbor count for murmuration."
+        },
+        {
+          "id": "backgroundAlpha",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Visibility: Background Opacity",
+          "units": "",
+          "description": "Controls metric neighborhood radius for schooling and nearest-neighbor count for murmuration."
+        },
+        {
+          "id": "trailAlpha",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Visibility: Trail Opacity",
+          "units": "",
+          "description": "Controls metric neighborhood radius for schooling and nearest-neighbor count for murmuration."
+        },
+        {
+          "id": "preyAlpha",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Visibility: Prey Opacity",
+          "units": "",
+          "description": "Controls metric neighborhood radius for schooling and nearest-neighbor count for murmuration."
+        },
+        {
+          "id": "predAlpha",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Visibility: Predator Opacity",
+          "units": "",
+          "description": "Controls metric neighborhood radius for schooling and nearest-neighbor count for murmuration."
+        },
+        {
+          "id": "bgR",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Background R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bgG",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Background G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bgB",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Background B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "trailR",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Trail R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "trailG",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Trail G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "trailB",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Trail B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "preyR",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Prey R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "preyG",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Prey G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "preyB",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Prey B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "predatorR",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Predator R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "predatorG",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Predator G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "predatorB",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Predator B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "visible",
+          "kind": "bool",
+          "groupId": "generative",
+          "label": "Action: Visible",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bpmSync",
+          "kind": "bool",
+          "groupId": "generative",
+          "label": "Action: BPM Sync",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "reseed",
+          "kind": "bool",
+          "groupId": "flockLifecycle",
+          "label": "Action: Reseed",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "predatorEnabled",
+          "kind": "bool",
+          "groupId": "generative",
+          "label": "Action: Predator Enabled",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "fearWaveEnabled",
+          "kind": "bool",
+          "groupId": "generative",
+          "label": "Force: Fear Waves",
+          "units": "",
+          "description": "Propagate predator pressure through nearby flock members without reseeding the simulation."
+        }
+      ]
+    },
+    {
+      "typeId": "flowField",
+      "groupCount": 1,
+      "parameterCount": 46,
+      "groups": [
+        {
+          "description": "",
+          "id": "generative",
+          "label": "Generative"
+        }
+      ],
+      "parameters": [
+        {
+          "id": "speed",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Time: Flow Speed",
+          "units": "",
+          "description": "Free-running simulation steps per second."
+        },
+        {
+          "id": "bpmMultiplier",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Time: BPM Mult",
+          "units": "",
+          "description": "Simulation step multiplier when BPM sync is enabled."
+        },
+        {
+          "id": "alpha",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Alpha: Flow",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "autoReseedEveryBeats",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Time: Auto Reseed Beats",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "particleCount",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Count: Particles",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "particleLife",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Time: Particle Life",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "respawnRate",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Time: Respawn Rate",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "spawnRadius",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Scale: Spawn Radius",
+          "units": "",
+          "description": "0=center, 1=full field."
+        },
+        {
+          "id": "fieldScale",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Scale: Field",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "fieldStrength",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Force: Field Strength",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "flowSpeed",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Time: Field Speed",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "curlAmount",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Force: Curl",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "turbulence",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Motion: Turbulence",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "stepSize",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Scale: Step Size",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "inertia",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Motion: Inertia",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "centerPull",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Force: Center Pull",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "driftX",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Motion: Drift X",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "driftY",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Motion: Drift Y",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "trailFade",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Time: Trail Fade",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "trailDeposit",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Glow: Trail Deposit",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "trailBoost",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Glow: Trail Boost",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "backgroundAlpha",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Alpha: Background",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "trailAlpha",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Alpha: Trail",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "pointSize",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Scale: Point Size",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "vectorSpacing",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Scale: Vector Spacing",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "vectorScale",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Scale: Vector Length",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "vectorAlpha",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Alpha: Vectors",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "colorBias",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Bias",
+          "units": "",
+          "description": "Blend bias between color A and color B."
+        },
+        {
+          "id": "paletteRate",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Time: Palette Rate",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bgR",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Background R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bgG",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Background G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bgB",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Background B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "colorAR",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: A R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "colorAG",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: A G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "colorAB",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: A B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "colorBR",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: B R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "colorBG",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: B G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "colorBB",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: B B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "visible",
+          "kind": "bool",
+          "groupId": "generative",
+          "label": "Action: Visible",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bpmSync",
+          "kind": "bool",
+          "groupId": "generative",
+          "label": "Action: BPM Sync",
+          "units": "",
+          "description": "Use transport BPM instead of free-running speed."
+        },
+        {
+          "id": "reseed",
+          "kind": "bool",
+          "groupId": "generative",
+          "label": "Action: Reseed",
+          "units": "",
+          "description": "Respawn every particle and clear trails."
+        },
+        {
+          "id": "autoReseed",
+          "kind": "bool",
+          "groupId": "generative",
+          "label": "Action: Auto Reseed",
+          "units": "",
+          "description": "Respawn on a transport-quantized cadence."
+        },
+        {
+          "id": "edgeWrap",
+          "kind": "bool",
+          "groupId": "generative",
+          "label": "Action: Edge Wrap",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "mirrorX",
+          "kind": "bool",
+          "groupId": "generative",
+          "label": "Action: Mirror X",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "mirrorY",
+          "kind": "bool",
+          "groupId": "generative",
+          "label": "Action: Mirror Y",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "vectorOverlay",
+          "kind": "bool",
+          "groupId": "generative",
+          "label": "Action: Vectors",
+          "units": "",
+          "description": "Draw low-opacity vector arrows on top of the trail texture."
+        }
+      ]
+    },
+    {
+      "typeId": "gameOfLife",
+      "groupCount": 2,
+      "parameterCount": 23,
+      "groups": [
+        {
+          "description": "",
+          "id": "generative",
+          "label": "Generative"
+        },
+        {
+          "description": "",
+          "id": "lifeLifecycle",
+          "label": "Life Lifecycle"
+        }
+      ],
+      "parameters": [
+        {
+          "id": "speed",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Motion: Life Speed",
+          "units": "",
+          "description": "",
+          "quickAccessOrder": 10
+        },
+        {
+          "id": "bpmMultiplier",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Life BPM Mult",
+          "units": "",
+          "description": "Generation rate multiplier when BPM sync is enabled"
+        },
+        {
+          "id": "seed",
+          "kind": "float",
+          "groupId": "lifeLifecycle",
+          "label": "Seed: Pattern Seed",
+          "units": "",
+          "description": "The same seed, density, and preset reproduce the same board"
+        },
+        {
+          "id": "density",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Seed: Life Seed Density",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "fadeFrames",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Action: Life Fade Frames",
+          "units": "",
+          "description": "Quantized decay trail length in simulation frames"
+        },
+        {
+          "id": "preset",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Count: Life Preset",
+          "units": "",
+          "description": "0=Random  1=Gliders  2=Waves  3=Crossfire",
+          "quickAccessOrder": 20
+        },
+        {
+          "id": "aliveR",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Life Alive R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "aliveG",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Life Alive G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "aliveB",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Life Alive B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "deadR",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Life Dead R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "deadG",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Life Dead G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "deadB",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Life Dead B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "alpha",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Visibility: Life Alpha",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "aliveAlpha",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Visibility: Life Alive Alpha",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "deadAlpha",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Visibility: Life Dead Alpha",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "reseedQuantizeBeats",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Seed: Life Reseed Quantize",
+          "units": "",
+          "description": "0=instant, otherwise queue reseeds to the next beat multiple"
+        },
+        {
+          "id": "autoReseedEveryBeats",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Seed: Life Auto Reseed Beats",
+          "units": "",
+          "description": "Beat interval used by automatic reseeding"
+        },
+        {
+          "id": "visible",
+          "kind": "bool",
+          "groupId": "generative",
+          "label": "Color: Game of Life Visible",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bpmSync",
+          "kind": "bool",
+          "groupId": "generative",
+          "label": "Color: Life BPM Sync",
+          "units": "",
+          "description": "Use transport BPM instead of free-running speed"
+        },
+        {
+          "id": "paused",
+          "kind": "bool",
+          "groupId": "generative",
+          "label": "Action: Life Paused",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "reseed",
+          "kind": "bool",
+          "groupId": "generative",
+          "label": "Seed: Life Reseed",
+          "units": "",
+          "description": "Trigger a fresh random board using current density"
+        },
+        {
+          "id": "wrap",
+          "kind": "bool",
+          "groupId": "generative",
+          "label": "Action: Life Wrap",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "autoReseed",
+          "kind": "bool",
+          "groupId": "generative",
+          "label": "Seed: Life Auto Reseed",
+          "units": "",
+          "description": "Automatically reseed on a transport-quantized cadence"
+        }
+      ]
+    },
+    {
+      "typeId": "geodesic",
+      "groupCount": 2,
+      "parameterCount": 17,
+      "groups": [
+        {
+          "description": "",
+          "id": "sphere",
+          "label": "Sphere"
+        },
+        {
+          "description": "",
+          "id": "visibility",
+          "label": "Visibility"
+        }
+      ],
+      "parameters": [
+        {
+          "id": "spin",
+          "kind": "float",
+          "groupId": "sphere",
+          "label": "Action: Sphere Spin",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "hover",
+          "kind": "float",
+          "groupId": "sphere",
+          "label": "Motion: Sphere Hover",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "baseHeight",
+          "kind": "float",
+          "groupId": "sphere",
+          "label": "Color: Sphere Base Height",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "orbitRadius",
+          "kind": "float",
+          "groupId": "sphere",
+          "label": "Color: Sphere Orbit Radius",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "orbitSpeed",
+          "kind": "float",
+          "groupId": "sphere",
+          "label": "Motion: Sphere Orbit Speed",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "rotateX",
+          "kind": "float",
+          "groupId": "sphere",
+          "label": "Color: Sphere Rotate X",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "rotateY",
+          "kind": "float",
+          "groupId": "sphere",
+          "label": "Color: Sphere Rotate Y",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "rotateZ",
+          "kind": "float",
+          "groupId": "sphere",
+          "label": "Color: Sphere Rotate Z",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "radius",
+          "kind": "float",
+          "groupId": "sphere",
+          "label": "Color: Sphere Radius",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "subdivisions",
+          "kind": "float",
+          "groupId": "sphere",
+          "label": "Action: Sphere Subdivisions",
+          "units": "",
+          "description": "Geodesic mesh subdivision level."
+        },
+        {
+          "id": "deformAmount",
+          "kind": "float",
+          "groupId": "sphere",
+          "label": "Force: Sphere Deform Amount",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "deformScale",
+          "kind": "float",
+          "groupId": "sphere",
+          "label": "Force: Sphere Deform Scale",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "deformSpeed",
+          "kind": "float",
+          "groupId": "sphere",
+          "label": "Force: Sphere Deform Speed",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "lineOpacity",
+          "kind": "float",
+          "groupId": "sphere",
+          "label": "Visibility: Sphere Line Opacity",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "faceOpacity",
+          "kind": "float",
+          "groupId": "sphere",
+          "label": "Visibility: Sphere Face Opacity",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "visible",
+          "kind": "bool",
+          "groupId": "visibility",
+          "label": "Visibility: Sphere Visible",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "deform",
+          "kind": "bool",
+          "groupId": "sphere",
+          "label": "Force: Sphere Deform",
+          "units": "",
+          "description": "Enable irregular Perlin noise deformation."
+        }
+      ]
+    },
+    {
+      "typeId": "grid",
+      "groupCount": 2,
+      "parameterCount": 22,
+      "groups": [
+        {
+          "description": "",
+          "id": "grid",
+          "label": "Grid"
+        },
+        {
+          "description": "",
+          "id": "visibility",
+          "label": "Visibility"
+        }
+      ],
+      "parameters": [
+        {
+          "id": "segments",
+          "kind": "float",
+          "groupId": "grid",
+          "label": "Color: Grid Segments",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "waveAmount",
+          "kind": "float",
+          "groupId": "grid",
+          "label": "Color: Grid Wave Amount",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "waveFrequency",
+          "kind": "float",
+          "groupId": "grid",
+          "label": "Color: Grid Wave Frequency",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "waveSpeed",
+          "kind": "float",
+          "groupId": "grid",
+          "label": "Color: Grid Wave Speed",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bendAmount",
+          "kind": "float",
+          "groupId": "grid",
+          "label": "Color: Grid Bend Amount",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bendFrequency",
+          "kind": "float",
+          "groupId": "grid",
+          "label": "Color: Grid Bend Frequency",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bendSpeed",
+          "kind": "float",
+          "groupId": "grid",
+          "label": "Color: Grid Bend Speed",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "deformAmount",
+          "kind": "float",
+          "groupId": "grid",
+          "label": "Color: Grid Noise Amount",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "deformScale",
+          "kind": "float",
+          "groupId": "grid",
+          "label": "Color: Grid Noise Scale",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "deformSpeed",
+          "kind": "float",
+          "groupId": "grid",
+          "label": "Color: Grid Noise Speed",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "twistAmount",
+          "kind": "float",
+          "groupId": "grid",
+          "label": "Color: Grid Twist Amount",
+          "units": "deg",
+          "description": ""
+        },
+        {
+          "id": "twistSpeed",
+          "kind": "float",
+          "groupId": "grid",
+          "label": "Color: Grid Twist Speed",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bulgeAmount",
+          "kind": "float",
+          "groupId": "grid",
+          "label": "Color: Grid Bulge Amount",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bulgeRadius",
+          "kind": "float",
+          "groupId": "grid",
+          "label": "Color: Grid Bulge Radius",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bulgeSpeed",
+          "kind": "float",
+          "groupId": "grid",
+          "label": "Color: Grid Bulge Speed",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "faceOpacity",
+          "kind": "float",
+          "groupId": "grid",
+          "label": "Color: Grid Face Opacity",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "visible",
+          "kind": "bool",
+          "groupId": "visibility",
+          "label": "Color: Grid Visible",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "wave",
+          "kind": "bool",
+          "groupId": "grid",
+          "label": "Color: Grid Wave",
+          "units": "",
+          "description": "Enable radial sine wave displacement."
+        },
+        {
+          "id": "bend",
+          "kind": "bool",
+          "groupId": "grid",
+          "label": "Color: Grid Bend",
+          "units": "",
+          "description": "Enable diagonal sine bend displacement."
+        },
+        {
+          "id": "deform",
+          "kind": "bool",
+          "groupId": "grid",
+          "label": "Color: Grid Noise",
+          "units": "",
+          "description": "Enable irregular Perlin noise displacement."
+        },
+        {
+          "id": "twist",
+          "kind": "bool",
+          "groupId": "grid",
+          "label": "Color: Grid Twist",
+          "units": "",
+          "description": "Enable horizontal swirl displacement."
+        },
+        {
+          "id": "bulge",
+          "kind": "bool",
+          "groupId": "grid",
+          "label": "Color: Grid Bulge",
+          "units": "",
+          "description": "Enable dome or bowl displacement."
+        }
+      ]
+    },
+    {
+      "typeId": "lenia",
+      "groupCount": 2,
+      "parameterCount": 37,
+      "groups": [
+        {
+          "description": "",
+          "id": "generative",
+          "label": "Generative"
+        },
+        {
+          "description": "",
+          "id": "circuitAppearance",
+          "label": "Circuit Appearance"
+        }
+      ],
+      "parameters": [
+        {
+          "id": "speed",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Time: Simulation Speed",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bpmMultiplier",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Time: BPM Mult",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "alpha",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Visibility: Layer Opacity",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "autoReseedEveryBeats",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Time: Auto Reseed Beats",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "seed",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Seed: Pattern Seed",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "seedDensity",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Seed: Patch Density",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "kernelRadius",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Scale: Kernel Radius",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "growthCenter",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Growth: Center",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "growthWidth",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Growth: Width",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "growthAmplitude",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Growth: Amplitude",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "mutationAmount",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Growth: Mutation",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "injectionRate",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Growth: Injection Rate",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "injectionAmount",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Growth: Injection Amount",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "injectionRadius",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Scale: Injection Radius",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "decayRate",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Time: Field Decay",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "fieldScale",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Scale: Field Gain",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "edgeGlow",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Glow: Edge Glow",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "backgroundAlpha",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Visibility: Background Opacity",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "fieldAlpha",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Visibility: Field Opacity",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "edgeOpacity",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Visibility: Edge Opacity",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bgR",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Background R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bgG",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Background G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bgB",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Background B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "fieldR",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Field R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "fieldG",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Field G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "fieldB",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Field B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "edgeR",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Edge R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "edgeG",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Edge G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "edgeB",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Edge B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "circuitThreshold",
+          "kind": "float",
+          "groupId": "circuitAppearance",
+          "label": "Scale: Level: Circuit Threshold",
+          "units": "",
+          "description": "Field values below this level do not produce circuit contours.",
+          "quickAccessOrder": 20
+        },
+        {
+          "id": "circuitLevels",
+          "kind": "float",
+          "groupId": "circuitAppearance",
+          "label": "Count: Circuit Contour Levels",
+          "units": "",
+          "description": "Number of hard isocontour bands extracted from the Lenia field."
+        },
+        {
+          "id": "circuitTraceWidth",
+          "kind": "float",
+          "groupId": "circuitAppearance",
+          "label": "Scale: Circuit Trace Width",
+          "units": "",
+          "description": "Hard-edged contour width in simulation pixels.",
+          "quickAccessOrder": 30
+        },
+        {
+          "id": "visible",
+          "kind": "bool",
+          "groupId": "generative",
+          "label": "Action: Visible",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bpmSync",
+          "kind": "bool",
+          "groupId": "generative",
+          "label": "Action: BPM Sync",
+          "units": "",
+          "description": "Use transport BPM instead of free-running Lenia updates."
+        },
+        {
+          "id": "paused",
+          "kind": "bool",
+          "groupId": "generative",
+          "label": "Action: Paused",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "reseed",
+          "kind": "bool",
+          "groupId": "generative",
+          "label": "Action: Reseed",
+          "units": "",
+          "description": "Reset the continuous automata field from the deterministic seed."
+        },
+        {
+          "id": "autoReseed",
+          "kind": "bool",
+          "groupId": "generative",
+          "label": "Action: Auto Reseed",
+          "units": "",
+          "description": "Reset on a transport-quantized cadence."
+        }
+      ]
+    },
+    {
+      "typeId": "media.clip",
+      "groupCount": 1,
+      "parameterCount": 5,
+      "groups": [
+        {
+          "description": "",
+          "id": "media",
+          "label": "Media"
+        }
+      ],
+      "parameters": [
+        {
+          "id": "gain",
+          "kind": "float",
+          "groupId": "media",
+          "label": "Color: Clip Gain",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "clip",
+          "kind": "float",
+          "groupId": "media",
+          "label": "Motion: Clip Index",
+          "units": "",
+          "description": "Select a clip from the validated media catalog.",
+          "optionSource": {
+            "id": "media.videoClips",
+            "labelField": "label",
+            "valueField": "index"
+          }
+        },
+        {
+          "id": "visible",
+          "kind": "bool",
+          "groupId": "media",
+          "label": "Visibility: Clip Visible",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "mirror",
+          "kind": "bool",
+          "groupId": "media",
+          "label": "Motion: Clip Mirror",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "loop",
+          "kind": "bool",
+          "groupId": "media",
+          "label": "Action: Clip Loop",
+          "units": "",
+          "description": ""
+        }
+      ]
+    },
+    {
+      "typeId": "media.webcam",
+      "groupCount": 1,
+      "parameterCount": 6,
+      "groups": [
+        {
+          "description": "",
+          "id": "media",
+          "label": "Media"
+        }
+      ],
+      "parameters": [
+        {
+          "id": "gain",
+          "kind": "float",
+          "groupId": "media",
+          "label": "Color: Webcam Gain",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "device",
+          "kind": "float",
+          "groupId": "media",
+          "label": "Color: Webcam Device",
+          "units": "",
+          "description": "Select an available webcam device.",
+          "optionSource": {
+            "id": "media.webcamDevices",
+            "labelField": "label",
+            "valueField": "index"
+          }
+        },
+        {
+          "id": "resolution",
+          "kind": "float",
+          "groupId": "media",
+          "label": "Color: Webcam Resolution",
+          "units": "",
+          "description": "Select a resolution declared by the active webcam asset.",
+          "optionSource": {
+            "id": "media.webcamResolutions",
+            "labelField": "label",
+            "valueField": "index"
+          }
+        },
+        {
+          "id": "visible",
+          "kind": "bool",
+          "groupId": "media",
+          "label": "Visibility: Webcam Visible",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "mirror",
+          "kind": "bool",
+          "groupId": "media",
+          "label": "Motion: Webcam Mirror",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "deviceInfoOverlay",
+          "kind": "bool",
+          "groupId": "media",
+          "label": "Color: Webcam Device Overlay",
+          "units": "",
+          "description": ""
+        }
+      ]
+    },
+    {
+      "typeId": "mountainIsland",
+      "groupCount": 1,
+      "parameterCount": 91,
+      "groups": [
+        {
+          "description": "",
+          "id": "mountainIsland",
+          "label": "Mountain Island"
+        }
+      ],
+      "parameters": [
+        {
+          "id": "alpha",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Alpha: Scene",
+          "units": "normalized",
+          "description": ""
+        },
+        {
+          "id": "sceneScale",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Scale: Scene",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "sceneOffsetY",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Scale: Scene Offset Y",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "sceneOffsetZ",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Scale: Scene Offset Z",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "spinAngle",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Motion: Spin Angle",
+          "units": "deg",
+          "description": ""
+        },
+        {
+          "id": "spinSpeed",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Motion: World Spin",
+          "units": "deg",
+          "description": ""
+        },
+        {
+          "id": "waterRadius",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Scale: Sphere Radius",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "waterLevel",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Scale: Water Level (Fixed)",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "waterRimDepth",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Scale: Water Rim Depth",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "waterHighlight",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Glow: Water Highlight",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "waterWaveAmount",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Motion: Water Shimmer",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "shoreGlow",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Glow: Shoreline",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "submergedLandDepth",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Scale: Submerged Land Depth",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "solidWorldAlpha",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Alpha: Solid Lower World",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "islandRadius",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Scale: Island Radius",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "pointCount",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Count: Terrain Samples",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "boundaryPoints",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Count: Shore Samples",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "triangleTargetLength",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Scale: Triangle Target Edge",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "mountainHeight",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Scale: Mountain Height",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "roughness",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Force: Terrain Roughness",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "shorelineJitter",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Force: Shoreline Jitter",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "peakCount",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Count: Mountain Peaks",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "snowLine",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Scale: Snow Line",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "treeLine",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Scale: Tree Line",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "sandHeight",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Scale: Sand Height",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "upliftRadius",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Scale: Uplift Radius",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "upliftScatter",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Scale: Uplift Scatter",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "upliftFalloff",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Force: Uplift Falloff",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "seabedUndulation",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Scale: Seabed Undulation",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "edgeUndulation",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Scale: Sphere Edge Undulation",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "wireAlpha",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Alpha: Delaunay Edges",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "growth",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Growth: Land Emergence",
+          "units": "normalized",
+          "description": ""
+        },
+        {
+          "id": "growthRate",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Growth: Auto Rate",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "growthCurve",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Growth: Emergence Curve",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "cloudCount",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Count: 3D Clouds",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "cloudPuffCount",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Count: Cloud Puffs",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "cloudFacetSegments",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Count: Cloud Facet Segments",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "cloudFacetRings",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Count: Cloud Facet Rings",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "cloudScale",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Scale: 3D Clouds",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "cloudDensity",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Alpha: Cloud Density",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "cloudBaseHeight",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Scale: Cloud Base Height",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "cloudLayerDepth",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Scale: Cloud Layer Depth",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "cloudClearance",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Scale: Mountain Clearance",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "cloudWindAngle",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Motion: Cloud Wind Angle",
+          "units": "deg",
+          "description": ""
+        },
+        {
+          "id": "cloudWindSpeed",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Motion: Cloud Wind Speed",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "cloudTurbulence",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Force: Cloud Turbulence",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "cloudMountainAvoidance",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Force: Mountain Avoidance",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "cloudUpdraft",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Force: Cloud Vertical Drift",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "cloudShadowAlpha",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Alpha: Cloud Shadows",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "audioAmount",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Audio: Amount",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "audioSmoothing",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Audio: Smoothing",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bassLift",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Audio: Bass Mountain Lift",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "highsGlint",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Audio: Water Glint",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "seed",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Seed: Island",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "skyTopR",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Color: Sky Top R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "skyTopG",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Color: Sky Top G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "skyTopB",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Color: Sky Top B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "skyHorizonR",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Color: Sky Horizon R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "skyHorizonG",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Color: Sky Horizon G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "skyHorizonB",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Color: Sky Horizon B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "waterR",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Color: Water R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "waterG",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Color: Water G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "waterB",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Color: Water B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "shallowR",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Color: Shallow R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "shallowG",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Color: Shallow G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "shallowB",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Color: Shallow B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "shoreR",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Color: Shore R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "shoreG",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Color: Shore G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "shoreB",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Color: Shore B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "lowlandR",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Color: Lowland R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "lowlandG",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Color: Lowland G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "lowlandB",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Color: Lowland B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "rockR",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Color: Rock R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "rockG",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Color: Rock G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "rockB",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Color: Rock B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "snowR",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Color: Snow R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "snowG",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Color: Snow G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "snowB",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Color: Snow B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "wireR",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Color: Wire R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "wireG",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Color: Wire G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "wireB",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Color: Wire B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "cloudR",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Color: Cloud R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "cloudG",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Color: Cloud G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "cloudB",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Color: Cloud B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "cloudShadeR",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Color: Cloud Shade R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "cloudShadeG",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Color: Cloud Shade G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "cloudShadeB",
+          "kind": "float",
+          "groupId": "mountainIsland",
+          "label": "Color: Cloud Shade B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "visible",
+          "kind": "bool",
+          "groupId": "mountainIsland",
+          "label": "Action: Visible",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "autoGrow",
+          "kind": "bool",
+          "groupId": "mountainIsland",
+          "label": "Growth: Auto Grow",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "growthReseed",
+          "kind": "bool",
+          "groupId": "mountainIsland",
+          "label": "Action: Reseed Growth",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "reseed",
+          "kind": "bool",
+          "groupId": "mountainIsland",
+          "label": "Action: Reseed",
+          "units": "",
+          "description": ""
+        }
+      ]
+    },
+    {
+      "typeId": "oscilloscope",
+      "groupCount": 1,
+      "parameterCount": 50,
+      "groups": [
+        {
+          "description": "",
+          "id": "oscilloscope",
+          "label": "Oscilloscope"
+        }
+      ],
+      "parameters": [
+        {
+          "id": "pattern",
+          "kind": "float",
+          "groupId": "oscilloscope",
+          "label": "Action: Pattern",
+          "units": "",
+          "description": "0=Audio XY 1=Circle 2=Lissajous 3=Rose"
+        },
+        {
+          "id": "signalMode",
+          "kind": "float",
+          "groupId": "oscilloscope",
+          "label": "Audio: Signal Mode",
+          "units": "",
+          "description": "0=Generated 1=Waveform Trace 2=Phase Portrait 3=Hybrid"
+        },
+        {
+          "id": "waveformGain",
+          "kind": "float",
+          "groupId": "oscilloscope",
+          "label": "Audio: Waveform Gain",
+          "units": "",
+          "description": "Gain applied to full waveform samples before drawing or hybrid modulation."
+        },
+        {
+          "id": "waveformMix",
+          "kind": "float",
+          "groupId": "oscilloscope",
+          "label": "Audio: Waveform Mix",
+          "units": "",
+          "description": "Blend between mapped scalar inputs and full waveform modulation in Hybrid mode."
+        },
+        {
+          "id": "waveformDelay",
+          "kind": "float",
+          "groupId": "oscilloscope",
+          "label": "Time: Phase Delay",
+          "units": "samples",
+          "description": "Sample delay for phase-portrait and hybrid waveform coordinates."
+        },
+        {
+          "id": "waveformSmoothing",
+          "kind": "float",
+          "groupId": "oscilloscope",
+          "label": "Audio: Waveform Smoothing",
+          "units": "normalized",
+          "description": "Higher values smooth incoming waveform snapshots."
+        },
+        {
+          "id": "waveformPersistence",
+          "kind": "float",
+          "groupId": "oscilloscope",
+          "label": "Time: Waveform Persistence",
+          "units": "s",
+          "description": "How long complete waveform traces remain in phosphor history."
+        },
+        {
+          "id": "modMode",
+          "kind": "float",
+          "groupId": "oscilloscope",
+          "label": "Action: Mod Mode",
+          "units": "",
+          "description": "0=Cartesian 1=Radial+Wiggle 2=Wiggle Only 3=Radial Only 4=Orbit 5=Spiral Twist 6=Mirror Warp"
+        },
+        {
+          "id": "xInput",
+          "kind": "float",
+          "groupId": "oscilloscope",
+          "label": "Action: X Input",
+          "units": "",
+          "description": "Horizontal modulation input. Map mic or OSC here to bend the base pattern."
+        },
+        {
+          "id": "yInput",
+          "kind": "float",
+          "groupId": "oscilloscope",
+          "label": "Action: Y Input",
+          "units": "",
+          "description": "Vertical modulation input. Different X/Y sources create richer figures."
+        },
+        {
+          "id": "speedInput",
+          "kind": "float",
+          "groupId": "oscilloscope",
+          "label": "Action: Speed Input",
+          "units": "",
+          "description": "Modulation input for movement speed."
+        },
+        {
+          "id": "baseAmount",
+          "kind": "float",
+          "groupId": "oscilloscope",
+          "label": "Scale: Base Amount",
+          "units": "",
+          "description": "Strength of the internally generated test pattern."
+        },
+        {
+          "id": "modAmount",
+          "kind": "float",
+          "groupId": "oscilloscope",
+          "label": "Motion: Mod Amount",
+          "units": "",
+          "description": "How strongly xInput/yInput modulate the base pattern."
+        },
+        {
+          "id": "radialAmount",
+          "kind": "float",
+          "groupId": "oscilloscope",
+          "label": "Scale: Radial Amount",
+          "units": "",
+          "description": "How much modulation changes radial distance from center."
+        },
+        {
+          "id": "wiggleAmount",
+          "kind": "float",
+          "groupId": "oscilloscope",
+          "label": "Motion: Wiggle Amount",
+          "units": "",
+          "description": "How much modulation wiggles perpendicular to the current path."
+        },
+        {
+          "id": "amplitude",
+          "kind": "float",
+          "groupId": "oscilloscope",
+          "label": "Scale: Amplitude",
+          "units": "",
+          "description": "Overall size of the generated pattern before scale/bias."
+        },
+        {
+          "id": "speed",
+          "kind": "float",
+          "groupId": "oscilloscope",
+          "label": "Time: Speed",
+          "units": "",
+          "description": "Base movement speed for the internal oscillator."
+        },
+        {
+          "id": "speedModAmount",
+          "kind": "float",
+          "groupId": "oscilloscope",
+          "label": "Time: Speed Mod Amount",
+          "units": "",
+          "description": "How much speedInput changes oscillator speed."
+        },
+        {
+          "id": "freqX",
+          "kind": "float",
+          "groupId": "oscilloscope",
+          "label": "Time: Freq X",
+          "units": "",
+          "description": "Horizontal oscillator rate."
+        },
+        {
+          "id": "freqY",
+          "kind": "float",
+          "groupId": "oscilloscope",
+          "label": "Time: Freq Y",
+          "units": "",
+          "description": "Vertical oscillator rate."
+        },
+        {
+          "id": "phaseOffsetDeg",
+          "kind": "float",
+          "groupId": "oscilloscope",
+          "label": "Time: Phase Offset",
+          "units": "deg",
+          "description": "Phase offset between X and Y oscillators."
+        },
+        {
+          "id": "morph",
+          "kind": "float",
+          "groupId": "oscilloscope",
+          "label": "Motion: Morph",
+          "units": "",
+          "description": "Pattern-specific shape control."
+        },
+        {
+          "id": "gridDivisions",
+          "kind": "float",
+          "groupId": "oscilloscope",
+          "label": "Count: Grid Divisions",
+          "units": "",
+          "description": "Number of grid subdivisions per axis quadrant."
+        },
+        {
+          "id": "gridAlpha",
+          "kind": "float",
+          "groupId": "oscilloscope",
+          "label": "Alpha: Grid",
+          "units": "",
+          "description": "Opacity of the XY grid and crosshair overlay."
+        },
+        {
+          "id": "glowAlpha",
+          "kind": "float",
+          "groupId": "oscilloscope",
+          "label": "Glow: Alpha",
+          "units": "",
+          "description": "Opacity of the CRT-style background glow."
+        },
+        {
+          "id": "glowRadius",
+          "kind": "float",
+          "groupId": "oscilloscope",
+          "label": "Glow: Radius",
+          "units": "",
+          "description": "Scale of the glow relative to the trace radius."
+        },
+        {
+          "id": "glowFalloff",
+          "kind": "float",
+          "groupId": "oscilloscope",
+          "label": "Glow: Falloff",
+          "units": "",
+          "description": "Controls how quickly the glow fades toward the center."
+        },
+        {
+          "id": "xScale",
+          "kind": "float",
+          "groupId": "oscilloscope",
+          "label": "Scale: X",
+          "units": "",
+          "description": "Horizontal gain applied after xInput."
+        },
+        {
+          "id": "yScale",
+          "kind": "float",
+          "groupId": "oscilloscope",
+          "label": "Scale: Y",
+          "units": "",
+          "description": "Vertical gain applied after yInput."
+        },
+        {
+          "id": "xBias",
+          "kind": "float",
+          "groupId": "oscilloscope",
+          "label": "Motion: X Bias",
+          "units": "",
+          "description": "Horizontal offset after gain."
+        },
+        {
+          "id": "yBias",
+          "kind": "float",
+          "groupId": "oscilloscope",
+          "label": "Motion: Y Bias",
+          "units": "",
+          "description": "Vertical offset after gain."
+        },
+        {
+          "id": "rotationDeg",
+          "kind": "float",
+          "groupId": "oscilloscope",
+          "label": "Motion: Rotation",
+          "units": "deg",
+          "description": "Rotates the trace around screen center."
+        },
+        {
+          "id": "historySize",
+          "kind": "float",
+          "groupId": "oscilloscope",
+          "label": "Time: History",
+          "units": "",
+          "description": "Max retained points in the trail buffer."
+        },
+        {
+          "id": "sampleDensity",
+          "kind": "float",
+          "groupId": "oscilloscope",
+          "label": "Count: Sample Density",
+          "units": "",
+          "description": "Interpolated points generated each frame between samples."
+        },
+        {
+          "id": "thickness",
+          "kind": "float",
+          "groupId": "oscilloscope",
+          "label": "Scale: Thickness",
+          "units": "",
+          "description": "OpenGL line width for the trace."
+        },
+        {
+          "id": "alpha",
+          "kind": "float",
+          "groupId": "oscilloscope",
+          "label": "Alpha: Scope",
+          "units": "",
+          "description": "Master alpha for the trace."
+        },
+        {
+          "id": "decay",
+          "kind": "float",
+          "groupId": "oscilloscope",
+          "label": "Time: Decay",
+          "units": "",
+          "description": "Higher values preserve more of the trail."
+        },
+        {
+          "id": "intensity",
+          "kind": "float",
+          "groupId": "oscilloscope",
+          "label": "Glow: Intensity",
+          "units": "",
+          "description": "Brightness multiplier for the trace colors."
+        },
+        {
+          "id": "pointSize",
+          "kind": "float",
+          "groupId": "oscilloscope",
+          "label": "Scale: Point Size",
+          "units": "",
+          "description": "Draws a dot on the newest sample when above zero."
+        },
+        {
+          "id": "colorR",
+          "kind": "float",
+          "groupId": "oscilloscope",
+          "label": "Color: Scope R",
+          "units": "",
+          "description": "RGB color channels for the trace."
+        },
+        {
+          "id": "colorG",
+          "kind": "float",
+          "groupId": "oscilloscope",
+          "label": "Color: Scope G",
+          "units": "",
+          "description": "RGB color channels for the trace."
+        },
+        {
+          "id": "colorB",
+          "kind": "float",
+          "groupId": "oscilloscope",
+          "label": "Color: Scope B",
+          "units": "",
+          "description": "RGB color channels for the trace."
+        },
+        {
+          "id": "bgColorR",
+          "kind": "float",
+          "groupId": "oscilloscope",
+          "label": "Color: Background R",
+          "units": "",
+          "description": "Background glow color red channel."
+        },
+        {
+          "id": "bgColorG",
+          "kind": "float",
+          "groupId": "oscilloscope",
+          "label": "Color: Background G",
+          "units": "",
+          "description": "Background glow color red channel."
+        },
+        {
+          "id": "bgColorB",
+          "kind": "float",
+          "groupId": "oscilloscope",
+          "label": "Color: Background B",
+          "units": "",
+          "description": "Background glow color red channel."
+        },
+        {
+          "id": "visible",
+          "kind": "bool",
+          "groupId": "oscilloscope",
+          "label": "Action: Visible",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "showGrid",
+          "kind": "bool",
+          "groupId": "oscilloscope",
+          "label": "Action: Show Grid",
+          "units": "",
+          "description": "Toggle oscilloscope-style XY coordinate grid."
+        },
+        {
+          "id": "showCrosshair",
+          "kind": "bool",
+          "groupId": "oscilloscope",
+          "label": "Action: Show Crosshair",
+          "units": "",
+          "description": "Toggle center horizontal/vertical axes."
+        },
+        {
+          "id": "showGlow",
+          "kind": "bool",
+          "groupId": "oscilloscope",
+          "label": "Action: Show Glow",
+          "units": "",
+          "description": "Toggle CRT-like phosphor background glow."
+        },
+        {
+          "id": "triggerSync",
+          "kind": "bool",
+          "groupId": "oscilloscope",
+          "label": "Audio: Trigger Sync",
+          "units": "",
+          "description": "Align waveform traces on an upward zero crossing when available."
+        }
+      ]
+    },
+    {
+      "typeId": "perlin",
+      "groupCount": 1,
+      "parameterCount": 15,
+      "groups": [
+        {
+          "description": "",
+          "id": "generative",
+          "label": "Generative"
+        }
+      ],
+      "parameters": [
+        {
+          "id": "scale",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Scale: Perlin Scale",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "speed",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Motion: Perlin Speed",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "brightness",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Perlin Brightness",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "contrast",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Glow: Perlin Contrast",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "alpha",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Visibility: Perlin Alpha",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "texelZoom",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Scale: Perlin Texel Zoom",
+          "units": "",
+          "description": "Adjust internal noise grid resolution (1.0 matches GoL cells)"
+        },
+        {
+          "id": "colorR",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Perlin Red",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "colorG",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Perlin Green",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "colorB",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Perlin Blue",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "octaves",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Count: Perlin Octaves",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "lacunarity",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Time: Perlin Lacunarity",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "persistence",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Time: Perlin Persistence",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "palette",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Perlin Palette",
+          "units": "",
+          "description": "0=Ocean 1=Solar 2=Forest 3=Neon 4=Monochrome"
+        },
+        {
+          "id": "paletteRate",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Palette Rate",
+          "units": "",
+          "description": "Cycles palette selection over time (units: palettes/sec)"
+        },
+        {
+          "id": "visible",
+          "kind": "bool",
+          "groupId": "generative",
+          "label": "Visibility: Perlin Visible",
+          "units": "",
+          "description": ""
+        }
+      ]
+    },
+    {
+      "typeId": "reactionDiffusion",
+      "groupCount": 1,
+      "parameterCount": 33,
+      "groups": [
+        {
+          "description": "",
+          "id": "generative",
+          "label": "Generative"
+        }
+      ],
+      "parameters": [
+        {
+          "id": "speed",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Time: Simulation Speed",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bpmMultiplier",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Time: BPM Mult",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "alpha",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Visibility: Layer Opacity",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "autoReseedEveryBeats",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Time: Auto Reseed Beats",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "feedRate",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Growth: Feed Rate",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "killRate",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Growth: Kill Rate",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "diffusionA",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Force: Diffusion A",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "diffusionB",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Force: Diffusion B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "injectionRate",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Growth: Injection Rate",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "injectionAmount",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Growth: Injection Amount",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "injectionRadius",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Scale: Injection Radius",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "seed",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Seed: Pattern Seed",
+          "units": "",
+          "description": "Deterministic field seed used when the chemical simulation is reset."
+        },
+        {
+          "id": "seedDensity",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Seed: Patch Density",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "contourThreshold",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Scale: Contour Threshold",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "contourWidth",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Scale: Contour Width",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "fieldScale",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Scale: Field Gain",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "backgroundAlpha",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Visibility: Background Opacity",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "fieldAlpha",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Visibility: Field Opacity",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "contourOpacity",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Visibility: Contour Opacity",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bgR",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Background R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bgG",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Background G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bgB",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Background B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "fieldR",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Field R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "fieldG",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Field G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "fieldB",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Field B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "contourR",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Contour R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "contourG",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Contour G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "contourB",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Contour B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "visible",
+          "kind": "bool",
+          "groupId": "generative",
+          "label": "Action: Visible",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bpmSync",
+          "kind": "bool",
+          "groupId": "generative",
+          "label": "Action: BPM Sync",
+          "units": "",
+          "description": "Use transport BPM instead of free-running simulation speed."
+        },
+        {
+          "id": "paused",
+          "kind": "bool",
+          "groupId": "generative",
+          "label": "Action: Paused",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "reseed",
+          "kind": "bool",
+          "groupId": "generative",
+          "label": "Action: Reseed",
+          "units": "",
+          "description": "Reset the chemical field and seed fresh B chemical patches."
+        },
+        {
+          "id": "autoReseed",
+          "kind": "bool",
+          "groupId": "generative",
+          "label": "Action: Auto Reseed",
+          "units": "",
+          "description": "Reset on a transport-quantized cadence."
+        }
+      ]
+    },
+    {
+      "typeId": "riverFormation",
+      "groupCount": 1,
+      "parameterCount": 40,
+      "groups": [
+        {
+          "description": "",
+          "id": "generative",
+          "label": "Generative"
+        }
+      ],
+      "parameters": [
+        {
+          "id": "alpha",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Visibility: River Opacity",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "speed",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Time: Formation Speed",
+          "units": "",
+          "description": "Free-running river graph simulation steps per second."
+        },
+        {
+          "id": "bpmMultiplier",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Time: BPM Mult",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "autoReseedEveryBeats",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Time: Auto Reseed Beats",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "seed",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Seed: River",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "warmupSteps",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Time: Warmup Steps",
+          "units": "",
+          "description": "Optional hidden simulation steps to pre-age the channel after reset. Use 0 for a straight-start reveal."
+        },
+        {
+          "id": "pathPoints",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Count: Path Points",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "riverWidth",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Scale: River Width",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "widthVariation",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Scale: Width Variation",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "widthPulse",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Motion: Width Pulse",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "migrationRate",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Motion: Bank Migration",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "erosionStrength",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Force: Erosion",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "depositionStrength",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Force: Deposition",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "channelDepth",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Scale: 3D Channel Depth",
+          "units": "",
+          "description": "Stored in the heightfield for future 3D terrain use; the 2D renderer stays mask-based."
+        },
+        {
+          "id": "bankHardness",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Force: Bank Hardness",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "trailDecay",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Time: Trail Decay",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "oxbowDecay",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Time: Oxbow Decay",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "cutoffFactor",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Scale: Cutoff Distance",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "branchChance",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Growth: Chute Chance",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "maxBranches",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Count: Max Branches",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "branchLength",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Scale: Branch Length",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "branchAngle",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Motion: Branch Angle",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "branchWidth",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Scale: Branch Width",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "noiseAmount",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Force: Meander Noise",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "valleyConfinement",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Force: Valley Confinement",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "meanderSmoothing",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Motion: Meander Smoothing",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "curvatureMemory",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Motion: Upstream Curvature",
+          "units": "",
+          "description": "Howard-Knutson style upstream curvature memory measured in channel widths."
+        },
+        {
+          "id": "stabilityClamp",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Motion: Stability Clamp",
+          "units": "",
+          "description": "CFL-style cap on per-step centerline displacement, relative to node spacing."
+        },
+        {
+          "id": "trailBoost",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Glow: Trail Boost",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "trailAlpha",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Visibility: Trail Opacity",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "oxbowAlpha",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Visibility: Oxbow Opacity",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "glowAmount",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Glow: Soft Edge",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "maskThreshold",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Visibility: Mask Threshold",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "colorR",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Foreground R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "colorG",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Foreground G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "colorB",
+          "kind": "float",
+          "groupId": "generative",
+          "label": "Color: Foreground B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "visible",
+          "kind": "bool",
+          "groupId": "generative",
+          "label": "Action: Visible",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bpmSync",
+          "kind": "bool",
+          "groupId": "generative",
+          "label": "Action: BPM Sync",
+          "units": "",
+          "description": "Use transport BPM instead of the free-running formation speed."
+        },
+        {
+          "id": "reseed",
+          "kind": "bool",
+          "groupId": "generative",
+          "label": "Action: Reseed",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "autoReseed",
+          "kind": "bool",
+          "groupId": "generative",
+          "label": "Action: Auto Reseed",
+          "units": "",
+          "description": ""
+        }
+      ]
+    },
+    {
+      "typeId": "solarSystem",
+      "groupCount": 1,
+      "parameterCount": 74,
+      "groups": [
+        {
+          "description": "",
+          "id": "solarSystem",
+          "label": "Solar System"
+        }
+      ],
+      "parameters": [
+        {
+          "id": "alpha",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Visibility: Layer: Opacity",
+          "units": "normalized",
+          "description": ""
+        },
+        {
+          "id": "calloutAlpha",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Alpha: Callout Text",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "calloutBackgroundAlpha",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Alpha: Callout Background",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "calloutScale",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Scale: Callout Size",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "calloutFocusMode",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Action: Callout Focus Mode",
+          "units": "0 all, 1 cycle, 2 changing",
+          "description": ""
+        },
+        {
+          "id": "calloutMaxVisible",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Count: Callout Panels",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "calloutCycleSeconds",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Time: Callout Cycle",
+          "units": "s",
+          "description": ""
+        },
+        {
+          "id": "scale",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Scale: View: Scale",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "sceneZoom",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Scale: View: Zoom",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "orbitSpread",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Scale: Orbit: Spread",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "orbitSpeed",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Motion: Orbit: Speed",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "orbitTilt",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Motion: View: Tilt",
+          "units": "deg",
+          "description": ""
+        },
+        {
+          "id": "orbitRotation",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Color: View: Rotation",
+          "units": "deg",
+          "description": ""
+        },
+        {
+          "id": "orbitPlaneVariation",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Motion: Orbit: Plane Variation",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "eccentricity",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Force: Orbit: Eccentricity Lift",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "depth",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Scale: View: Depth",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "starSize",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Color: Sun: Size",
+          "units": "viewport",
+          "description": ""
+        },
+        {
+          "id": "starGlow",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Color: Sun: Glow",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "starRadiance",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Color: Sun: Radiance",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "starEmissionAudio",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Color: Sun: Emission Lift",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "starSurfaceTurbulence",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Color: Sun: Surface Turbulence",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "solarBurstIntensity",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Color: Sun: Burst Intensity",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "sideFillLight",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Action: Lighting: Side Fill",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "visitorEvents",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Action: Visitors: Events",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "artifactActivity",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Motion: Artifacts: Activity",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "planetSize",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Scale: Planet: Size",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "observedDiversity",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Motion: System: Observed Diversity",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "planetVariation",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Action: Planet: Variation",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "asteroidDensity",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Count: Asteroids: Density",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "cometDensity",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Count: Comets: Density",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "orbitAlpha",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Visibility: Orbit: Alpha",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "orbitThickness",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Scale: Orbit: Thickness",
+          "units": "px",
+          "description": ""
+        },
+        {
+          "id": "trailAlpha",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Visibility: Trail: Alpha",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "trailLength",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Action: Trail: Length",
+          "units": "orbit",
+          "description": ""
+        },
+        {
+          "id": "trailSteps",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Count: Trail: Steps",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "trailStampGain",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Force: Trail: Wave Amount",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "trailStampLife",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Time: Trail: Wave Frequency",
+          "units": "cycles",
+          "description": ""
+        },
+        {
+          "id": "atmosphereGrowth",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Color: Atmosphere: Growth",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "lifeReactivity",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Color: Biosphere: Reactivity",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "biosphereThreshold",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Color: Biosphere: Threshold",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "civilizationGrowth",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Growth: Satellites: Emergence",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "moonSize",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Scale: Moon: Size",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "moonSpeed",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Motion: Moon: Speed",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "audioAmount",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Audio: Signal: Amount",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "audioSmoothing",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Audio: Signal: Smoothing",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bassScale",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Color: Sun: Bloom Lift",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "midsSpeed",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Audio: Solar Wind: Amount",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "highsSparkle",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Audio: Heliosphere: Sparkle",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "waveformAmount",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Color: Heliosphere: Ripple",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "seed",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Seed: System: Seed",
+          "units": "0 = random on setup/reseed",
+          "description": ""
+        },
+        {
+          "id": "bgAlpha",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Color: Background: Alpha",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bgR",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Color: Background: Color R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bgG",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Color: Background: Color G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "bgB",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Color: Background: Color B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "starR",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Color: Sun: Color R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "starG",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Color: Sun: Color G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "starB",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Color: Sun: Color B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "orbitR",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Color: Orbit: Color R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "orbitG",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Color: Orbit: Color G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "orbitB",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Color: Orbit: Color B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "trailR",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Color: Trail: Color R",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "trailG",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Color: Trail: Color G",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "trailB",
+          "kind": "float",
+          "groupId": "solarSystem",
+          "label": "Color: Trail: Color B",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "visible",
+          "kind": "bool",
+          "groupId": "solarSystem",
+          "label": "Visibility: Layer: Visible",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "showOrbits",
+          "kind": "bool",
+          "groupId": "solarSystem",
+          "label": "Color: Orbit: Guides",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "showTrails",
+          "kind": "bool",
+          "groupId": "solarSystem",
+          "label": "Visibility: Trail: Visible",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "showMoons",
+          "kind": "bool",
+          "groupId": "solarSystem",
+          "label": "Visibility: Moon: Visible",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "showRings",
+          "kind": "bool",
+          "groupId": "solarSystem",
+          "label": "Color: Rings: Visible",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "showAsteroids",
+          "kind": "bool",
+          "groupId": "solarSystem",
+          "label": "Visibility: Asteroids: Visible",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "showComets",
+          "kind": "bool",
+          "groupId": "solarSystem",
+          "label": "Visibility: Comets: Visible",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "showWaveformBelt",
+          "kind": "bool",
+          "groupId": "solarSystem",
+          "label": "Visibility: Heliosphere: Visible",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "showCallouts",
+          "kind": "bool",
+          "groupId": "solarSystem",
+          "label": "Action: Callouts Visible",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "calloutCompact",
+          "kind": "bool",
+          "groupId": "solarSystem",
+          "label": "Action: Compact Callouts",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "reseed",
+          "kind": "bool",
+          "groupId": "solarSystem",
+          "label": "Action: Reseed",
+          "units": "",
+          "description": "Generate a new observed-data-driven 3D system. Seed 0 uses a fresh random seed."
+        }
+      ]
+    },
+    {
+      "typeId": "stlModel",
+      "groupCount": 2,
+      "parameterCount": 15,
+      "groups": [
+        {
+          "description": "",
+          "id": "model",
+          "label": "Model"
+        },
+        {
+          "description": "",
+          "id": "visibility",
+          "label": "Visibility"
+        }
+      ],
+      "parameters": [
+        {
+          "id": "spin",
+          "kind": "float",
+          "groupId": "model",
+          "label": "Action: Model Spin",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "hover",
+          "kind": "float",
+          "groupId": "model",
+          "label": "Motion: Model Hover",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "baseHeight",
+          "kind": "float",
+          "groupId": "model",
+          "label": "Color: Model Base Height",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "orbitRadius",
+          "kind": "float",
+          "groupId": "model",
+          "label": "Color: Model Orbit Radius",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "orbitSpeed",
+          "kind": "float",
+          "groupId": "model",
+          "label": "Motion: Model Orbit Speed",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "rotateX",
+          "kind": "float",
+          "groupId": "model",
+          "label": "Color: Model Rotate X",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "rotateY",
+          "kind": "float",
+          "groupId": "model",
+          "label": "Color: Model Rotate Y",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "rotateZ",
+          "kind": "float",
+          "groupId": "model",
+          "label": "Color: Model Rotate Z",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "colorR",
+          "kind": "float",
+          "groupId": "model",
+          "label": "Color: Model Red",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "colorG",
+          "kind": "float",
+          "groupId": "model",
+          "label": "Color: Model Green",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "colorB",
+          "kind": "float",
+          "groupId": "model",
+          "label": "Color: Model Blue",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "scale",
+          "kind": "float",
+          "groupId": "model",
+          "label": "Scale: Model Scale",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "lineOpacity",
+          "kind": "float",
+          "groupId": "model",
+          "label": "Visibility: Model Line Opacity",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "faceOpacity",
+          "kind": "float",
+          "groupId": "model",
+          "label": "Visibility: Model Face Opacity",
+          "units": "",
+          "description": ""
+        },
+        {
+          "id": "visible",
+          "kind": "bool",
+          "groupId": "visibility",
+          "label": "Visibility: Model Visible",
+          "units": "",
+          "description": ""
+        }
+      ]
+    },
+    {
+      "typeId": "text",
+      "groupCount": 0,
+      "parameterCount": 0,
+      "groups": [],
+      "parameters": []
+    }
+  ]
+}

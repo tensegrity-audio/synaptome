@@ -20,6 +20,9 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 APP_ROOT = REPO_ROOT / "synaptome"
 DEFAULT_OUTPUT = REPO_ROOT / "docs" / "contracts" / "parameter_manifest.json"
 DEFAULT_COMBINED_OUTPUT = REPO_ROOT / "tools" / "testdata" / "layer_packages" / "expected_combined_parameter_manifest.json"
+BUILTIN_ELEMENT_CONTRACTS = (
+    REPO_ROOT / "docs" / "contracts" / "builtin_element_parameters.json"
+)
 
 PARAM_ID_RE = re.compile(r"^[A-Za-z][A-Za-z0-9_]*(?:\.[A-Za-z0-9_]+)+$")
 CONSOLE_PATTERN_RE = re.compile(r"^console\.layer\{slot\}(?:\.[A-Za-z0-9_]+)+$")
@@ -278,6 +281,45 @@ def parse_layer_templates(factory_types: dict[str, str]) -> tuple[dict[str, list
     return templates_by_type, explicit_parameters
 
 
+def declared_layer_templates() -> dict[str, list[dict[str, Any]]]:
+    snapshot = load_json(BUILTIN_ELEMENT_CONTRACTS)
+    templates: dict[str, list[dict[str, Any]]] = {}
+    for type_entry in snapshot.get("types", []):
+        if not isinstance(type_entry, dict):
+            continue
+        type_id = type_entry.get("typeId")
+        declarations = type_entry.get("declarations", {})
+        parameters = declarations.get("parameters", []) if isinstance(declarations, dict) else []
+        if not isinstance(type_id, str) or not isinstance(parameters, list):
+            continue
+        type_templates: list[dict[str, Any]] = []
+        for parameter in parameters:
+            if not isinstance(parameter, dict):
+                continue
+            parameter_id = parameter.get("id")
+            kind = parameter.get("kind")
+            if not isinstance(parameter_id, str) or kind not in {"float", "bool", "string"}:
+                continue
+            type_templates.append(
+                {
+                    "suffix": f".{parameter_id}",
+                    "kind": kind,
+                    "source": source_ref(BUILTIN_ELEMENT_CONTRACTS, 1),
+                    "sourceClass": "ElementTypeContract",
+                    "groupId": parameter.get("groupId", ""),
+                    "label": parameter.get("label", parameter_id),
+                    "default": parameter.get("default"),
+                    "units": parameter.get("units", ""),
+                    "description": parameter.get("description", ""),
+                    "range": parameter.get("range"),
+                    "quickAccessOrder": parameter.get("quickAccessOrder"),
+                    "optionSource": parameter.get("optionSource"),
+                }
+            )
+        templates[type_id] = type_templates
+    return templates
+
+
 def layer_assets() -> list[dict[str, Any]]:
     entries: list[dict[str, Any]] = []
     for path in sorted((APP_ROOT / "bin" / "data" / "layers").rglob("*.json")):
@@ -320,11 +362,8 @@ def build_manifest(
     signal_bloom_registration = (
         APP_ROOT / "src" / "runtime" / "SignalBloomRegistration.cpp"
     )
-    factory_types = parse_factory_types(
-        builtin_elements,
-        signal_bloom_registration,
-    )
-    layer_templates, explicit_parameters = parse_layer_templates(factory_types)
+    layer_templates = declared_layer_templates()
+    _, explicit_parameters = parse_layer_templates({})
 
     parameters: dict[str, dict[str, Any]] = {}
     for core_source in (of_app, builtin_host_bindings):
@@ -391,12 +430,14 @@ def build_manifest(
             suffix = template["suffix"]
             param_id = f"{asset['registryPrefix']}{suffix}"
             default_value = default_from_layer(asset["defaults"], suffix)
+            if default_value is None:
+                default_value = template.get("default")
             entry = {
                 "id": param_id,
                 "kind": template["kind"],
                 "scope": "layer_asset",
                 "family": family_for(param_id),
-                "units": infer_units(param_id),
+                "units": template.get("units") or infer_units(param_id),
                 "assetId": asset["id"],
                 "layerType": asset["type"],
                 "template": f"{{registryPrefix}}{suffix}",
@@ -499,7 +540,8 @@ def build_manifest(
         "status": "generated",
         "generator": "tools/gen_parameter_manifest.py",
         "sourceStrategy": [
-            "Static C++ scan of ParameterRegistry addFloat/addBool/addString registrations.",
+            "Authoritative built-in ElementTypeContract declarations expanded through the reviewed contract snapshot.",
+            "Static C++ scan retained only for core/effect ParameterRegistry registrations outside elements.",
             "Layer asset expansion from synaptome/bin/data/layers registryPrefix values.",
             "Console slot templates are patterns because live scene prefixes are slot-indexed.",
         ],
@@ -508,7 +550,7 @@ def build_manifest(
             "synaptome/src/runtime/BuiltinElementHostBindings.cpp",
             "synaptome/src/runtime/BuiltinElements.cpp",
             "synaptome/src/runtime/SignalBloomRegistration.cpp",
-            "synaptome/src/visuals/**/*.cpp",
+            "docs/contracts/builtin_element_parameters.json",
             "synaptome/bin/data/layers/**/*.json",
         ],
         "counts": {

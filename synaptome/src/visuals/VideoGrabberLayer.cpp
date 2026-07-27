@@ -329,19 +329,22 @@ void VideoGrabberLayer::setup(ParameterRegistry& registry) {
     deviceParamId_ = prefix + ".device";
     registry.addFloat(deviceParamId_, &paramDeviceIndex_, paramDeviceIndex_, deviceMeta);
 
-    if (!resolutionOptions_.empty()) {
-        ParameterRegistry::Descriptor resMeta;
-        resMeta.label = "Webcam Resolution";
-        resMeta.group = "Media";
-        resMeta.range.min = 0.0f;
-        resMeta.range.max = static_cast<float>(std::max(0, static_cast<int>(resolutionOptions_.size()) - 1));
-        resMeta.range.step = 1.0f;
-        const std::string summary = resolutionOptionsSummary();
-        if (!summary.empty()) {
-            resMeta.description = summary;
-        }
-        registry.addFloat(prefix + ".resolution", &paramResolutionIndex_, paramResolutionIndex_, resMeta);
+    ParameterRegistry::Descriptor resMeta;
+    resMeta.label = "Webcam Resolution";
+    resMeta.group = "Media";
+    resMeta.range.min = 0.0f;
+    resMeta.range.max = static_cast<float>(
+        std::max(0, static_cast<int>(resolutionOptions_.size()) - 1));
+    resMeta.range.step = 1.0f;
+    const std::string summary = resolutionOptionsSummary();
+    if (!summary.empty()) {
+        resMeta.description = summary;
     }
+    registry.addFloat(
+        prefix + ".resolution",
+        &paramResolutionIndex_,
+        paramResolutionIndex_,
+        resMeta);
 
     ParameterRegistry::Descriptor overlayMeta;
     overlayMeta.label = "Webcam Device Overlay";

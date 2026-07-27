@@ -398,15 +398,18 @@ void LayerFactory::registerType(
     Creator creator) {
     ElementTypeContractRecord record;
     record.state = ParameterDeclarationState::LegacySetupDiscovery;
+    record.bindingMode = ParameterBindingMode::LegacySetupAdapter;
     record.contract.element = std::move(descriptor);
     registerTypeRecord(std::move(record), std::move(creator));
 }
 
 void LayerFactory::registerType(
     synaptome::element::ElementTypeContract contract,
-    Creator creator) {
+    Creator creator,
+    ParameterBindingMode bindingMode) {
     ElementTypeContractRecord record;
     record.state = ParameterDeclarationState::Declared;
+    record.bindingMode = bindingMode;
     record.contract = std::move(contract);
     registerTypeRecord(std::move(record), std::move(creator));
 }
@@ -432,6 +435,14 @@ void LayerFactory::registerTypeRecord(
             ParameterDeclarationState::LegacySetupDiscovery) {
         throw std::invalid_argument(
             "LayerFactory::registerType invalid parameter declaration state");
+    }
+    switch (record.bindingMode) {
+    case ParameterBindingMode::Explicit:
+    case ParameterBindingMode::LegacySetupAdapter:
+        break;
+    default:
+        throw std::invalid_argument(
+            "LayerFactory::registerType invalid parameter binding mode");
     }
     if (!creator) {
         throw std::invalid_argument(

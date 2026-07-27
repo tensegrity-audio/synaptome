@@ -1,6 +1,6 @@
 # Synaptome Public Contract Index
 
-Status: public app/runtime contract coverage is locked for the first Synaptome extraction slice. The current `python tools\validate_configs.py --public-app` report covers 17 public contracts.
+Status: public app/runtime contract coverage is locked for the first Synaptome extraction slice. The current `python tools\validate_configs.py --public-app` report covers 18 public contracts.
 
 This index names the contracts that the standalone Synaptome runtime owns: app configuration, scenes, layer assets, parameter IDs, mappings, HUD/Console state, and the public artist SDK fixture.
 
@@ -31,6 +31,17 @@ Architecture contract drafts:
 - [Synaptome Public Runtime Contract Roadmap](../architecture/synaptome_public_runtime_contract_roadmap.md) owns non-layer scene, HUD, console/display, media, device, external boundary, and host audio follow-up.
 
 Parameter contract artifacts:
+- [builtin_element_parameters.json](builtin_element_parameters.json) is the
+  reviewed, type-level source snapshot for all 23 built-in element parameter
+  contracts.
+- [element_parameter_catalog.json](element_parameter_catalog.json) is the
+  generated machine-readable catalog view consumed by tooling and inspection
+  surfaces.
+- [Element Parameter Reference](../element_parameter_reference.md) is the
+  generated human-readable reference for the same declarations.
+- `python tools\gen_builtin_element_contracts.py --check` verifies the reviewed
+  snapshot, compiled Runtime payload, catalog view, and documentation stay
+  identical.
 - [parameter_manifest.json](parameter_manifest.json) is the generated static parameter ID snapshot.
 - [parameter_vocabulary.md](parameter_vocabulary.md) is the first public naming vocabulary for reusable Synaptome parameters.
 
@@ -111,6 +122,7 @@ Coverage commands:
 
 ```powershell
 python tools\validate_configs.py --public-app
+python tools\gen_builtin_element_contracts.py --check
 python tools\validate_parameter_targets.py --strict --contract-fixtures
 python tools\validate_modular_layer_families.py
 python tools\validate_layer_packages.py --check

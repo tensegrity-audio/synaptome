@@ -37,10 +37,29 @@ namespace {
     }
 
     std::string entryDescription(const LayerLibrary::Entry& entry) {
+        std::ostringstream out;
         if (!entry.layerGroup.empty()) {
-            return displayCategory(entry) + " / " + entry.layerGroup;
+            out << displayCategory(entry) << " / "
+                << entry.layerGroup;
+        } else {
+            out << displayCategory(entry);
         }
-        return displayCategory(entry);
+        out << " · " << entry.parameterCount
+            << (entry.parameterCount == 1
+                    ? " parameter"
+                    : " parameters");
+        if (!entry.parameterGroups.empty()) {
+            out << " · ";
+            for (std::size_t i = 0;
+                 i < entry.parameterGroups.size();
+                 ++i) {
+                if (i > 0) {
+                    out << ", ";
+                }
+                out << entry.parameterGroups[i];
+            }
+        }
+        return out.str();
     }
 
     std::string lowercase(std::string value) {
@@ -64,9 +83,13 @@ namespace {
         const std::string description = entry.config.is_object()
             ? entry.config.value("description", std::string())
             : std::string();
+        std::string parameterGroups;
+        for (const auto& group : entry.parameterGroups) {
+            parameterGroups += " " + group;
+        }
         return lowercase(entry.label + " " + entry.id + " " + entry.category + " " +
                          entry.layerGroup + " " + entry.type + " " + entry.model + " " +
-                         entry.stateModel + " " + description);
+                         entry.stateModel + " " + description + parameterGroups);
     }
 
     bool matchesSearch(const LayerLibrary::Entry& entry,

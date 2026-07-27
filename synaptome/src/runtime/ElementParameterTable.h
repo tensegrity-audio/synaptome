@@ -49,6 +49,41 @@ public:
             &value);
     }
 
+    void bindLegacyRegistry(
+        std::string_view registryPrefix,
+        const ParameterRegistry& registry) {
+        const std::string prefix =
+            std::string(registryPrefix) + ".";
+        const auto localId = [&](const std::string& id) {
+            if (id.rfind(prefix, 0) != 0 ||
+                id.size() <= prefix.size()) {
+                bindingError_ =
+                    "legacy setup registered a parameter outside its "
+                    "declared prefix: " + id;
+                return std::string();
+            }
+            return id.substr(prefix.size());
+        };
+        for (const auto& parameter : registry.floats()) {
+            const auto id = localId(parameter.meta.id);
+            if (!id.empty() && parameter.value) {
+                bind(id, *parameter.value);
+            }
+        }
+        for (const auto& parameter : registry.bools()) {
+            const auto id = localId(parameter.meta.id);
+            if (!id.empty() && parameter.value) {
+                bind(id, *parameter.value);
+            }
+        }
+        for (const auto& parameter : registry.strings()) {
+            const auto id = localId(parameter.meta.id);
+            if (!id.empty() && parameter.value) {
+                bind(id, *parameter.value);
+            }
+        }
+    }
+
     std::string contractError() const {
         if (!bindingError_.empty()) {
             return bindingError_;

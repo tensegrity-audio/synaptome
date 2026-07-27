@@ -207,6 +207,14 @@ def main() -> int:
     builtin_elements = (
         ROOT / "synaptome/src/runtime/BuiltinElements.cpp"
     ).read_text(encoding="utf-8")
+    builtin_parameter_contracts = (
+        ROOT
+        / "synaptome/src/runtime/BuiltinElementParameterContracts.cpp"
+    ).read_text(encoding="utf-8")
+    builtin_parameter_contracts_header = (
+        ROOT
+        / "synaptome/src/runtime/BuiltinElementParameterContracts.h"
+    ).read_text(encoding="utf-8")
     post_effect_header = (
         ROOT / "synaptome/src/visuals/effects/PostEffectChain.h"
     ).read_text(encoding="utf-8")
@@ -522,6 +530,7 @@ def main() -> int:
             errors.append(f"public parameter binding seam is missing {token}")
     for token in (
         "class ElementParameterTable final : public element::ParameterBinder",
+        "void bindLegacyRegistry(",
         "contractError() const",
         "applyDeclarationDefaults() const",
         "void populate(",
@@ -537,8 +546,12 @@ def main() -> int:
         "enum class ParameterDeclarationState",
         "LegacySetupDiscovery",
         "Declared",
+        "enum class ParameterBindingMode",
+        "Explicit",
+        "LegacySetupAdapter",
         "struct ElementTypeContractRecord",
         "ParameterDeclarationState state",
+        "ParameterBindingMode bindingMode",
         "synaptome::element::ElementTypeContract contract;",
         "synaptome::element::ElementTypeContract contract,",
         "const ElementTypeContractRecord* typeContract(",
@@ -561,6 +574,38 @@ def main() -> int:
             errors.append(
                 "scoped element registry is missing atomic parameter "
                 "contract behavior: " + token
+            )
+    for token in (
+        "ParameterBindingMode::Explicit",
+        "parameterTable.bindLegacyRegistry(",
+        "parameterTable.populate(",
+    ):
+        if token not in runtime_source:
+            errors.append(
+                "Runtime is missing declared parameter binding mode behavior: "
+                + token
+            )
+    for token in (
+        "builtinElementParameterDeclarations(typeId)",
+        "ParameterBindingMode::",
+        "LegacySetupAdapter",
+    ):
+        if token not in builtin_elements:
+            errors.append(
+                "built-in registration is missing authoritative generated "
+                "parameter declarations: " + token
+            )
+    for token in (
+        "builtinElementParameterDeclarations(",
+        "builtinElementParameterTypeIds()",
+    ):
+        if (
+            token not in builtin_parameter_contracts
+            and token not in builtin_parameter_contracts_header
+        ):
+            errors.append(
+                "compiled built-in parameter contract loader is missing " +
+                token
             )
     if "registerActions(" not in layer_header:
         errors.append("compatibility Layer is missing optional action registration")
@@ -2036,6 +2081,9 @@ def main() -> int:
         "telemetry replacement did not publish the adopted instance",
         "clear retained live telemetry",
         "shutdown retained live telemetry",
+        "RunLegacyParameterAdapterScenario",
+        "legacy setup metadata overrode declarations or configured values",
+        "legacy adapter failure leaked state or lost diagnostics",
     ):
         if token not in runtime_test:
             errors.append(f"RuntimeCore test is missing control-plane coverage: {token}")

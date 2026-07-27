@@ -65,7 +65,7 @@ void registerBuiltinElementHostParameters(ParameterRegistry& registry) {
         registry,
         &textState.content,
         textState.content,
-        "Center Text",
+        "Motion: Center Text",
         overlayGroup,
         "Text displayed in the center text slot");
     addString(
@@ -73,7 +73,7 @@ void registerBuiltinElementHostParameters(ParameterRegistry& registry) {
         registry,
         &textState.topLeft,
         textState.topLeft,
-        "Top Left Text",
+        "Motion: Top Left Text",
         overlayGroup,
         "Text displayed in the top-left text slot");
     addString(
@@ -81,7 +81,7 @@ void registerBuiltinElementHostParameters(ParameterRegistry& registry) {
         registry,
         &textState.topRight,
         textState.topRight,
-        "Top Right Text",
+        "Motion: Top Right Text",
         overlayGroup,
         "Text displayed in the top-right text slot");
     addString(
@@ -89,7 +89,7 @@ void registerBuiltinElementHostParameters(ParameterRegistry& registry) {
         registry,
         &textState.bottomLeft,
         textState.bottomLeft,
-        "Bottom Left Text",
+        "Motion: Bottom Left Text",
         overlayGroup,
         "Text displayed in the bottom-left text slot");
     addString(
@@ -97,7 +97,7 @@ void registerBuiltinElementHostParameters(ParameterRegistry& registry) {
         registry,
         &textState.bottomRight,
         textState.bottomRight,
-        "Bottom Right Text",
+        "Motion: Bottom Right Text",
         overlayGroup,
         "Text displayed in the bottom-right text slot");
     addString(
@@ -105,7 +105,7 @@ void registerBuiltinElementHostParameters(ParameterRegistry& registry) {
         registry,
         &textState.font,
         textState.font,
-        "Font File",
+        "Motion: Font File",
         overlayGroup,
         "TrueType font filename under data/fonts");
     const float fontIndexMax = textState.fontIndexMax();

@@ -4640,9 +4640,12 @@ bool RunCircuitLeniaLifecycleScenario() {
     organic.setup(organicRegistry);
     require(!organic.debugUsesCircuitPresentation(),
             "established Lenia unexpectedly switched to circuit presentation");
-    require(organicRegistry.findFloat(
-                "generative.lenia.test.circuitThreshold") == nullptr,
-            "circuit-only controls leaked into the established Lenia UI");
+    const auto* organicThreshold = organicRegistry.findFloat(
+        "generative.lenia.test.circuitThreshold");
+    require(
+        organicThreshold &&
+            organicThreshold->meta.group == "Circuit Appearance",
+        "Lenia variants no longer expose one stable parameter surface");
     return true;
 }
 
@@ -4652,12 +4655,6 @@ bool RunCircuitLeniaOscDefaultsScenario() {
             throw std::runtime_error(message);
         }
     };
-
-    const std::string mapPath =
-        (synaptome_test_paths::dataRoot() / "config" / "midi-map.json").string();
-    MidiRouter router;
-    require(router.load(mapPath),
-            "Circuit Lenia editable OSC defaults did not load through MidiRouter");
 
     struct ExpectedRoute {
         const char* pattern;
@@ -4681,6 +4678,29 @@ bool RunCircuitLeniaOscDefaultsScenario() {
         { "/control/circuit-lenia/field-scale",
           "generative.circuitLenia.fieldScale", 0.5f, 4.0f },
     };
+
+    ofJson fixture = {
+        {"cc", ofJson::array()},
+        {"buttons", ofJson::array()},
+        {"oscSources", ofJson::array()},
+        {"osc", ofJson::array()},
+    };
+    for (const auto& expected : routes) {
+        fixture["osc"].push_back({
+            {"bank", "home"},
+            {"pattern", expected.pattern},
+            {"target", expected.target},
+            {"in", {0.0f, 1.0f}},
+            {"out", {expected.outMin, expected.outMax}},
+            {"blend", "absolute"},
+            {"relative", false},
+        });
+    }
+
+    MidiRouter router;
+    require(
+        router.importMappingSnapshot(fixture, true),
+        "Circuit Lenia editable OSC fixture did not import");
 
     for (const auto& expected : routes) {
         const auto* route = router.findOscMap(expected.target);

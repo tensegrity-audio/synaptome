@@ -3,6 +3,7 @@
 #include "ofLog.h"
 #include <algorithm>
 #include <filesystem>
+#include <unordered_map>
 #include <vector>
 
 namespace {
@@ -204,6 +205,38 @@ bool LayerLibrary::appendConfig(const ofJson& cfg, const std::string& configPath
         }
         entries_.push_back(std::move(entry));
         return true;
+}
+
+void LayerLibrary::applyElementParameterDeclarations(
+    const std::vector<
+        synaptome::element::ElementTypeContract>& contracts) {
+    std::unordered_map<
+        std::string,
+        const synaptome::element::ParameterDeclarationSet*>
+        declarationsByType;
+    declarationsByType.reserve(contracts.size());
+    for (const auto& contract : contracts) {
+        declarationsByType.emplace(
+            contract.element.typeId,
+            &contract.parameters);
+    }
+    for (auto& entry : entries_) {
+        entry.parameterCount = 0;
+        entry.parameterGroups.clear();
+        const auto found =
+            declarationsByType.find(entry.type);
+        if (found == declarationsByType.end()) {
+            continue;
+        }
+        entry.parameterCount =
+            found->second->parameters.size();
+        entry.parameterGroups.reserve(
+            found->second->groups.size());
+        for (const auto& group :
+             found->second->groups) {
+            entry.parameterGroups.push_back(group.label);
+        }
+    }
 }
 
 void LayerLibrary::sortEntries() {

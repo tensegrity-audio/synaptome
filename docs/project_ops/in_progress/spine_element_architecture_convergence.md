@@ -4,21 +4,21 @@ State Summary
 - Request ID: spine_element_architecture_convergence
 - Phase: EXECUTION
 - Status: In Progress
-- Steps Complete: 3 / 12
-- Progress: SEAC-3, SEAC-3R, and SEAC-4A are complete. SEAC-4 remains In Progress at SEAC-4B. SEAC-4B1 established pointer-free declarations; SEAC-4B2 now makes those declarations authoritative for Signal Bloom metadata/defaults while a bind-only public capability connects its 18 declared parameters to live instance storage. The other 22 shipping registrations remain legacy setup discovery.
-- Last Step Outcome: 2026-07-27 - Completed the SEAC-4B2 live-binding checkpoint with contract-checked float/bool/string storage binding, declaration-owned metadata/defaults, configured base-value preservation, transactional failure cleanup, and passing focused native runtime/package gates.
-- Next Step: Continue SEAC-4B by migrating the remaining 22 registrations and generating Browser, catalog, manifest, and documentation views from authoritative declarations. Package serialization remains SEAC-7, generated registration remains SEAC-8, and persisted scene/preset/mapping migration remains SEAC-5/SEAC-9.
+- Steps Complete: 4 / 12
+- Progress: SEAC-4 is complete. All 23 built-in element types now have construction-free static parameter declarations covering 786 controls. Runtime enforces exact ID/kind/storage parity, discards compatibility setup metadata, and publishes declaration-owned metadata/defaults. Browser inspection, the compatibility parameter manifest, a machine-readable catalog, compiled Runtime declarations, and the human reference are generated from one reviewed snapshot.
+- Last Step Outcome: 2026-07-27 - Closed SEAC-4 with catalog-wide declaration capture, stable variant surfaces, exact live validation across 23 types and 55 assets, adapter-mode native failure coverage, and passing generated-view checks.
+- Next Step: Begin SEAC-5 by freezing versioned ownership and provenance for defaults, presets, scenes, mapping banks, machine profiles, and operator preferences.
 - Dependencies / Overlap: `show_readiness_operator_stability`, `layer_package_compatibility_bench_scaffolding`, `docs/architecture/synaptome_spine_element_model.md`, `docs/architecture/synaptome_layer_system_roadmap.md`, `docs/architecture/synaptome_artist_sdk.md`, parameter/scene/mapping contracts, and layer-authoring tests.
 - Primary Scope: runtime
 - Secondary Scopes: contracts, artist-sdk, tests, docs, release
-- Blocking Issues / Unknowns: Native binary modules remain an optional architecture decision rather than a promised deliverable. The aggregate registration list and registration-source tool lists remain handwritten until SEAC-8. Signal Bloom now uses declaration-owned metadata/defaults and bind-only storage, but Browser/catalog/manifest generation, the other 22 declared registrations, package serialization, and scene/preset/mapping migration remain incomplete. Legacy types still own metadata in `setup()`. The shared `TextLayerState` singleton, cross-instance values, and pre-adoption `configure()` side effects remain explicit SEAC-4B/SEAC-5 parameter/state-ownership debt behind the host adapter.
+- Blocking Issues / Unknowns: Native binary modules remain an optional architecture decision rather than a promised deliverable. Aggregate registration remains handwritten until SEAC-8. Twenty-two built-ins still use a declared compatibility adapter to expose existing storage during `setup()`; Runtime ignores that metadata and checks it against the static contract, so direct bind-only migration is cleanup rather than a Phase 4 authority gap. The shared `TextLayerState` singleton, cross-instance values, and pre-adoption `configure()` side effects now belong to SEAC-5 state-ownership work.
 - Impact / Priority Notes: This is the active architecture lane and precedes automatic discovery, broader package activation, or new content-family expansion.
 - Priority Score: N/A
 - Priority Lane: Fast-Track
 - Ready State: Ready
 - Ready Gate: The architecture direction, compatibility policy, ordered tasks, and stop conditions are explicit; the operator accepted residual show-validation risk and authorized execution.
 - Project Ops / Roadmap Updates (timestamped): 2026-07-26 - Added the canonical model and subordinated package/discovery work to its contract and build gates. 2026-07-26 - Promoted SEAC to execution after dual-screen validation was deferred. 2026-07-26 - Completed the dependency inventory and froze the Element SDK v1 source/static-link boundary. 2026-07-26 - Landed the first SEAC-3 build and registration slice. 2026-07-26 - Moved generic element preparation/release and exact registration ownership behind the first Runtime facade seam. 2026-07-26 - Linked the first runtime-core library and moved fixed composition storage plus generic update/draw/resize ownership behind it. 2026-07-26 - Added isolated parameter staging and transactional same-address visual-element replacement. 2026-07-26 - Hardened reserved opacity ownership, prepared-result lifetime, FX/UI-to-visual adoption, bool modifier migration, and registry-consumer invalidation. 2026-07-26 - Removed the global element factory and proved per-Runtime type-registry isolation. 2026-07-26 - Moved zero-based effect coverage-window policy into Runtime and removed the duplicate `PostEffectChain` resolver without expanding the Element SDK. 2026-07-26 - Added the Runtime composition mutation control plane, Runtime-owned layer opacity, a const-only host view, and narrow render/legacy-element seams. 2026-07-27 - Replaced the const live host view with pointer-free by-value snapshots and removed public live composition access. 2026-07-27 - Replaced pointer-addressed generic element replacement with a zero-based composition-layer transaction and narrowed mutable legacy access to two compatibility areas. 2026-07-27 - Removed the derived element cache and moved ordinary built-in views, bindings, and parameter actions to snapshot-addressed registry access. 2026-07-27 - Added live-instance action registration, pointer-free snapshot discovery, and generic slot-addressed invocation without adding persisted action mappings. 2026-07-27 - Replaced read-only concrete element inspection with separate on-demand typed telemetry and made Geodesic subdivision durable parameter state. 2026-07-27 - Consolidated host creator bindings in the controlled aggregate and shared Signal Bloom's package leaf registrar with its bench without claiming generated registration. 2026-07-27 - Isolated legacy Text host parameters and font synchronization behind `BuiltinElementHostBindings` without claiming singleton retirement or authoritative declarations. 2026-07-27 - Closed SEAC-3R by extracting host-only composition rendering/GPU-target ownership, retiring the raw mutable target seam, and adding a dedicated stub-backed renderer policy harness. 2026-07-27 - Closed SEAC-4A with minimal static type/kind/action descriptor authority, atomic descriptor-plus-creator registration, construction-free inspection, exact live handler binding, and shipping registration migration. 2026-07-27 - Completed SEAC-4B1 with the pointer-free parameter DTO, explicit declared-versus-legacy registry state, and a construction-free five-group/18-parameter Signal Bloom declaration with exact package/static parity plus compatible live ID/kind/range registration. 2026-07-27 - Completed SEAC-4B2 for Signal Bloom with bind-only live storage and declaration-owned runtime metadata/defaults.
-- Resume From: Phase EXECUTION, State In Progress, Next Action continue SEAC-4B with the remaining 22 declared registrations and declaration-generated public views.
+- Resume From: Phase EXECUTION, State In Progress, Next Action begin SEAC-5 state ownership and provenance.
 
 ## Milestone Synthesis
 
@@ -114,7 +114,7 @@ State Summary
 | SEAC-1 | Accept and route one canonical spine/element/layer vocabulary, capability ladder, and compatibility policy. | Done |
 | SEAC-2 | Inventory current host/element dependencies and freeze Element SDK v1 identities, lifecycle, service, render, resource, and capability decisions. | Done |
 | SEAC-3 | Complete the Element SDK/runtime-core/host build boundary, including controlled static registration outside `ofApp.cpp`, host-only GPU-target ownership, and presentation delegation without a raw mutable render-target seam. | Done |
-| SEAC-4 | Make static `ElementDescriptor` action declarations and structured parameter declarations authoritative; enforce live binding parity and generate catalog, manifest, Browser, and documentation views from those declarations. Execute SEAC-4A descriptors/actions before SEAC-4B parameters/catalog parity. | In Progress |
+| SEAC-4 | Make static `ElementDescriptor` action declarations and structured parameter declarations authoritative; enforce live binding parity and generate catalog, manifest, Browser, and documentation views from those declarations. Execute SEAC-4A descriptors/actions before SEAC-4B parameters/catalog parity. | Done |
 | SEAC-5 | Define and implement versioned state ownership for defaults, presets, scenes, mapping banks, machine profiles, operator preferences, provenance, and migrations. | Planned |
 | SEAC-6 | Generalize the single-element confidence suite for dependency resolution, setup, descriptor comparison, deterministic update, offscreen rendering, GL containment, teardown/reload, and performance reporting. | Planned |
 | SEAC-7 | Serialize the frozen type descriptors, parameter declarations, compatibility requirements, capabilities, definitions, assets, presets, mapping suggestions, tests, and migrations into Element Package v1; validate package/runtime descriptor parity before activation. | Planned |
@@ -132,8 +132,9 @@ effect interface. SEAC-4A is complete: minimal static type/kind/action
 descriptors and the exact live handler-binding set are authoritative. SEAC-4B1
 established the first construction-free static parameter declaration, and
 SEAC-4B2 binds that declaration to Signal Bloom's live instance storage while
-making its static metadata/defaults authoritative. Generated views and the
-other 22 registrations remain. Metadata-generated registration remains SEAC-8.
+making its static metadata/defaults authoritative. SEAC-4B3 closes the gate:
+all 23 built-ins now have authoritative static declarations and exact runtime
+parity; generated registration remains SEAC-8.
 
 ## Ordered Roadmap
 
@@ -456,8 +457,13 @@ source-code archaeology or private host knowledge.
   ordered groups and 18 ordered parameters in package order, including explicit
   visibility, scale options, the transport BPM-multiplier option source, no
   quick-access entries, and the exact `alpha` to `opacity` deprecation.
-  Current `setup()` registration remains live and repeats metadata for parity;
-  the other 22 shipping registrations remain legacy setup discovery.
+  Its explicit binding path is the reference implementation.
+- 2026-07-27 - Completed SEAC-4B3 and closed SEAC-4. A reviewed catalog-wide
+  snapshot now generates compiled Runtime declarations, the parameter catalog,
+  Browser group/count inspection, compatibility manifests, and the human
+  reference. The compatibility adapter binds existing setup storage by exact
+  ID/kind while discarding setup metadata. The live gate passed all 23 types
+  and 55 catalog assets.
 
 ## Validation
 
@@ -477,6 +483,14 @@ source-code archaeology or private host knowledge.
   snap/step fidelity across element replacement.
 - Passed: Element boundary policy, public/shipping source parity, shared
   registration, generated manifest, and catalog golden checks.
+- Passed: `python tools/gen_builtin_element_contracts.py --check` (23 types,
+  786 parameters).
+- Passed: built-in live contract validation (23 types, 55 assets).
+- Passed: RuntimeCore native adapter coverage for authoritative metadata,
+  configured base values, live storage, cleanup, and missing/extra/wrong-kind
+  failures.
+- Passed: BrowserFlow Release execution (36 scenarios), including stable Lenia
+  variant parameters and hermetic Circuit Lenia mapping defaults.
 - Passed: `python tools/validate_layer_authoring.py runtime-core --native
   --incremental-app`.
 - Passed: Runtime lifecycle identity, prefix reservation, exact ownership,
@@ -581,16 +595,13 @@ source-code archaeology or private host knowledge.
   parity plus compatible live ID/kind/range registration, then reports PASS
   for its existing 18-parameter, 240-update, stub-backed draw contract.
   Public and shipping Signal Bloom registrar bodies remain in parity.
-- Current Gate: SEAC-4B2 is complete inside SEAC-4B; the milestone remains 3
-  of 12 and SEAC-4/SEAC-4B remain In Progress. Signal Bloom now has bind-only
-  live storage plus declaration-owned metadata/defaults. Browser/catalog/
-  manifest/docs generation, the remaining 22 registrations, package
-  serialization, and scene/preset/mapping migration are not complete. Legacy
-  types retain `setup()` metadata. The shared Text singleton and its
-  pre-adoption state effects remain SEAC-4B/SEAC-5 debt behind the host-only
-  adapter.
-- Not Run: BrowserFlow execution, physical MIDI control, and the complete
-  show-machine recovery rehearsal remain deferred. BrowserFlow Release builds.
+- Current Gate: SEAC-4 is complete and the milestone is 4 of 12. The current
+  gate is SEAC-5: versioned state ownership, provenance, compatibility readers,
+  and migrations for presets, scenes, mappings, machine profiles, and operator
+  preferences. The shared Text singleton and pre-adoption state effects are
+  explicit SEAC-5 debt.
+- Not Run: Physical MIDI control and the complete show-machine recovery
+  rehearsal remain deferred.
 - Manual Evidence: User reports the Release app and dual-screen mode working well. MIDI has not been tested.
 
 ## Doc Sync

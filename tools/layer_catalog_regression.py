@@ -53,6 +53,17 @@ def parse_factory_types() -> dict[str, str]:
         match.group(1): match.group(2)
         for match in inline_pattern.finditer(text)
     }
+    factory_types.update(
+        {
+            match.group(1): match.group(2)
+            for match in re.finditer(
+                r'registerBuiltin\(\s*ElementDescriptor\s*\{\s*"([^"]+)".*?'
+                r'std::make_unique<([^>]+)>',
+                text,
+                re.DOTALL,
+            )
+        }
+    )
     contract_types = {
         match.group(1): match.group(2)
         for match in re.finditer(

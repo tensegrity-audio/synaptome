@@ -133,26 +133,27 @@ void LeniaLayer::setup(ParameterRegistry& registry) {
     registerFloat(registry, prefix + ".edgeG", &paramEdgeG_, paramEdgeG_, "Color: Edge G", 0.0f, 1.0f, 0.01f);
     registerFloat(registry, prefix + ".edgeB", &paramEdgeB_, paramEdgeB_, "Color: Edge B", 0.0f, 1.0f, 0.01f);
 
-    if (presentation_ == Presentation::Circuit) {
-        registerFloat(
-            registry, prefix + ".circuitThreshold",
-            &paramCircuitThreshold_, paramCircuitThreshold_,
-            "Level: Circuit Threshold", 0.0f, 0.95f, 0.01f,
-            "Field values below this level do not produce circuit contours.",
-            "Circuit Appearance", true, 20);
-        registerFloat(
-            registry, prefix + ".circuitLevels",
-            &paramCircuitLevels_, paramCircuitLevels_,
-            "Count: Circuit Contour Levels", 2.0f, 8.0f, 1.0f,
-            "Number of hard isocontour bands extracted from the Lenia field.",
-            "Circuit Appearance");
-        registerFloat(
-            registry, prefix + ".circuitTraceWidth",
-            &paramCircuitTraceWidth_, paramCircuitTraceWidth_,
-            "Scale: Circuit Trace Width", 1.0f, 4.0f, 1.0f,
-            "Hard-edged contour width in simulation pixels.",
-            "Circuit Appearance", true, 30);
-    }
+    // The type-level parameter surface is stable across presentation variants.
+    // Organic assets retain these values for preset/mapping compatibility even
+    // though only the circuit renderer consumes them.
+    registerFloat(
+        registry, prefix + ".circuitThreshold",
+        &paramCircuitThreshold_, paramCircuitThreshold_,
+        "Level: Circuit Threshold", 0.0f, 0.95f, 0.01f,
+        "Field values below this level do not produce circuit contours.",
+        "Circuit Appearance", true, 20);
+    registerFloat(
+        registry, prefix + ".circuitLevels",
+        &paramCircuitLevels_, paramCircuitLevels_,
+        "Count: Circuit Contour Levels", 2.0f, 8.0f, 1.0f,
+        "Number of hard isocontour bands extracted from the Lenia field.",
+        "Circuit Appearance");
+    registerFloat(
+        registry, prefix + ".circuitTraceWidth",
+        &paramCircuitTraceWidth_, paramCircuitTraceWidth_,
+        "Scale: Circuit Trace Width", 1.0f, 4.0f, 1.0f,
+        "Hard-edged contour width in simulation pixels.",
+        "Circuit Appearance", true, 30);
 
     allocateField();
     resetField();

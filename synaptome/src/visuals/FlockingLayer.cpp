@@ -9,26 +9,6 @@
 
 namespace {
     constexpr int kModeCount = 3;
-    const char* kSchoolingModeLabels[kModeCount] = {
-        "Gather",
-        "Scatter",
-        "Panic"
-    };
-    const char* kMurmurationModeLabels[kModeCount] = {
-        "Fold",
-        "Bloom",
-        "Ripple"
-    };
-
-    std::string modeDescriptions(bool schoolingModel) {
-        const char* const* labels = schoolingModel ? kSchoolingModeLabels : kMurmurationModeLabels;
-        std::string desc;
-        for (int i = 0; i < kModeCount; ++i) {
-            if (!desc.empty()) desc += "  ";
-            desc += ofToString(i) + "=" + labels[i];
-        }
-        return desc;
-    }
 }
 
 void FlockingLayer::configure(const ofJson& config) {
@@ -146,11 +126,14 @@ void FlockingLayer::setup(ParameterRegistry& registry) {
 
     meta = {};
     meta.group = "Generative";
-    meta.label = model_ == Schooling ? "Action: School Mode" : "Action: Murmuration Mode";
+    meta.label = "Action: Behavior Mode";
     meta.range.min = 0.0f;
     meta.range.max = static_cast<float>(kModeCount - 1);
     meta.range.step = 1.0f;
-    meta.description = modeDescriptions(model_ == Schooling);
+    meta.description =
+        "Select one of three model-specific behaviors. "
+        "Schooling: 0=Gather, 1=Scatter, 2=Panic. "
+        "Murmuration: 0=Fold, 1=Bloom, 2=Ripple.";
     meta.quickAccess = true;
     meta.quickAccessOrder = 20;
     registry.addFloat(prefix + ".mode", &paramMode_, paramMode_, meta);
@@ -217,13 +200,13 @@ void FlockingLayer::setup(ParameterRegistry& registry) {
     meta.range.step = 0.01f;
     registry.addFloat(prefix + ".fearTrailAlpha", &paramFearTrailAlpha_, paramFearTrailAlpha_, meta);
 
-    meta.label = model_ == Schooling ? "Scale: School Radius" : "Count: Topological Neighbors";
+    meta.label = "Scale: Neighborhood";
     meta.range.min = 1.0f;
     meta.range.max = 12.0f;
     meta.range.step = 1.0f;
-    meta.description = model_ == Schooling
-        ? "Metric neighborhood radius: higher values make the school clump and lane over a larger local zone."
-        : "Topological neighborhood count: each bird follows this many nearest birds, independent of metric distance.";
+    meta.description =
+        "Controls metric neighborhood radius for schooling and nearest-neighbor "
+        "count for murmuration.";
     registry.addFloat(prefix + ".neighborCount", &paramNeighborCount_, paramNeighborCount_, meta);
 
     meta.label = "Force: Cohesion";

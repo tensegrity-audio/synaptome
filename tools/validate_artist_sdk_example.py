@@ -90,11 +90,19 @@ def dumps(data: dict[str, Any]) -> str:
     return json.dumps(data, indent=2, sort_keys=False) + "\n"
 
 
-def extract_parameters(source_text: str) -> dict[str, str]:
+def extract_parameters(
+    source_text: str,
+    registration_text: str,
+) -> dict[str, str]:
     pattern = re.compile(r"registry\.add(Float|Bool|String)\(\s*prefix\s*\+\s*\"\.([^\"]+)\"")
     found: dict[str, str] = {}
     for kind, suffix in pattern.findall(source_text):
         found[suffix] = kind.lower()
+    for kind, suffix in re.findall(
+        r"\b(bool|float)Parameter\(\s*\"([^\"]+)\"",
+        registration_text,
+    ):
+        found[suffix] = kind
     return dict(sorted(found.items()))
 
 
@@ -149,7 +157,10 @@ def collect_errors(
 ) -> list[str]:
     errors: list[str] = []
 
-    if "class SignalBloomLayer : public Layer" not in header_text:
+    if not re.search(
+        r"class\s+SignalBloomLayer\s+final\s*:\s*public\s+Layer",
+        header_text,
+    ):
         errors.append("SignalBloomLayer.h must declare SignalBloomLayer as a Layer subclass")
 
     for method in ("configure", "setup", "update", "draw"):
@@ -291,7 +302,7 @@ def build_contract() -> tuple[dict[str, Any], list[str]]:
     if not isinstance(scene, dict):
         return {}, ["scene fixture must be a JSON object"]
 
-    parameters = extract_parameters(source_text)
+    parameters = extract_parameters(source_text, registration_text)
     targets = sorted(set(iter_targets(scene)))
     signal_slot_suffixes = slot_parameter_suffixes(scene, 1)
     media_slot_suffixes = slot_parameter_suffixes(scene, 2)

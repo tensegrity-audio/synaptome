@@ -285,27 +285,94 @@ Runtime::ElementResult Runtime::prepareElementImpl(
         result.stagedParameters_ = std::make_unique<ParameterRegistry>();
         if (typeContract->state ==
             LayerFactory::ParameterDeclarationState::Declared) {
-            result.stage = "bind";
-            auto* bindable =
-                dynamic_cast<element::ParameterBindable*>(
-                    result.element_.get());
-            if (!bindable) {
-                if (result.ownsPrefixReservation_) {
-                    activePrefixes_.erase(request.registryPrefix);
-                    result.ownsPrefixReservation_ = false;
-                }
-                result.element_.reset();
-                result.stagedParameters_.reset();
-                result.errorCode = ElementErrorCode::ContractViolation;
-                result.error =
-                    "declared element does not implement parameter binding: " +
-                    request.typeId;
-                return result;
-            }
-
             ElementParameterTable parameterTable(
                 typeContract->contract.parameters);
-            bindable->bindParameters(parameterTable);
+            if (typeContract->bindingMode ==
+                LayerFactory::ParameterBindingMode::Explicit) {
+                result.stage = "bind";
+                auto* bindable =
+                    dynamic_cast<element::ParameterBindable*>(
+                        result.element_.get());
+                if (!bindable) {
+                    if (result.ownsPrefixReservation_) {
+                        activePrefixes_.erase(request.registryPrefix);
+                        result.ownsPrefixReservation_ = false;
+                    }
+                    result.element_.reset();
+                    result.stagedParameters_.reset();
+                    result.errorCode = ElementErrorCode::ContractViolation;
+                    result.error =
+                        "explicitly bound declared element does not implement "
+                        "parameter binding: " + request.typeId;
+                    return result;
+                }
+                bindable->bindParameters(parameterTable);
+                const auto parameterContractError =
+                    parameterTable.contractError();
+                if (!parameterContractError.empty()) {
+                    if (result.ownsPrefixReservation_) {
+                        activePrefixes_.erase(request.registryPrefix);
+                        result.ownsPrefixReservation_ = false;
+                    }
+                    result.element_.reset();
+                    result.stagedParameters_.reset();
+                    result.errorCode = ElementErrorCode::ContractViolation;
+                    result.error = parameterContractError;
+                    return result;
+                }
+                parameterTable.applyDeclarationDefaults();
+
+                result.stage = "configure";
+                result.element_->configure(request.config);
+                if (progress) progress("configure");
+
+                // setup remains a resource-initialization hook for explicitly
+                // bound elements. Static declarations own all parameter
+                // metadata and defaults.
+                result.stage = "setup";
+                result.element_->setup(*result.stagedParameters_);
+                if (!parameterSnapshot(*result.stagedParameters_).empty()) {
+                    if (result.ownsPrefixReservation_) {
+                        activePrefixes_.erase(request.registryPrefix);
+                        result.ownsPrefixReservation_ = false;
+                    }
+                    result.element_.reset();
+                    result.stagedParameters_.reset();
+                    result.errorCode = ElementErrorCode::ContractViolation;
+                    result.error =
+                        "explicitly bound declared element registered "
+                        "parameter metadata during setup: " + request.typeId;
+                    return result;
+                }
+            } else {
+                // Transitional built-ins still expose their storage through
+                // setup(). The generated declaration is authoritative:
+                // setup metadata is discarded after exact ID/kind binding.
+                result.stage = "configure";
+                result.element_->configure(request.config);
+                if (progress) progress("configure");
+
+                result.stage = "setup";
+                result.element_->setup(*result.stagedParameters_);
+                parameterTable.bindLegacyRegistry(
+                    request.registryPrefix,
+                    *result.stagedParameters_);
+                const auto parameterContractError =
+                    parameterTable.contractError();
+                if (!parameterContractError.empty()) {
+                    if (result.ownsPrefixReservation_) {
+                        activePrefixes_.erase(request.registryPrefix);
+                        result.ownsPrefixReservation_ = false;
+                    }
+                    result.element_.reset();
+                    result.stagedParameters_.reset();
+                    result.errorCode = ElementErrorCode::ContractViolation;
+                    result.error = parameterContractError;
+                    return result;
+                }
+                result.stagedParameters_ =
+                    std::make_unique<ParameterRegistry>();
+            }
             const auto parameterContractError =
                 parameterTable.contractError();
             if (!parameterContractError.empty()) {
@@ -317,30 +384,6 @@ Runtime::ElementResult Runtime::prepareElementImpl(
                 result.stagedParameters_.reset();
                 result.errorCode = ElementErrorCode::ContractViolation;
                 result.error = parameterContractError;
-                return result;
-            }
-            parameterTable.applyDeclarationDefaults();
-
-            result.stage = "configure";
-            result.element_->configure(request.config);
-            if (progress) progress("configure");
-
-            // setup remains a transitional resource-initialization hook.
-            // Declared elements must leave all parameter metadata to their
-            // static contract and bind only instance storage above.
-            result.stage = "setup";
-            result.element_->setup(*result.stagedParameters_);
-            if (!parameterSnapshot(*result.stagedParameters_).empty()) {
-                if (result.ownsPrefixReservation_) {
-                    activePrefixes_.erase(request.registryPrefix);
-                    result.ownsPrefixReservation_ = false;
-                }
-                result.element_.reset();
-                result.stagedParameters_.reset();
-                result.errorCode = ElementErrorCode::ContractViolation;
-                result.error =
-                    "declared element registered parameter metadata during "
-                    "setup: " + request.typeId;
                 return result;
             }
             parameterTable.populate(
