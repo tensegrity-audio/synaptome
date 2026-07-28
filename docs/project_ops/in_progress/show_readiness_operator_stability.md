@@ -4,21 +4,21 @@ State Summary
 - Request ID: show_readiness_operator_stability
 - Phase: EXECUTION
 - Status: Deferred by operator
-- Steps Complete: 14 / 18
-- Progress: Core persistence, mapping recovery, operator status, render, controller-window, and quit-safety work is implemented and validated; the remaining dual-screen and full recovery rehearsal are explicitly deferred.
-- Last Step Outcome: 2026-07-26 - The operator postponed dual-screen testing and authorized spine/element architecture execution without treating the residual display check as a blocker.
-- Next Step: When show validation resumes, reproduce the dual-screen hiccup, record its exact trigger, and complete the heaviest-scene and device-recovery rehearsal.
+- Steps Complete: 15 / 18
+- Progress: Core persistence, mapping recovery, operator status, render, controller-window, and quit-safety work is implemented and validated; the operator reports dual-screen mode working well. Live physical-MIDI hardware and the full recovery rehearsal remain deferred.
+- Last Step Outcome: 2026-07-27 - The operator ran the Release app successfully and passed a live dual-screen smoke test.
+- Next Step: When show validation resumes, test live physical-MIDI control and complete the heaviest-scene and device-recovery rehearsal.
 - Dependencies / Overlap: `docs/project_ops/roadmap.md`, `docs/architecture/synaptome_spine_element_model.md`, scene persistence, window/monitor placement, MIDI/OSC mappings, Browser, Console, and HUD.
 - Primary Scope: runtime
 - Secondary Scopes: tests, contracts, docs
-- Blocking Issues / Unknowns: Exact dual-screen trigger is not yet recorded and the complete show-machine recovery sequence remains unproven; the operator accepted this as deferred validation risk.
+- Blocking Issues / Unknowns: Live physical-MIDI behavior and the complete show-machine recovery sequence remain unproven; the operator accepted this as deferred validation risk.
 - Impact / Priority Notes: Residual show-machine validation remains important but no longer blocks the spine/element architecture roadmap.
 - Priority Score: N/A
 - Priority Lane: Deferred
 - Ready State: Ready
 - Ready Gate: Core implementation and automated checks are complete enough to preserve; remaining acceptance requires later access to the show-machine display and device setup.
-- Project Ops / Roadmap Updates (timestamped): 2026-07-24 - Opened as the active show blocker. 2026-07-26 - Recorded operator live evidence. 2026-07-26 - Deferred dual-screen and full recovery rehearsal and promoted the spine/element architecture request.
-- Resume From: Phase EXECUTION, State Deferred by operator, Next Action reproduce the dual-screen hiccup when show-machine validation resumes.
+- Project Ops / Roadmap Updates (timestamped): 2026-07-24 - Opened as the active show blocker. 2026-07-26 - Recorded operator live evidence. 2026-07-26 - Deferred dual-screen and full recovery rehearsal and promoted the spine/element architecture request. 2026-07-27 - Recorded the successful live dual-screen smoke test; MIDI remains untested.
+- Resume From: Phase EXECUTION, State Deferred by operator, Next Action test live physical-MIDI hardware and the recovery sequence when show-machine validation resumes.
 
 - Started: 2026-07-24
 - Owner: Synaptome runtime

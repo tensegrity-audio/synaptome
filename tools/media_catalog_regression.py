@@ -27,6 +27,7 @@ PUBLIC_EXAMPLE = BASE_PATH / "docs/examples/media_catalog_example.json"
 INVALID_CASES = BASE_PATH / "tools/testdata/media_catalog/invalid_catalog_cases.json"
 RUNTIME_CATALOG_SOURCE = BASE_PATH / "synaptome/src/media/VideoCatalog.cpp"
 CLIP_ID_RE = re.compile(r"^[a-z0-9][a-z0-9_-]*$")
+LAYER_ID_RE = re.compile(r"^[a-z0-9][a-z0-9._-]*$")
 
 
 def load_json(path: Path) -> Any:
@@ -144,6 +145,8 @@ def structural_errors(data: Any) -> list[str]:
         for field in ("id", "defaultClip"):
             if not isinstance(raw.get(field), str) or not raw.get(field):
                 errors.append(f"{context}.{field} must be a non-empty string")
+        if isinstance(raw.get("id"), str) and not LAYER_ID_RE.fullmatch(raw["id"]):
+            errors.append(f"{context}.id must be a stable lowercase layer ID")
         if "opacity" in raw and (not isinstance(raw["opacity"], (int, float)) or not 0 <= raw["opacity"] <= 1):
             errors.append(f"{context}.opacity must be between 0 and 1")
         if "blendMode" in raw and (not isinstance(raw["blendMode"], str) or not raw["blendMode"]):

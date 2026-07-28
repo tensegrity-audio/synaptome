@@ -91,7 +91,7 @@
       "properties": {
         "id": {
           "type": "string",
-          "pattern": "^[a-z0-9][a-z0-9_-]*$"
+          "pattern": "^[a-z0-9][a-z0-9._-]*$"
         },
         "defaultClip": {
           "type": "string",
