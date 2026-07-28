@@ -230,7 +230,104 @@ bool HotkeyManager::loadFromDisk() {
     return true;
 }
 
+bool HotkeyManager::adoptPreferencesSnapshot(
+    const ofJson& hotkeys) {
+    if (!hotkeys.is_object() ||
+        !hotkeys.contains("bindings") ||
+        !hotkeys["bindings"].is_array()) {
+        return false;
+    }
+    std::unordered_map<std::string, int> choices;
+    for (const auto& node : hotkeys["bindings"]) {
+        if (!node.is_object() ||
+            !node.contains("id") ||
+            !node["id"].is_string() ||
+            !node.contains("key") ||
+            !node["key"].is_number_integer()) {
+            return false;
+        }
+        choices[node["id"].get<std::string>()] =
+            normalizeKey(node["key"].get<int>());
+    }
+    savedKeys_.clear();
+    for (const auto& id : order_) {
+        auto it = bindings_.find(id);
+        if (it == bindings_.end()) {
+            continue;
+        }
+        int key = it->second.defaultKey;
+        const auto choice = choices.find(id);
+        if (choice != choices.end()) {
+            key = choice->second;
+        }
+        it->second.currentKey = key;
+        savedKeys_[id] = key;
+        if (controller_) {
+            applyBinding(it->second);
+        }
+    }
+    return true;
+}
+
+ofJson HotkeyManager::exportPreferencesSnapshot() const {
+    ofJson hotkeys = ofJson::object();
+    hotkeys["bindings"] = ofJson::array();
+    for (const auto& id : order_) {
+        const auto it = bindings_.find(id);
+        if (it == bindings_.end()) {
+            continue;
+        }
+        hotkeys["bindings"].push_back({
+            {"id", id},
+            {"key", it->second.currentKey}
+        });
+    }
+    return hotkeys;
+}
+
+void HotkeyManager::setPreferencesPersistenceCallback(
+    std::function<bool(const ofJson&)> callback) {
+    preferencesPersistenceCallback_ =
+        std::move(callback);
+}
+
 bool HotkeyManager::saveToDisk() {
+    if (preferencesPersistenceCallback_) {
+        bool published = false;
+        try {
+            published = preferencesPersistenceCallback_(
+                exportPreferencesSnapshot());
+        } catch (...) {
+            published = false;
+        }
+        if (!published) {
+            ofLogWarning("HotkeyManager")
+                << "Failed to publish canonical hotkey preferences";
+            for (const auto& id : order_) {
+                auto it = bindings_.find(id);
+                if (it == bindings_.end()) {
+                    continue;
+                }
+                const auto saved = savedKeys_.find(id);
+                it->second.currentKey =
+                    saved != savedKeys_.end()
+                    ? saved->second
+                    : it->second.defaultKey;
+                if (controller_) {
+                    applyBinding(it->second);
+                }
+            }
+            return false;
+        }
+        for (const auto& id : order_) {
+            const auto it = bindings_.find(id);
+            if (it != bindings_.end()) {
+                savedKeys_[id] =
+                    it->second.currentKey;
+            }
+        }
+        return true;
+    }
     if (storagePath_.empty()) {
         ofLogWarning("HotkeyManager") << "Cannot save hotkeys without storage path";
         return false;

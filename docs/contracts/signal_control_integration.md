@@ -16,7 +16,10 @@ As of 2026-05-17, both repo copies of this contract should remain identical. The
 Synaptome has completed its current receive-side slice:
 
 - Browser `OSC > Input` rows exist for mode, serial status, router UDP port, last message, and reconnect/rebind.
-- `config/osc-input.json` persists the input mode, defaults to `directSerial`, and stores the router target as `127.0.0.1:9000`.
+- Machine-profile v1 is the canonical owner of OSC transport and endpoint
+  selection. `config/osc-input.json` remains a read-only compatibility source
+  when no canonical profile exists; the first explicit Browser mode change
+  writes operator-local `config/machine-profile.json`.
 - Direct serial remains the working fallback path for existing OSC learn, parameter routing, HUD telemetry, and history.
 - `routerUdp` binds an `ofxOscReceiver`, shows listening status in the Browser, and routes single numeric OSC messages through the existing scalar OSC path.
 - `routerUdp` now accepts `/sensor/host/<source>/waveform` multi-float packets and publishes external host audio snapshots into Synaptome's existing render-facing `AudioAnalysisBus`.
@@ -86,8 +89,8 @@ Synaptome Mesh gateway ingest:
 
 - The synaptome_mesh gateway emits OSC over serial/SLIP today under the `synaptome-mesh-osc v0.1.0` contract.
 - In router mode, Signal Control should ingest the gateway stream first so the same messages can be inspected, counted, and routed to both OBS and Synaptome.
-- Signal Control should preserve every OSC message it receives from the gateway, including legacy routes and `/synaptome_mesh/...` aliases, and it should not silently drop string/status/control messages just because Synaptome's current app-facing mapping path mostly consumes numeric routes.
-- Forwarding to Synaptome should send OSC to Synaptome's Router UDP input on `udp://127.0.0.1:9000`. Synaptome currently applies numeric scalar app routes and host waveform packets; string or richer gateway messages may require a Synaptome follow-up if they need to become Browser history, HUD feeds, or mappings.
+- Signal Control should preserve every OSC message it receives from the gateway, including legacy routes and `/synaptome_mesh/...` aliases. Synaptome now retains string/status/control and other well-formed payload shapes as typed ingress diagnostics while keeping parameter routing finite-single-numeric.
+- Forwarding to Synaptome should send raw OSC to Synaptome's Router UDP input on `udp://127.0.0.1:9000`. Synaptome's receiver owns the Mesh v0.1 namespace/route normalization and dual-emission deduplication so direct serial and Router UDP remain equivalent. Signal Control may apply the same profile per destination but must not make it the only compatibility boundary.
 - OBS-facing routing is Tensegrity-owned. It may map gateway messages into widget state, labels, counters, meters, or logs without requiring Synaptome internals.
 
 Synaptome Browser:
@@ -96,6 +99,9 @@ Synaptome Browser:
 - Show active serial port or UDP listen port.
 - Show recent OSC address/value and receiver status.
 - Show active external audio source and waveform freshness.
+- Publish mode changes only after the requested UDP listener is available and
+  the recoverable machine-profile write succeeds; otherwise restore the prior
+  binding.
 
 ## Default Local Ports
 
@@ -108,6 +114,12 @@ All ports are configurable. Defaults should avoid both apps binding the same UDP
 | Signal Control OSC ingest from Synaptome telemetry | `udp://127.0.0.1:9001` | Signal Control |
 | Hardware/helper OSC ingest | Configurable serial or UDP | Signal Control in router mode; Synaptome in direct mode |
 | Synaptome Mesh gateway OSC ingest | Gateway serial can still go direct only for Synaptome-only fallback. | Signal Control owns gateway ingest/fanout when OBS and Synaptome both need the same OSC stream. |
+
+These defaults are endpoint selections, not OSC payload restrictions.
+Synaptome observes any well-formed OSC message through the typed ingress
+envelope. The `synaptome-mesh-v1` receive adapter derives canonical Mesh
+addresses while preserving raw address, payload, transport, and endpoint
+provenance.
 
 ## Signal Flows
 
@@ -247,7 +259,7 @@ Browser status expectations for `OSC > Input` after B3:
 7. Done: Publish external snapshots so `Sensors > Audio Waveform` can render router audio without opening the same audio device.
 8. Done: Add Browser rows for external source freshness and waveform sample count.
 9. Done: Add fixtures/docs for the receive routes and validation coverage for config shape.
-10. Future if needed: Accept and surface forwarded non-numeric gateway OSC payloads beyond the current numeric scalar/waveform app path.
+10. Complete for diagnostics: Synaptome accepts and surfaces typed non-numeric gateway OSC. Typed non-scalar parameter/action mapping remains future work and requires explicit conversion semantics.
 
 ## Tensegrity Work Plan
 

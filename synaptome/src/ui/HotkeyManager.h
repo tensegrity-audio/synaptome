@@ -1,7 +1,9 @@
 #pragma once
 
 #include "MenuController.h"
+#include "ofJson.h"
 
+#include <functional>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -33,6 +35,10 @@ public:
     std::vector<std::string> scopesInOrder() const;
 
     bool loadFromDisk();
+    bool adoptPreferencesSnapshot(const ofJson& hotkeys);
+    ofJson exportPreferencesSnapshot() const;
+    void setPreferencesPersistenceCallback(
+        std::function<bool(const ofJson&)> callback);
     bool saveToDisk();
     bool saveIfDirty();
 
@@ -48,6 +54,8 @@ private:
     std::unordered_map<std::string, Binding> bindings_;
     std::vector<std::string> order_;
     std::unordered_map<std::string, int> savedKeys_;
+    std::function<bool(const ofJson&)>
+        preferencesPersistenceCallback_;
 
     void applyBinding(const Binding& binding);
     static int normalizeKey(int key);

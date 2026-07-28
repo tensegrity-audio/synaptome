@@ -120,15 +120,15 @@ architecture.
 | Compile graph | `synaptome/Synaptome.vcxproj:497` compiles the host, runtime facilities, UI, and every visual implementation into one executable. | A small element change rebuilds and relinks the application. |
 | Element API | `synaptome/src/visuals/Layer.h:3` includes `ofMain.h`, `ofJson`, and the concrete `ParameterRegistry`; its draw context exposes mutable `ofCamera&`. | The public seam is broad and tied to runtime internals. |
 | Concrete dependencies | Registration-only concrete headers and creator lambdas now live in the handwritten `BuiltinElements.cpp` aggregate. Signal Bloom's package leaf registrar is shared by that aggregate and its bench. Legacy Text parameter/state access lives behind host-only `BuiltinElementHostBindings`. | Adding a built-in no longer adds a creator lambda or concrete state dependency to `ofApp`, but still edits the aggregate/project until SEAC-8 generation exists; the shared Text singleton remains internal compatibility debt. |
-| Type special cases | Mutable element-specific action/status casts have been replaced by registered parameters, statically declared actions with live handler binding, and typed telemetry. GPU-target ownership and presentation are isolated in `HostCompositionRenderer`; the raw Runtime target adapter is retired. | SEAC-3 control/query/render ownership and SEAC-4 declaration/binding authority are closed; versioned state ownership is the SEAC-5 gap. |
+| Type special cases | Mutable element-specific action/status casts have been replaced by registered parameters, statically declared actions with live handler binding, and typed telemetry. GPU-target ownership and presentation are isolated in `HostCompositionRenderer`; the raw Runtime target adapter is retired. | SEAC-3 control/query/render ownership and SEAC-4 declaration/binding authority are closed; Scene, value-origin, and mapping-route slices are implemented while the remaining machine/preference/Text state boundary stays in SEAC-5. |
 | Lifecycle | `synaptome/src/visuals/Layer.h:23` has configure, setup, update, draw, resize, and enable methods, then relies on destruction. Runtime replacement is transactional. | There is still no typed setup result, explicit element teardown hook, or normalized health contract. |
 | Composition | Runtime owns the fixed assignment/state/lifecycle records and coverage policy. `HostCompositionRenderer` owns per-slot/composite FBOs and presentation behind `HostCompositionEffects`; `ofApp::drawConsole` delegates. | The state and graphics owners are now explicit; real pixel/GL evidence remains a later confidence-suite gate. |
 | Registry | At the SEAC-2 freeze, `LayerFactory` was process-global. It is now a Runtime-scoped registry with atomic declared records, validation, non-constructing lookup, and copied enumeration. Every shipping record carries `ElementTypeContract`; compatibility binding mode is explicit. It still has no package owner/version, unregister, or atomic package registration. | Type/action/parameter identity is isolated and inspectable; broader package ownership remains SEAC-7/SEAC-8 work. |
 | Catalog | `LayerLibrary` owns legacy JSON loading, package activation, and preset merging; package tools generate a second legacy catalog representation. | The package manifest is not yet the runtime's typed source of truth. |
-| Parameters | Public pointer-free DTOs and authoritative declarations now cover all 23 shipping types and 786 controls. Runtime publishes declaration metadata/defaults and enforces exact live ID/kind/storage parity. Signal Bloom uses explicit bind-only storage; 22 existing implementations use a checked setup-storage adapter whose metadata is discarded. | Direct bind-only migration remains cleanup. Versioned value ownership, provenance, and migrations belong to SEAC-5. |
+| Parameters | Public pointer-free declaration DTOs and authoritative declarations now cover all 23 shipping types and 786 controls. Runtime publishes declaration metadata/defaults, enforces exact live ID/kind/storage parity, and exposes a separate copied base/live/origin/modifier snapshot owned by the spine. Signal Bloom uses explicit bind-only storage; 22 existing implementations use a checked setup-storage adapter whose metadata is discarded. SEAC-5A freezes value precedence, provenance vocabulary, and artifact ownership/version rules; the Scene compatibility reader and value-origin slice are implemented. | Direct bind-only migration remains cleanup. Mapping/profile/preference versioning and the Text transaction remain SEAC-5 implementation work. |
 | Services | Elements reach global services such as audio analysis, video catalog, and text state directly. | Isolated tests can still depend on hidden process state. |
 | Inspection | Type/kind/action/group/parameter inspection is construction-free for every registration. Browser counts/groups, the machine catalog, compatibility manifest, compiled declarations, and human reference come from the same reviewed snapshot. | Dynamic option providers remain runtime services, and package ownership/version inspection belongs to later phases. |
-| Tests | The package bench proves stub-backed element lifecycle/draw dispatch. Browser tests still use private app internals. `HostCompositionRendererTest` separately compiles the production renderer/Runtime sources against FBO/GL stubs. BrowserFlow passes 36 scenarios, and the operator reports successful Release and dual-screen use. | The renderer harness proves traversal/policy/failure behavior, not pixels, shader execution, or a real GL context; physical MIDI and a complete show-machine recovery rehearsal remain deferred. |
+| Tests | The package bench proves stub-backed element lifecycle/draw dispatch. Browser tests still use private app internals. `HostCompositionRendererTest` separately compiles the production renderer/Runtime sources against FBO/GL stubs. BrowserFlow passes 36 scenarios, and the operator reports successful Release and dual-screen use. | The renderer harness proves traversal/policy/failure behavior, not pixels, shader execution, or a real GL context; live physical-MIDI hardware and a complete show-machine recovery rehearsal remain deferred. |
 
 The inventory also identifies two state risks that later tasks must preserve:
 
@@ -511,8 +511,12 @@ Rules:
 - MIDI and OSC adapters target generic registered parameter IDs and actions;
   they never require concrete element casts.
 
-SEAC-4 completed this representation and generation path. State provenance,
-versioned persistence, and migrations are SEAC-5 work.
+SEAC-4 completed this representation and generation path. SEAC-5A freezes
+state provenance, ownership, version-reader, and migration rules in
+[`state_ownership_and_provenance.md`](../contracts/state_ownership_and_provenance.md);
+the Scene compatibility reader and runtime value-origin snapshot are
+implemented while the remaining mapping/profile/preference readers remain
+SEAC-5 work.
 
 ### Live Action Compatibility Contract
 
@@ -693,8 +697,9 @@ unchanged. Geodesic subdivisions resolve through the registered parameter;
 media source labels and webcam capture readiness use the separate typed
 telemetry query. `compositionElementForHost` and all host concrete status casts
 are removed. Direct Text state access has also left `ofApp` through
-`BuiltinElementHostBindings`; the shared singleton and its pre-adoption
-configuration side effects remain SEAC-5 state-ownership debt. The
+`BuiltinElementHostBindings`; the shared singleton remains a global
+compatibility owner, but candidate configuration is staged and published only
+after Runtime adoption, closing the pre-adoption state leak. The
 retired `CompositionRenderTargets`/`compositionRenderTargetsForHost` seam does
 not remain as compatibility debt. SEAC-4A static type/kind/action declarations
 and live binding parity are complete. SEAC-4 adds construction-free parameter
@@ -725,8 +730,9 @@ SEAC-3 preserved output and proceeded in this order:
    renderer policy/failure behavior in a dedicated stub-backed target.
 
 `BuiltinElementHostBindings` completes direct application-root isolation for
-the legacy Text bridge. The shared singleton and pre-adoption configuration
-effects remain SEAC-5 debt. Broader service injection and cohesive
+the legacy Text bridge. The shared singleton and stable global IDs remain a
+documented compatibility boundary; transactional adoption now prevents
+candidate values from leaking before commit. Broader service injection and cohesive
 family targets remain later migration work; generated registration remains
 SEAC-8.
 
@@ -797,7 +803,8 @@ This decision does not promise or implement:
 - serialization of the runtime descriptor into packages;
 - generated registration;
 - persisted MIDI/OSC action targets and action mappings;
-- physical MIDI validation and a complete show-machine recovery rehearsal;
+- live physical-MIDI hardware validation and a complete show-machine recovery
+  rehearsal;
 - real pixel, shader, and graphics-context confidence tests.
 
 Those remain separate gated tasks. Parameter declaration and Runtime metadata

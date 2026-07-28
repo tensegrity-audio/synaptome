@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "globalBanks": [
+    {
+      "id": "home",
+      "label": "Home",
+      "controls": [
+        {
+          "id": "speed",
+          "target": "globals.speed"
+        }
+      ]
+    }
+  ]
+}

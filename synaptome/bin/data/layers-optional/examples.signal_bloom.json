@@ -1,4 +1,6 @@
 {
+  "schemaVersion": 1,
+  "packageVersion": "0.1.0",
   "id": "examples.signal_bloom",
   "label": "Signal Bloom",
   "category": "Examples",
@@ -78,6 +80,11 @@
       "bgColorB": 0.04,
       "speedInput": 0.0
     }
+  },
+  "presetSchemaVersions": {
+    "default": 1,
+    "bright": 1,
+    "calm": 1
   },
   "presetMetadata": [
     {

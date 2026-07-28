@@ -98,6 +98,26 @@ public:
         int value = 0;
     };
 
+    struct MidiInputBindingStatus {
+        bool authoritative = false;
+        bool configured = false;
+        bool resolved = false;
+        bool connected = false;
+        bool ambiguous = false;
+        std::size_t exactMatchCount = 0;
+        std::string deviceProfileId;
+        std::string portName;
+        std::string connectedPortName;
+        std::string detail;
+    };
+
+    struct MidiInputBindingResult {
+        bool ok = false;
+        bool rollbackSucceeded = true;
+        MidiInputBindingStatus status;
+        std::string error;
+    };
+
     struct BindingMetadata {
         BindingMetadata();
         int channel;
@@ -162,6 +182,20 @@ public:
     std::vector<std::string> availableInputPorts() const;
     void setTestPortList(const std::vector<std::string>& ports);
     void clearTestPortList();
+    MidiInputBindingStatus resolveInputBinding(
+        const std::string& deviceProfileId,
+        const std::string& portName) const;
+    MidiInputBindingStatus inputBindingStatus() const;
+    ofJson exportInputBindingSnapshot() const;
+    MidiInputBindingResult adoptInputBindingSnapshot(
+        const ofJson& snapshot);
+    void setInputBindingPersistenceCallback(
+        std::function<bool(const ofJson&)> persistence);
+    MidiInputBindingResult publishInputBindingSnapshot(
+        const ofJson& snapshot);
+    MidiInputBindingResult publishInputBindingSnapshot(
+        const ofJson& snapshot,
+        const std::function<bool(const ofJson&)>& persistence);
     void captureNextMidiControl(std::function<void(const CapturedMidiControl&)> callback);
     void cancelMidiControlCapture();
 
@@ -226,6 +260,14 @@ private:
 
     bool openPreferredPort();
     bool openByName(const std::string& name, bool allowSubstring);
+    bool openCanonicalInputPort();
+    bool routeMatchesActiveInput(
+        const std::string& deviceProfileId) const;
+    static bool parseInputBindingSnapshot(
+        const ofJson& snapshot,
+        std::string& deviceProfileId,
+        std::string& portName,
+        std::string& error);
     void markClosed();
     uint64_t lastRetryMs = 0;
     uint64_t retryIntervalMs = 1000;
@@ -251,6 +293,12 @@ private:
     std::string deviceName;
     int deviceIndex = -1;
     std::string currentPortLabel;
+    bool canonicalInputBindingAuthoritative_ = false;
+    std::string canonicalDeviceProfileId_;
+    std::string canonicalPortName_;
+    MidiInputBindingStatus cachedCanonicalInputStatus_;
+    std::function<bool(const ofJson&)>
+        inputBindingPersistenceCallback_;
 
     std::vector<CcMap> ccMaps;
     std::vector<BtnMap> btnMaps;

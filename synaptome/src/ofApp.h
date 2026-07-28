@@ -3,9 +3,12 @@
 #include "ofxOsc.h"
 #include "io/MidiRouter.h"
 #include "io/SerialSlipOsc.h"
+#include "io/OscIngressMessage.h"
 #include "io/AudioInputBridge.h"
 #include "io/OscParameterRouter.h"
 #include "io/ConsoleStore.h"
+#include "io/PreferencesDocument.h"
+#include "io/BankDefinitionsDocument.h"
 #include "ui/MenuController.h"
 #include "ui/MenuSkin.h"
 #include "ui/AssetBrowser.h"
@@ -53,6 +56,8 @@ public:
     void mouseDragged(int x, int y, int button) override;
     void mouseReleased(int x, int y, int button) override;
     void exit() override;
+    bool publishGlobalBankDefinitions(
+        const BankRegistry::DefinitionList& definitions);
 
     std::string composeHudControls() const;
     std::string composeHudLayerSummary() const;
@@ -126,6 +131,18 @@ public:
     std::string overlayLayoutPath;
     std::string controlHubPrefsPath;
     std::string oscInputConfigPath;
+    std::string machineProfilePath_;
+    std::string preferencesPath_;
+    synaptome::state::PreferencesPublisher preferencesPublisher_;
+    bool preferencesLoadBlocked_ = false;
+    std::string bankDefinitionsPath_;
+    synaptome::state::BankDefinitionsPublisher
+        bankDefinitionsPublisher_;
+    bool bankDefinitionsLoaded_ = false;
+    bool bankDefinitionsLoadBlocked_ = false;
+    ofJson machineProfileDocument_;
+    bool machineProfileLoaded_ = false;
+    bool machineProfileLoadBlocked_ = false;
     std::string packageActivationPath_;
     std::string localPackageActivationPath_;
     struct PackagePresetSelection {
@@ -186,6 +203,10 @@ public:
         std::string mode = "directSerial";
         std::string routerUdpHost = "127.0.0.1";
         int routerUdpPort = 9000;
+        bool serialAutoPort = true;
+        std::string serialPort;
+        std::string serialPortNameContains;
+        int serialBaud = 115200;
     } oscInputSettings_;
     ofxOscReceiver routerOscReceiver_;
     bool routerUdpListening_ = false;
@@ -194,6 +215,10 @@ public:
     std::string routerUdpStatusText_;
     uint64_t routerUdpPacketsSeen_ = 0;
     uint64_t routerUdpDroppedMessages_ = 0;
+    uint64_t oscMessagesObserved_ = 0;
+    uint64_t oscScalarMessagesRouted_ = 0;
+    uint64_t oscDiagnosticMessagesObserved_ = 0;
+    uint64_t oscMeshDuplicatesSuppressed_ = 0;
     uint64_t lastRouterUdpPacketMs_ = 0;
     uint64_t lastRouterUdpWaitLogMs_ = 0;
     uint64_t lastRouterUdpBindAttemptMs_ = 0;
@@ -201,6 +226,15 @@ public:
     std::string lastOscAddress_;
     float lastOscValue_ = 0.0f;
     uint64_t lastOscMessageMs_ = 0;
+    std::string lastOscRawAddress_;
+    std::string lastOscTypeTags_;
+    std::string lastOscPayloadSummary_;
+    std::string lastOscTransport_;
+    std::string lastOscEndpoint_;
+    bool lastOscWasRoutableScalar_ = false;
+    bool lastOscWasMeshAlias_ = false;
+    bool lastOscWasDuplicate_ = false;
+    OscIngressCompatibility::MeshDualEmissionDeduper meshOscDeduper_;
     struct ExternalAudioSourceState {
         std::string sourceId;
         float level = 0.0f;
@@ -255,6 +289,8 @@ public:
     uint64_t lastMicLogMs = 0;
     std::deque<std::pair<std::string, float>> oscHistory;
     std::size_t oscHistoryMax = 8;
+    std::deque<OscIngressMessage> oscIngressHistory_;
+    std::size_t oscIngressHistoryMax_ = 16;
     struct HudCategoryActivity {
         uint64_t lastSeenMs = 0;
         std::string lastMetric;
@@ -393,6 +429,10 @@ public:
         bool routerMappingsDefined = false;
         bool slotAssignmentsDefined = false;
         bool activeBankDefined = false;
+        bool sceneVersionUnsupported = false;
+        bool mappingVersionUnsupported = false;
+        int sceneSourceVersion = 0;
+        std::vector<std::string> sceneMigrationTrail;
         bool recoveredFromBackup = false;
         bool restoreSecondaryDisplay = false;
         bool restoreControllerFocusConsole = true;
@@ -407,6 +447,7 @@ public:
         ofJson scene;
         ofJson routerSnapshot;
         ofJson slotAssignmentsSnapshot;
+        synaptome::state::ParameterBaseOrigins parameterBaseOrigins;
         bool secondaryDisplayEnabled = false;
         bool paramSecondaryDisplayEnabled = false;
         bool paramControllerFocusConsole = true;
@@ -476,13 +517,23 @@ public:
     };
 
     void setupOscRoutes();
+    void loadMachineProfileSettings();
+    bool loadOscInputSettingsFromMachineProfile();
+    ofJson buildMachineProfileBaseWithCurrentOsc() const;
+    bool saveMachineProfileMidiInputs(
+        const ofJson& midiInputs);
     void loadOscInputSettings();
-    void saveOscInputSettings() const;
+    bool saveOscInputSettings();
+    bool saveMachineProfileControlSlots(
+        const ofJson& controlSlots);
+    void configureSerialOscCollector();
     void applyOscInputMode(const std::string& mode);
     bool ensureRouterUdpReceiver(bool forceRebind = false);
     void stopRouterUdpReceiver();
     void updateRouterUdpReceiver(uint64_t nowMs);
     void updateControlHubOscInputStatus();
+    bool observeOscIngressMessage(OscIngressMessage& message);
+    void ingestOscEnvelope(OscIngressMessage message);
     bool updateExternalAudioTelemetry(const std::string& address, float value, uint64_t nowMs);
     bool handleExternalAudioWaveform(const ofxOscMessage& msg, uint64_t nowMs);
     void publishExternalAudioSnapshot(const ExternalAudioSourceState& state);
@@ -500,6 +551,15 @@ public:
     std::vector<std::string> loadOscChannelHints() const;
 
 private:
+    bool loadOperatorPreferences();
+    bool loadOperatorBankDefinitions();
+    bool applyCanonicalGlobalBankDefinitions(
+        const ofJson& document);
+    bool publishPreferenceSection(
+        const std::string& section,
+        const ofJson& value);
+    const ofJson* canonicalPreferenceSection(
+        const std::string& section) const;
     void registerCoreMidiTargets();
     void configureDefaultBanks();
     void applyMenuTextSkin();
@@ -712,6 +772,7 @@ private:
     bool midiTelemetryInitialized_ = false;
     bool collectorTelemetryInitialized_ = false;
     bool lastMidiConnected_ = false;
+    std::string lastMidiStatusDetail_;
     bool lastCollectorConnected_ = false;
     uint64_t lastCollectorPacketMs_ = 0;
     uint64_t lastCollectorWaitLogMs_ = 0;

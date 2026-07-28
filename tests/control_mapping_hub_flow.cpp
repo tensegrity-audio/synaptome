@@ -4,7 +4,9 @@
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
+#include <limits>
 #include <cctype>
+#include <cstring>
 #include <cstdlib>
 #include <memory>
 #include <sstream>
@@ -26,13 +28,30 @@
 #include "../synaptome/src/ui/ControlMappingHubState.h"
 #undef private
 #undef protected
+#ifndef OF_SDK_AVAILABLE
+inline constexpr int OF_SERIAL_ERROR = -1;
+inline constexpr int OF_SERIAL_NO_DATA = -2;
+class ofSerial {
+public:
+    int readByte() { return OF_SERIAL_NO_DATA; }
+};
+#endif
+#define private public
+#include "../synaptome/src/io/SerialSlipOsc.h"
+#undef private
 #include "../synaptome/src/ui/ColumnControls.h"
 #include "../synaptome/src/ui/ColumnControls.cpp"
 #include "../synaptome/src/ui/DevicesPanel.h"
 #include "../synaptome/src/ui/DevicesPanel.cpp"
 #include "../synaptome/src/ui/WindowMonitorPlacement.h"
 #include "../synaptome/src/io/MidiRouter.h"
+#include "../synaptome/src/io/MachineProfileDocument.cpp"
+#include "../synaptome/src/io/MappingBankDocument.cpp"
+#include "../synaptome/src/io/PreferencesDocument.cpp"
+#include "../synaptome/src/io/BankDefinitionsDocument.cpp"
 #include "../synaptome/src/io/MidiRouter.cpp"
+#include "../synaptome/src/io/OscIngressMessage.h"
+#include "../synaptome/src/io/SceneStateDocument.cpp"
 #include "../synaptome/src/visuals/LayerLibrary.cpp"
 
 // The BrowserFlow harness uses deliberately small openFrameworks stubs. These
@@ -1159,6 +1178,70 @@ bool RunBuiltinElementHostParametersWithoutTextElementScenario() {
     return true;
 }
 
+bool RunTextLayerStateTransactionScenario() {
+    auto require = [](bool condition, const std::string& message) {
+        if (!condition) throw std::runtime_error(message);
+    };
+    auto same = [](const TextLayerState::Snapshot& left,
+                   const TextLayerState::Snapshot& right) {
+        return left.content == right.content &&
+               left.topLeft == right.topLeft &&
+               left.topRight == right.topRight &&
+               left.bottomLeft == right.bottomLeft &&
+               left.bottomRight == right.bottomRight &&
+               left.font == right.font &&
+               left.fontIndex == right.fontIndex &&
+               left.fontSize == right.fontSize &&
+               left.cornerFontSize == right.cornerFontSize &&
+               left.colorR == right.colorR &&
+               left.colorG == right.colorG &&
+               left.colorB == right.colorB;
+    };
+
+    auto& live = TextLayerState::instance();
+    struct ScopedSnapshotRestore {
+        TextLayerState& state;
+        TextLayerState::Snapshot saved;
+        ~ScopedSnapshotRestore() noexcept {
+            state.adoptSnapshot(std::move(saved));
+        }
+    } restore{live, live.snapshot()};
+
+    const auto baseline = live.snapshot();
+    {
+        auto abandoned = live.snapshot();
+        abandoned.content = "prepared but abandoned";
+        abandoned.topLeft = "must not leak";
+        abandoned.fontSize = 201.0f;
+        abandoned.colorR = 91.0f;
+    }
+    require(
+        same(live.snapshot(), baseline),
+        "abandoned Text configuration changed shared live state");
+
+    auto prepared = live.snapshot();
+    prepared.content = "adopted text";
+    prepared.topLeft = "committed";
+    prepared.topRight.clear();
+    prepared.bottomLeft = "left";
+    prepared.bottomRight = "right";
+    prepared.fontSize = 72.0f;
+    prepared.cornerFontSize = 24.0f;
+    prepared.colorR = 12.0f;
+    prepared.colorG = 34.0f;
+    prepared.colorB = 56.0f;
+    const auto expected = prepared;
+
+    require(
+        same(live.snapshot(), baseline),
+        "prepared Text configuration published before adoption");
+    live.adoptSnapshot(std::move(prepared));
+    require(
+        same(live.snapshot(), expected),
+        "Text adoption did not atomically publish the staged values");
+    return true;
+}
+
 bool RunElementParameterRegistryContractScenario() {
     auto require = [](bool condition, const std::string& message) {
         if (!condition) throw std::runtime_error(message);
@@ -1197,7 +1280,9 @@ bool RunElementParameterRegistryContractScenario() {
     scaleMod.blend = modifier::BlendMode::kAbsolute;
     scaleMod.inputRange = {0.0f, 1.0f, false};
     scaleMod.outputRange = {0.0f, 1.0f, false};
-    registry.addFloatModifier("console.layer1.scale", scaleMod);
+    auto& scaleRuntimeModifier =
+        registry.addFloatModifier("console.layer1.scale", scaleMod);
+    scaleRuntimeModifier.ownerTag = "tests.automation.scale";
     registry.setFloatModifierInput(
         "console.layer1.scale",
         0,
@@ -1209,7 +1294,9 @@ bool RunElementParameterRegistryContractScenario() {
     enabledMod.blend = modifier::BlendMode::kToggle;
     enabledMod.inputRange = {0.0f, 1.0f, false};
     enabledMod.outputRange = {0.0f, 1.0f, false};
-    registry.addBoolModifier("console.layer1.enabled", enabledMod);
+    auto& enabledRuntimeModifier =
+        registry.addBoolModifier("console.layer1.enabled", enabledMod);
+    enabledRuntimeModifier.ownerTag = "tests.automation.enabled";
     registry.setBoolModifierInput(
         "console.layer1.enabled",
         0,
@@ -1231,6 +1318,22 @@ bool RunElementParameterRegistryContractScenario() {
             enabled->baseValue &&
             !*enabled->value,
         "typed bool lookup did not preserve distinct base and live values");
+    const auto initialSnapshots = registry.snapshotValues();
+    const auto scaleSnapshot = std::find_if(
+        initialSnapshots.begin(),
+        initialSnapshots.end(),
+        [](const auto& snapshot) {
+            return snapshot.id == "console.layer1.scale";
+        });
+    require(
+        scaleSnapshot != initialSnapshots.end() &&
+            scaleSnapshot->baseOrigin.kind ==
+                synaptome::state::ParameterBaseOriginKind::
+                    ElementDefault &&
+            scaleSnapshot->modifiers.size() == 1 &&
+            scaleSnapshot->modifiers.front().ownerTag ==
+                "tests.automation.scale",
+        "read-only parameter snapshot lost default or modifier origin");
 
     const ParameterRegistry::Range copiedRange = scale->meta.range;
     require(
@@ -1239,13 +1342,33 @@ bool RunElementParameterRegistryContractScenario() {
             nearlyEqual(copiedRange.step, 0.1f),
         "float lookup did not expose complete range metadata");
 
-    registry.setFloatBase("console.layer1.scale", 3.25f, true);
-    registry.setBoolBase("console.layer1.enabled", false, true);
+    const synaptome::state::ParameterBaseOrigin operatorOrigin{
+        synaptome::state::ParameterBaseOriginKind::OperatorEdit,
+        "tests.operator",
+    };
+    registry.setFloatBase(
+        "console.layer1.scale",
+        3.25f,
+        operatorOrigin,
+        true);
+    registry.setBoolBase(
+        "console.layer1.enabled",
+        false,
+        operatorOrigin,
+        true);
     require(
         nearlyEqual(registry.getFloatBase("console.layer1.scale"), 3.25f) &&
             nearlyEqual(liveScale, 3.25f) &&
             !registry.getBoolBase("console.layer1.enabled") &&
-            !liveEnabled,
+            !liveEnabled &&
+            registry.findFloat("console.layer1.scale")
+                    ->baseOrigin.kind ==
+                synaptome::state::ParameterBaseOriginKind::
+                    OperatorEdit &&
+            registry.findBool("console.layer1.enabled")
+                    ->baseOrigin.kind ==
+                synaptome::state::ParameterBaseOriginKind::
+                    OperatorEdit,
         "base-plus-live writes did not update both registry and live storage");
 
     ParameterRegistry replacement;
@@ -1656,11 +1779,767 @@ bool RunSlotBindingRefreshScenario() {
     return true;
 }
 
+bool RunSlotAssignmentTransactionScenario() {
+    auto require = [](bool condition, const std::string& message) {
+        if (!condition) {
+            throw std::runtime_error(message);
+        }
+    };
+
+    const auto uniqueSuffix = std::to_string(
+        std::chrono::steady_clock::now()
+            .time_since_epoch()
+            .count());
+    const auto tempRoot =
+        std::filesystem::temp_directory_path() /
+        ("cmh_slot_assignment_transaction_" + uniqueSuffix);
+    std::filesystem::create_directories(tempRoot);
+    const auto mappingPath = tempRoot / "midi-map.json";
+
+    ParameterRegistry registry;
+    ParameterRegistry::Descriptor depthMeta;
+    depthMeta.id = "tests.slot.depth";
+    depthMeta.label = "Slot Depth";
+    depthMeta.group = "Tests";
+    depthMeta.range.min = 0.0f;
+    depthMeta.range.max = 1.0f;
+    float depth = 0.25f;
+    registry.addFloat(
+        depthMeta.id,
+        &depth,
+        depth,
+        depthMeta);
+
+    ParameterRegistry::Descriptor keepMeta = depthMeta;
+    keepMeta.id = "tests.slot.keep";
+    keepMeta.label = "Unrelated Route";
+    float keep = 0.75f;
+    registry.addFloat(
+        keepMeta.id,
+        &keep,
+        keep,
+        keepMeta);
+
+    MidiRouter router;
+    router.bindFloat(
+        depthMeta.id,
+        &depth,
+        0.0f,
+        1.0f,
+        false,
+        0.0f);
+    router.bindFloat(
+        keepMeta.id,
+        &keep,
+        0.0f,
+        1.0f,
+        false,
+        0.0f);
+    require(
+        !router.load(mappingPath.string()),
+        "Fresh transaction fixture unexpectedly loaded a MIDI map");
+    const ofJson initialRoutes = {
+        {"schemaVersion", 1},
+        {"cc",
+         ofJson::array({
+             {{"num", 7}, {"target", depthMeta.id}},
+             {{"num", 99}, {"target", keepMeta.id}},
+         })},
+        {"buttons", ofJson::array()},
+        {"oscSources", ofJson::array()},
+        {"osc", ofJson::array()},
+    };
+    require(
+        router.importMappingSnapshot(initialRoutes, true) &&
+            router.save(""),
+        "Could not seed transactional slot routing fixture");
+
+    ControlMappingHubState hub;
+    hub.setParameterRegistry(&registry);
+    hub.setMidiRouter(&router);
+    hub.setMenuSkin(MenuSkin::ConsoleHub());
+    hub.setDeviceMapsDirectory(
+        synaptome_test_paths::deviceMapsRoot().string());
+    hub.setSlotAssignmentsPath(
+        (tempRoot / "slot-assignments.json").string());
+
+    int persistenceCalls = 0;
+    bool persistenceSucceeds = true;
+    ofJson lastPublishedSnapshot;
+    hub.setSlotAssignmentPersistenceCallback(
+        [&](const ofJson& snapshot) {
+            ++persistenceCalls;
+            lastPublishedSnapshot = snapshot;
+            return persistenceSucceeds;
+        });
+
+    MenuController controller;
+    hub.onEnter(controller);
+    hub.view();
+
+    const ofJson canonical = {
+        {"assignments",
+         ofJson::array({
+             {
+                 {"assignmentKey", depthMeta.id},
+                 {"deviceProfileId", "MIDI Mix 0"},
+                 {"slotId", "K1"},
+                 {"analog", true},
+             },
+         })},
+    };
+    const auto imported =
+        hub.importSlotAssignmentSnapshotTransactional(canonical);
+    require(
+        imported.ok &&
+            imported.rollbackSucceeded &&
+            imported.error.empty(),
+        "Canonical slot-assignment transaction was rejected: " +
+            imported.error);
+    require(
+        persistenceCalls == 1 &&
+            lastPublishedSnapshot == canonical,
+        "Successful slot-assignment transaction did not publish exactly "
+        "one canonical snapshot");
+    require(
+        hub.exportSlotAssignmentSnapshot() == canonical,
+        "Canonical slot-assignment import/export changed the shipped "
+        "spaced device profile ID");
+    require(
+        std::count_if(
+            router.getCcMaps().begin(),
+            router.getCcMaps().end(),
+            [&](const MidiRouter::CcMap& route) {
+                return route.target == depthMeta.id;
+            }) == 1,
+        "Canonical slot-assignment transaction published duplicate "
+        "MIDI routes");
+    require(
+        std::any_of(
+            router.getCcMaps().begin(),
+            router.getCcMaps().end(),
+            [&](const MidiRouter::CcMap& route) {
+                return route.target == depthMeta.id &&
+                    route.cc == 16;
+            }),
+        "Canonical spaced-device assignment did not resolve shipped "
+        "MIDI Mix 0.K1 routing");
+    require(
+        std::any_of(
+            router.getCcMaps().begin(),
+            router.getCcMaps().end(),
+            [&](const MidiRouter::CcMap& route) {
+                return route.target == keepMeta.id &&
+                    route.cc == 99;
+            }),
+        "Canonical slot transaction replaced an unrelated route");
+
+    const ofJson acceptedAssignments =
+        hub.exportSlotAssignmentSnapshot();
+    const ofJson acceptedRoutes =
+        router.exportMappingSnapshot();
+    const ofJson acceptedPersistedRoutes =
+        ofLoadJson(mappingPath.string());
+
+    const ofJson duplicate = {
+        {"assignments",
+         ofJson::array({
+             canonical["assignments"][0],
+             canonical["assignments"][0],
+         })},
+    };
+    persistenceCalls = 0;
+    const auto duplicateRejected =
+        hub.importSlotAssignmentSnapshotTransactional(duplicate);
+    require(
+        !duplicateRejected.ok &&
+            !duplicateRejected.error.empty() &&
+            persistenceCalls == 0,
+        "Duplicate slot assignment was accepted or reached persistence");
+    require(
+        hub.exportSlotAssignmentSnapshot() ==
+                acceptedAssignments &&
+            router.exportMappingSnapshot() == acceptedRoutes &&
+            ofLoadJson(mappingPath.string()) ==
+                acceptedPersistedRoutes,
+        "Duplicate rejection changed assignments or routes");
+
+    const ofJson malformed = {
+        {"assignments",
+         ofJson::array({
+             {
+                 {"assignmentKey", depthMeta.id},
+                 {"deviceProfileId", "MIDI Mix 0"},
+                 {"slotId", "K2"},
+             },
+         })},
+    };
+    const auto malformedRejected =
+        hub.importSlotAssignmentSnapshotTransactional(malformed);
+    require(
+        !malformedRejected.ok &&
+            !malformedRejected.error.empty() &&
+            persistenceCalls == 0,
+        "Malformed slot assignment was accepted or reached persistence");
+    require(
+        hub.exportSlotAssignmentSnapshot() ==
+                acceptedAssignments &&
+            router.exportMappingSnapshot() == acceptedRoutes &&
+            ofLoadJson(mappingPath.string()) ==
+                acceptedPersistedRoutes,
+        "Malformed rejection changed assignments or routes");
+
+    const ofJson replacement = {
+        {"assignments",
+         ofJson::array({
+             {
+                 {"assignmentKey", depthMeta.id},
+                 {"deviceProfileId", "MIDI Mix 0"},
+                 {"slotId", "K2"},
+                 {"analog", true},
+             },
+         })},
+    };
+    persistenceSucceeds = false;
+    persistenceCalls = 0;
+    const auto persistenceRejected =
+        hub.importSlotAssignmentSnapshotTransactional(replacement);
+    require(
+        !persistenceRejected.ok &&
+            persistenceRejected.rollbackSucceeded &&
+            !persistenceRejected.error.empty() &&
+            persistenceCalls == 1,
+        "Persistence rejection did not report a successful rollback");
+    require(
+        hub.exportSlotAssignmentSnapshot() ==
+                acceptedAssignments &&
+            router.exportMappingSnapshot() == acceptedRoutes &&
+            ofLoadJson(mappingPath.string()) ==
+                acceptedPersistedRoutes,
+        "Persistence callback failure did not roll back assignment and "
+        "MIDI snapshots");
+
+    persistenceSucceeds = true;
+    persistenceCalls = 0;
+    const ofJson explicitlyEmpty = {
+        {"assignments", ofJson::array()},
+    };
+    const auto cleared =
+        hub.importSlotAssignmentSnapshotTransactional(explicitlyEmpty);
+    require(
+        cleared.ok &&
+            cleared.rollbackSucceeded &&
+            persistenceCalls == 1 &&
+            lastPublishedSnapshot == explicitlyEmpty &&
+            hub.exportSlotAssignmentSnapshot() == explicitlyEmpty,
+        "Explicitly empty slot-assignment transaction did not clear and "
+        "publish exactly once");
+    require(
+        std::none_of(
+            router.getCcMaps().begin(),
+            router.getCcMaps().end(),
+            [&](const MidiRouter::CcMap& route) {
+                return route.target == depthMeta.id;
+            }),
+        "Explicitly empty slot assignment left its MIDI route active");
+    require(
+        std::any_of(
+            router.getCcMaps().begin(),
+            router.getCcMaps().end(),
+            [&](const MidiRouter::CcMap& route) {
+                return route.target == keepMeta.id &&
+                    route.cc == 99;
+            }),
+        "Explicitly empty slot assignment removed an unrelated route");
+
+    hub.onExit(controller);
+    return true;
+}
+
+bool RunSlotAssignmentUiRollbackScenario() {
+    auto require = [](bool condition, const std::string& message) {
+        if (!condition) {
+            throw std::runtime_error(message);
+        }
+    };
+
+    const auto uniqueSuffix = std::to_string(
+        std::chrono::steady_clock::now()
+            .time_since_epoch()
+            .count());
+    const auto tempRoot =
+        std::filesystem::temp_directory_path() /
+        ("cmh_slot_assignment_ui_rollback_" + uniqueSuffix);
+    const auto layersDir = tempRoot / "layers";
+    std::filesystem::create_directories(layersDir);
+    const auto assetPath = layersDir / "tests.asset.ui.json";
+    {
+        std::ofstream asset(assetPath);
+        require(
+            static_cast<bool>(asset),
+            "Could not create UI rollback asset fixture");
+        asset << R"JSON({
+  "id": "tests.asset.ui",
+  "label": "Slot UI Asset",
+  "category": "Tests",
+  "type": "generative.perlin",
+  "registryPrefix": "tests.asset.ui"
+})JSON";
+    }
+
+    LayerLibrary library;
+    require(
+        library.reload(layersDir.string()),
+        "Could not load UI rollback asset fixture");
+    const auto* entry = library.find("tests.asset.ui");
+    require(entry != nullptr, "UI rollback asset was not indexed");
+
+    ParameterRegistry registry;
+    ParameterRegistry::Descriptor meta;
+    meta.id = "console.layer1.opacity";
+    meta.label = "UI Slot Opacity";
+    meta.group = "Console";
+    meta.range.min = 0.0f;
+    meta.range.max = 1.0f;
+    float opacity = 0.5f;
+    registry.addFloat(meta.id, &opacity, opacity, meta);
+
+    const auto mappingPath = tempRoot / "midi-map.json";
+    MidiRouter router;
+    router.bindFloat(
+        meta.id,
+        &opacity,
+        0.0f,
+        1.0f,
+        false,
+        0.0f);
+    require(
+        !router.load(mappingPath.string()),
+        "Fresh UI rollback fixture unexpectedly loaded a MIDI map");
+
+    ControlMappingHubState hub;
+    hub.setParameterRegistry(&registry);
+    hub.setMidiRouter(&router);
+    hub.setLayerLibrary(&library);
+    hub.setMenuSkin(MenuSkin::ConsoleHub());
+    hub.setDeviceMapsDirectory(
+        synaptome_test_paths::deviceMapsRoot().string());
+    hub.setConsoleAssetResolver(
+        [entry](const std::string& prefix)
+            -> const LayerLibrary::Entry* {
+            if (prefix.rfind("console.layer", 0) == 0 ||
+                prefix == entry->registryPrefix ||
+                prefix == entry->id) {
+                return entry;
+            }
+            return nullptr;
+        });
+    hub.setConsoleSlotInventoryCallback([entry] {
+        ConsoleLayerInfo info;
+        info.index = 1;
+        info.assetId = entry->id;
+        info.active = true;
+        info.label = entry->label;
+        return std::vector<ConsoleLayerInfo>{info};
+    });
+    hub.setSlotAssignmentsPath(
+        (tempRoot / "slot-assignments.json").string());
+
+    int persistenceCalls = 0;
+    bool persistenceSucceeds = true;
+    hub.setSlotAssignmentPersistenceCallback(
+        [&](const ofJson&) {
+            ++persistenceCalls;
+            return persistenceSucceeds;
+        });
+
+    MenuController controller;
+    hub.onEnter(controller);
+    hub.view();
+    require(
+        hub.focusAssetById(entry->id),
+        "Could not focus UI rollback asset");
+    hub.rebuildView();
+
+    constexpr const char* kCanonicalAssignmentKey =
+        "tests.asset.ui::opacity";
+    const ofJson initialAssignment = {
+        {"assignments",
+         ofJson::array({
+             {
+                 {"assignmentKey", kCanonicalAssignmentKey},
+                 {"deviceProfileId", "MIDI Mix 0"},
+                 {"slotId", "K1"},
+                 {"analog", true},
+             },
+         })},
+    };
+    const auto seeded =
+        hub.importSlotAssignmentSnapshotTransactional(
+            initialAssignment);
+    require(
+        seeded.ok && persistenceCalls == 1,
+        "Could not seed UI slot assignment transaction: " +
+            seeded.error);
+
+    hub.rebuildView();
+    const auto* row = hub.rowForId(meta.id);
+    require(
+        row != nullptr && row->isFloat &&
+            row->floatParam != nullptr,
+        "UI rollback parameter row was not available");
+
+    persistenceSucceeds = false;
+    persistenceCalls = 0;
+    const ofJson beforeAssignmentFailure =
+        hub.exportSlotAssignmentSnapshot();
+    const ofJson beforeAssignmentRoutes =
+        router.exportMappingSnapshot();
+    const ofJson beforeAssignmentFile =
+        ofLoadJson(mappingPath.string());
+
+    require(
+        hub.beginSlotPicker(*row),
+        "Could not open UI slot picker for rollback test");
+    bool selectedK2 = false;
+    for (std::size_t pickerIndex = 0;
+         pickerIndex < hub.slotPickerIndices_.size();
+         ++pickerIndex) {
+        const int slotIndex =
+            hub.slotPickerIndices_[pickerIndex];
+        if (slotIndex < 0 ||
+            slotIndex >=
+                static_cast<int>(hub.slotCatalog_.size())) {
+            continue;
+        }
+        const auto& slot =
+            hub.slotCatalog_[static_cast<std::size_t>(
+                slotIndex)];
+        if (slot.deviceId == "MIDI Mix 0" &&
+            slot.slotId == "K2" &&
+            slot.analog) {
+            hub.slotPickerSelection_ =
+                static_cast<int>(pickerIndex);
+            selectedK2 = true;
+            break;
+        }
+    }
+    require(selectedK2, "Shipped MIDI Mix 0.K2 slot was absent");
+
+    const bool uiAssigned = hub.applySelectedSlot();
+    require(
+        !uiAssigned && persistenceCalls == 1,
+        "UI slot assignment did not report one rejected persistence "
+        "attempt");
+    require(
+        hub.exportSlotAssignmentSnapshot() ==
+                beforeAssignmentFailure &&
+            router.exportMappingSnapshot() ==
+                beforeAssignmentRoutes &&
+            ofLoadJson(mappingPath.string()) ==
+                beforeAssignmentFile,
+        "UI slot assignment persistence failure left partial "
+        "assignment or route state");
+
+    hub.cancelSlotPicker();
+    hub.rebuildView();
+    const auto& gridItems = hub.activeGridItems();
+    int gridItemIndex = -1;
+    for (std::size_t index = 0;
+         index < gridItems.size();
+         ++index) {
+        const auto& item = gridItems[index];
+        if (item.sectionHeader ||
+            item.rowIndex < 0 ||
+            item.rowIndex >=
+                static_cast<int>(
+                    hub.tableModel_.rows.size())) {
+            continue;
+        }
+        if (hub.tableModel_.rows[
+                static_cast<std::size_t>(
+                    item.rowIndex)].id == meta.id) {
+            gridItemIndex = static_cast<int>(index);
+            break;
+        }
+    }
+    require(
+        gridItemIndex >= 0 &&
+            hub.debugSetGridSelection(
+                gridItemIndex,
+                static_cast<int>(
+                    ControlMappingHubState::Column::kSlot)),
+        "Could not select the UI slot cell for unmap rollback");
+
+    persistenceCalls = 0;
+    const ofJson beforeUnmapAssignments =
+        hub.exportSlotAssignmentSnapshot();
+    const ofJson beforeUnmapRoutes =
+        router.exportMappingSnapshot();
+    const ofJson beforeUnmapFile =
+        ofLoadJson(mappingPath.string());
+    require(
+        hub.handleInput(controller, 'u'),
+        "UI slot unmap input was not handled");
+    require(
+        persistenceCalls == 1 &&
+            hub.exportSlotAssignmentSnapshot() ==
+                beforeUnmapAssignments &&
+            router.exportMappingSnapshot() ==
+                beforeUnmapRoutes &&
+            ofLoadJson(mappingPath.string()) ==
+                beforeUnmapFile,
+        "UI unmap persistence failure left partial assignment or "
+        "route state");
+
+    persistenceCalls = 0;
+    hub.slotAssignments_.clear();
+    ControlMappingHubState::LogicalSlotBinding legacyAlias;
+    legacyAlias.deviceId = "MIDI Mix 0";
+    legacyAlias.deviceName = "MIDI Mix 0";
+    legacyAlias.slotId = "K1";
+    legacyAlias.slotLabel = "Knob 1";
+    legacyAlias.analog = true;
+    hub.slotAssignments_[meta.id] =
+        std::move(legacyAlias);
+    hub.slotAssignmentsLoaded_ = true;
+    hub.slotAssignmentsDirty_ = false;
+    const ofJson beforeAliasRenderRoutes =
+        router.exportMappingSnapshot();
+    hub.tableModel_.dirty = true;
+    hub.invalidateRowCache();
+    hub.view();
+    require(
+        persistenceCalls == 0,
+        "Rendering a legacy slot-assignment alias invoked "
+        "persistence");
+    require(
+        router.exportMappingSnapshot() ==
+            beforeAliasRenderRoutes,
+        "Rendering a legacy slot-assignment alias changed routes");
+
+    hub.slotAssignmentsDirty_ = false;
+    hub.onExit(controller);
+    return true;
+}
+
+#include "midi_input_binding_flow.inc"
+
 struct SensorSample {
     std::string parameterId;
     float value = 0.0f;
     uint64_t timestampMs = 0;
 };
+
+bool RunSynaptomeMeshOscCompatibilityScenario() {
+    auto numericMessage = [](const std::string& address,
+                             float value,
+                             uint64_t timestampMs) {
+        OscIngressMessage message;
+        message.rawAddress = address;
+        message.typeTags = ",f";
+        message.transport = "udp";
+        message.endpoint = "127.0.0.1:9002";
+        message.timestampMs = timestampMs;
+        message.arguments.push_back(
+            OscIngressAtom::numeric(OscIngressAtomType::Float32, value));
+        OscIngressCompatibility::normalizeSynaptomeMeshV1(message);
+        return message;
+    };
+
+    auto legacy = numericMessage(
+        "/sensor/hr/0x0301/heart-bpm",
+        72.0f,
+        100);
+    auto namespaced = numericMessage(
+        "/synaptome_mesh/sensor/hr/0x0301/heart-bpm",
+        72.0f,
+        101);
+    if (legacy.canonicalAddress != "/sensor/hr/0x0301/bpm"
+        || namespaced.canonicalAddress != legacy.canonicalAddress
+        || legacy.meshNamespaceAlias
+        || !namespaced.meshNamespaceAlias
+        || !legacy.meshRouteAliasApplied
+        || !namespaced.meshRouteAliasApplied) {
+        throw std::runtime_error("Mesh heart-bpm compatibility normalization failed");
+    }
+
+    OscIngressCompatibility::MeshDualEmissionDeduper deduper(25);
+    if (deduper.shouldSuppress(legacy)) {
+        throw std::runtime_error("Mesh legacy route was suppressed before its paired alias");
+    }
+    if (!deduper.shouldSuppress(namespaced)
+        || !namespaced.duplicateSuppressed) {
+        throw std::runtime_error("Mesh dual-emitted namespace alias was not suppressed");
+    }
+
+    auto repeatedLegacy = numericMessage(
+        "/sensor/hr/0x0301/heart-bpm",
+        72.0f,
+        140);
+    auto repeatedAlias = numericMessage(
+        "/synaptome_mesh/sensor/hr/0x0301/heart-bpm",
+        72.0f,
+        141);
+    if (deduper.shouldSuppress(repeatedLegacy)
+        || !deduper.shouldSuppress(repeatedAlias)) {
+        throw std::runtime_error("Repeated Mesh event pairs were not independently accepted");
+    }
+
+    auto matrixAlias = numericMessage(
+        "/synaptome_mesh/sensor/matrix/0x0101/mic-level",
+        0.42f,
+        200);
+    if (matrixAlias.canonicalAddress != "/sensor/matrix/0x0101/mic-level"
+        || matrixAlias.meshRouteAliasApplied) {
+        throw std::runtime_error("Mesh identity route normalization changed the metric");
+    }
+    float scalarValue = 0.0f;
+    if (!matrixAlias.finiteNumericScalar(scalarValue)
+        || std::fabs(scalarValue - 0.42f) > 0.0001f) {
+        throw std::runtime_error("Mesh numeric payload was not retained as a scalar");
+    }
+
+    OscIngressMessage stringMessage;
+    stringMessage.rawAddress =
+        "/synaptome_mesh/system/matrix/0x0101/device-type-name";
+    stringMessage.typeTags = ",s";
+    stringMessage.transport = "serial-slip";
+    stringMessage.endpoint = "COM7";
+    stringMessage.timestampMs = 210;
+    stringMessage.arguments.push_back(
+        OscIngressAtom::text(OscIngressAtomType::String, "matrix"));
+    OscIngressCompatibility::normalizeSynaptomeMeshV1(stringMessage);
+    if (stringMessage.canonicalAddress
+            != "/system/matrix/0x0101/device-type-name"
+        || stringMessage.finiteNumericScalar(scalarValue)
+        || stringMessage.payloadSummary() != "\"matrix\"") {
+        throw std::runtime_error("Mesh string payload was not preserved as diagnostics");
+    }
+
+    OscIngressMessage multiArgument;
+    multiArgument.rawAddress = "/vendor/device/pose";
+    multiArgument.canonicalAddress = multiArgument.rawAddress;
+    multiArgument.typeTags = ",fff";
+    multiArgument.arguments = {
+        OscIngressAtom::numeric(OscIngressAtomType::Float32, 0.1),
+        OscIngressAtom::numeric(OscIngressAtomType::Float32, 0.2),
+        OscIngressAtom::numeric(OscIngressAtomType::Float32, 0.3)
+    };
+    if (multiArgument.finiteNumericScalar(scalarValue)
+        || multiArgument.payloadSummary().empty()) {
+        throw std::runtime_error("Generic multi-argument OSC was treated as a scalar");
+    }
+
+    OscIngressMessage nonFinite = numericMessage(
+        "/vendor/device/nonfinite",
+        std::numeric_limits<float>::infinity(),
+        220);
+    if (nonFinite.finiteNumericScalar(scalarValue)) {
+        throw std::runtime_error("Non-finite OSC value entered scalar routing");
+    }
+
+    OscIngressMessage boolMessage;
+    boolMessage.rawAddress = "/vendor/device/enabled";
+    boolMessage.canonicalAddress = boolMessage.rawAddress;
+    boolMessage.typeTags = ",T";
+    OscIngressAtom boolAtom;
+    boolAtom.type = OscIngressAtomType::Bool;
+    boolAtom.numericValue = 1.0;
+    boolMessage.arguments.push_back(boolAtom);
+    if (boolMessage.finiteNumericScalar(scalarValue)
+        || boolMessage.payloadSummary() != "true") {
+        throw std::runtime_error("OSC bool observation was coerced into numeric routing");
+    }
+
+    OscIngressMessage int64Message;
+    int64Message.rawAddress = "/vendor/device/counter";
+    int64Message.canonicalAddress = int64Message.rawAddress;
+    int64Message.typeTags = ",h";
+    int64Message.arguments.push_back(OscIngressAtom::integer(
+        OscIngressAtomType::Int64,
+        std::numeric_limits<std::int64_t>::max()));
+    if (int64Message.payloadSummary() != "9223372036854775807") {
+        throw std::runtime_error("OSC int64 diagnostic precision was not preserved");
+    }
+
+    auto appendPaddedString = [](std::vector<std::uint8_t>& packet,
+                                 const std::string& value) {
+        packet.insert(packet.end(), value.begin(), value.end());
+        packet.push_back(0);
+        while ((packet.size() % 4) != 0) {
+            packet.push_back(0);
+        }
+    };
+    auto appendU32 = [](std::vector<std::uint8_t>& packet,
+                        std::uint32_t value) {
+        packet.push_back(static_cast<std::uint8_t>((value >> 24) & 0xff));
+        packet.push_back(static_cast<std::uint8_t>((value >> 16) & 0xff));
+        packet.push_back(static_cast<std::uint8_t>((value >> 8) & 0xff));
+        packet.push_back(static_cast<std::uint8_t>(value & 0xff));
+    };
+    auto makeSerialPacket = [&](const std::string& address,
+                                const std::string& tags) {
+        std::vector<std::uint8_t> packet;
+        appendPaddedString(packet, address);
+        appendPaddedString(packet, tags);
+        return packet;
+    };
+
+    SerialSlipOsc serialParser;
+    serialParser.activePort = "COM7";
+    std::vector<OscIngressMessage> serialEvents;
+    auto captureSerial = [&](const OscIngressMessage& message) {
+        serialEvents.push_back(message);
+    };
+
+    auto serialFloat = makeSerialPacket("/sensor/matrix/0x0101/mic-level", ",f");
+    float serialFloatValue = 0.42f;
+    std::uint32_t serialFloatBits = 0;
+    std::memcpy(&serialFloatBits, &serialFloatValue, sizeof(serialFloatBits));
+    appendU32(serialFloat, serialFloatBits);
+    serialParser.parseFrame(
+        serialFloat.data(),
+        static_cast<int>(serialFloat.size()),
+        captureSerial);
+
+    auto serialInt = makeSerialPacket("/param/rx/deck/0x0201/page", ",i");
+    appendU32(serialInt, 3);
+    serialParser.parseFrame(
+        serialInt.data(),
+        static_cast<int>(serialInt.size()),
+        captureSerial);
+
+    auto serialString = makeSerialPacket(
+        "/system/matrix/0x0101/device-type-name",
+        ",s");
+    appendPaddedString(serialString, "matrix");
+    serialParser.parseFrame(
+        serialString.data(),
+        static_cast<int>(serialString.size()),
+        captureSerial);
+
+    if (serialEvents.size() != 3
+        || serialEvents[0].transport != "serial-slip"
+        || serialEvents[0].endpoint != "COM7"
+        || serialEvents[0].payloadSummary() != "0.42"
+        || serialEvents[1].payloadSummary() != "3"
+        || serialEvents[2].payloadSummary() != "\"matrix\"") {
+        throw std::runtime_error("Serial SLIP OSC did not preserve Mesh f/i/s payloads");
+    }
+
+    auto truncatedString = makeSerialPacket("/system/matrix/0x0101/role-name", ",s");
+    truncatedString.push_back('x');
+    const auto eventsBeforeTruncation = serialEvents.size();
+    serialParser.parseFrame(
+        truncatedString.data(),
+        static_cast<int>(truncatedString.size()),
+        captureSerial);
+    if (serialEvents.size() != eventsBeforeTruncation) {
+        throw std::runtime_error("Truncated serial OSC string mutated ingress state");
+    }
+    return true;
+}
 
 bool RunOscIngestFlowScenario(const std::filesystem::path& artifactPath) {
     HudRegistry hud;
@@ -2295,6 +3174,915 @@ bool RunSceneParameterPersistenceScenario() {
         throw std::runtime_error("String persistence did not capture the live value");
     }
 
+    const synaptome::state::ParameterBaseOrigin sceneOrigin{
+        synaptome::state::ParameterBaseOriginKind::Scene,
+        "layers/scenes/legacy-origin.json",
+        1,
+        {"scene-v1-to-v2"},
+    };
+    registry.setFloatBase(
+        "test.scene.float",
+        0.4f,
+        sceneOrigin,
+        true);
+    registry.setBoolBase(
+        "test.scene.bool",
+        false,
+        sceneOrigin,
+        true);
+    registry.setStringBase(
+        "test.scene.string",
+        "scene",
+        sceneOrigin,
+        true);
+    if (floatParam.baseOrigin != sceneOrigin ||
+        boolParam.baseOrigin != sceneOrigin ||
+        stringParam.baseOrigin != sceneOrigin) {
+        throw std::runtime_error(
+            "Scene value application did not retain source version or migration origin");
+    }
+    registry.setStringBase(
+        "test.scene.string",
+        "operator",
+        {synaptome::state::ParameterBaseOriginKind::OperatorEdit,
+         "tests.operator"},
+        true);
+    if (stringParam.baseOrigin.kind !=
+        synaptome::state::ParameterBaseOriginKind::OperatorEdit) {
+        throw std::runtime_error(
+            "Operator edit did not replace the prior Scene base origin");
+    }
+
+    return true;
+}
+
+bool RunSceneStateDocumentVersionScenario() {
+    using synaptome::state::SceneDocumentError;
+    using synaptome::state::SceneDocumentKind;
+    using synaptome::state::normalizeSceneDocument;
+    auto require = [](bool condition, const std::string& message) {
+        if (!condition) {
+            throw std::runtime_error(message);
+        }
+    };
+
+    const ofJson legacy = {
+        {"globals", {{"transport.bpm", 120.0}}},
+        {"mappings", {{"activeBank", "home"}}},
+    };
+    const ofJson legacyBefore = legacy;
+    const auto normalizedLegacy = normalizeSceneDocument(legacy);
+    require(normalizedLegacy.ok,
+            "Unversioned legacy scene was rejected");
+    require(normalizedLegacy.kind == SceneDocumentKind::LegacyV1 &&
+                normalizedLegacy.sourceVersion == 1 &&
+                normalizedLegacy.migratedInMemory,
+            "Unversioned scene was not classified as legacy v1");
+    require(normalizedLegacy.document["scene"]["schemaVersion"] == 2,
+            "Legacy scene was not normalized to current v2 in memory");
+    require(normalizedLegacy.document["mappings"] == legacy["mappings"],
+            "Legacy normalization changed mapping presence/value semantics");
+    require(legacy == legacyBefore && !legacy.contains("scene"),
+            "Legacy normalization mutated its source document");
+
+    const ofJson explicitV1 = {
+        {"scene", {{"schemaVersion", 1}}},
+        {"mappings", {{"router", ofJson::object()}}},
+    };
+    const auto normalizedV1 = normalizeSceneDocument(explicitV1);
+    require(normalizedV1.ok &&
+                normalizedV1.kind == SceneDocumentKind::LegacyV1 &&
+                normalizedV1.sourceVersion == 1 &&
+                normalizedV1.document["mappings"].contains("router") &&
+                normalizedV1.document["mappings"]["router"].empty(),
+            "Explicit v1 scene did not retain authoritative empty mappings");
+
+    const ofJson currentV2 = {
+        {"scene", {{"schemaVersion", 2}}},
+        {"console", {{"slots", ofJson::array()}}},
+    };
+    const auto normalizedV2 = normalizeSceneDocument(currentV2);
+    require(normalizedV2.ok &&
+                normalizedV2.kind == SceneDocumentKind::CurrentV2 &&
+                normalizedV2.sourceVersion == 2 &&
+                !normalizedV2.migratedInMemory &&
+                normalizedV2.document == currentV2,
+            "Current v2 scene was not accepted unchanged");
+
+    for (const auto& invalid : std::vector<ofJson>{
+             ofJson::array(),
+             ofJson{{"scene", "invalid"}},
+             ofJson{{"scene", {{"schemaVersion", "2"}}}},
+             ofJson{{"scene", {{"schemaVersion", 0}}}},
+             ofJson{{"scene", {{"schemaVersion", 3}}}},
+         }) {
+        const auto rejected = normalizeSceneDocument(invalid);
+        require(!rejected.ok && !rejected.error.empty(),
+                "Invalid/future scene version was accepted");
+    }
+    const auto future = normalizeSceneDocument(
+        ofJson{{"scene", {{"schemaVersion", 3}}}});
+    require(
+        future.errorCode == SceneDocumentError::UnsupportedFutureVersion,
+        "Future scene version did not remain distinguishable from corruption");
+
+    const ofJson omittedMappings = {
+        {"scene", {{"schemaVersion", 2}}},
+    };
+    const auto normalizedOmitted = normalizeSceneDocument(omittedMappings);
+    require(normalizedOmitted.ok &&
+                !normalizedOmitted.document.contains("mappings"),
+            "Scene normalization invented an omitted mappings owner");
+    return true;
+}
+
+bool RunSceneSlotAssignmentOwnershipScenario() {
+    using synaptome::state::normalizeSceneDocument;
+    auto require = [](bool condition, const std::string& message) {
+        if (!condition) {
+            throw std::runtime_error(message);
+        }
+    };
+
+    const auto fixturePath =
+        synaptome_test_paths::appRoot().parent_path() /
+        "tools" / "testdata" / "scene_persistence" /
+        "slot_assignment_ownership_cases.json";
+    const ofJson fixture = ofLoadJson(fixturePath.string());
+    require(
+        fixture.is_object() &&
+            fixture.value("policyVersion", 0) == 1 &&
+            fixture.contains("writerCases") &&
+            fixture["writerCases"].is_array() &&
+            fixture.contains("legacyReadCases") &&
+            fixture["legacyReadCases"].is_array(),
+        "Malformed Scene slot-assignment ownership fixture");
+
+    bool namedWriterCovered = false;
+    bool autosaveWriterCovered = false;
+    for (const auto& writerCase : fixture["writerCases"]) {
+        require(
+            writerCase.is_object() &&
+                writerCase.contains("id") &&
+                writerCase["id"].is_string() &&
+                writerCase.contains("path") &&
+                writerCase["path"].is_string() &&
+                writerCase.contains("storageKind") &&
+                writerCase["storageKind"].is_string() &&
+                writerCase.contains("document"),
+            "Malformed Scene slot-assignment writer case");
+        const std::string caseId = writerCase["id"].get<std::string>();
+        const std::string storageKind =
+            writerCase["storageKind"].get<std::string>();
+        const ofJson source = writerCase["document"];
+        const ofJson sourceBefore = source;
+        const auto normalized = normalizeSceneDocument(source);
+        require(
+            normalized.ok &&
+                normalized.document == source &&
+                source == sourceBefore,
+            "Canonical Scene writer case was rejected or mutated: " +
+                caseId);
+        require(
+            normalized.document.contains("scene") &&
+                normalized.document["scene"].is_object() &&
+                normalized.document["scene"].contains("storage") &&
+                normalized.document["scene"]["storage"].is_object() &&
+                normalized.document["scene"]["storage"].value(
+                    "kind",
+                    std::string()) == storageKind,
+            "Scene writer case storage kind drifted: " + caseId);
+        require(
+            !normalized.document.contains("mappings") ||
+                !normalized.document["mappings"].contains(
+                    "slotAssignments"),
+            "Canonical Scene writer case absorbed machine-local "
+            "slot assignments: " +
+                caseId);
+        namedWriterCovered |= storageKind == "named";
+        autosaveWriterCovered |= storageKind == "autosave";
+    }
+    require(
+        namedWriterCovered && autosaveWriterCovered,
+        "Scene ownership fixture must pin named and recovery-autosave "
+        "writer policy");
+
+    bool nonemptyLegacyCovered = false;
+    bool emptyLegacyCovered = false;
+    for (const auto& readCase : fixture["legacyReadCases"]) {
+        require(
+            readCase.is_object() &&
+                readCase.contains("id") &&
+                readCase["id"].is_string() &&
+                readCase.value(
+                    "expectedCompatibility",
+                    std::string()) == "accepted" &&
+                readCase.value(
+                    "expectedNormalLoadAction",
+                    std::string()) == "preserve-machine" &&
+                readCase.value("explicitImportRequired", false) &&
+                readCase.contains("document"),
+            "Malformed legacy Scene slot-assignment compatibility case");
+        const std::string caseId = readCase["id"].get<std::string>();
+        const ofJson source = readCase["document"];
+        const ofJson sourceBefore = source;
+        const auto normalized = normalizeSceneDocument(source);
+        require(
+            normalized.ok &&
+                normalized.document == source &&
+                source == sourceBefore,
+            "Legacy Scene slot-assignment input was rejected or mutated: " +
+                caseId);
+        require(
+            normalized.document.contains("mappings") &&
+                normalized.document["mappings"].is_object() &&
+                normalized.document["mappings"].contains(
+                    "slotAssignments") &&
+                normalized.document["mappings"]["slotAssignments"].
+                    is_object() &&
+                normalized.document["mappings"]["slotAssignments"].
+                    contains("assignments") &&
+                normalized.document["mappings"]["slotAssignments"]
+                    ["assignments"].is_array(),
+            "Legacy Scene slot-assignment compatibility shape drifted: " +
+                caseId);
+        const bool empty =
+            normalized.document["mappings"]["slotAssignments"]
+                ["assignments"].empty();
+        emptyLegacyCovered |= empty;
+        nonemptyLegacyCovered |= !empty;
+    }
+    require(
+        nonemptyLegacyCovered && emptyLegacyCovered,
+        "Legacy Scene compatibility must cover non-empty and explicitly "
+        "empty slot assignments");
+
+    return true;
+}
+
+bool RunMachineProfileDocumentVersionScenario() {
+    using synaptome::state::MachineProfileDocumentError;
+    using synaptome::state::MachineProfileDocumentKind;
+    using synaptome::state::validateMachineProfileDocument;
+    auto require = [](bool condition, const std::string& message) {
+        if (!condition) {
+            throw std::runtime_error(message);
+        }
+    };
+
+    const auto fixtureRoot =
+        synaptome_test_paths::appRoot().parent_path() /
+        "tools" / "testdata" / "machine_profile";
+
+    const ofJson canonical =
+        ofLoadJson((fixtureRoot / "canonical_v1.json").string());
+    const ofJson canonicalBefore = canonical;
+    const auto accepted = validateMachineProfileDocument(canonical);
+    require(
+        accepted.ok &&
+            accepted.kind == MachineProfileDocumentKind::CurrentV1 &&
+            accepted.errorCode == MachineProfileDocumentError::None &&
+            accepted.sourceVersion == 1 &&
+            accepted.document == canonical,
+        "Canonical machine profile v1 was not accepted unchanged");
+    require(canonical == canonicalBefore,
+            "Machine profile validation mutated its source document");
+
+    const ofJson empty =
+        ofLoadJson((fixtureRoot / "canonical_empty_v1.json").string());
+    const ofJson emptyBefore = empty;
+    const auto acceptedEmpty = validateMachineProfileDocument(empty);
+    require(
+        acceptedEmpty.ok &&
+            acceptedEmpty.document["osc"]["inputs"].empty() &&
+            !acceptedEmpty.document["osc"].contains("activeInputId"),
+        "Canonical empty machine profile v1 was not accepted");
+    require(empty == emptyBefore,
+            "Empty machine profile validation mutated its source document");
+
+    const ofJson invalidFixture =
+        ofLoadJson((fixtureRoot / "invalid_cases.json").string());
+    require(invalidFixture.is_object() &&
+                invalidFixture.contains("cases") &&
+                invalidFixture["cases"].is_array() &&
+                !invalidFixture["cases"].empty(),
+            "Machine profile invalid-case fixture is empty");
+    for (const auto& invalidCase : invalidFixture["cases"]) {
+        require(invalidCase.is_object() &&
+                    invalidCase.contains("id") &&
+                    invalidCase["id"].is_string() &&
+                    invalidCase.contains("document"),
+                "Malformed machine profile invalid-case fixture");
+        const std::string caseId = invalidCase["id"].get<std::string>();
+        const ofJson source = invalidCase["document"];
+        const ofJson sourceBefore = source;
+        const auto rejected = validateMachineProfileDocument(source);
+        require(!rejected.ok && !rejected.error.empty(),
+                "Invalid machine profile was accepted: " + caseId);
+        require(source == sourceBefore,
+                "Rejected machine profile source was mutated: " + caseId);
+        const auto expectedError =
+            caseId == "future-version"
+                ? MachineProfileDocumentError::UnsupportedFutureVersion
+                : MachineProfileDocumentError::InvalidDocument;
+        require(rejected.errorCode == expectedError,
+                "Machine profile rejection used the wrong error class: " +
+                    caseId);
+    }
+
+    const ofJson midiFixture =
+        ofLoadJson(
+            (fixtureRoot / "midi_binding_cases.json").string());
+    require(
+        midiFixture.is_object() &&
+            midiFixture.value("policyVersion", 0) == 1 &&
+            midiFixture.contains("acceptedDocuments") &&
+            midiFixture["acceptedDocuments"].is_array() &&
+            midiFixture.contains("invalidDocuments") &&
+            midiFixture["invalidDocuments"].is_array(),
+        "Malformed machine-profile physical-MIDI fixture");
+    for (const auto& acceptedCase :
+         midiFixture["acceptedDocuments"]) {
+        require(
+            acceptedCase.is_object() &&
+                acceptedCase.contains("id") &&
+                acceptedCase["id"].is_string() &&
+                acceptedCase.contains("expectedApplyAction") &&
+                acceptedCase["expectedApplyAction"].is_string() &&
+                acceptedCase.contains("document"),
+            "Malformed accepted physical-MIDI document case");
+        const std::string caseId =
+            acceptedCase["id"].get<std::string>();
+        const ofJson source = acceptedCase["document"];
+        const ofJson sourceBefore = source;
+        const auto validated =
+            validateMachineProfileDocument(source);
+        require(
+            validated.ok &&
+                validated.document == source &&
+                source == sourceBefore,
+            "Valid physical-MIDI machine-profile document was rejected "
+            "or mutated: " +
+                caseId);
+    }
+    for (const auto& invalidCase :
+         midiFixture["invalidDocuments"]) {
+        require(
+            invalidCase.is_object() &&
+                invalidCase.contains("id") &&
+                invalidCase["id"].is_string() &&
+                invalidCase.contains("document"),
+            "Malformed rejected physical-MIDI document case");
+        const std::string caseId =
+            invalidCase["id"].get<std::string>();
+        const ofJson source = invalidCase["document"];
+        const ofJson sourceBefore = source;
+        const auto rejected =
+            validateMachineProfileDocument(source);
+        require(
+            !rejected.ok &&
+                rejected.errorCode ==
+                    MachineProfileDocumentError::InvalidDocument &&
+                !rejected.error.empty(),
+            "Malformed or duplicate physical-MIDI profile was accepted: " +
+                caseId);
+        require(
+            source == sourceBefore,
+            "Rejected physical-MIDI machine-profile source was mutated: " +
+                caseId);
+    }
+
+    return true;
+}
+
+bool RunMappingBankDocumentVersionScenario() {
+    using synaptome::state::MappingBankDocumentError;
+    using synaptome::state::MappingBankDocumentKind;
+    using synaptome::state::normalizeMappingBankDocument;
+    auto require = [](bool condition, const std::string& message) {
+        if (!condition) {
+            throw std::runtime_error(message);
+        }
+    };
+
+    const ofJson legacy = {
+        {"cc", ofJson::array({
+            {{"num", 12}, {"target", "test.mapping.depth"}}
+        })},
+    };
+    const ofJson legacyBefore = legacy;
+    const auto normalizedLegacy =
+        normalizeMappingBankDocument(legacy);
+    require(
+        normalizedLegacy.ok &&
+            normalizedLegacy.kind ==
+                MappingBankDocumentKind::LegacyUnversioned &&
+            normalizedLegacy.sourceVersion == 0 &&
+            normalizedLegacy.migratedInMemory &&
+            normalizedLegacy.document["schemaVersion"] == 1,
+        "Unversioned mapping snapshot was not normalized to v1");
+    require(
+        normalizedLegacy.document["cc"] == legacy["cc"] &&
+            legacy == legacyBefore &&
+            !legacy.contains("schemaVersion"),
+        "Legacy mapping normalization changed or mutated route state");
+
+    const ofJson current = {
+        {"schemaVersion", 1},
+        {"cc", ofJson::array()},
+        {"buttons", ofJson::array()},
+        {"oscSources", ofJson::array()},
+        {"osc", ofJson::array()},
+    };
+    const auto normalizedCurrent =
+        normalizeMappingBankDocument(current);
+    require(
+        normalizedCurrent.ok &&
+            normalizedCurrent.kind ==
+                MappingBankDocumentKind::CurrentV1 &&
+            normalizedCurrent.sourceVersion == 1 &&
+            !normalizedCurrent.migratedInMemory &&
+            normalizedCurrent.document == current,
+        "Current mapping-bank v1 was not accepted unchanged");
+
+    for (const auto& invalid : std::vector<ofJson>{
+             ofJson::array(),
+             ofJson{{"schemaVersion", "1"}},
+             ofJson{{"schemaVersion", 0}},
+             ofJson{{"schemaVersion", -1}},
+             ofJson{{"schemaVersion", 2}},
+             ofJson{
+                 {"version", 1},
+                 {"bank", "default"},
+                 {"mappings", ofJson::array()},
+             },
+         }) {
+        const auto rejected =
+            normalizeMappingBankDocument(invalid);
+        require(
+            !rejected.ok && !rejected.error.empty(),
+            "Invalid, future, or interchange mapping document was accepted");
+    }
+    const auto future = normalizeMappingBankDocument(
+        ofJson{
+            {"schemaVersion", 2},
+            {"mappings", ofJson::object()},
+        });
+    require(
+        future.errorCode ==
+            MappingBankDocumentError::UnsupportedFutureVersion,
+        "Future mapping-bank version was not distinguishable from corruption");
+
+    const auto normalizedNull =
+        normalizeMappingBankDocument(ofJson());
+    require(
+        normalizedNull.ok &&
+            normalizedNull.kind ==
+                MappingBankDocumentKind::LegacyUnversioned &&
+            normalizedNull.document["schemaVersion"] == 1,
+        "Legacy null explicit-empty snapshot lost compatibility");
+    return true;
+}
+
+bool RunPreferencesDocumentVersionScenario() {
+    using synaptome::state::PreferencesDocumentError;
+    using synaptome::state::PreferencesDocumentKind;
+    using synaptome::state::PreferencesPublisher;
+    using synaptome::state::normalizePreferencesDocument;
+    auto require = [](bool condition, const std::string& message) {
+        if (!condition) {
+            throw std::runtime_error(message);
+        }
+    };
+
+    const ofJson legacy = {
+        {"treeWidthRatio", 0.16},
+        {"selectedCategory", "Scenes"},
+        {"selectedSubcategory", "Saved"},
+        {"selectedAsset", ""},
+        {"selectedColumn", "value"},
+        {"visibleColumns", {{"name", true}, {"value", true}}},
+        {"collapsedCategories", ofJson::array({"Examples"})},
+        {"hudVisible", true},
+        {"hudLayoutTarget", "controller"},
+        {"hudWidgets", ofJson::array({
+            {
+                {"id", "hud.status"},
+                {"column", 0},
+                {"band", "hud"},
+                {"visible", true},
+                {"collapsed", false},
+            }
+        })},
+        {"hudControllerWidgets", ofJson::array({
+            {
+                {"id", "hud.status"},
+                {"column", 1},
+                {"band", "hud"},
+                {"collapsed", true},
+            }
+        })},
+    };
+    const ofJson legacyBefore = legacy;
+    const auto migrated = normalizePreferencesDocument(legacy);
+    require(
+        migrated.ok &&
+            migrated.kind ==
+                PreferencesDocumentKind::LegacyControlHub &&
+            migrated.migratedInMemory &&
+            migrated.sourceVersion == 0 &&
+            migrated.document["schemaVersion"] == 1,
+        "Legacy Control Hub preferences were not migrated to v1");
+    require(
+        migrated.document["browser"]["selection"]["category"] ==
+                "Scenes" &&
+            migrated.document["hud"]["widgets"].size() == 2 &&
+            migrated.document["hud"]["widgets"][0]["target"] ==
+                "projector" &&
+            migrated.document["hud"]["widgets"][1]["target"] ==
+                "controller" &&
+            legacy == legacyBefore &&
+            !legacy.contains("schemaVersion"),
+        "Legacy preference migration lost fields or mutated its source");
+
+    const ofJson current = {
+        {"schemaVersion", 1},
+        {"browser", {
+            {"treeWidthRatio", 0.20},
+            {"selection", {
+                {"category", "SDK Inspection (Read-only)"},
+                {"subcategory", ""},
+                {"asset", "Signal Bloom"},
+            }},
+            {"selectedColumn", "midi"},
+            {"visibleColumns", {{"name", true}, {"midi", true}}},
+            {"collapsedCategories", ofJson::array()},
+            {"collapsedParameterSections", ofJson::array()},
+        }},
+        {"hud", {
+            {"visible", false},
+            {"layoutTarget", "projector"},
+            {"stateMigrated", true},
+            {"widgets", ofJson::array()},
+        }},
+        {"hotkeys", {
+            {"bindings", ofJson::array({
+                {{"id", "menu.console"}, {"key", 96}},
+                {{"id", "app.quit"}, {"key", 0}},
+            })}
+        }},
+        {"packages", {
+            {"activations", ofJson::array({
+                {
+                    {"packageId", "examples.signal_bloom"},
+                    {"enabled", true},
+                    {"selectedPreset", {
+                        {"bankId", "performance"},
+                        {"presetId", "default"},
+                    }},
+                }
+            })}
+        }},
+        {"mappings", {{"activeBank", "home"}}},
+    };
+    const auto accepted = normalizePreferencesDocument(current);
+    require(
+        accepted.ok &&
+            accepted.kind == PreferencesDocumentKind::CurrentV1 &&
+            accepted.sourceVersion == 1 &&
+            !accepted.migratedInMemory &&
+            accepted.document == current,
+        "Canonical preferences v1 was not accepted unchanged");
+
+    for (const auto& invalid : std::vector<ofJson>{
+             ofJson::array(),
+             ofJson{{"schemaVersion", "1"}},
+             ofJson{{"schemaVersion", 0}},
+             ofJson{{"schemaVersion", 1}, {"machine", ofJson::object()}},
+             ofJson{
+                 {"schemaVersion", 1},
+                 {"browser", {{"treeWidthRatio", 0.01}}},
+             },
+             ofJson{
+                 {"schemaVersion", 1},
+                 {"browser", {{"visibleColumns", {{"name", false}}}}},
+             },
+             ofJson{
+                 {"schemaVersion", 1},
+                 {"hud", {{"layoutTarget", "both"}}},
+             },
+             ofJson{
+                 {"schemaVersion", 1},
+                 {"hotkeys", {{"bindings", ofJson::array({
+                     {{"id", "menu.console"}, {"key", 1}},
+                     {{"id", "menu.console"}, {"key", 2}},
+                 })}}},
+             },
+             ofJson{
+                 {"schemaVersion", 1},
+                 {"packages", {{"activations", ofJson::array({
+                     {{"packageId", "bad package"}, {"enabled", true}},
+                 })}}},
+             },
+             ofJson{
+                 {"schemaVersion", 1},
+                 {"mappings", {{"activeBank", "bad bank"}}},
+             },
+         }) {
+        const auto rejected = normalizePreferencesDocument(invalid);
+        require(
+            !rejected.ok && !rejected.error.empty(),
+            "Invalid preferences document was accepted");
+    }
+    const auto future = normalizePreferencesDocument({
+        {"schemaVersion", 2},
+        {"browser", ofJson::object()},
+    });
+    require(
+        !future.ok &&
+            future.errorCode ==
+                PreferencesDocumentError::UnsupportedFutureVersion,
+        "Future preferences version was not distinguishable from corruption");
+
+    PreferencesPublisher publisher;
+    std::string error;
+    require(
+        publisher.adoptInitial(current, &error),
+        "Could not seed preferences publisher: " + error);
+    std::vector<ofJson> persisted;
+    std::vector<ofJson> adopted;
+    publisher.setPersistCallback([&](const ofJson& snapshot) {
+        persisted.push_back(snapshot);
+        return true;
+    });
+    publisher.setAdoptCallback([&](const ofJson& snapshot) {
+        adopted.push_back(snapshot);
+        return snapshot["mappings"].value(
+                   "activeBank",
+                   std::string()) != "reject";
+    });
+
+    const auto sectionPublished = publisher.publishSection(
+        "mappings",
+        {{"activeBank", "performance"}});
+    require(
+        sectionPublished.ok &&
+            publisher.snapshot()["mappings"]["activeBank"] ==
+                "performance" &&
+            publisher.snapshot()["browser"] == current["browser"] &&
+            publisher.snapshot()["hotkeys"] == current["hotkeys"],
+        "Section publication did not preserve unrelated preferences");
+
+    const ofJson beforeFailure = publisher.snapshot();
+    const auto rejectedPublication = publisher.publishSection(
+        "mappings",
+        {{"activeBank", "reject"}});
+    require(
+        !rejectedPublication.ok &&
+            rejectedPublication.rollbackSucceeded &&
+            publisher.snapshot() == beforeFailure &&
+            persisted.size() == 3 &&
+            persisted.back() == beforeFailure &&
+            adopted.size() == 3 &&
+            adopted.back() == beforeFailure,
+        "Failed preference adoption did not restore persisted and live state");
+
+    publisher.setPersistCallback([](const ofJson&) {
+        return false;
+    });
+    const auto persistFailure = publisher.publishSection(
+        "mappings",
+        {{"activeBank", "home"}});
+    require(
+        !persistFailure.ok &&
+            publisher.snapshot() == beforeFailure,
+        "Failed preference persistence changed the authoritative snapshot");
+
+    PreferencesPublisher throwingPublisher;
+    require(
+        throwingPublisher.adoptInitial(current),
+        "Could not seed throwing preferences publisher");
+    throwingPublisher.setPersistCallback(
+        [](const ofJson&) -> bool {
+            throw std::runtime_error("injected persistence exception");
+        });
+    bool escaped = false;
+    try {
+        const auto result = throwingPublisher.publishSection(
+            "mappings",
+            {{"activeBank", "performance"}});
+        require(
+            !result.ok &&
+                throwingPublisher.snapshot() == current,
+            "Thrown persistence callback changed preferences");
+    } catch (...) {
+        escaped = true;
+    }
+    require(
+        !escaped,
+        "Persistence callback exception escaped publication");
+
+    int adoptionCalls = 0;
+    throwingPublisher.setPersistCallback(
+        [](const ofJson&) { return true; });
+    throwingPublisher.setAdoptCallback(
+        [&](const ofJson&) -> bool {
+            ++adoptionCalls;
+            throw std::runtime_error("injected adoption exception");
+        });
+    try {
+        const auto result = throwingPublisher.publishSection(
+            "mappings",
+            {{"activeBank", "performance"}});
+        require(
+            !result.ok &&
+                !result.rollbackSucceeded &&
+                adoptionCalls == 2 &&
+                throwingPublisher.snapshot() == current,
+            "Thrown adoption/rollback callback was not contained");
+    } catch (...) {
+        escaped = true;
+    }
+    require(
+        !escaped,
+        "Adoption callback exception escaped publication");
+
+    const auto unknownSection =
+        publisher.publishSection("machine", ofJson::object());
+    require(
+        !unknownSection.ok &&
+            publisher.snapshot() == beforeFailure,
+        "Unknown preference section was published");
+    return true;
+}
+
+bool RunBankDefinitionsDocumentScenario() {
+    using synaptome::state::BankDefinitionsDocumentError;
+    using synaptome::state::BankDefinitionsPublisher;
+    using synaptome::state::validateBankDefinitionsDocument;
+    auto require = [](bool condition, const std::string& message) {
+        if (!condition) {
+            throw std::runtime_error(message);
+        }
+    };
+    const ofJson current = {
+        {"schemaVersion", 1},
+        {"globalBanks", ofJson::array({
+            {
+                {"id", "home"},
+                {"label", "Home"},
+                {"controls", ofJson::array({
+                    {
+                        {"id", "speed"},
+                        {"label", "Speed"},
+                        {"target", "globals.speed"},
+                        {"softTakeover", true},
+                    }
+                })},
+            },
+            {
+                {"id", "performance"},
+                {"parent", "home"},
+                {"controls", ofJson::array({
+                    {
+                        {"id", "masterFx"},
+                        {"target", "fx.master"},
+                    }
+                })},
+            },
+        })}
+    };
+    const ofJson before = current;
+    const auto accepted =
+        validateBankDefinitionsDocument(current);
+    require(
+        accepted.ok &&
+            accepted.sourceVersion == 1 &&
+            accepted.document == current &&
+            current == before,
+        "Canonical bank definitions were not accepted unchanged");
+
+    for (const auto& invalid : std::vector<ofJson>{
+             ofJson::array(),
+             ofJson{{"schemaVersion", 1}},
+             ofJson{
+                 {"schemaVersion", 0},
+                 {"globalBanks", ofJson::array()},
+             },
+             ofJson{
+                 {"schemaVersion", 1},
+                 {"globalBanks", ofJson::array()},
+                 {"activeBank", "home"},
+             },
+             ofJson{
+                 {"schemaVersion", 1},
+                 {"globalBanks", ofJson::array({
+                     {{"id", "home"}},
+                     {{"id", "home"}},
+                 })},
+             },
+             ofJson{
+                 {"schemaVersion", 1},
+                 {"globalBanks", ofJson::array({
+                     {{"id", "child"}, {"parent", "missing"}},
+                 })},
+             },
+             ofJson{
+                 {"schemaVersion", 1},
+                 {"globalBanks", ofJson::array({
+                     {{"id", "a"}, {"parent", "b"}},
+                     {{"id", "b"}, {"parent", "a"}},
+                 })},
+             },
+             ofJson{
+                 {"schemaVersion", 1},
+                 {"globalBanks", ofJson::array({
+                     {
+                         {"id", "home"},
+                         {"controls", ofJson::array({
+                             {{"id", "orphan"}},
+                         })},
+                     },
+                 })},
+             },
+         }) {
+        const auto rejected =
+            validateBankDefinitionsDocument(invalid);
+        require(
+            !rejected.ok && !rejected.error.empty(),
+            "Invalid bank-definitions document was accepted");
+    }
+    const auto future =
+        validateBankDefinitionsDocument({
+            {"schemaVersion", 2},
+            {"globalBanks", ofJson::array()},
+        });
+    require(
+        !future.ok &&
+            future.errorCode ==
+                BankDefinitionsDocumentError::
+                    UnsupportedFutureVersion,
+        "Future bank-definitions version was not distinguishable");
+
+    BankDefinitionsPublisher publisher;
+    require(
+        publisher.adoptInitial(current),
+        "Could not seed bank-definitions publisher");
+    std::vector<ofJson> persisted;
+    std::vector<ofJson> adopted;
+    publisher.setPersistCallback([&](const ofJson& value) {
+        persisted.push_back(value);
+        return true;
+    });
+    publisher.setAdoptCallback([&](const ofJson& value) {
+        adopted.push_back(value);
+        return value["globalBanks"].size() != 1;
+    });
+    ofJson candidate = current;
+    candidate["globalBanks"][0]["label"] = "Operator Home";
+    require(
+        publisher.publish(candidate).ok &&
+            publisher.snapshot() == candidate,
+        "Valid bank definitions were not published");
+
+    const ofJson published = publisher.snapshot();
+    ofJson rejectedCandidate = current;
+    rejectedCandidate["globalBanks"].erase(
+        rejectedCandidate["globalBanks"].begin() + 1);
+    const auto rolledBack =
+        publisher.publish(rejectedCandidate);
+    require(
+        !rolledBack.ok &&
+            rolledBack.rollbackSucceeded &&
+            publisher.snapshot() == published &&
+            persisted.size() == 3 &&
+            persisted.back() == published &&
+            adopted.size() == 3 &&
+            adopted.back() == published,
+        "Failed bank adoption did not restore persisted/live definitions");
+
+    BankDefinitionsPublisher throwingPublisher;
+    require(
+        throwingPublisher.adoptInitial(current),
+        "Could not seed throwing bank publisher");
+    throwingPublisher.setPersistCallback(
+        [](const ofJson&) -> bool {
+            throw std::runtime_error("injected write failure");
+        });
+    bool escaped = false;
+    try {
+        const auto result =
+            throwingPublisher.publish(candidate);
+        require(
+            !result.ok &&
+                throwingPublisher.snapshot() == current,
+            "Thrown persistence changed bank definitions");
+    } catch (...) {
+        escaped = true;
+    }
+    require(
+        !escaped,
+        "Bank persistence exception escaped publication");
     return true;
 }
 
@@ -2397,6 +4185,13 @@ bool RunMappingSnapshotRoundTripScenario() {
     require(router.importMappingSnapshot(savedSceneMappings, true),
             "Complete scene mapping snapshot was rejected");
     const ofJson canonicalBaseline = router.exportMappingSnapshot();
+    require(
+        canonicalBaseline["schemaVersion"] == 1 &&
+            canonicalBaseline.contains("cc") &&
+            canonicalBaseline.contains("buttons") &&
+            canonicalBaseline.contains("oscSources") &&
+            canonicalBaseline.contains("osc"),
+        "Canonical mapping export did not emit the complete v1 shape");
     ofJson combinedSceneState = {
         {"parameters", {
             {"floats", {{"test.scene.depth", registry.getFloatBase("test.scene.depth")}}},
@@ -2457,6 +4252,80 @@ bool RunMappingSnapshotRoundTripScenario() {
                 osc->bankId == "performance" &&
                 osc->controlId == "deck-intensity",
             "OSC route identity or control metadata was lost");
+
+    router.setActiveBank("performance");
+    const ofJson beforeFutureImport =
+        router.exportMappingSnapshot();
+    ofJson futureSnapshot = beforeFutureImport;
+    futureSnapshot["schemaVersion"] = 2;
+    require(
+        !router.importMappingSnapshot(futureSnapshot, true) &&
+            router.exportMappingSnapshot() ==
+                beforeFutureImport &&
+            router.activeBank() == "performance",
+        "Future mapping import changed routes or the active bank");
+
+    const ofJson publicInterchange = {
+        {"version", 1},
+        {"bank", "performance"},
+        {"mappings", ofJson::array()},
+    };
+    require(
+        !router.importMappingSnapshot(
+            publicInterchange,
+            true) &&
+            router.exportMappingSnapshot() ==
+                beforeFutureImport,
+        "Public MIDI interchange was mistaken for a runtime snapshot");
+
+    const ofJson explicitEmptyV1 = {
+        {"schemaVersion", 1},
+        {"cc", ofJson::array()},
+        {"buttons", ofJson::array()},
+        {"oscSources", ofJson::array()},
+        {"osc", ofJson::array()},
+    };
+    require(
+        router.importMappingSnapshot(
+            explicitEmptyV1,
+            true) &&
+            router.getCcMaps().empty() &&
+            router.getBtnMaps().empty() &&
+            router.getOscMaps().empty() &&
+            router.getOscSourceProfiles().empty() &&
+            router.activeBank() == "performance",
+        "Present empty mapping-bank v1 was not authoritative");
+    require(
+        router.importMappingSnapshot(
+            canonicalBaseline,
+            true),
+        "Canonical mappings could not be restored after explicit clear");
+    const ofJson beforePublicationFailure =
+        router.exportMappingSnapshot();
+    ofJson publicationCandidate =
+        beforePublicationFailure;
+    publicationCandidate["cc"][0]["num"] = 75;
+    router.onOscRoutesChanged = [] {
+        throw std::runtime_error(
+            "injected route publication failure");
+    };
+    bool publicationAccepted = false;
+    try {
+        publicationAccepted =
+            router.importMappingSnapshot(
+                publicationCandidate,
+                true);
+    } catch (...) {
+        throw std::runtime_error(
+            "Route publication failure escaped import");
+    }
+    router.onOscRoutesChanged = nullptr;
+    require(
+        !publicationAccepted &&
+            router.exportMappingSnapshot() ==
+                beforePublicationFailure &&
+            router.activeBank() == "performance",
+        "Route publication failure did not restore prior mappings");
 
     const ofJson mutatedMappings = {
         {"cc", ofJson::array({
@@ -2588,6 +4457,141 @@ bool RunMappingSnapshotRoundTripScenario() {
 
     router.clearTestPortList();
     restartedRouter.clearTestPortList();
+    return true;
+}
+
+bool RunMappingStoreRecoveryScenario() {
+    auto require = [](bool condition, const std::string& message) {
+        if (!condition) {
+            throw std::runtime_error(message);
+        }
+    };
+
+    const std::filesystem::path tempRoot =
+        std::filesystem::temp_directory_path() /
+        "synaptome_mapping_bank_v1";
+    std::error_code cleanupError;
+    std::filesystem::remove_all(tempRoot, cleanupError);
+    std::filesystem::create_directories(tempRoot);
+    const std::filesystem::path mappingPath =
+        tempRoot / "midi-map.json";
+    const std::filesystem::path backupPath =
+        tempRoot / "midi-map.json.bak";
+
+    float writerValue = 0.0f;
+    MidiRouter writer;
+    writer.bindFloat(
+        "test.mapping.store",
+        &writerValue,
+        0.0f,
+        1.0f);
+    writer.setTestPortList({});
+    const ofJson legacy = {
+        {"cc", ofJson::array({
+            {
+                {"num", 23},
+                {"channel", 2},
+                {"target", "test.mapping.store"},
+                {"out", ofJson::array({0.0f, 1.0f})},
+            }
+        })},
+    };
+    require(
+        writer.importMappingSnapshot(legacy, true) &&
+            writer.save(mappingPath.string()),
+        "Canonical mapping-bank save failed");
+    const ofJson firstSave =
+        ofLoadJson(mappingPath.string());
+    require(
+        firstSave["schemaVersion"] == 1 &&
+            firstSave.contains("cc") &&
+            firstSave.contains("buttons") &&
+            firstSave.contains("oscSources") &&
+            firstSave.contains("osc"),
+        "Standalone writer did not emit canonical mapping-bank v1");
+
+    float loadedValue = 0.0f;
+    MidiRouter loaded;
+    loaded.bindFloat(
+        "test.mapping.store",
+        &loadedValue,
+        0.0f,
+        1.0f);
+    loaded.setTestPortList({});
+    require(
+        loaded.load(mappingPath.string()) &&
+            loaded.exportMappingSnapshot() ==
+                writer.exportMappingSnapshot() &&
+            ofLoadJson(mappingPath.string()) == firstSave,
+        "Canonical mapping-bank reload changed routes or rewrote its source");
+
+    const ofJson secondRoutes = {
+        {"schemaVersion", 1},
+        {"cc", ofJson::array({
+            {
+                {"num", 64},
+                {"target", "test.mapping.store"},
+                {"out", ofJson::array({0.0f, 1.0f})},
+            }
+        })},
+        {"buttons", ofJson::array()},
+        {"oscSources", ofJson::array()},
+        {"osc", ofJson::array()},
+    };
+    require(
+        writer.importMappingSnapshot(
+            secondRoutes,
+            true) &&
+            writer.save(mappingPath.string()) &&
+            std::filesystem::exists(backupPath),
+        "Second mapping save did not preserve a recovery copy");
+
+    const ofJson liveBeforeFuture =
+        loaded.exportMappingSnapshot();
+    ofJson futurePrimary = secondRoutes;
+    futurePrimary["schemaVersion"] = 2;
+    futurePrimary["mappings"] = ofJson::object();
+    require(
+        ofSavePrettyJson(
+            mappingPath.string(),
+            futurePrimary) &&
+            ofSavePrettyJson(
+                backupPath.string(),
+                firstSave),
+        "Could not prepare future-version recovery fixture");
+    require(
+        !loaded.load(mappingPath.string()) &&
+            loaded.exportMappingSnapshot() ==
+                liveBeforeFuture &&
+            ofLoadJson(mappingPath.string()) ==
+                futurePrimary,
+        "Future primary downgraded through backup or changed live routes");
+
+    const ofJson malformedPrimary = {
+        {"schemaVersion", 1},
+        {"cc", "not-an-array"},
+    };
+    const ofJson malformedBackup = {
+        {"schemaVersion", 1},
+        {"buttons", "not-an-array"},
+    };
+    require(
+        ofSavePrettyJson(
+            mappingPath.string(),
+            malformedPrimary) &&
+            ofSavePrettyJson(
+                backupPath.string(),
+                malformedBackup),
+        "Could not prepare malformed recovery fixtures");
+    require(
+        !loaded.load(mappingPath.string()) &&
+            loaded.exportMappingSnapshot() ==
+                liveBeforeFuture,
+        "Malformed primary and backup damaged live mappings");
+
+    writer.clearTestPortList();
+    loaded.clearTestPortList();
+    std::filesystem::remove_all(tempRoot, cleanupError);
     return true;
 }
 
@@ -4061,7 +6065,12 @@ bool RunLabeledParameterSelectionScenario() {
     require(hub.debugSelectLabeledValue(bpmRowId, 2.0),
             "Double Time selection failed");
     require(std::abs(bpmMultiplier - 2.0f) < 0.0001f &&
-                std::abs(registry.getFloatBase(bpmRowId) - 2.0f) < 0.0001f,
+                std::abs(registry.getFloatBase(bpmRowId) - 2.0f) < 0.0001f &&
+                registry.findFloat(bpmRowId)->baseOrigin.kind ==
+                    synaptome::state::ParameterBaseOriginKind::
+                        OperatorEdit &&
+                registry.findFloat(bpmRowId)->baseOrigin.originId ==
+                    "browser",
             "labeled BPM selection did not update live and base values");
     hub.rebuildModel();
     bpmRow = hub.rowForId(bpmRowId);
@@ -4286,6 +6295,27 @@ bool RunOptInLayerPackageActivationScenario() {
                 "presetBank",
                 std::string()) == "performance",
             "legacy activation preset did not infer its package bank");
+    const auto brightOrigins =
+        library.parameterOriginsForConfig(
+            "examples.signal_bloom",
+            entry->config);
+    require(
+        brightOrigins.at("visible").kind ==
+                synaptome::state::ParameterBaseOriginKind::
+                    DefinitionDefault &&
+            brightOrigins.at("alpha").kind ==
+                synaptome::state::ParameterBaseOriginKind::Preset &&
+            brightOrigins.at("alpha").originId ==
+                "examples.signal_bloom/bright" &&
+            brightOrigins.at("alpha").artifactVersion == 1 &&
+            brightOrigins.at("alpha").artifactRevision == "0.1.0" &&
+            brightOrigins.at("speed").kind ==
+                synaptome::state::ParameterBaseOriginKind::
+                    ActivationOverride &&
+            brightOrigins.at("speed").originId ==
+                "examples.signal_bloom" &&
+            brightOrigins.at("speed").artifactVersion == 1,
+        "package merge lost definition, preset, or activation origin");
 
     ofJson calmConfig;
     std::string presetError;
@@ -4304,6 +6334,19 @@ bool RunOptInLayerPackageActivationScenario() {
             "selected Calm preset did not replace the prior preset value");
     require(calmConfig["packageActivation"].value("mappingApplied", true) == false,
             "preset resolution implicitly applied a mapping preset");
+    const auto calmOrigins =
+        library.parameterOriginsForConfig(
+            "examples.signal_bloom",
+            calmConfig);
+    require(
+        calmOrigins.at("bpmMultiplier").kind ==
+                synaptome::state::ParameterBaseOriginKind::Preset &&
+            calmOrigins.at("bpmMultiplier").originId ==
+                "examples.signal_bloom/calm" &&
+            calmOrigins.at("speed").kind ==
+                synaptome::state::ParameterBaseOriginKind::
+                    ActivationOverride,
+        "next-load preset resolution lost per-parameter provenance");
     ofJson rejectedConfig = {{"sentinel", true}};
     require(!library.configForPackagePreset(
                 "examples.signal_bloom",

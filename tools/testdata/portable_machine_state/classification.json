@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "portableGlobs": [
+    "synaptome/bin/data/layers/**/*.json",
+    "synaptome/bin/data/layers-optional/**/*.json",
+    "docs/examples/artist_sdk/**/*.json",
+    "tools/testdata/runtime_state/layers/scenes/**/*.json",
+    "tools/testdata/layer_catalog/**/*.json",
+    "tools/testdata/layer_packages/**/*.json"
+  ],
+  "localGlobs": [
+    "docs/examples/machine_profile_example.json",
+    "tools/testdata/machine_profile/**/*.json",
+    "tools/testdata/runtime_state/config/console.json"
+  ],
+  "legacyCompatibilityFiles": [
+    "tools/testdata/scene_persistence/slot_assignment_ownership_cases.json"
+  ],
+  "rules": {
+    "portableWebcamSelectors": [
+      "deviceName",
+      "deviceIndex"
+    ],
+    "absoluteLocalPaths": true
+  }
+}

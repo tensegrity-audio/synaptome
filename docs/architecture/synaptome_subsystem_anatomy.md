@@ -330,16 +330,18 @@ Slot state includes:
 - associated params and mappings.
 
 Rules:
-- Slots are 1-based for public/operator identity.
-- Slot parameter IDs should use `console.layerN.*`.
-- Slot assignment should be data-driven through asset IDs.
+- Composition-layer Console slots are 1-based for public/operator identity.
+- Composition-slot parameter IDs should use `console.layerN.*`.
+- Composition-slot assignment should be data-driven through asset IDs.
 - Loading/unloading a slot should add/remove parameter prefixes cleanly.
 - Slot state should survive scene save/load.
 
 Relationships:
 - Console is the user-facing deck for slots.
 - Browser can assign assets to slots and show slot inventory.
-- Scenes persist slot assignments.
+- Scenes persist composition-layer assignments. Logical hardware control-slot
+  assignments are machine-profile state and are omitted by current Scene
+  writers.
 - Effects can route over slot coverage.
 - MIDI/OSC mappings can target slot params.
 
@@ -348,7 +350,8 @@ Current gaps:
 - Slot/window state now participates in scene-load transaction stability; live-window fixture coverage remains follow-up.
 
 Target:
-- Slot assignment, parameter hydration, coverage, and display state should be transaction-safe and fixture-backed.
+- Composition-slot assignment, parameter hydration, coverage, and display
+  state should be transaction-safe and fixture-backed.
 
 ### ConsoleStore And Presentation State
 
@@ -367,7 +370,9 @@ Rules:
 - Loaders should accept older compatible fields, but writers should emit the current version.
 
 Relationships:
-- Scenes and ConsoleStore overlap around slot assignments, window/layout state, HUD state, and sensor snapshots.
+- Scenes and ConsoleStore overlap around composition-layer assignments,
+  window/layout state, HUD state, and sensor snapshots. Logical hardware
+  control-slot assignments do not belong to this overlap.
 - Browser and Console both mutate parts of this state.
 - Scene-load transaction work now stages scene-owned state; docs still need to lock which display pieces are scene-owned vs local.
 
@@ -392,7 +397,9 @@ Rules:
 - Device support should start with data contracts, not source edits.
 - Physical controls should map to logical roles.
 - Logical roles should map to parameter IDs or slot actions.
-- Device identity and port hints should be separate from show-specific bindings.
+- Device-map identity and port hints are advisory discovery metadata;
+  show-machine exact bindings live in machine-profile v1 and require explicit
+  publication.
 
 Relationships:
 - Device maps describe hardware layout.

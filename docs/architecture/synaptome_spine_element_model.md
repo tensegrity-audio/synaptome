@@ -20,6 +20,9 @@ Read with:
   and promotion state.
 - [`../project_ops/in_progress/spine_element_architecture_convergence.md`](../project_ops/in_progress/spine_element_architecture_convergence.md)
   for the ordered implementation milestones and promotion gates.
+- [`../contracts/state_ownership_and_provenance.md`](../contracts/state_ownership_and_provenance.md)
+  for the frozen SEAC-5 ownership matrix, value-origin vocabulary, and
+  artifact compatibility rules.
 
 ## System Definition
 
@@ -437,6 +440,7 @@ Value precedence must be explicit and visible:
 
 ```text
 element default
+  -> element-definition default
   -> selected preset
   -> explicit activation override
   -> scene value
@@ -461,6 +465,24 @@ State ownership:
 | Telemetry, current frame, transient input | Runtime only |
 
 Portable scenes must not silently absorb machine-local state.
+
+SEAC-5A freezes the detailed ownership and provenance rules in
+[`state_ownership_and_provenance.md`](../contracts/state_ownership_and_provenance.md).
+In particular, omitted owned sections preserve their current external owner,
+present empty sections are authoritative, missing scene versions are legacy
+Scene v1 rather than implicit v2, unsupported future versions fail before
+mutation, and compatibility migration never rewrites a source merely because
+it was loaded. Persistence code must follow that contract as the remaining
+SEAC-5 slices land. The Runtime now retains the current base winner as a
+nonserialized origin and exposes copied base/live values plus ordered active
+modifier owners. Definition, package-preset, activation, Scene, and Browser
+write paths stamp that origin without changing value precedence.
+The applied-route portion of mapping ownership now uses mapping-bank v1 over
+the actual flat `MidiRouter` snapshot. Missing `schemaVersion` remains legacy
+input; canonical writers emit v1, and invalid/future versions reject before
+route mutation. Scene `activeBank`, bank definitions, device profiles, and
+machine-local endpoint selection remain independent owners rather than being
+folded into the route document.
 
 ## Package Contract
 

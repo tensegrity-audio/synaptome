@@ -13,7 +13,9 @@ SOURCE = ROOT / "synaptome/src/visuals/LeniaLayer.cpp"
 CATALOG = ROOT / "synaptome/bin/data/layers/generative/circuit_lenia.json"
 ORGANIC_CATALOG = ROOT / "synaptome/bin/data/layers/generative/lenia.json"
 REGISTRATION = ROOT / "synaptome/src/runtime/BuiltinElements.cpp"
-MIDI_MAP = ROOT / "synaptome/bin/data/config/midi-map.json"
+MAPPING_FIXTURE = (
+    ROOT / "tools/testdata/circuit_lenia/default_mapping_routes.json"
+)
 
 CIRCUIT_LENIA_OSC_DEFAULTS = {
     "/control/circuit-lenia/threshold": (
@@ -53,7 +55,14 @@ def registered_parameters(source: str) -> set[str]:
 
 def validate() -> list[str]:
     errors: list[str] = []
-    for path in (HEADER, SOURCE, CATALOG, ORGANIC_CATALOG, REGISTRATION, MIDI_MAP):
+    for path in (
+        HEADER,
+        SOURCE,
+        CATALOG,
+        ORGANIC_CATALOG,
+        REGISTRATION,
+        MAPPING_FIXTURE,
+    ):
         if not path.exists():
             errors.append(f"missing required file: {path.relative_to(ROOT)}")
     if errors:
@@ -64,7 +73,7 @@ def validate() -> list[str]:
     registration = REGISTRATION.read_text(encoding="utf-8")
     data = json.loads(CATALOG.read_text(encoding="utf-8"))
     organic = json.loads(ORGANIC_CATALOG.read_text(encoding="utf-8"))
-    midi_map = json.loads(MIDI_MAP.read_text(encoding="utf-8"))
+    midi_map = json.loads(MAPPING_FIXTURE.read_text(encoding="utf-8"))
 
     for token in (
         "Presentation::Circuit",

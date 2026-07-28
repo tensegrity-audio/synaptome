@@ -6,7 +6,6 @@
     "registryPrefix": "media.webcam.primary",
     "opacity": 1.0,
     "defaults": {
-        "deviceName": "Integrated",
         "gain": 1.0,
         "mirror": true,
         "width": 960,

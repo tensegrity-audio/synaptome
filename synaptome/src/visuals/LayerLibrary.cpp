@@ -263,16 +263,32 @@ bool LayerLibrary::loadOptInPackages(const std::string& activationPath) {
         ofLogWarning("LayerLibrary") << "failed to parse package activation " << activationPath << ": " << e.what();
         return false;
     }
-    if (!activation.value("enabled", false)) {
+    return loadOptInPackages(
+        activation,
+        std::filesystem::path(activationPath).parent_path().string(),
+        activationPath);
+}
+
+bool LayerLibrary::loadOptInPackages(
+    const ofJson& activation,
+    const std::string& activationDirectory,
+    const std::string& sourceLabel) {
+    if (!activation.is_object() ||
+        !activation.value("enabled", false)) {
         return true;
     }
     if (!activation.contains("packages") || !activation["packages"].is_array()) {
-        ofLogWarning("LayerLibrary") << "enabled package activation requires packages[]: " << activationPath;
+        ofLogWarning("LayerLibrary") << "enabled package activation requires packages[]: " << sourceLabel;
         return false;
     }
+    const int activationSchemaVersion =
+        activation.contains("schemaVersion") &&
+                activation["schemaVersion"].is_number_integer()
+            ? activation["schemaVersion"].get<int>()
+            : 0;
 
     bool valid = true;
-    const std::filesystem::path activationDir = std::filesystem::path(activationPath).parent_path();
+    const std::filesystem::path activationDir = activationDirectory;
     for (const auto& package : activation["packages"]) {
         bool packageValid = true;
         if (!package.is_object() || !package.value("enabled", false)) {
@@ -360,6 +376,7 @@ bool LayerLibrary::loadOptInPackages(const std::string& activationPath) {
             { "presetBank", presetBankId },
             { "mappingPreset", mappingPresetId },
             { "mappingApplied", false },
+            { "artifactVersion", activationSchemaVersion },
             { "baseDefaults", packageDefaults },
             { "parameters", explicitOverrides }
         };
@@ -422,4 +439,93 @@ bool LayerLibrary::configForPackagePreset(const std::string& assetId,
     resolvedConfig["packageActivation"]["preset"] = presetId;
     resolvedConfig["packageActivation"]["presetBank"] = resolvedBankId;
     return true;
+}
+
+synaptome::state::ParameterBaseOrigins
+LayerLibrary::parameterOriginsForConfig(
+    const std::string& assetId,
+    const ofJson& resolvedConfig) const {
+    using synaptome::state::ParameterBaseOrigin;
+    using synaptome::state::ParameterBaseOriginKind;
+    synaptome::state::ParameterBaseOrigins origins;
+
+    const int definitionVersion =
+        resolvedConfig.contains("schemaVersion") &&
+                resolvedConfig["schemaVersion"].is_number_integer()
+            ? resolvedConfig["schemaVersion"].get<int>()
+            : 0;
+    const std::string artifactRevision =
+        resolvedConfig.value("packageVersion", std::string());
+    const auto defaults =
+        resolvedConfig.value("defaults", ofJson::object());
+    if (defaults.is_object()) {
+        for (auto it = defaults.begin(); it != defaults.end(); ++it) {
+            origins[it.key()] = {
+                ParameterBaseOriginKind::DefinitionDefault,
+                assetId,
+                definitionVersion,
+                {},
+                artifactRevision,
+            };
+        }
+    }
+
+    const auto activation =
+        resolvedConfig.value("packageActivation", ofJson::object());
+    if (!activation.is_object()) {
+        return origins;
+    }
+    const std::string packageId =
+        resolvedConfig.value("packageId", assetId);
+    const std::string presetId =
+        activation.value("preset", std::string());
+    const auto presets =
+        resolvedConfig.value("presets", ofJson::object());
+    const auto presetSchemaVersions =
+        resolvedConfig.value(
+            "presetSchemaVersions",
+            ofJson::object());
+    if (!presetId.empty() &&
+        presets.is_object() &&
+        presets.contains(presetId) &&
+        presets[presetId].is_object()) {
+        const int presetVersion =
+            presetSchemaVersions.is_object() &&
+                    presetSchemaVersions.contains(presetId) &&
+                    presetSchemaVersions[presetId].is_number_integer()
+                ? presetSchemaVersions[presetId].get<int>()
+                : 0;
+        for (auto it = presets[presetId].begin();
+             it != presets[presetId].end();
+             ++it) {
+            origins[it.key()] = {
+                ParameterBaseOriginKind::Preset,
+                assetId + "/" + presetId,
+                presetVersion,
+                {},
+                artifactRevision,
+            };
+        }
+    }
+
+    const auto overrides =
+        activation.value("parameters", ofJson::object());
+    const int activationVersion =
+        activation.contains("artifactVersion") &&
+                activation["artifactVersion"].is_number_integer()
+            ? activation["artifactVersion"].get<int>()
+            : 0;
+    if (overrides.is_object()) {
+        for (auto it = overrides.begin();
+             it != overrides.end();
+             ++it) {
+            origins[it.key()] = {
+                ParameterBaseOriginKind::ActivationOverride,
+                packageId,
+                activationVersion,
+                {},
+            };
+        }
+    }
+    return origins;
 }

@@ -1,6 +1,6 @@
 # Synaptome Project Ops Roadmap
 
-Status: Active project index, reviewed 2026-07-27.
+Status: Active project index, reviewed 2026-07-28.
 
 This file is the single source of truth for current priority, execution state,
 and the next safe promotion point. Architecture roadmaps describe sequencing
@@ -17,10 +17,16 @@ Status: Active 2026-07-26.
 
 Continue the spine/element architecture convergence while preserving the
 current working show baseline. The operator has now passed a live dual-screen
-smoke test; physical MIDI and the full show-machine recovery rehearsal remain
-deferred. The host/dependency inventory, Element SDK v1 boundary, Runtime
-extraction, and authoritative built-in parameter contracts are complete. The
-active work is SEAC-5 state ownership and value provenance.
+smoke test; live physical-MIDI hardware and the full show-machine recovery
+rehearsal remain deferred. The host/dependency inventory, Element SDK v1
+boundary, Runtime
+extraction, authoritative built-in parameter contracts, Scene compatibility
+reader, runtime value-origin slice, and mapping-bank route v1 are complete.
+Machine-profile v1 now owns OSC transport/endpoints, one exact physical MIDI
+input binding, and transactional logical control-slot assignments. Preferences
+v1, transactional Text adoption, and the portable/local-state gate complete
+SEAC-5. Audio/webcam/display/path adapters remain independently versioned
+follow-up lanes. Live physical MIDI hardware remains untested.
 
 The current safe sequence is:
 
@@ -85,20 +91,20 @@ State Summary
 - Phase: EXECUTION
 - Status: Deferred by operator
 - Steps Complete: 15 / 18
-- Progress: Core persistence, mapping recovery, operator status, render, controller-window, and quit-safety work is implemented and validated; the operator reports dual-screen mode working well. Physical MIDI and the full recovery rehearsal remain deferred.
+- Progress: Core persistence, mapping recovery, operator status, render, controller-window, and quit-safety work is implemented and validated; the operator reports dual-screen mode working well. Live physical-MIDI hardware and the full recovery rehearsal remain deferred.
 - Last Step Outcome: 2026-07-27 - The operator ran the Release app successfully and passed a live dual-screen smoke test.
-- Next Step: When show validation resumes, test physical MIDI control and complete the heaviest-scene and device-recovery rehearsal.
+- Next Step: When show validation resumes, test live physical-MIDI control and complete the heaviest-scene and device-recovery rehearsal.
 - Dependencies / Overlap: `docs/project_ops/roadmap.md`, `docs/architecture/synaptome_spine_element_model.md`, scene persistence, window/monitor placement, MIDI/OSC mappings, Browser, Console, and HUD.
 - Primary Scope: runtime
 - Secondary Scopes: tests, contracts, docs
-- Blocking Issues / Unknowns: Physical MIDI behavior and the complete show-machine recovery sequence remain unproven; the operator accepted this as deferred validation risk.
+- Blocking Issues / Unknowns: Live physical-MIDI behavior and the complete show-machine recovery sequence remain unproven; the operator accepted this as deferred validation risk.
 - Impact / Priority Notes: Residual show-machine validation remains important but no longer blocks the spine/element architecture roadmap.
 - Priority Score: N/A
 - Priority Lane: Deferred
 - Ready State: Ready
 - Ready Gate: Core implementation and automated checks are complete enough to preserve; remaining acceptance requires later access to the show-machine display and device setup.
 - Project Ops / Roadmap Updates (timestamped): 2026-07-24 - Opened as the active show blocker. 2026-07-26 - Recorded operator live evidence. 2026-07-26 - Deferred dual-screen and full recovery rehearsal and promoted the spine/element architecture request. 2026-07-27 - Recorded the successful live dual-screen smoke test; MIDI remains untested.
-- Resume From: Phase EXECUTION, State Deferred by operator, Next Action test physical MIDI and the recovery sequence when show-machine validation resumes.
+- Resume From: Phase EXECUTION, State Deferred by operator, Next Action test live physical-MIDI hardware and the recovery sequence when show-machine validation resumes.
 Request Doc: docs/project_ops/in_progress/show_readiness_operator_stability.md
 
 Show-safe checklist:
@@ -128,21 +134,29 @@ State Summary
 - Request ID: spine_element_architecture_convergence
 - Phase: EXECUTION
 - Status: In Progress
-- Steps Complete: 4 / 12
-- Progress: SEAC-4 is complete. All 23 built-in element types now have construction-free static parameter declarations covering 786 controls. Runtime enforces exact ID/kind/storage parity, discards compatibility setup metadata, and publishes declaration-owned metadata/defaults. Browser inspection, the compatibility parameter manifest, a machine-readable catalog, compiled Runtime declarations, and the human reference are generated from one reviewed snapshot.
-- Last Step Outcome: 2026-07-27 - Closed SEAC-4 with catalog-wide declaration capture, stable variant surfaces, exact live validation across 23 types and 55 assets, adapter-mode native failure coverage, and passing generated-view checks.
-- Next Step: Begin SEAC-5 by freezing versioned ownership and provenance for defaults, presets, scenes, mapping banks, machine profiles, and operator preferences.
+- Steps Complete: 5 / 12
+- Progress: SEAC-5 is complete. Scene v1/v2, mapping-bank v1, strict machine-profile v1, preferences v1, value provenance, OSC/Mesh compatibility, portable/local-state enforcement, and transactional shared Text adoption now pass the promotion gate.
+- Last Step Outcome: 2026-07-28 - Added canonical-first preferences v1 and independent bank-definitions v1 with recoverable publication/rollback; moved new Scene writes away from operator-owned active/global banks; staged Text state until Runtime adoption; and added a portable-state gate. BrowserFlow passes 49/49, Release builds cleanly, and all 23 public-app contracts validate.
+- Next Step: Begin SEAC-6 by generalizing the isolated element confidence suite across dependency resolution, deterministic update, offscreen render/GL containment, teardown/reload, and performance reporting.
 - Dependencies / Overlap: `show_readiness_operator_stability`, `layer_package_compatibility_bench_scaffolding`, `docs/architecture/synaptome_spine_element_model.md`, `docs/architecture/synaptome_layer_system_roadmap.md`, `docs/architecture/synaptome_artist_sdk.md`, parameter/scene/mapping contracts, and layer-authoring tests.
 - Primary Scope: runtime
 - Secondary Scopes: contracts, artist-sdk, tests, docs, release
-- Blocking Issues / Unknowns: Native binary modules remain an optional architecture decision rather than a promised deliverable. Aggregate registration remains handwritten until SEAC-8. Twenty-two built-ins still use a declared compatibility adapter to expose existing storage during `setup()`; Runtime ignores that metadata and checks it against the static contract, so direct bind-only migration is cleanup rather than a Phase 4 authority gap. The shared `TextLayerState` singleton, cross-instance values, and pre-adoption `configure()` side effects now belong to SEAC-5 state-ownership work.
+- Blocking Issues / Unknowns: Native binary modules remain an optional architecture decision rather than a promised deliverable. Aggregate registration remains handwritten until SEAC-8. Twenty-two built-ins still use a declared compatibility adapter to expose existing storage during `setup()`; direct bind-only migration is cleanup. Audio input, webcam selection, display geometry, and content roots remain named legacy/local adapter lanes; adding any to the strict machine document requires an independently transactional machine-profile v2 normalizer rather than widening v1. Device-map `portHints` remain non-authoritative compatibility metadata. Live physical-MIDI hardware remains untested.
 - Impact / Priority Notes: This is the active architecture lane and precedes automatic discovery, broader package activation, or new content-family expansion.
 - Priority Score: N/A
 - Priority Lane: Fast-Track
 - Ready State: Ready
 - Ready Gate: The architecture direction, compatibility policy, ordered tasks, and stop conditions are explicit; the operator accepted residual show-validation risk and authorized execution.
-- Project Ops / Roadmap Updates (timestamped): 2026-07-26 - Added the canonical model and subordinated package/discovery work to its contract and build gates. 2026-07-26 - Promoted SEAC to execution after dual-screen validation was deferred. 2026-07-26 - Completed the dependency inventory and froze the Element SDK v1 source/static-link boundary. 2026-07-26 - Landed the first SEAC-3 build and registration slice. 2026-07-26 - Moved generic element preparation/release and exact registration ownership behind the first Runtime facade seam. 2026-07-26 - Linked the first runtime-core library and moved fixed composition storage plus generic update/draw/resize ownership behind it. 2026-07-26 - Added isolated parameter staging and transactional same-address visual-element replacement. 2026-07-26 - Hardened reserved opacity ownership, prepared-result lifetime, FX/UI-to-visual adoption, bool modifier migration, and registry-consumer invalidation. 2026-07-26 - Removed the global element factory and proved per-Runtime type-registry isolation. 2026-07-26 - Moved zero-based effect coverage-window policy into Runtime and removed the duplicate `PostEffectChain` resolver without expanding the Element SDK. 2026-07-26 - Added the Runtime composition mutation control plane, Runtime-owned layer opacity, a const-only host view, and narrow render/legacy-element seams. 2026-07-27 - Replaced the const live host view with pointer-free by-value snapshots and removed public live composition access. 2026-07-27 - Replaced pointer-addressed generic element replacement with a zero-based composition-layer transaction and narrowed mutable legacy access to two compatibility areas. 2026-07-27 - Removed the derived element cache and moved ordinary built-in views, bindings, and parameter actions to snapshot-addressed registry access. 2026-07-27 - Added live-instance action registration, pointer-free snapshot discovery, and generic slot-addressed invocation without adding persisted action mappings. 2026-07-27 - Replaced read-only concrete element inspection with separate on-demand typed telemetry and made Geodesic subdivision durable parameter state. 2026-07-27 - Consolidated host creator bindings in the controlled aggregate and shared Signal Bloom's package leaf registrar with its bench without claiming generated registration. 2026-07-27 - Isolated legacy Text host parameters and font synchronization behind `BuiltinElementHostBindings` without claiming singleton retirement or authoritative declarations. 2026-07-27 - Closed SEAC-3R by extracting host-only composition rendering/GPU-target ownership, retiring the raw mutable target seam, and adding a dedicated stub-backed renderer policy harness. 2026-07-27 - Closed SEAC-4A with minimal static type/kind/action descriptor authority, atomic descriptor-plus-creator registration, construction-free inspection, exact live handler binding, and shipping registration migration. 2026-07-27 - Completed SEAC-4B1 with the pointer-free parameter DTO, explicit declared-versus-legacy registry state, and a construction-free five-group/18-parameter Signal Bloom declaration with exact package/static parity plus compatible live ID/kind/range registration. 2026-07-27 - Completed SEAC-4B2 for Signal Bloom with bind-only live storage and declaration-owned runtime metadata/defaults.
-- Resume From: Phase EXECUTION, State In Progress, Next Action begin SEAC-5 state ownership and provenance.
+- Resume From: Phase EXECUTION, State In Progress, Next Action execute SEAC-6 against the existing RuntimeCore, BrowserFlow, renderer-policy, and package-bench harnesses.
+- Project Ops / Roadmap Updates (timestamped): 2026-07-26 - Added the canonical model and subordinated package/discovery work to its contract and build gates. 2026-07-26 - Promoted SEAC to execution after dual-screen validation was deferred. 2026-07-26 - Completed the dependency inventory and froze the Element SDK v1 source/static-link boundary. 2026-07-26 - Landed the first SEAC-3 build and registration slice. 2026-07-26 - Moved generic element preparation/release and exact registration ownership behind the first Runtime facade seam. 2026-07-26 - Linked the first runtime-core library and moved fixed composition storage plus generic update/draw/resize ownership behind it. 2026-07-26 - Added isolated parameter staging and transactional same-address visual-element replacement. 2026-07-26 - Hardened reserved opacity ownership, prepared-result lifetime, FX/UI-to-visual adoption, bool modifier migration, and registry-consumer invalidation. 2026-07-26 - Removed the global element factory and proved per-Runtime type-registry isolation. 2026-07-26 - Moved zero-based effect coverage-window policy into Runtime and removed the duplicate `PostEffectChain` resolver without expanding the Element SDK. 2026-07-26 - Added the Runtime composition mutation control plane, Runtime-owned layer opacity, a const-only host view, and narrow render/legacy-element seams. 2026-07-27 - Replaced the const live host view with pointer-free by-value snapshots and removed public live composition access. 2026-07-27 - Replaced pointer-addressed generic element replacement with a zero-based composition-layer transaction and narrowed mutable legacy access to two compatibility areas. 2026-07-27 - Removed the derived element cache and moved ordinary built-in views, bindings, and parameter actions to snapshot-addressed registry access. 2026-07-27 - Added live-instance action registration, pointer-free snapshot discovery, and generic slot-addressed invocation without adding persisted action mappings. 2026-07-27 - Replaced read-only concrete element inspection with separate on-demand typed telemetry and made Geodesic subdivision durable parameter state. 2026-07-27 - Consolidated host creator bindings in the controlled aggregate and shared Signal Bloom's package leaf registrar with its bench without claiming generated registration. 2026-07-27 - Isolated legacy Text host parameters and font synchronization behind `BuiltinElementHostBindings` without claiming singleton retirement or authoritative declarations. 2026-07-27 - Closed SEAC-3R by extracting host-only composition rendering/GPU-target ownership, retiring the raw mutable target seam, and adding a dedicated stub-backed renderer policy harness. 2026-07-27 - Closed SEAC-4A with minimal static type/kind/action descriptor authority, atomic descriptor-plus-creator registration, construction-free inspection, exact live handler binding, and shipping registration migration. 2026-07-27 - Completed SEAC-4B1 with the pointer-free parameter DTO, explicit declared-versus-legacy registry state, and a construction-free five-group/18-parameter Signal Bloom declaration with exact package/static parity plus compatible live ID/kind/range registration. 2026-07-27 - Completed SEAC-4B2 for Signal Bloom with bind-only live storage and declaration-owned runtime metadata/defaults. 2026-07-27 - Froze SEAC-5A state ownership, provenance, version-reader, portability, and migration rules after three parallel audits.
+  2026-07-27 - Implemented the side-effect-free Scene v1/v2 compatibility reader and non-destructive future-version gate.
+  2026-07-27 - Implemented nonserialized parameter value origins and pointer-free base/live/modifier inspection without changing value precedence or public persistence.
+  2026-07-27 - Implemented mapping-bank v1 for the actual flat `MidiRouter` route snapshot with legacy copied migration, complete canonical writes, and non-downgrading future-version rejection.
+  2026-07-27 - Added transport-neutral typed OSC ingress plus the Synaptome-owned Mesh v0.1 consumer profile without changing the producer contract.
+  2026-07-27 - Added the strict OSC-first machine-profile v1 document and moved explicit Browser transport changes behind recoverable local profile publication.
+  2026-07-28 - Added strict `controlSlots`, canonical-first startup adoption, atomic assignment/MIDI-route/profile publication with rollback, and Scene/autosave writer omission while preserving legacy Scene reads.
+  2026-07-28 - Added strict optional physical MIDI input ownership, omission-only legacy delegation, exact-unique resolution/reconnect, active-profile route filtering, and recoverable explicit Device Mapper binding with rollback.
+  2026-07-28 - Closed SEAC-5 with strict preferences v1, recoverable section-preserving adapters, transactional Text adoption, operator-owned active-bank persistence, and an executable portable/local machine-state boundary.
 Request Doc: docs/project_ops/in_progress/spine_element_architecture_convergence.md
 
 Current Direction
@@ -176,13 +190,13 @@ Current Direction
   data-only content definition, generated registration, or native module. It
   must not use “drop-in plugin” as an umbrella promise.
 - Priority Lane: Current architecture gate.
-- Ready State: SEAC-4 is complete; SEAC-5 versioned state ownership and
-  provenance are the current gate.
+- Ready State: SEAC-5 promotion criteria pass; SEAC-6 can build on the current
+  RuntimeCore, BrowserFlow, renderer-policy, and package-bench harnesses.
 
-Task breakdown: 4 complete and 8 planned. The ordered promotion path is static
+Task breakdown: 5 complete and 7 planned. The ordered promotion path is static
 descriptors/actions (complete) -> static Signal Bloom parameter declaration
-(complete) -> live parameter binding/authority (complete) -> versioned state (current) ->
-confidence suite -> package serialization -> generated registration ->
+(complete) -> live parameter binding/authority (complete) -> versioned state
+(complete) -> confidence suite (current) -> package serialization -> generated registration ->
 operator mappings -> discovery -> native-module decision -> representative
 migration.
 

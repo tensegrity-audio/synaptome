@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "cc": [],
+  "buttons": [],
+  "osc": [
+    {
+      "bank": "home",
+      "pattern": "/control/circuit-lenia/threshold",
+      "target": "generative.circuitLenia.circuitThreshold"
+    },
+    {
+      "bank": "home",
+      "pattern": "/control/circuit-lenia/levels",
+      "target": "generative.circuitLenia.circuitLevels"
+    },
+    {
+      "bank": "home",
+      "pattern": "/control/circuit-lenia/trace-width",
+      "target": "generative.circuitLenia.circuitTraceWidth"
+    },
+    {
+      "bank": "home",
+      "pattern": "/control/circuit-lenia/growth-center",
+      "target": "generative.circuitLenia.growthCenter"
+    },
+    {
+      "bank": "home",
+      "pattern": "/control/circuit-lenia/growth-width",
+      "target": "generative.circuitLenia.growthWidth"
+    },
+    {
+      "bank": "home",
+      "pattern": "/control/circuit-lenia/injection-rate",
+      "target": "generative.circuitLenia.injectionRate"
+    },
+    {
+      "bank": "home",
+      "pattern": "/control/circuit-lenia/field-scale",
+      "target": "generative.circuitLenia.fieldScale"
+    }
+  ],
+  "oscSources": [
+    {
+      "blend": "absolute",
+      "in": [0.0, 1.0],
+      "out": [0.0, 0.55],
+      "pattern": "/control/circuit-lenia/threshold",
+      "relative": false
+    },
+    {
+      "blend": "absolute",
+      "in": [0.0, 1.0],
+      "out": [2.0, 8.0],
+      "pattern": "/control/circuit-lenia/levels",
+      "relative": false
+    },
+    {
+      "blend": "absolute",
+      "in": [0.0, 1.0],
+      "out": [1.0, 4.0],
+      "pattern": "/control/circuit-lenia/trace-width",
+      "relative": false
+    },
+    {
+      "blend": "absolute",
+      "in": [0.0, 1.0],
+      "out": [0.2, 0.55],
+      "pattern": "/control/circuit-lenia/growth-center",
+      "relative": false
+    },
+    {
+      "blend": "absolute",
+      "in": [0.0, 1.0],
+      "out": [0.02, 0.18],
+      "pattern": "/control/circuit-lenia/growth-width",
+      "relative": false
+    },
+    {
+      "blend": "absolute",
+      "in": [0.0, 1.0],
+      "out": [0.0, 0.12],
+      "pattern": "/control/circuit-lenia/injection-rate",
+      "relative": false
+    },
+    {
+      "blend": "absolute",
+      "in": [0.0, 1.0],
+      "out": [0.5, 4.0],
+      "pattern": "/control/circuit-lenia/field-scale",
+      "relative": false
+    }
+  ]
+}

@@ -206,6 +206,18 @@ def validate_midi_map(data: object, path: Path) -> List[str]:
     if not isinstance(data, dict):
         return [f"{ctx} must be a JSON object"]
 
+    if "schemaVersion" in data:
+        version = data["schemaVersion"]
+        if not isinstance(version, int) or isinstance(version, bool):
+            errors.append("'schemaVersion' must be an integer")
+        elif version != 1:
+            errors.append("'schemaVersion' must be 1")
+    if "version" in data or "bank" in data or "mappings" in data:
+        errors.append(
+            "runtime MIDI maps use the flat mapping-bank route shape; "
+            "{version, bank, mappings} is a separate interchange artifact"
+        )
+
     if "device" in data and not isinstance(data["device"], str):
         errors.append("'device' must be a string")
     if "deviceIndex" in data and not isinstance(data["deviceIndex"], int):
@@ -551,6 +563,9 @@ BROWSER_EXAMPLE_SCHEMAS = {
     Path("docs/examples/midi_bank_example.json"): Path("docs/schemas/midi_bank.schema.json"),
     Path("docs/examples/osc_map_example.json"): Path("docs/schemas/osc_map.schema.json"),
     Path("docs/examples/osc_input_example.json"): Path("docs/schemas/osc_input.schema.json"),
+    Path("docs/examples/machine_profile_example.json"): Path("docs/schemas/machine_profile.schema.json"),
+    Path("docs/examples/preferences_example.json"): Path("docs/schemas/preferences.schema.json"),
+    Path("docs/examples/bank_definitions_example.json"): Path("docs/schemas/bank_definitions.schema.json"),
     Path("docs/examples/hotkeys_example.json"): Path("docs/schemas/hotkeys.schema.json"),
 }
 
@@ -586,6 +601,30 @@ CONTRACT_ENTRIES: tuple[ContractEntry, ...] = (
         public_app=True,
     ),
     ContractEntry(
+        name="Generic OSC ingress and Synaptome Mesh compatibility",
+        status="validated",
+        sources=(
+            Path("synaptome/src/io/OscIngressMessage.h"),
+            Path("synaptome/src/io/SerialSlipOsc.h"),
+            Path("synaptome/src/ofApp.cpp"),
+            Path("tools/validate_osc_ingress_contract.py"),
+        ),
+        validator_command="python tools\\validate_osc_ingress_contract.py",
+        fixtures=(
+            Path(
+                "tools/testdata/osc_ingress/"
+                "synaptome_mesh_v0_1_0_consumer_capture.json"
+            ),
+        ),
+        notes=(
+            "Preserves typed OSC observations across UDP and serial, routes only "
+            "finite numeric scalars, and locks receiver-side Mesh v0.1 namespace, "
+            "heart-bpm alias, and dual-emission deduplication behavior."
+        ),
+        check_command=(sys.executable, "tools/validate_osc_ingress_contract.py"),
+        public_app=True,
+    ),
+    ContractEntry(
         name="Signal Control receive and OSC input selection",
         status="validated",
         sources=(
@@ -604,6 +643,140 @@ CONTRACT_ENTRIES: tuple[ContractEntry, ...] = (
         ),
         notes="Locks the Router UDP input config shape plus the Signal Control scalar telemetry and waveform receive routes for /sensor/host/<source>/*.",
         check_command=(sys.executable, "tools/validate_signal_control_receive_contract.py", "--check"),
+        public_app=True,
+    ),
+    ContractEntry(
+        name="Machine profile v1 OSC, physical-MIDI input, and control-slot persistence",
+        status="validated",
+        sources=(
+            Path("synaptome/src/io/MachineProfileDocument.h"),
+            Path("synaptome/src/io/MachineProfileDocument.cpp"),
+            Path("synaptome/src/io/MidiRouter.h"),
+            Path("synaptome/src/io/MidiRouter.cpp"),
+            Path("synaptome/src/ui/ControlMappingHubState.h"),
+            Path("synaptome/src/ui/DevicesPanel.cpp"),
+            Path("synaptome/src/ofApp.cpp"),
+            Path("docs/schemas/machine_profile.schema.json"),
+            Path("tools/validate_machine_profile_contract.py"),
+        ),
+        validator_command="python tools\\validate_machine_profile_contract.py --check",
+        fixtures=(
+            Path("docs/examples/machine_profile_example.json"),
+            Path("tools/testdata/machine_profile/canonical_v1.json"),
+            Path("tools/testdata/machine_profile/canonical_empty_v1.json"),
+            Path("tools/testdata/machine_profile/invalid_cases.json"),
+            Path("tools/testdata/machine_profile/midi_binding_cases.json"),
+        ),
+        notes=(
+            "Machine-local OSC transport/endpoints, one physical MIDI input, "
+            "and logical control-slot assignments are canonical in strict v1. "
+            "MIDI omission alone permits legacy selector compatibility; "
+            "present empty disables, and configured input resolves by one "
+            "exact name without hints, substrings, indices, or port-zero "
+            "fallback. Slot and explicit MIDI changes publish recoverably; "
+            "generic OSC payload and Mesh compatibility remain separate."
+        ),
+        check_command=(
+            sys.executable,
+            "tools/validate_machine_profile_contract.py",
+            "--check",
+        ),
+        public_app=True,
+    ),
+    ContractEntry(
+        name="Operator preferences v1",
+        status="validated",
+        sources=(
+            Path("synaptome/src/io/PreferencesDocument.h"),
+            Path("synaptome/src/io/PreferencesDocument.cpp"),
+            Path("synaptome/src/ui/ControlMappingHubState.h"),
+            Path("synaptome/src/ui/HotkeyManager.cpp"),
+            Path("synaptome/src/visuals/LayerLibrary.cpp"),
+            Path("synaptome/src/ofApp.cpp"),
+            Path("docs/schemas/preferences.schema.json"),
+            Path("tools/validate_preferences_contract.py"),
+        ),
+        validator_command="python tools\\validate_preferences_contract.py --check",
+        fixtures=(
+            Path("docs/examples/preferences_example.json"),
+            Path("tools/testdata/preferences/canonical_v1.json"),
+            Path("tools/testdata/preferences/legacy_control_hub.json"),
+            Path("tools/testdata/preferences/invalid_cases.json"),
+        ),
+        notes=(
+            "Strict section-authoritative Browser/HUD, hotkey, package, and "
+            "active-bank preferences with legacy fallback, section-preserving "
+            "recoverable publication, and callback-exception containment. "
+            "Mapping routes and bank definitions remain outside preferences."
+        ),
+        check_command=(
+            sys.executable,
+            "tools/validate_preferences_contract.py",
+            "--check",
+        ),
+        public_app=True,
+    ),
+    ContractEntry(
+        name="Operator global bank definitions v1",
+        status="validated",
+        sources=(
+            Path("synaptome/src/io/BankDefinitionsDocument.h"),
+            Path("synaptome/src/io/BankDefinitionsDocument.cpp"),
+            Path("synaptome/src/core/BankRegistry.h"),
+            Path("synaptome/src/ofApp.cpp"),
+            Path("docs/schemas/bank_definitions.schema.json"),
+            Path("tools/validate_bank_definitions_contract.py"),
+        ),
+        validator_command="python tools\\validate_bank_definitions_contract.py --check",
+        fixtures=(
+            Path("docs/examples/bank_definitions_example.json"),
+            Path("tools/testdata/bank_definitions/canonical_v1.json"),
+            Path("tools/testdata/bank_definitions/canonical_empty_v1.json"),
+            Path("tools/testdata/bank_definitions/invalid_cases.json"),
+        ),
+        notes=(
+            "Strict independently versioned operator mapping-store ownership "
+            "for custom global bank definitions. Canonical presence wins over "
+            "legacy Scene global banks; reads do not auto-migrate and new "
+            "Scene writers omit them. Whole-document publication currently "
+            "uses an app seam rather than an operator editor. Active bank "
+            "choice remains preferences-owned and routes remain in the "
+            "mapping-bank snapshot."
+        ),
+        check_command=(
+            sys.executable,
+            "tools/validate_bank_definitions_contract.py",
+            "--check",
+        ),
+        public_app=True,
+    ),
+    ContractEntry(
+        name="Portable machine-state separation",
+        status="validated",
+        sources=(
+            Path("tools/validate_portable_machine_state.py"),
+            Path(
+                "tools/testdata/portable_machine_state/"
+                "classification.json"
+            ),
+        ),
+        validator_command=(
+            "python tools\\validate_portable_machine_state.py --check"
+        ),
+        fixtures=(
+            Path("tools/testdata/portable_machine_state/cases.json"),
+        ),
+        notes=(
+            "Rejects physical webcam deviceName/deviceIndex selectors and "
+            "absolute local filesystem paths in classified portable "
+            "Scene/layer/package JSON. Machine-profile and explicitly named "
+            "legacy-compatibility fixtures remain outside the portable scan."
+        ),
+        check_command=(
+            sys.executable,
+            "tools/validate_portable_machine_state.py",
+            "--check",
+        ),
         public_app=True,
     ),
     ContractEntry(
@@ -725,6 +898,7 @@ CONTRACT_ENTRIES: tuple[ContractEntry, ...] = (
         fixtures=(
             Path("synaptome/bin/data/layers/generative/lenia.json"),
             Path("synaptome/bin/data/layers/generative/circuit_lenia.json"),
+            Path("tools/testdata/circuit_lenia/default_mapping_routes.json"),
         ),
         notes="Locks Circuit Lenia to the established deterministic continuous automaton while selecting a fixed hard-isocontour presentation, complete circuit defaults, coarse nearest-neighbor output, and an independent mapping namespace.",
         check_command=(sys.executable, "tools/validate_circuit_lenia.py"),
@@ -896,14 +1070,12 @@ CONTRACT_ENTRIES: tuple[ContractEntry, ...] = (
         sources=(
             Path("synaptome/src/io/ConsoleStore.h"),
             Path("tools/testdata/runtime_state/config/console.json"),
-            Path("tools/testdata/runtime_state/config/ui/slot_assignments.json"),
             Path("tools/validate_console_layout_contract.py"),
             Path("tools/testdata/console_layout/expected_console_contract.json"),
         ),
         validator_command="python tools\\validate_console_layout_contract.py --check",
         fixtures=(
             Path("tools/testdata/runtime_state/config/console.json"),
-            Path("tools/testdata/runtime_state/config/ui/slot_assignments.json"),
             Path("tools/testdata/console_layout/expected_console_contract.json"),
         ),
         notes="Static Console/display contract covers fixture eight-slot inventory, layer asset references, overlay flags, display preference shape, and HUD placement shape while excluding live monitor coordinates, timestamps, and sensor warm-start snapshots from the golden fixture.",

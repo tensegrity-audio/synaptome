@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "browser": {
+    "treeWidthRatio": 0.2,
+    "selection": {
+      "category": "Scenes",
+      "subcategory": "Saved",
+      "asset": ""
+    },
+    "selectedColumn": "value",
+    "visibleColumns": {
+      "name": true,
+      "value": true
+    },
+    "collapsedCategories": [],
+    "collapsedParameterSections": []
+  },
+  "hud": {
+    "visible": true,
+    "layoutTarget": "controller",
+    "stateMigrated": true,
+    "widgets": []
+  },
+  "hotkeys": {
+    "bindings": [
+      {
+        "id": "menu.console",
+        "key": 96
+      }
+    ]
+  },
+  "packages": {
+    "activations": [
+      {
+        "packageId": "examples.signal_bloom",
+        "enabled": true,
+        "selectedPreset": {
+          "bankId": "performance",
+          "presetId": "default"
+        }
+      }
+    ]
+  },
+  "mappings": {
+    "activeBank": "home"
+  }
+}

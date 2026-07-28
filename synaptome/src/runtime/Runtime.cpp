@@ -388,7 +388,8 @@ Runtime::ElementResult Runtime::prepareElementImpl(
             }
             parameterTable.populate(
                 request.registryPrefix,
-                *result.stagedParameters_);
+                *result.stagedParameters_,
+                request.initialBaseOrigins);
         } else {
             result.stage = "configure";
             result.element_->configure(request.config);

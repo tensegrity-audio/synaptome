@@ -1,8 +1,10 @@
 ﻿#include "MidiRouter.h"
+#include "MappingBankDocument.h"
 #include "ofFileUtils.h"
 #include "ofUtils.h"
 #include "ofLog.h"
 #include <algorithm>
+#include <cctype>
 #include <filesystem>
 #include <map>
 #include <stdexcept>
@@ -136,11 +138,16 @@ namespace {
                                 const std::vector<MidiRouter::OscMap>& oscMaps,
                                 const std::vector<MidiRouter::OscSourceProfile>& oscSourceProfiles) {
         ofJson doc = ofJson::object();
+        doc["schemaVersion"] =
+            synaptome::state::kCurrentMappingBankSchemaVersion;
+        doc["cc"] = ofJson::array();
+        doc["buttons"] = ofJson::array();
+        doc["oscSources"] = ofJson::array();
+        doc["osc"] = ofJson::array();
         std::vector<MidiRouter::OscMap> canonicalOscMaps = oscMaps;
         std::vector<MidiRouter::OscSourceProfile> canonicalOscProfiles = oscSourceProfiles;
         canonicalizeOscState(canonicalOscMaps, canonicalOscProfiles);
 
-        doc["cc"] = ofJson::array();
         for (const auto& map : ccMaps) {
             if (map.target.empty() || map.cc < 0 || map.cc > 127) continue;
             ofJson entry;
@@ -485,14 +492,27 @@ bool MidiRouter::load(const std::string& jsonPath) {
     const std::string backupPath = jsonPath + ".bak";
     ofJson doc;
     std::string primaryFailure;
-    auto tryCandidate = [&](const std::string& candidatePath, std::string& failure) {
+    auto tryCandidate = [&](const std::string& candidatePath,
+                            std::string& failure,
+                            bool& versionUnsupported) {
         if (!ofFile::doesFileExist(candidatePath)) {
             failure = "file not found";
             return false;
         }
         try {
             ofJson candidate = ofLoadJson(candidatePath);
-            if (!candidate.is_object()) mappingSchemaError("$", "an object");
+            const auto normalized =
+                synaptome::state::normalizeMappingBankDocument(
+                    candidate);
+            if (!normalized.ok) {
+                versionUnsupported =
+                    normalized.errorCode ==
+                    synaptome::state::
+                        MappingBankDocumentError::
+                            UnsupportedFutureVersion;
+                failure = normalized.error;
+                return false;
+            }
             if (candidate.contains("device") && !candidate["device"].is_string()) {
                 mappingSchemaError("$.device", "a string");
             }
@@ -512,15 +532,35 @@ bool MidiRouter::load(const std::string& jsonPath) {
     };
 
     bool recoveredFromBackup = false;
-    if (!tryCandidate(jsonPath, primaryFailure)) {
+    bool primaryVersionUnsupported = false;
+    if (!tryCandidate(
+            jsonPath,
+            primaryFailure,
+            primaryVersionUnsupported)) {
+        if (primaryVersionUnsupported) {
+            ofLogError("MidiRouter")
+                << "Failed to load mapping " << jsonPath << ": "
+                << primaryFailure
+                << "; refusing backup downgrade and preserving "
+                   "current mappings";
+            return false;
+        }
         std::string backupFailure;
-        if (!tryCandidate(backupPath, backupFailure)) {
+        bool backupVersionUnsupported = false;
+        if (!tryCandidate(
+                backupPath,
+                backupFailure,
+                backupVersionUnsupported)) {
             ofLogError("MidiRouter") << "Failed to load mapping " << jsonPath << ": "
                                      << primaryFailure << "; backup failed: " << backupFailure
                                      << "; preserving current mappings";
             if (!isOpen) {
                 listPortsToLog();
-                if (!openPreferredPort()) {
+                const bool opened =
+                    canonicalInputBindingAuthoritative_
+                        ? openCanonicalInputPort()
+                        : openPreferredPort();
+                if (!opened) {
                     ofLogWarning("MidiRouter")
                         << "No MIDI input device could be opened (will retry automatically)";
                 }
@@ -539,13 +579,19 @@ bool MidiRouter::load(const std::string& jsonPath) {
     if (doc.contains("deviceIndex")) nextDeviceIndex = doc["deviceIndex"].get<int>();
 
     close();
-    deviceName = std::move(nextDeviceName);
-    deviceIndex = nextDeviceIndex;
+    if (!canonicalInputBindingAuthoritative_) {
+        deviceName = std::move(nextDeviceName);
+        deviceIndex = nextDeviceIndex;
+    }
     currentPortLabel.clear();
 
     listPortsToLog();
 
-    if (!openPreferredPort()) {
+    const bool opened =
+        canonicalInputBindingAuthoritative_
+            ? openCanonicalInputPort()
+            : openPreferredPort();
+    if (!opened) {
         ofLogWarning("MidiRouter") << "No MIDI input device could be opened (will retry automatically)";
     } else {
         ofLogNotice("MidiRouter") << "Loaded "
@@ -564,9 +610,11 @@ bool MidiRouter::save(const std::string& jsonPath) {
     }
 
     ofJson doc = exportMappingSnapshot();
-    if (!deviceName.empty()) {
+    if (!canonicalInputBindingAuthoritative_ &&
+        !deviceName.empty()) {
         doc["device"] = deviceName;
-    } else if (deviceIndex >= 0) {
+    } else if (!canonicalInputBindingAuthoritative_ &&
+               deviceIndex >= 0) {
         doc["deviceIndex"] = deviceIndex;
     }
 
@@ -594,14 +642,30 @@ bool MidiRouter::save(const std::string& jsonPath) {
         bool previousValid = false;
         try {
             const ofJson previous = ofLoadJson(outPath);
-            if (previous.is_object()) {
+            const auto normalized =
+                synaptome::state::normalizeMappingBankDocument(
+                    previous);
+            if (!normalized.ok &&
+                normalized.errorCode ==
+                    synaptome::state::
+                        MappingBankDocumentError::
+                            UnsupportedFutureVersion) {
+                ofLogError("MidiRouter")
+                    << "Refusing to overwrite future-version mapping "
+                    << outPath << ": " << normalized.error;
+                ofFile::removeFile(tmpPath, false);
+                return false;
+            }
+            if (normalized.ok) {
                 if (previous.contains("device") && !previous["device"].is_string()) {
                     mappingSchemaError("$.device", "a string");
                 }
                 if (previous.contains("deviceIndex") && !previous["deviceIndex"].is_number_integer()) {
                     mappingSchemaError("$.deviceIndex", "an integer");
                 }
-                parseMappingSnapshot(previous, ParsedMappingState{});
+                parseMappingSnapshot(
+                    normalized.document,
+                    ParsedMappingState{});
                 previousValid = true;
             }
         } catch (...) {
@@ -653,8 +717,14 @@ ofJson MidiRouter::exportMappingSnapshot() const {
 }
 
 bool MidiRouter::importMappingSnapshot(const ofJson& snapshot, bool replaceExisting) {
-    if (!snapshot.is_object() && !snapshot.is_null()) {
-        ofLogWarning("MidiRouter") << "Rejected invalid mapping snapshot root; preserving current mappings";
+    const auto normalized =
+        synaptome::state::normalizeMappingBankDocument(
+            snapshot);
+    if (!normalized.ok) {
+        ofLogWarning("MidiRouter")
+            << "Rejected invalid mapping snapshot: "
+            << normalized.error
+            << "; preserving current mappings";
         return false;
     }
 
@@ -666,9 +736,9 @@ bool MidiRouter::importMappingSnapshot(const ofJson& snapshot, bool replaceExist
         pending.oscSourceProfiles = oscSourceProfiles;
     }
     try {
-        if (snapshot.is_object()) {
-            pending = parseMappingSnapshot(snapshot, std::move(pending));
-        }
+        pending = parseMappingSnapshot(
+            normalized.document,
+            std::move(pending));
     } catch (const std::exception& e) {
         ofLogWarning("MidiRouter") << "Rejected invalid mapping snapshot: " << e.what()
                                     << "; preserving current mappings";
@@ -733,6 +803,14 @@ bool MidiRouter::importMappingSnapshot(const ofJson& snapshot, bool replaceExist
         }
     }
 
+    std::unordered_map<std::string, bool> previousBoolHigh;
+    previousBoolHigh.reserve(boolTargets.size());
+    for (const auto& entry : boolTargets) {
+        previousBoolHigh.emplace(
+            entry.first,
+            entry.second.lastHigh);
+    }
+
     ccMaps.swap(pending.ccMaps);
     btnMaps.swap(pending.btnMaps);
     oscMaps.swap(pending.oscMaps);
@@ -749,7 +827,53 @@ bool MidiRouter::importMappingSnapshot(const ofJson& snapshot, bool replaceExist
     }
 
     if (onOscRoutesChanged) {
-        onOscRoutesChanged();
+        try {
+            onOscRoutesChanged();
+        } catch (const std::exception& e) {
+            ccMaps.swap(pending.ccMaps);
+            btnMaps.swap(pending.btnMaps);
+            oscMaps.swap(pending.oscMaps);
+            oscSourceProfiles.swap(
+                pending.oscSourceProfiles);
+            for (auto& entry : boolTargets) {
+                const auto prior =
+                    previousBoolHigh.find(entry.first);
+                if (prior != previousBoolHigh.end()) {
+                    entry.second.lastHigh = prior->second;
+                }
+            }
+            try {
+                onOscRoutesChanged();
+            } catch (...) {
+                // The route vectors are authoritative and already restored.
+            }
+            ofLogWarning("MidiRouter")
+                << "Rejected mapping snapshot during route publication: "
+                << e.what() << "; restored prior mappings";
+            return false;
+        } catch (...) {
+            ccMaps.swap(pending.ccMaps);
+            btnMaps.swap(pending.btnMaps);
+            oscMaps.swap(pending.oscMaps);
+            oscSourceProfiles.swap(
+                pending.oscSourceProfiles);
+            for (auto& entry : boolTargets) {
+                const auto prior =
+                    previousBoolHigh.find(entry.first);
+                if (prior != previousBoolHigh.end()) {
+                    entry.second.lastHigh = prior->second;
+                }
+            }
+            try {
+                onOscRoutesChanged();
+            } catch (...) {
+                // The route vectors are authoritative and already restored.
+            }
+            ofLogWarning("MidiRouter")
+                << "Rejected mapping snapshot during route publication; "
+                   "restored prior mappings";
+            return false;
+        }
     }
     return true;
 }
@@ -851,18 +975,43 @@ void MidiRouter::setFloatTargetTouchedCallback(std::function<void(const std::str
     floatTargetTouchedCallback_ = std::move(cb);
 }
 void MidiRouter::update() {
+    const uint64_t now = ofGetElapsedTimeMillis();
     if (isOpen) {
+        if (canonicalInputBindingAuthoritative_) {
+            if (now - lastRetryMs < retryIntervalMs) {
+                return;
+            }
+            lastRetryMs = now;
+            const auto status = resolveInputBinding(
+                canonicalDeviceProfileId_,
+                canonicalPortName_);
+            cachedCanonicalInputStatus_ = status;
+            if (!status.resolved ||
+                currentPortLabel != canonicalPortName_) {
+                markClosed();
+            }
+        }
         return;
     }
-    uint64_t now = ofGetElapsedTimeMillis();
+    if (canonicalInputBindingAuthoritative_ &&
+        canonicalPortName_.empty()) {
+        return;
+    }
     if (now - lastRetryMs < retryIntervalMs) {
         return;
     }
     lastRetryMs = now;
-    openPreferredPort();
+    if (canonicalInputBindingAuthoritative_) {
+        openCanonicalInputPort();
+    } else {
+        openPreferredPort();
+    }
 }
 
 bool MidiRouter::openPreferredPort() {
+    if (canonicalInputBindingAuthoritative_) {
+        return openCanonicalInputPort();
+    }
     midiIn.closePort();
     bool ok = false;
 
@@ -945,6 +1094,53 @@ bool MidiRouter::openByName(const std::string& name, bool allowSubstring) {
     return false;
 }
 
+bool MidiRouter::openCanonicalInputPort() {
+    markClosed();
+    const auto status = resolveInputBinding(
+        canonicalDeviceProfileId_,
+        canonicalPortName_);
+    cachedCanonicalInputStatus_ = status;
+    if (!status.configured || !status.resolved) {
+        return false;
+    }
+    // Test port overrides deliberately exercise resolution/reconnect policy
+    // without claiming that a physical ofxMidi port was opened.
+    if (useTestPortListOverride_) {
+        return false;
+    }
+    const auto ports = availableInputPorts();
+    const auto match = std::find(
+        ports.begin(),
+        ports.end(),
+        canonicalPortName_);
+    if (match == ports.end()) {
+        return false;
+    }
+    const auto index =
+        static_cast<unsigned int>(
+            std::distance(ports.begin(), match));
+    if (!midiIn.openPort(index)) {
+        markClosed();
+        return false;
+    }
+    midiIn.addListener(this);
+    midiIn.ignoreTypes(false, false, false);
+    isOpen = true;
+    currentPortLabel = canonicalPortName_;
+    lastRetryMs = ofGetElapsedTimeMillis();
+    return true;
+}
+
+bool MidiRouter::routeMatchesActiveInput(
+    const std::string& deviceProfileId) const {
+    if (deviceProfileId.empty() ||
+        !canonicalInputBindingAuthoritative_) {
+        return true;
+    }
+    return !canonicalDeviceProfileId_.empty() &&
+           deviceProfileId == canonicalDeviceProfileId_;
+}
+
 void MidiRouter::markClosed() {
     if (isOpen) {
         midiIn.removeListener(this);
@@ -988,6 +1184,238 @@ void MidiRouter::clearTestPortList() {
     useTestPortListOverride_ = false;
 }
 
+MidiRouter::MidiInputBindingStatus
+MidiRouter::resolveInputBinding(
+    const std::string& deviceProfileId,
+    const std::string& portName) const {
+    MidiInputBindingStatus status;
+    status.authoritative = true;
+    status.deviceProfileId = deviceProfileId;
+    status.portName = portName;
+    status.configured =
+        !deviceProfileId.empty() && !portName.empty();
+    if (!status.configured) {
+        status.detail = "disabled";
+        return status;
+    }
+    const auto ports = availableInputPorts();
+    status.exactMatchCount =
+        static_cast<std::size_t>(std::count(
+            ports.begin(),
+            ports.end(),
+            portName));
+    status.resolved = status.exactMatchCount == 1;
+    status.ambiguous = status.exactMatchCount > 1;
+    if (status.resolved) {
+        status.detail = "resolved";
+    } else if (status.ambiguous) {
+        status.detail = "ambiguous exact port name";
+    } else {
+        status.detail = "configured port is unavailable";
+    }
+    return status;
+}
+
+MidiRouter::MidiInputBindingStatus
+MidiRouter::inputBindingStatus() const {
+    if (!canonicalInputBindingAuthoritative_) {
+        MidiInputBindingStatus status;
+        status.connected = isOpen;
+        status.connectedPortName = currentPortLabel;
+        status.configured =
+            !deviceName.empty() || deviceIndex >= 0;
+        status.detail = "legacy mapping-file compatibility";
+        return status;
+    }
+    auto status = useTestPortListOverride_
+        ? resolveInputBinding(
+              canonicalDeviceProfileId_,
+              canonicalPortName_)
+        : cachedCanonicalInputStatus_;
+    status.authoritative = true;
+    status.deviceProfileId = canonicalDeviceProfileId_;
+    status.portName = canonicalPortName_;
+    status.configured =
+        !canonicalDeviceProfileId_.empty() &&
+        !canonicalPortName_.empty();
+    status.connected =
+        isOpen && currentPortLabel == canonicalPortName_;
+    status.connectedPortName = currentPortLabel;
+    return status;
+}
+
+ofJson MidiRouter::exportInputBindingSnapshot() const {
+    ofJson snapshot = ofJson::object();
+    snapshot["inputs"] = ofJson::array();
+    if (canonicalInputBindingAuthoritative_ &&
+        !canonicalDeviceProfileId_.empty() &&
+        !canonicalPortName_.empty()) {
+        snapshot["inputs"].push_back({
+            {"deviceProfileId", canonicalDeviceProfileId_},
+            {"portName", canonicalPortName_}
+        });
+    }
+    return snapshot;
+}
+
+bool MidiRouter::parseInputBindingSnapshot(
+    const ofJson& snapshot,
+    std::string& deviceProfileId,
+    std::string& portName,
+    std::string& error) {
+    deviceProfileId.clear();
+    portName.clear();
+    if (!snapshot.is_object() ||
+        snapshot.size() != 1 ||
+        !snapshot.contains("inputs") ||
+        !snapshot["inputs"].is_array()) {
+        error =
+            "MIDI input snapshot must contain only an inputs array";
+        return false;
+    }
+    const auto& inputs = snapshot["inputs"];
+    if (inputs.size() > 1) {
+        error = "MIDI input snapshot supports at most one input";
+        return false;
+    }
+    if (inputs.empty()) {
+        error.clear();
+        return true;
+    }
+    const auto& input = inputs.front();
+    if (!input.is_object() ||
+        input.size() != 2 ||
+        !input.contains("deviceProfileId") ||
+        !input.contains("portName") ||
+        !input["deviceProfileId"].is_string() ||
+        !input["portName"].is_string()) {
+        error =
+            "MIDI input must contain only string deviceProfileId "
+            "and portName fields";
+        return false;
+    }
+    deviceProfileId =
+        input["deviceProfileId"].get<std::string>();
+    portName = input["portName"].get<std::string>();
+    const auto validReference =
+        [](const std::string& value) {
+            return !value.empty() &&
+                   value.size() <= 255 &&
+                   std::any_of(
+                       value.begin(),
+                       value.end(),
+                       [](char character) {
+                           return !std::isspace(
+                               static_cast<unsigned char>(
+                                   character));
+                       });
+        };
+    if (!validReference(deviceProfileId) ||
+        !validReference(portName)) {
+        error =
+            "MIDI deviceProfileId and portName must be non-empty "
+            "strings no longer than 255 characters";
+        return false;
+    }
+    error.clear();
+    return true;
+}
+
+MidiRouter::MidiInputBindingResult
+MidiRouter::adoptInputBindingSnapshot(
+    const ofJson& snapshot) {
+    MidiInputBindingResult result;
+    std::string deviceProfileId;
+    std::string portName;
+    if (!parseInputBindingSnapshot(
+            snapshot,
+            deviceProfileId,
+            portName,
+            result.error)) {
+        result.status = inputBindingStatus();
+        return result;
+    }
+    markClosed();
+    canonicalInputBindingAuthoritative_ = true;
+    canonicalDeviceProfileId_ = std::move(deviceProfileId);
+    canonicalPortName_ = std::move(portName);
+    deviceName.clear();
+    deviceIndex = -1;
+    openCanonicalInputPort();
+    result.status = inputBindingStatus();
+    result.ok = true;
+    result.error.clear();
+    return result;
+}
+
+MidiRouter::MidiInputBindingResult
+MidiRouter::publishInputBindingSnapshot(
+    const ofJson& snapshot) {
+    return publishInputBindingSnapshot(
+        snapshot,
+        inputBindingPersistenceCallback_);
+}
+
+void MidiRouter::setInputBindingPersistenceCallback(
+    std::function<bool(const ofJson&)> persistence) {
+    inputBindingPersistenceCallback_ =
+        std::move(persistence);
+}
+
+MidiRouter::MidiInputBindingResult
+MidiRouter::publishInputBindingSnapshot(
+    const ofJson& snapshot,
+    const std::function<bool(const ofJson&)>& persistence) {
+    const bool previousAuthoritative =
+        canonicalInputBindingAuthoritative_;
+    const std::string previousProfile =
+        canonicalDeviceProfileId_;
+    const std::string previousPort = canonicalPortName_;
+    const std::string previousDeviceName = deviceName;
+    const int previousDeviceIndex = deviceIndex;
+    const bool previousConnected = isOpen;
+
+    auto result = adoptInputBindingSnapshot(snapshot);
+    if (!result.ok) {
+        return result;
+    }
+
+    bool persisted = false;
+    try {
+        persisted = persistence && persistence(snapshot);
+    } catch (const std::exception& exception) {
+        result.error =
+            "MIDI input persistence failed: " +
+            std::string(exception.what());
+    } catch (...) {
+        result.error = "MIDI input persistence failed";
+    }
+    if (persisted) {
+        return result;
+    }
+    if (result.error.empty()) {
+        result.error =
+            "MIDI input persistence rejected the snapshot";
+    }
+
+    markClosed();
+    canonicalInputBindingAuthoritative_ =
+        previousAuthoritative;
+    canonicalDeviceProfileId_ = previousProfile;
+    canonicalPortName_ = previousPort;
+    deviceName = previousDeviceName;
+    deviceIndex = previousDeviceIndex;
+    const bool reopened =
+        previousAuthoritative
+            ? openCanonicalInputPort()
+            : openPreferredPort();
+    result.rollbackSucceeded =
+        !previousConnected || reopened;
+    result.ok = false;
+    result.status = inputBindingStatus();
+    return result;
+}
+
 void MidiRouter::captureNextMidiControl(std::function<void(const CapturedMidiControl&)> callback) {
     pendingMidiCapture_ = std::move(callback);
 }
@@ -1025,6 +1453,9 @@ void MidiRouter::newMidiMessage(ofxMidiMessage& msg) {
             if (map.cc != ccNum || map.target.empty()) {
                 continue;
             }
+            if (!routeMatchesActiveInput(map.deviceId)) {
+                continue;
+            }
             if (map.channel >= 0 && map.channel != msg.channel) {
                 continue;
             }
@@ -1036,6 +1467,9 @@ void MidiRouter::newMidiMessage(ofxMidiMessage& msg) {
         dispatchCapture("note", msg.channel, number, value);
         for (const auto& map : btnMaps) {
             if (map.num != number || map.target.empty()) {
+                continue;
+            }
+            if (!routeMatchesActiveInput(map.deviceId)) {
                 continue;
             }
             if (map.channel >= 0 && map.channel != msg.channel) {
@@ -1442,6 +1876,10 @@ void MidiRouter::setOrUpdateCc(const std::string& target,
             }
             if (!binding.deviceId.empty()) {
                 map.deviceId = binding.deviceId;
+            } else if (
+                canonicalInputBindingAuthoritative_ &&
+                !canonicalDeviceProfileId_.empty()) {
+                map.deviceId = canonicalDeviceProfileId_;
             }
             if (!binding.columnId.empty()) {
                 map.columnId = binding.columnId;
@@ -1464,7 +1902,11 @@ void MidiRouter::setOrUpdateCc(const std::string& target,
     map.cc = ccNum;
     map.bankId = activeBankId;
     map.channel = binding.channel;
-    map.deviceId = binding.deviceId;
+    map.deviceId = !binding.deviceId.empty()
+        ? binding.deviceId
+        : (canonicalInputBindingAuthoritative_
+               ? canonicalDeviceProfileId_
+               : std::string());
     map.columnId = binding.columnId;
     map.slotId = binding.slotId;
     auto fit = floatTargets.find(target);
@@ -1536,6 +1978,10 @@ void MidiRouter::setOrUpdateBtn(const std::string& target,
             }
             if (!binding.deviceId.empty()) {
                 map.deviceId = binding.deviceId;
+            } else if (
+                canonicalInputBindingAuthoritative_ &&
+                !canonicalDeviceProfileId_.empty()) {
+                map.deviceId = canonicalDeviceProfileId_;
             }
             if (!binding.columnId.empty()) {
                 map.columnId = binding.columnId;
@@ -1557,7 +2003,11 @@ void MidiRouter::setOrUpdateBtn(const std::string& target,
     map.setValue = setValue;
     map.bankId = activeBankId;
     map.channel = binding.channel;
-    map.deviceId = binding.deviceId;
+    map.deviceId = !binding.deviceId.empty()
+        ? binding.deviceId
+        : (canonicalInputBindingAuthoritative_
+               ? canonicalDeviceProfileId_
+               : std::string());
     map.columnId = binding.columnId;
     map.slotId = binding.slotId;
     if (!binding.controlId.empty()) {

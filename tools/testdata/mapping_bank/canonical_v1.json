@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "cc": [
+    {
+      "num": 23,
+      "channel": 2,
+      "target": "console.layer1.opacity",
+      "bank": "home",
+      "control": "layer-one-opacity",
+      "device": "show-controller",
+      "column": "console.column.1",
+      "slot": "encoder.1",
+      "out": [
+        0.0,
+        1.0
+      ],
+      "snapInt": false,
+      "step": 0.01
+    }
+  ],
+  "buttons": [
+    {
+      "num": 42,
+      "channel": 2,
+      "type": "toggle",
+      "target": "console.layer1.active",
+      "bank": "home",
+      "control": "layer-one-active",
+      "device": "show-controller",
+      "column": "console.column.1",
+      "slot": "button.1",
+      "setValue": 1.0
+    }
+  ],
+  "oscSources": [
+    {
+      "pattern": "/sensor/host/localmic/mic-level",
+      "in": [
+        0.0,
+        1.0
+      ],
+      "out": [
+        0.0,
+        1.0
+      ],
+      "smooth": 0.2,
+      "deadband": 0.0,
+      "blend": "scale",
+      "relative": true
+    }
+  ],
+  "osc": [
+    {
+      "pattern": "/sensor/host/localmic/mic-level",
+      "target": "effects.crt.softness",
+      "bank": "home",
+      "control": "local-mic-level"
+    }
+  ]
+}

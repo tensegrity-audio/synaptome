@@ -1,0 +1,183 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://synaptome.local/schemas/preferences.schema.json",
+  "title": "Synaptome operator preferences",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "browser": { "$ref": "#/$defs/browser" },
+    "hud": { "$ref": "#/$defs/hud" },
+    "hotkeys": { "$ref": "#/$defs/hotkeys" },
+    "packages": { "$ref": "#/$defs/packages" },
+    "mappings": { "$ref": "#/$defs/mappings" }
+  },
+  "$defs": {
+    "stableId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 127,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "boundedText": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "uniqueTextList": {
+      "type": "array",
+      "maxItems": 512,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 255
+      }
+    },
+    "browser": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "treeWidthRatio": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 0.5
+        },
+        "selection": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "category": { "$ref": "#/$defs/boundedText" },
+            "subcategory": { "$ref": "#/$defs/boundedText" },
+            "asset": { "$ref": "#/$defs/boundedText" }
+          }
+        },
+        "selectedColumn": {
+          "enum": [
+            "name",
+            "value",
+            "slot",
+            "midi",
+            "midi_min",
+            "midi_max",
+            "osc",
+            "osc_deadband"
+          ]
+        },
+        "visibleColumns": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "name": { "const": true },
+            "value": { "type": "boolean" },
+            "slot": { "type": "boolean" },
+            "midi": { "type": "boolean" },
+            "midi_min": { "type": "boolean" },
+            "midi_max": { "type": "boolean" },
+            "osc": { "type": "boolean" },
+            "osc_deadband": { "type": "boolean" }
+          }
+        },
+        "collapsedCategories": { "$ref": "#/$defs/uniqueTextList" },
+        "collapsedParameterSections": { "$ref": "#/$defs/uniqueTextList" }
+      }
+    },
+    "widget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id"],
+      "properties": {
+        "id": { "$ref": "#/$defs/stableId" },
+        "target": {
+          "enum": ["projector", "controller"],
+          "default": "projector"
+        },
+        "column": {
+          "type": "integer",
+          "minimum": -1,
+          "maximum": 31
+        },
+        "band": { "$ref": "#/$defs/stableId" },
+        "visible": { "type": "boolean" },
+        "collapsed": { "type": "boolean" }
+      }
+    },
+    "hud": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "visible": { "type": "boolean" },
+        "layoutTarget": { "enum": ["projector", "controller"] },
+        "stateMigrated": { "type": "boolean" },
+        "widgets": {
+          "type": "array",
+          "maxItems": 256,
+          "items": { "$ref": "#/$defs/widget" }
+        }
+      }
+    },
+    "hotkeys": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "bindings": {
+          "type": "array",
+          "maxItems": 512,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "key"],
+            "properties": {
+              "id": { "$ref": "#/$defs/stableId" },
+              "key": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 2147483647
+              }
+            }
+          }
+        }
+      }
+    },
+    "selectedPreset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bankId", "presetId"],
+      "properties": {
+        "bankId": { "$ref": "#/$defs/stableId" },
+        "presetId": { "$ref": "#/$defs/stableId" }
+      }
+    },
+    "packages": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "activations": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["packageId", "enabled"],
+            "properties": {
+              "packageId": { "$ref": "#/$defs/stableId" },
+              "enabled": { "type": "boolean" },
+              "selectedPreset": { "$ref": "#/$defs/selectedPreset" }
+            }
+          }
+        }
+      }
+    },
+    "mappings": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "activeBank": {
+          "type": "string",
+          "maxLength": 127,
+          "pattern": "^$|^[A-Za-z0-9][A-Za-z0-9._-]*$"
+        }
+      }
+    }
+  }
+}

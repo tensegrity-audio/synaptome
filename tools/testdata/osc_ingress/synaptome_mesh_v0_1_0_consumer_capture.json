@@ -1,0 +1,140 @@
+{
+  "contract": "synaptome-mesh-osc",
+  "producerVersion": "0.1.0",
+  "consumerProfile": "synaptome-mesh-v1",
+  "dedupeWindowMs": 25,
+  "origin": {
+    "transport": "udp",
+    "endpoint": "127.0.0.1:9002"
+  },
+  "events": [
+    {
+      "sequence": 1,
+      "timestampMs": 100,
+      "address": "/sensor/matrix/0x0101/mic-level",
+      "typeTags": ",f",
+      "args": [
+        { "type": "float32", "value": 0.42 }
+      ],
+      "expected": {
+        "canonicalAddress": "/sensor/matrix/0x0101/mic-level",
+        "meshNamespaceAlias": false,
+        "routeAliasApplied": false,
+        "dispatch": true,
+        "routableScalar": true
+      }
+    },
+    {
+      "sequence": 2,
+      "timestampMs": 101,
+      "address": "/synaptome_mesh/sensor/matrix/0x0101/mic-level",
+      "typeTags": ",f",
+      "args": [
+        { "type": "float32", "value": 0.42 }
+      ],
+      "expected": {
+        "canonicalAddress": "/sensor/matrix/0x0101/mic-level",
+        "meshNamespaceAlias": true,
+        "routeAliasApplied": false,
+        "dispatch": false,
+        "routableScalar": true
+      }
+    },
+    {
+      "sequence": 3,
+      "timestampMs": 120,
+      "address": "/sensor/hr/0x0301/heart-bpm",
+      "typeTags": ",f",
+      "args": [
+        { "type": "float32", "value": 72.0 }
+      ],
+      "expected": {
+        "canonicalAddress": "/sensor/hr/0x0301/bpm",
+        "meshNamespaceAlias": false,
+        "routeAliasApplied": true,
+        "dispatch": true,
+        "routableScalar": true
+      }
+    },
+    {
+      "sequence": 4,
+      "timestampMs": 121,
+      "address": "/synaptome_mesh/sensor/hr/0x0301/heart-bpm",
+      "typeTags": ",f",
+      "args": [
+        { "type": "float32", "value": 72.0 }
+      ],
+      "expected": {
+        "canonicalAddress": "/sensor/hr/0x0301/bpm",
+        "meshNamespaceAlias": true,
+        "routeAliasApplied": true,
+        "dispatch": false,
+        "routableScalar": true
+      }
+    },
+    {
+      "sequence": 5,
+      "timestampMs": 140,
+      "address": "/system/matrix/0x0101/device-type-name",
+      "typeTags": ",s",
+      "args": [
+        { "type": "string", "value": "matrix" }
+      ],
+      "expected": {
+        "canonicalAddress": "/system/matrix/0x0101/device-type-name",
+        "meshNamespaceAlias": false,
+        "routeAliasApplied": false,
+        "dispatch": true,
+        "routableScalar": false
+      }
+    },
+    {
+      "sequence": 6,
+      "timestampMs": 141,
+      "address": "/synaptome_mesh/system/matrix/0x0101/device-type-name",
+      "typeTags": ",s",
+      "args": [
+        { "type": "string", "value": "matrix" }
+      ],
+      "expected": {
+        "canonicalAddress": "/system/matrix/0x0101/device-type-name",
+        "meshNamespaceAlias": true,
+        "routeAliasApplied": false,
+        "dispatch": false,
+        "routableScalar": false
+      }
+    },
+    {
+      "sequence": 7,
+      "timestampMs": 180,
+      "address": "/param/rx/deck/0x0201/page",
+      "typeTags": ",i",
+      "args": [
+        { "type": "int32", "value": 3 }
+      ],
+      "expected": {
+        "canonicalAddress": "/param/rx/deck/0x0201/page",
+        "meshNamespaceAlias": false,
+        "routeAliasApplied": false,
+        "dispatch": true,
+        "routableScalar": true
+      }
+    },
+    {
+      "sequence": 8,
+      "timestampMs": 181,
+      "address": "/synaptome_mesh/param/rx/deck/0x0201/page",
+      "typeTags": ",i",
+      "args": [
+        { "type": "int32", "value": 3 }
+      ],
+      "expected": {
+        "canonicalAddress": "/param/rx/deck/0x0201/page",
+        "meshNamespaceAlias": true,
+        "routeAliasApplied": false,
+        "dispatch": false,
+        "routableScalar": true
+      }
+    }
+  ]
+}

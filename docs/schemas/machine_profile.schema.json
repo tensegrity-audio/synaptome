@@ -1,0 +1,272 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Synaptome machine profile v1",
+  "description": "Operator-local physical endpoint selection, exact physical MIDI input binding, and logical control-slot assignments. This v1 document is not portable Scene or package state.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "profileId",
+    "osc"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "profileId": {
+      "$ref": "#/definitions/stableId"
+    },
+    "osc": {
+      "type": "object",
+      "required": [
+        "inputs"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/endpoint"
+          }
+        },
+        "activeInputId": {
+          "$ref": "#/definitions/stableId"
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/endpoint"
+          }
+        }
+      }
+    },
+    "midi": {
+      "type": "object",
+      "description": "Optional single-input physical MIDI binding. Omission delegates to legacy mapping-file selection only when the canonical profile is valid and unblocked. A present empty inputs array disables MIDI. Port resolution is an exact unique name match; hints, substrings, indices, and port-zero fallback are not canonical resolution.",
+      "required": [
+        "inputs"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "inputs": {
+          "type": "array",
+          "maxItems": 1,
+          "items": {
+            "$ref": "#/definitions/midiInput"
+          }
+        }
+      }
+    },
+    "controlSlots": {
+      "type": "object",
+      "required": [
+        "assignments"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "assignments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/controlSlotAssignment"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "stableId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 127,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "assignmentKey": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*(::[A-Za-z0-9][A-Za-z0-9._-]*)?$"
+    },
+    "machineBindingId": {
+      "description": "Exact nonblank machine-binding value, including current logical device-profile/slot identifiers and enumerated physical port names. Stable-ID normalization is deferred to device-profile v1.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255,
+      "pattern": "\\S"
+    },
+    "midiInput": {
+      "type": "object",
+      "description": "One logical device profile bound to one exact enumerated MIDI input port name. A missing, renamed, or non-unique port remains unresolved; runtime resolution must not guess.",
+      "required": [
+        "deviceProfileId",
+        "portName"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "deviceProfileId": {
+          "$ref": "#/definitions/machineBindingId"
+        },
+        "portName": {
+          "$ref": "#/definitions/machineBindingId"
+        }
+      }
+    },
+    "controlSlotAssignment": {
+      "type": "object",
+      "required": [
+        "assignmentKey",
+        "deviceProfileId",
+        "slotId",
+        "analog"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "assignmentKey": {
+          "$ref": "#/definitions/assignmentKey"
+        },
+        "deviceProfileId": {
+          "$ref": "#/definitions/machineBindingId"
+        },
+        "slotId": {
+          "$ref": "#/definitions/machineBindingId"
+        },
+        "analog": {
+          "type": "boolean"
+        }
+      }
+    },
+    "udp": {
+      "type": "object",
+      "required": [
+        "host",
+        "port"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "host": {
+          "type": "string",
+          "minLength": 1
+        },
+        "port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        }
+      }
+    },
+    "serial": {
+      "type": "object",
+      "required": [
+        "autoPort",
+        "baud"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "autoPort": {
+          "type": "boolean"
+        },
+        "baud": {
+          "type": "integer",
+          "minimum": 1200,
+          "maximum": 4000000
+        },
+        "port": {
+          "type": "string",
+          "minLength": 1
+        },
+        "portNameContains": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "autoPort": {
+                "const": false
+              }
+            },
+            "required": [
+              "autoPort"
+            ]
+          },
+          "then": {
+            "anyOf": [
+              {
+                "required": [
+                  "port"
+                ]
+              },
+              {
+                "required": [
+                  "portNameContains"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "endpoint": {
+      "type": "object",
+      "required": [
+        "id",
+        "enabled",
+        "transport"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/stableId"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "transport": {
+          "enum": [
+            "udp",
+            "serial"
+          ]
+        },
+        "udp": {
+          "$ref": "#/definitions/udp"
+        },
+        "serial": {
+          "$ref": "#/definitions/serial"
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "transport": {
+              "const": "udp"
+            }
+          },
+          "required": [
+            "udp"
+          ],
+          "not": {
+            "required": [
+              "serial"
+            ]
+          }
+        },
+        {
+          "properties": {
+            "transport": {
+              "const": "serial"
+            }
+          },
+          "required": [
+            "serial"
+          ],
+          "not": {
+            "required": [
+              "udp"
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

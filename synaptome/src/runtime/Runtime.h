@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CompositionLayer.h"
+#include "../core/ParameterValueOrigin.h"
 
 #include <synaptome/element/compat/Layer.h>
 
@@ -37,6 +38,7 @@ public:
         std::string instanceId;
         std::string registryPrefix;
         ofJson config = ofJson::object();
+        synaptome::state::ParameterBaseOrigins initialBaseOrigins;
         bool enabled = true;
     };
 

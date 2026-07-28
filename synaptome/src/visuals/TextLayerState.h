@@ -6,8 +6,25 @@
 // Shared parameter storage for the text layer so Browser controls remain
 // available even when no text layer is active.
 struct TextLayerState {
+    struct Snapshot {
+        std::string content;
+        std::string topLeft;
+        std::string topRight;
+        std::string bottomLeft;
+        std::string bottomRight;
+        std::string font;
+        float fontIndex = 0.0f;
+        float fontSize = 48.0f;
+        float cornerFontSize = 32.0f;
+        float colorR = 0.0f;
+        float colorG = 255.0f;
+        float colorB = 160.0f;
+    };
+
     static TextLayerState& instance();
 
+    Snapshot snapshot() const;
+    void adoptSnapshot(Snapshot&& snapshot) noexcept;
     void refreshAvailableFonts();
     void syncFontSelection();
     float fontIndexMax() const;

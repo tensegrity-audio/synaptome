@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Synaptome Scene",
-  "description": "Permissive G0 schema for persisted scene snapshots. Runtime transaction semantics are defined separately.",
+  "description": "Compatibility schema for legacy Scene v1 and current Scene v2 snapshots. A missing scene.schemaVersion is legacy v1; writers emit v2. Runtime ownership and transaction semantics are defined separately.",
   "type": "object",
   "additionalProperties": true,
   "properties": {
@@ -29,13 +29,45 @@
     },
     "mappings": {
       "type": "object",
+      "description": "Independently owned mapping sections. Router and activeBank presence is authoritative; slotAssignments is accepted only as legacy input and does not override machine-profile ownership during normal load.",
+      "properties": {
+        "router": {
+          "type": "object",
+          "description": "Mapping-bank route snapshot. Missing schemaVersion is legacy unversioned input; writers emit v1.",
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "cc": {
+              "type": "array"
+            },
+            "buttons": {
+              "type": "array"
+            },
+            "oscSources": {
+              "type": "array"
+            },
+            "osc": {
+              "type": "array"
+            }
+          },
+          "additionalProperties": true
+        },
+        "slotAssignments": {
+          "type": "object",
+          "description": "Legacy compatibility input only. Normal Scene load preserves machine-profile controlSlots, and current named/autosave writers omit this field."
+        },
+        "activeBank": {
+          "type": "string"
+        }
+      },
       "additionalProperties": true
     },
     "scene": {
       "type": "object",
       "additionalProperties": true,
       "properties": {
-        "schemaVersion": { "type": "integer" },
+        "schemaVersion": { "type": "integer", "enum": [1, 2] },
         "savedAt": { "type": "string" },
         "source": { "$ref": "#/definitions/sceneRef" },
         "storage": { "$ref": "#/definitions/sceneRef" }

@@ -1,0 +1,58 @@
+[
+  {
+    "id": "future-version",
+    "document": {
+      "schemaVersion": 2,
+      "globalBanks": []
+    }
+  },
+  {
+    "id": "missing-array",
+    "document": {
+      "schemaVersion": 1
+    }
+  },
+  {
+    "id": "duplicate-bank",
+    "document": {
+      "schemaVersion": 1,
+      "globalBanks": [
+        { "id": "home" },
+        { "id": "home" }
+      ]
+    }
+  },
+  {
+    "id": "missing-parent",
+    "document": {
+      "schemaVersion": 1,
+      "globalBanks": [
+        { "id": "child", "parent": "missing" }
+      ]
+    }
+  },
+  {
+    "id": "cycle",
+    "document": {
+      "schemaVersion": 1,
+      "globalBanks": [
+        { "id": "a", "parent": "b" },
+        { "id": "b", "parent": "a" }
+      ]
+    }
+  },
+  {
+    "id": "orphan-control",
+    "document": {
+      "schemaVersion": 1,
+      "globalBanks": [
+        {
+          "id": "home",
+          "controls": [
+            { "id": "orphan" }
+          ]
+        }
+      ]
+    }
+  }
+]

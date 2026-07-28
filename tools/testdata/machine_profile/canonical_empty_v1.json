@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "profileId": "fixture-empty",
+  "osc": {
+    "inputs": []
+  },
+  "midi": {
+    "inputs": []
+  },
+  "controlSlots": {
+    "assignments": []
+  }
+}

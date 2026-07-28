@@ -622,6 +622,9 @@ shape in `synaptome/bin/data/config/midi-map.json` for app-wide defaults:
 {
   "mappings": {
     "router": {
+      "schemaVersion": 1,
+      "cc": [],
+      "buttons": [],
       "osc": [
         {
           "bank": "home",

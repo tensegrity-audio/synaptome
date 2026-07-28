@@ -2,6 +2,271 @@
 
 This changelog records Project Ops and administrative workflow changes. Product release versioning remains governed by `docs/release_policy.md`.
 
+## 2026-07-28 - architecture - seac_5_versioned_state_closeout
+
+- Request ID: `spine_element_architecture_convergence`
+- Phase / Milestone: SEAC-5 complete; milestone advances to 5 of 12 and SEAC-6
+  becomes the current gate.
+- Preferences: Added strict canonical-first preferences v1 with independently
+  authoritative Browser/HUD, hotkey, package activation/next-load preset, and
+  active-bank sections. Omitted sections retain named legacy compatibility;
+  writes preserve unrelated sections and roll persisted/live state back.
+- Mapping ownership: Added strict independent bank-definitions v1 for custom
+  global banks. Routes remain mapping-bank owned, active selection remains
+  preferences-owned, and new Scene/autosave writes omit operator global/active
+  bank state while legacy Scene reads remain compatibility-only.
+- Runtime safety: Text candidates stage a copied shared-state snapshot and
+  publish it only after Runtime adoption. Failed or abandoned preparation
+  cannot leak candidate `overlay.text.*` values.
+- Portability: Added an executable classification gate across 85 portable
+  Scene/layer/package JSON artifacts. It rejects physical webcam selectors and
+  absolute local paths while keeping OSC address patterns and explicitly local
+  compatibility fixtures valid.
+- OSC/Mesh boundary: Generic typed OSC observation and finite scalar routing
+  remain transport-neutral; Synaptome Mesh v0.1 namespaced/legacy routes are
+  normalized and deduplicated on receive without constraining the producer.
+- Validation: BrowserFlow Release passes 49/49. The Release app builds with
+  zero warnings and zero errors. All 23 public-app contracts, generated
+  manifests/catalogs, preferences, bank definitions, machine profile, mapping
+  bank, Scene recovery, portable state, Circuit Lenia, and extraction gates
+  pass.
+- Deferred boundaries: Audio device, webcam endpoint, display geometry, and
+  content-root adapters remain named local compatibility lanes. They require a
+  future independently transactional machine-profile version and are not
+  represented as implemented v1 sections. Live physical-MIDI and full
+  show-machine recovery rehearsal remain deferred validation.
+
+## 2026-07-28 - architecture - machine_profile_v1_physical_midi_input
+
+- Request ID: `spine_element_architecture_convergence`
+- Phase / Milestone: SEAC-5 in progress; third machine-profile runtime lane;
+  milestone remains 4 of 12.
+- Contract: Added optional strict `midi.inputs` with at most one exact
+  `deviceProfileId`/`portName` row. Omission preserves the current owner and is
+  the only valid-profile state that permits legacy standalone
+  `device`/`deviceIndex`; present empty explicitly disables MIDI input.
+- Resolution: A configured binding resolves only when one enumerated port
+  equals the stored name. Missing, renamed, and duplicate exact names remain
+  unavailable or ambiguous; canonical startup never guesses from device-map
+  hints, substrings, numeric indices, or port-zero fallback.
+- Runtime behavior: Unresolved/reconnect transitions retain applied routes and
+  logical control-slot assignments. Device-qualified routes dispatch only for
+  the active canonical profile, while unqualified compatibility routes remain
+  available.
+- Transaction: Device Mapper uses hints only to suggest roster associations.
+  Explicit `A` binding publishes the observed exact port name through the
+  recoverable machine profile; persistence rejection restores the prior
+  binding and connection state.
+- Confidence: The contract validator covers canonical, explicit-empty, and 33
+  rejection cases. Native resolver, reconnect, route-filtering, and Device
+  Mapper rollback scenarios pass; BrowserFlow passes 46/46 and the Release app
+  builds cleanly.
+- Remaining boundary: Live physical-MIDI hardware is still untested.
+  Preferences v1 is the next SEAC-5 slice; transactional Text configuration
+  and audio/webcam/display/path machine lanes remain independently staged.
+
+## 2026-07-28 - architecture - machine_profile_v1_control_slots
+
+- Request ID: `spine_element_architecture_convergence`
+- Phase / Milestone: SEAC-5 in progress; second machine-profile runtime lane;
+  milestone remains 4 of 12.
+- Contract: Added optional strict `controlSlots.assignments` with stable
+  assignment keys, exact device-profile/slot IDs, duplicate rejection, and
+  omission-versus-explicit-empty semantics. Spaced shipped IDs such as
+  `MIDI Mix 0` remain valid machine bindings.
+- Runtime ownership: A present canonical section is authoritative at startup.
+  When absent, the unversioned slot file remains copied legacy input; blocked
+  or invalid canonical profiles do not downgrade through fragmented state.
+- Transaction: Browser assignment and unassignment prepare the complete
+  assignment and MIDI-route candidate before mutation, publish once, and
+  restore assignment memory, router memory, and the persisted route file when
+  profile publication fails. Rendering legacy aliases is read-only.
+- Scene boundary: New named Scene and recovery-autosave writers omit logical
+  hardware slot assignments. Legacy present/empty Scene fields remain readable
+  and validated, but normal load preserves the machine owner; import must be
+  explicit.
+- Confidence: Machine-profile and Scene contracts, extraction classification,
+  source gates, and all 44 BrowserFlow scenarios pass.
+- Next boundary: Physical MIDI endpoint binding is the next machine-profile
+  lane. Audio input, webcam selection, display, paths, and preferences remain
+  independently staged; OSC/Mesh payload compatibility is unchanged.
+
+## 2026-07-27 - architecture - machine_profile_v1_osc_lane
+
+- Request ID: `spine_element_architecture_convergence`
+- Phase / Milestone: SEAC-5 in progress; first machine-profile runtime lane;
+  milestone remains 4 of 12.
+- Contract: Added strict `machine-profile.json` schema v1 with one copied pure
+  C++ validator, a sanitized public example, canonical/explicit-empty
+  fixtures, and twelve rejection cases. Missing versions reject because no
+  historical aggregate profile existed; future primaries cannot downgrade
+  through backup or fragmented legacy input.
+- Runtime ownership: UDP bind and direct-serial endpoint selection now load
+  from the canonical profile. `osc-input.json` remains a read-only
+  compatibility source only when the canonical profile is absent.
+- Publication: Explicit Browser mode changes preserve custom profile
+  endpoints, write only the ignored operator-local profile through verified
+  temp/backup promotion, and restore the prior transport when binding or
+  publication fails.
+- OSC/Mesh boundary: The profile selects transport and endpoints only. Any
+  well-formed OSC remains observable through the typed ingress envelope, and
+  the Synaptome-owned Mesh consumer adapter continues to normalize derived
+  routes while retaining raw provenance.
+- Confidence: Machine-profile contract validation passes, all 41 BrowserFlow
+  scenarios pass, and the Release app builds with zero warnings/errors.
+- Remaining boundary: Logical slot assignments are the next transactional
+  lane. MIDI, audio, webcam, display, paths, preferences, and named-Scene
+  local-state cleanup remain explicit follow-ups.
+
+## 2026-07-27 - architecture - osc_mesh_consumer_compatibility
+
+- Request ID: `spine_element_architecture_convergence`
+- Phase / Milestone: SEAC-5 in progress; machine-endpoint compatibility slice;
+  milestone remains 4 of 12.
+- Ingress model: Added a transport-neutral typed OSC envelope carrying raw and
+  canonical addresses, ordered typed arguments, typetags, transport, endpoint,
+  timestamp, and bounded payload diagnostics. UDP and direct SLIP serial now
+  converge on this model.
+- Routing boundary: Existing mappings still receive exactly one finite numeric
+  scalar. Strings, bools, blobs, vectors, nil, impulse, MIDI, timetag, and RGBA
+  values are observable without implicit float coercion.
+- Mesh adapter: The Synaptome receiver now normalizes producer-owned
+  `/synaptome_mesh` aliases, translates HR `heart-bpm` to the established
+  `bpm` app route, and suppresses only an immediate identical legacy/alias
+  pair from the same source. Mesh sender output remains unchanged.
+- Serial safety: The SLIP reader handles Mesh `,f`, `,i`, and `,s` plus the
+  supported OSC 1.x argument shapes, rejects malformed/truncated data, and
+  caps frames at 64 KiB.
+- Confidence: Release app build passes with zero warnings/errors. BrowserFlow
+  passes all 40 scenarios. The consumer-owned Mesh v0.1 fixture passes
+  `python tools/validate_osc_ingress_contract.py`.
+- Remaining boundary: Non-scalar mapping semantics, concurrent-input identity,
+  and persisted endpoint selection belong to later typed-mapping and
+  machine-profile work.
+
+## 2026-07-27 - architecture - seac5c_mapping_bank_route_v1
+
+- Request ID: `spine_element_architecture_convergence`
+- Phase / Milestone: SEAC-5 in progress; mapping-bank route v1 slice
+  complete; milestone remains 4 of 12.
+- Runtime document: Added a pure `MappingBankDocument` classifier for the
+  actual flat `MidiRouter` snapshot. Missing `schemaVersion` is legacy
+  unversioned input normalized only in copied memory; exact v1 is current.
+- Canonical writer: `exportMappingSnapshot()` now emits `schemaVersion: 1`
+  and complete `cc`, `buttons`, `oscSources`, and `osc` arrays. Scene
+  `activeBank`, bank definitions, and slot assignments remain independent.
+- Failure boundary: Invalid/future versions reject before route mutation and
+  before Scene apply. A future standalone primary cannot silently activate an
+  older backup or be rotated away by a save. A throwing route-publication
+  callback restores the prior route vectors and button edge state.
+- Compatibility: Legacy route fields and standalone `device`/`deviceIndex`
+  remain readable. The separate `{version, bank, mappings}` public
+  interchange example is explicitly rejected by the runtime reader.
+- Confidence: BrowserFlow Release passes all 39 scenarios, adding pure
+  version/source-isolation, explicit-empty clear, canonical disk save/reload,
+  backup rotation, malformed dual-failure preservation, publication rollback,
+  and future no-downgrade coverage. Focused mapping, Scene, and config gates
+  pass.
+- Remaining boundary: Global bank definitions/operator active selection need
+  a later app-level mapping-store transaction. Physical endpoint and
+  cross-machine re-resolution belong to machine-profile v1, the next gate.
+
+## 2026-07-27 - architecture - seac5b_parameter_value_origins
+
+- Request ID: `spine_element_architecture_convergence`
+- Phase / Milestone: SEAC-5 in progress; SEAC-5B value-origin slice complete;
+  milestone remains 4 of 12.
+- Runtime model: Added a spine-owned, nonserialized `ParameterBaseOrigin` for
+  the current pre-modifier winner and a copied `ParameterValueSnapshot` with
+  base/live values plus ordered active modifier owner tags. The Element SDK
+  declaration surface remains unchanged.
+- Resolution path: `ElementRequest` now carries a suffix-keyed origin sidecar
+  into staged parameter publication. Declaration defaults, definition
+  defaults, package presets, and activation overrides retain the same
+  precedence while becoming independently inspectable.
+- Artifact identity: The generated Signal Bloom runtime adapter preserves
+  package schema/revision and each preset schema version. Package selection
+  still applies next-load-only and mappings remain suggestion-only.
+- Scene/operator path: Scene application stamps canonical path, source
+  version, and the v1-to-v2 migration trail; failed publication restores the
+  prior origin snapshot with the prior values. Browser commits stamp
+  `operator-edit` without changing scene JSON or public parameter IDs.
+- Modifier boundary: Active modifier identity stays separate from the base
+  origin. Scene-restored modifiers receive deterministic scene owner tags;
+  this slice does not claim mapping-bank persistence is versioned.
+- Confidence: RuntimeCore Release passes the configured/Scene/operator/
+  modifier transitions; all 37 BrowserFlow scenarios pass, including package
+  default/preset/activation provenance. Scene transaction/persistence and
+  strict target gates pass, and the Release app builds.
+- Next gate: Define mapping-bank v1 around the actual versionless
+  `MidiRouter` snapshot and keep its legacy reader atomic.
+
+## 2026-07-27 - architecture - seac5_scene_compatibility_reader
+
+- Request ID: `spine_element_architecture_convergence`
+- Phase / Milestone: SEAC-5 in progress; milestone remains 4 of 12.
+- Runtime seam: Added pure `SceneStateDocument` classification before
+  `buildSceneApplyPlan`. Missing and explicit v1 input normalizes to v2 only
+  in the copied in-memory document; current v2 is copied unchanged.
+- Failure boundary: Non-object metadata, non-integer/non-positive versions,
+  and unsupported future versions reject before a composition or mapping plan
+  is built. A future-version primary file cannot silently activate an older
+  backup; malformed/corrupt files retain the existing verified-backup recovery
+  path.
+- Compatibility: Independent presence of `mappings.router`,
+  `slotAssignments`, and `activeBank` is unchanged. Omission preserves the
+  live/external owner and a present empty object remains authoritative. Reads
+  never rewrite their source.
+- Contracts: The scene schema now admits only v1/v2 when the discriminator is
+  present. The scene golden records source classification and normalized
+  version for committed legacy/current fixtures. The source transaction gate
+  pins classifier integration before mapping ownership.
+- Native confidence: BrowserFlow Release passes all 37 scenarios, including
+  legacy/unversioned, explicit v1, unchanged v2, invalid/future, source-copy,
+  and omitted-versus-empty coverage. The Release app builds and links the new
+  source.
+- Local-state caveat: The full public-app aggregate still sees the operator's
+  pre-existing dirty MIDI map and reports stale manifest/Circuit Lenia route
+  checks. Scoped committed-fixture gates pass; live MIDI/scenes/backups were
+  left untouched.
+- Next gate: Add read-only runtime value-origin records without changing
+  precedence or persisted public IDs.
+
+## 2026-07-27 - architecture - seac5a_state_ownership_provenance_freeze
+
+- Request ID: `spine_element_architecture_convergence`
+- Phase / Milestone: SEAC-5 in progress; SEAC-5A contract freeze complete;
+  milestone remains 4 of 12.
+- Ownership authority: Added the canonical State Ownership And Provenance
+  Contract for declaration/definition defaults, bundled and user presets,
+  scenes, banks, applied routes, device profiles, machine profiles, operator
+  preferences, recovery state, and runtime-only telemetry.
+- Provenance: Froze the precedence chain and runtime origin vocabulary for
+  element defaults, definition defaults, presets, activation overrides, scene
+  values, live edits, and modifiers.
+- Compatibility: Missing scene version is legacy v1, explicit v2 is current,
+  and unsupported future versions must fail before mutation. Omitted mapping
+  subsections preserve their current owner; present empty sections are
+  authoritative. Reads migrate only in memory and never rewrite implicitly.
+- Portability: Portable artifacts cannot silently absorb physical
+  device/port names, monitor geometry, absolute paths, UI preferences, or
+  telemetry. Current device-bearing slot snapshots, global-bank scene writes,
+  numeric camera selection, and mixed Console/Browser stores are documented
+  compatibility inputs rather than target ownership.
+- Mapping boundary: The documented Browser MIDI-bank example is not the
+  versionless `MidiRouter` runtime persistence shape. The latter needs its own
+  mapping-bank v1 reader after the Scene slice; package mappings remain
+  suggestion-only.
+- Legacy Text: `overlay.text.*` remains a host-global, scene-owned
+  compatibility surface. Candidate preparation must become transactional
+  before any per-instance Text-state claim.
+- Audit safety: Three parallel read-only audits covered portable state,
+  machine/operator state, and migrations/tests. Dirty live MIDI/scenes and
+  local `.bak` files were neither read as contract fixtures nor modified.
+- Next gate: Add the pure Scene classifier/normalizer before
+  `buildSceneApplyPlan`, with legacy, v2, invalid/future-version, backup, and
+  omitted-versus-empty mapping coverage.
+
 ## 2026-07-27 - architecture - seac4_authoritative_builtin_parameter_contracts
 
 - Request ID: `spine_element_architecture_convergence`

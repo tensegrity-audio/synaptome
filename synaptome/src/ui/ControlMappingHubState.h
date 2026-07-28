@@ -23,6 +23,7 @@
 #include <cstdlib>
 #include <array>
 #include <algorithm>
+#include <filesystem>
 #include <functional>
 #include <iterator>
 #include <limits>
@@ -65,8 +66,20 @@ public:
         bool routerListening = false;
         bool hasLastMessage = false;
         std::string lastAddress;
+        std::string lastRawAddress;
+        std::string lastTypeTags;
+        std::string lastPayloadSummary;
+        std::string lastTransport;
+        std::string lastEndpoint;
         float lastValue = 0.0f;
         uint64_t lastMessageMs = 0;
+        bool lastWasRoutableScalar = false;
+        bool lastWasMeshAlias = false;
+        bool lastWasDuplicate = false;
+        uint64_t messagesObserved = 0;
+        uint64_t scalarMessagesRouted = 0;
+        uint64_t diagnosticMessagesObserved = 0;
+        uint64_t meshDuplicatesSuppressed = 0;
         std::string externalAudioSource;
         bool hasExternalTelemetry = false;
         uint64_t externalTelemetryMs = 0;
@@ -81,6 +94,9 @@ public:
     ~ControlMappingHubState() override;
 
     void setPreferencesPath(const std::string& path);
+    void setCanonicalPreferencesSnapshot(
+        const ofJson& compatibilitySnapshot,
+        std::function<bool(const ofJson&)> persistenceCallback);
     void setKeyMappingState(const std::shared_ptr<MenuController::State>& state);
     void setConsoleSlotLoadCallback(std::function<bool(int, const std::string&)> cb);
     void setConsoleSlotUnloadCallback(std::function<bool(int)> cb);
@@ -110,6 +126,18 @@ public:
     bool focusAssetById(const std::string& assetId) const;
     void setDeviceMapsDirectory(const std::string& path);
     void setSlotAssignmentsPath(const std::string& path);
+    void setSlotAssignmentPersistenceCallback(
+        std::function<bool(const ofJson&)> callback);
+    struct SlotAssignmentTransactionResult {
+        bool ok = false;
+        bool rollbackSucceeded = true;
+        std::string error;
+    };
+    ofJson exportSlotAssignmentSnapshot() const;
+    SlotAssignmentTransactionResult adoptSlotAssignmentSnapshot(
+        const ofJson& snapshot) const;
+    SlotAssignmentTransactionResult importSlotAssignmentSnapshotTransactional(
+        const ofJson& snapshot) const;
     void setMidiPaneStatus(const std::string& description, bool available);
     void setOscPaneStatus(const std::string& description, bool available);
     void setOscInputStatus(const OscInputStatus& status);
@@ -403,6 +431,15 @@ private:
         bool analog = true;
     };
 
+    using SlotAssignmentMap =
+        std::unordered_map<std::string, LogicalSlotBinding>;
+
+    struct PreparedSlotRoute {
+        const ParameterRow* row = nullptr;
+        const SlotOption* slot = nullptr;
+        const SlotOption::ColumnBinding* binding = nullptr;
+    };
+
     struct VisibleRange {
         int start = 0;
         int end = -1;
@@ -461,6 +498,8 @@ private:
     std::function<bool(const std::string&)> savedSceneOverwriteCallback_;
     std::function<void(MenuController&)> midiAction_;
     std::function<void(MenuController&)> oscAction_;
+    std::function<bool(const ofJson&)>
+        slotAssignmentPersistenceCallback_;
     std::function<void(const std::string&)> oscInputModeChangeCallback_;
     std::function<void()> oscInputReconnectCallback_;
 
@@ -471,6 +510,10 @@ private:
     bool oscAvailable_ = false;
 
     std::string preferencesPath_;
+    mutable ofJson canonicalPreferencesCompatibilitySnapshot_;
+    std::function<bool(const ofJson&)>
+        preferencesPersistenceCallback_;
+    bool canonicalPreferencesAuthoritative_ = false;
     std::string deviceMapsDirectory_;
     std::string slotAssignmentsPath_;
     std::string layerPackageInspectionPath_;
@@ -490,7 +533,7 @@ private:
     mutable std::unordered_map<std::string, std::size_t> slotIndexByLogicalKey_;
     mutable bool slotAssignmentsLoaded_ = false;
     mutable bool slotAssignmentsDirty_ = false;
-    mutable std::unordered_map<std::string, LogicalSlotBinding> slotAssignments_;
+    mutable SlotAssignmentMap slotAssignments_;
     mutable bool consoleSlotInventoryDirty_ = true;
     mutable bool slotMidiAssignmentsDirty_ = false;
     mutable std::unordered_map<std::string, std::vector<ConsoleSlotRef>> consoleSlotsByAssetId_;
@@ -789,12 +832,29 @@ private:
                                    const std::string& assetKeyHint = std::string()) const;
     std::string assignmentKeyForRow(const ParameterRow& row) const;
     void ensureSlotAssignmentDirectory() const;
+    static bool isCanonicalAssignmentKey(const std::string& value);
+    bool parseSlotAssignmentSnapshot(
+        const ofJson& snapshot,
+        SlotAssignmentMap& assignments,
+        std::string& error,
+        bool allowLegacyFields) const;
+    ofJson serializeSlotAssignmentSnapshot(
+        const SlotAssignmentMap& assignments) const;
+    bool writeSlotAssignmentSnapshotRecoverably(
+        const ofJson& snapshot,
+        std::string& error) const;
+    const ParameterRow* rowForAssignmentKey(
+        const std::string& assignmentKey) const;
+    bool prepareSlotAssignmentRoutes(
+        const SlotAssignmentMap& assignments,
+        ofJson& routingSnapshot,
+        std::vector<PreparedSlotRoute>& routes,
+        std::string& error) const;
+    void bindPreparedSlotRoutes(
+        const std::vector<PreparedSlotRoute>& routes) const;
     void loadSlotAssignments() const;
-    void markSlotAssignmentsDirty() const;
     void flushSlotAssignments() const;
     const LogicalSlotBinding* logicalSlotBinding(const ParameterRow& row) const;
-    bool applyLogicalSlotAssignment(const ParameterRow& row, const SlotOption& slot) const;
-    bool removeLogicalSlotAssignment(const std::string& parameterId) const;
     bool applySlotAssignmentToRow(const ParameterRow& row) const;
     void rebuildSlotMidiAssignments() const;
     bool rebuildSlotMidiAssignmentsFromCurrentModel() const;
@@ -841,8 +901,23 @@ inline ControlMappingHubState::~ControlMappingHubState() {
 }
 
 inline void ControlMappingHubState::setPreferencesPath(const std::string& path) {
+    canonicalPreferencesAuthoritative_ = false;
+    canonicalPreferencesCompatibilitySnapshot_ = ofJson();
+    preferencesPersistenceCallback_ = nullptr;
     preferencesPath_ = path;
     ensurePreferencesDirectory();
+    loadPreferences();
+}
+
+inline void ControlMappingHubState::setCanonicalPreferencesSnapshot(
+    const ofJson& compatibilitySnapshot,
+    std::function<bool(const ofJson&)> persistenceCallback) {
+    canonicalPreferencesAuthoritative_ = true;
+    canonicalPreferencesCompatibilitySnapshot_ =
+        compatibilitySnapshot;
+    preferencesPersistenceCallback_ =
+        std::move(persistenceCallback);
+    preferencesPath_.clear();
     loadPreferences();
 }
 
@@ -1098,6 +1173,11 @@ inline void ControlMappingHubState::setSlotAssignmentsPath(const std::string& pa
     if (midiRouter_) {
         rebuildSlotMidiAssignments();
     }
+}
+
+inline void ControlMappingHubState::setSlotAssignmentPersistenceCallback(
+    std::function<bool(const ofJson&)> callback) {
+    slotAssignmentPersistenceCallback_ = std::move(callback);
 }
 
 inline void ControlMappingHubState::setOscPaneStatus(const std::string& description, bool available) {
@@ -2713,12 +2793,61 @@ inline bool ControlMappingHubState::handleInput(MenuController& controller, int 
             }
             bool removed = false;
             if (selectedColumn_ == Column::kSlot) {
-                bool logicalRemoved = removeLogicalSlotAssignment(selectedRow->id);
-                bool midiRemoved = midiRouter_ ? midiRouter_->removeMidiMappingsForTarget(selectedRow->id) : false;
-                removed = logicalRemoved || midiRemoved;
-                if (removed) {
-                    emitTelemetryEvent("midi.unmap", selectedRow);
+                loadSlotAssignments();
+                SlotAssignmentMap candidate =
+                    slotAssignments_;
+                const std::string canonical =
+                    assignmentKeyForRow(*selectedRow);
+                const std::size_t canonicalRemoved =
+                    canonical.empty()
+                        ? 0
+                        : candidate.erase(canonical);
+                const std::size_t legacyRemoved =
+                    candidate.erase(selectedRow->id);
+                if (canonicalRemoved + legacyRemoved == 0) {
+                    const bool midiRemoved =
+                        midiRouter_
+                            ? midiRouter_
+                                  ->removeMidiMappingsForTarget(
+                                      selectedRow->id)
+                            : false;
+                    if (midiRemoved) {
+                        emitTelemetryEvent(
+                            "midi.unmap",
+                            selectedRow);
+                        persistRoutingChange();
+                        tableModel_.dirty = true;
+                        invalidateRowCache();
+                        setBannerMessage("Mappings removed");
+                        controller.requestViewModelRefresh();
+                    } else {
+                        setBannerMessage(
+                            "No mappings to remove",
+                            1800);
+                    }
+                    return true;
                 }
+                const auto transaction =
+                    importSlotAssignmentSnapshotTransactional(
+                        serializeSlotAssignmentSnapshot(candidate));
+                if (!transaction.ok) {
+                    ofLogWarning("ControlMappingHub")
+                        << "Failed to remove slot assignment: "
+                        << transaction.error;
+                    setBannerMessage(
+                        "Slot unmap failed: " +
+                            transaction.error,
+                        3600);
+                    return true;
+                }
+                emitTelemetryEvent(
+                    "midi.unmap",
+                    selectedRow);
+                tableModel_.dirty = true;
+                invalidateRowCache();
+                setBannerMessage("Mappings removed");
+                controller.requestViewModelRefresh();
+                return true;
             } else if (selectedColumn_ == Column::kMidi && midiRouter_) {
                 removed = midiRouter_->removeMidiMappingsForTarget(selectedRow->id);
                 if (removed) emitTelemetryEvent("midi.unmap", selectedRow);
@@ -3559,7 +3688,13 @@ inline std::string ControlMappingHubState::formatOscInputValue(const ParameterRo
         if (!oscInputStatus_.hasLastMessage || oscInputStatus_.lastAddress.empty()) {
             return "No OSC yet";
         }
-        return oscInputStatus_.lastAddress + " = " + ofToString(oscInputStatus_.lastValue, 3);
+        std::string value = oscInputStatus_.lastAddress;
+        if (!oscInputStatus_.lastPayloadSummary.empty()) {
+            value += " = " + oscInputStatus_.lastPayloadSummary;
+        } else if (oscInputStatus_.lastWasRoutableScalar) {
+            value += " = " + ofToString(oscInputStatus_.lastValue, 3);
+        }
+        return value;
     }
     if (row.oscInputField == "externalSource") {
         return oscInputStatus_.externalAudioSource.empty()
@@ -3629,8 +3764,24 @@ inline std::string ControlMappingHubState::formatOscInputDetail(const ParameterR
         }
         uint64_t now = ofGetElapsedTimeMillis();
         uint64_t ageMs = now > oscInputStatus_.lastMessageMs ? now - oscInputStatus_.lastMessageMs : 0;
-        return ageMs < 1000 ? (ofToString(static_cast<int>(ageMs)) + " ms ago")
-                            : (ofToString(static_cast<float>(ageMs) / 1000.0f, 1) + " s ago");
+        std::string detail = ageMs < 1000
+            ? (ofToString(static_cast<int>(ageMs)) + " ms ago")
+            : (ofToString(static_cast<float>(ageMs) / 1000.0f, 1) + " s ago");
+        if (!oscInputStatus_.lastTypeTags.empty()) {
+            detail += "  |  " + oscInputStatus_.lastTypeTags;
+        }
+        detail += oscInputStatus_.lastWasRoutableScalar
+            ? "  |  routed scalar"
+            : "  |  observed";
+        if (oscInputStatus_.lastWasDuplicate) {
+            detail += "  |  Mesh duplicate suppressed";
+        } else if (oscInputStatus_.lastWasMeshAlias) {
+            detail += "  |  Mesh alias normalized";
+        }
+        if (!oscInputStatus_.lastTransport.empty()) {
+            detail += "  |  " + oscInputStatus_.lastTransport;
+        }
+        return detail;
     }
     if (row.oscInputField == "externalSource") {
         return oscInputStatus_.externalAudioSource.empty()
@@ -4565,17 +4716,35 @@ inline bool ControlMappingHubState::applySelectedSlot() {
         return false;
     }
     const auto& slot = slotCatalog_[static_cast<std::size_t>(slotIndex)];
-    if (!applyLogicalSlotAssignment(*row, slot)) {
-        setBannerMessage("Failed to assign slot", 2200);
+    loadSlotAssignments();
+    SlotAssignmentMap candidate = slotAssignments_;
+    LogicalSlotBinding logical;
+    logical.deviceId = slot.deviceId;
+    logical.deviceName = slot.deviceName;
+    logical.slotId = slot.slotId;
+    logical.slotLabel =
+        slot.label.empty() ? slot.slotId : slot.label;
+    logical.analog = slot.analog;
+    std::string assignmentKey = assignmentKeyForRow(*row);
+    if (assignmentKey.empty()) {
+        assignmentKey = row->id;
+    }
+    candidate[assignmentKey] = std::move(logical);
+    if (assignmentKey != row->id) {
+        candidate.erase(row->id);
+    }
+    const auto transaction =
+        importSlotAssignmentSnapshotTransactional(
+            serializeSlotAssignmentSnapshot(candidate));
+    if (!transaction.ok) {
+        ofLogWarning("ControlMappingHub")
+            << "Failed to assign slot: "
+            << transaction.error;
+        setBannerMessage(
+            "Slot assignment failed: " +
+                transaction.error,
+            3600);
         return false;
-    }
-    bool removedMidi = false;
-    if (midiRouter_) {
-        removedMidi = midiRouter_->removeMidiMappingsForTarget(row->id);
-    }
-    bool appliedMidi = applySlotAssignmentToRow(*row);
-    if (removedMidi || appliedMidi) {
-        persistRoutingChange();
     }
     emitTelemetryEvent("midi.slot.assign", row, slot.deviceId + "." + slot.slotId);
     std::string label = slot.label.empty() ? slot.slotId : slot.label;
@@ -6573,80 +6742,787 @@ inline void ControlMappingHubState::ensureSlotAssignmentDirectory() const {
     }
 }
 
+inline bool ControlMappingHubState::isCanonicalAssignmentKey(
+    const std::string& value) {
+    if (value.empty() || value.size() > 255) {
+        return false;
+    }
+    bool segmentStart = true;
+    bool separatorSeen = false;
+    for (std::size_t index = 0;
+         index < value.size();
+         ++index) {
+        const unsigned char character =
+            static_cast<unsigned char>(value[index]);
+        if (segmentStart) {
+            if (!std::isalnum(character)) {
+                return false;
+            }
+            segmentStart = false;
+            continue;
+        }
+        if (std::isalnum(character) ||
+            character == '.' ||
+            character == '_' ||
+            character == '-') {
+            continue;
+        }
+        if (character == ':' &&
+            !separatorSeen &&
+            index + 1 < value.size() &&
+            value[index + 1] == ':') {
+            ++index;
+            segmentStart = true;
+            separatorSeen = true;
+            continue;
+        }
+        return false;
+    }
+    return !segmentStart;
+}
+
+inline bool ControlMappingHubState::parseSlotAssignmentSnapshot(
+    const ofJson& snapshot,
+    SlotAssignmentMap& assignments,
+    std::string& error,
+    bool allowLegacyFields) const {
+    SlotAssignmentMap candidate;
+    if (!snapshot.is_object()) {
+        error = "slot assignment snapshot must be an object";
+        return false;
+    }
+    if (!allowLegacyFields &&
+        (snapshot.size() != 1 ||
+         !snapshot.contains("assignments"))) {
+        error =
+            "canonical slot assignment snapshot must contain only assignments";
+        return false;
+    }
+    if (!snapshot.contains("assignments")) {
+        if (allowLegacyFields) {
+            assignments = std::move(candidate);
+            return true;
+        }
+        error = "slot assignment snapshot is missing assignments";
+        return false;
+    }
+    if (!snapshot["assignments"].is_array()) {
+        error = "slot assignment snapshot assignments must be an array";
+        return false;
+    }
+
+    std::size_t index = 0;
+    for (const auto& entry : snapshot["assignments"]) {
+        const std::string path =
+            "assignments[" + std::to_string(index++) + "]";
+        if (!entry.is_object()) {
+            error = path + " must be an object";
+            return false;
+        }
+
+        const bool canonical =
+            entry.contains("assignmentKey") ||
+            entry.contains("deviceProfileId");
+        if (!canonical && !allowLegacyFields) {
+            error = path + " must use canonical assignment fields";
+            return false;
+        }
+
+        std::string assignmentKey;
+        LogicalSlotBinding binding;
+        if (canonical) {
+            static const std::array<const char*, 4> fields = {{
+                "assignmentKey",
+                "deviceProfileId",
+                "slotId",
+                "analog"
+            }};
+            if (entry.size() != fields.size() ||
+                !std::all_of(
+                    fields.begin(),
+                    fields.end(),
+                    [&](const char* field) {
+                        return entry.contains(field);
+                    })) {
+                error =
+                    path +
+                    " must contain only assignmentKey, deviceProfileId, "
+                    "slotId, and analog";
+                return false;
+            }
+            if (!entry["assignmentKey"].is_string() ||
+                !entry["deviceProfileId"].is_string() ||
+                !entry["slotId"].is_string() ||
+                !entry["analog"].is_boolean()) {
+                error = path + " contains a value of the wrong type";
+                return false;
+            }
+            assignmentKey =
+                entry["assignmentKey"].get<std::string>();
+            binding.deviceId =
+                entry["deviceProfileId"].get<std::string>();
+            binding.slotId = entry["slotId"].get<std::string>();
+            binding.analog = entry["analog"].get<bool>();
+            if (!isCanonicalAssignmentKey(assignmentKey)) {
+                error = path + ".assignmentKey is not canonical";
+                return false;
+            }
+            const auto isNonBlankReference =
+                [](const std::string& value) {
+                    return !value.empty() &&
+                           value.size() <= 255 &&
+                           std::any_of(
+                               value.begin(),
+                               value.end(),
+                               [](char character) {
+                                   return !std::isspace(
+                                       static_cast<unsigned char>(
+                                           character));
+                               });
+                };
+            if (!isNonBlankReference(binding.deviceId) ||
+                !isNonBlankReference(binding.slotId)) {
+                error =
+                    path +
+                    " deviceProfileId and slotId must be non-empty "
+                    "references";
+                return false;
+            }
+            binding.deviceName = binding.deviceId;
+            binding.slotLabel = binding.slotId;
+        } else {
+            if (!entry.contains("parameterId") ||
+                !entry["parameterId"].is_string()) {
+                error = path + ".parameterId must be a string";
+                return false;
+            }
+            const std::string parameterId =
+                entry["parameterId"].get<std::string>();
+            if (parameterId.empty()) {
+                error = path + ".parameterId must not be empty";
+                return false;
+            }
+            assignmentKey = assignmentKeyForId(parameterId);
+            if (assignmentKey.empty()) {
+                assignmentKey = parameterId;
+            }
+            if (entry.contains("deviceId") &&
+                !entry["deviceId"].is_string()) {
+                error = path + ".deviceId must be a string";
+                return false;
+            }
+            if (entry.contains("deviceName") &&
+                !entry["deviceName"].is_string()) {
+                error = path + ".deviceName must be a string";
+                return false;
+            }
+            if (entry.contains("slotId") &&
+                !entry["slotId"].is_string()) {
+                error = path + ".slotId must be a string";
+                return false;
+            }
+            if (entry.contains("slotLabel") &&
+                !entry["slotLabel"].is_string()) {
+                error = path + ".slotLabel must be a string";
+                return false;
+            }
+            if (entry.contains("analog") &&
+                !entry["analog"].is_boolean()) {
+                error = path + ".analog must be a boolean";
+                return false;
+            }
+            binding.deviceId =
+                entry.value("deviceId", std::string());
+            binding.deviceName =
+                entry.value("deviceName", binding.deviceId);
+            binding.slotId =
+                entry.value("slotId", std::string());
+            binding.slotLabel =
+                entry.value("slotLabel", binding.slotId);
+            binding.analog = entry.value("analog", true);
+        }
+
+        if (!allowLegacyFields &&
+            candidate.find(assignmentKey) != candidate.end()) {
+            error = path + " duplicates assignmentKey " + assignmentKey;
+            return false;
+        }
+        candidate[assignmentKey] = std::move(binding);
+    }
+    assignments = std::move(candidate);
+    error.clear();
+    return true;
+}
+
+inline ofJson ControlMappingHubState::serializeSlotAssignmentSnapshot(
+    const SlotAssignmentMap& assignments) const {
+    std::vector<std::string> keys;
+    keys.reserve(assignments.size());
+    for (const auto& pair : assignments) {
+        keys.push_back(pair.first);
+    }
+    std::sort(keys.begin(), keys.end());
+
+    ofJson snapshot = ofJson::object();
+    snapshot["assignments"] = ofJson::array();
+    for (const auto& key : keys) {
+        const auto& binding = assignments.at(key);
+        snapshot["assignments"].push_back({
+            {"assignmentKey", key},
+            {"deviceProfileId", binding.deviceId},
+            {"slotId", binding.slotId},
+            {"analog", binding.analog}
+        });
+    }
+    return snapshot;
+}
+
+inline bool ControlMappingHubState::writeSlotAssignmentSnapshotRecoverably(
+    const ofJson& snapshot,
+    std::string& error) const {
+    if (slotAssignmentPersistenceCallback_) {
+        try {
+            if (!slotAssignmentPersistenceCallback_(snapshot)) {
+                error =
+                    "machine-profile slot assignment persistence rejected "
+                    "the snapshot";
+                return false;
+            }
+        } catch (const std::exception& exception) {
+            error =
+                "machine-profile slot assignment persistence failed: " +
+                std::string(exception.what());
+            return false;
+        } catch (...) {
+            error =
+                "machine-profile slot assignment persistence failed";
+            return false;
+        }
+        error.clear();
+        return true;
+    }
+    if (slotAssignmentsPath_.empty()) {
+        error = "slot assignment persistence path is not configured";
+        return false;
+    }
+    ensureSlotAssignmentDirectory();
+    const std::string temporaryPath =
+        slotAssignmentsPath_ + ".tmp";
+    const std::string backupPath =
+        slotAssignmentsPath_ + ".bak";
+    ofFile::removeFile(temporaryPath, false);
+
+    try {
+        if (!ofSavePrettyJson(temporaryPath, snapshot)) {
+            error = "failed to write temporary slot assignment snapshot";
+            return false;
+        }
+        const ofJson verified = ofLoadJson(temporaryPath);
+        if (verified != snapshot) {
+            ofFile::removeFile(temporaryPath, false);
+            error =
+                "temporary slot assignment snapshot verification failed";
+            return false;
+        }
+    } catch (const std::exception& exception) {
+        ofFile::removeFile(temporaryPath, false);
+        error =
+            "failed to verify temporary slot assignment snapshot: " +
+            std::string(exception.what());
+        return false;
+    }
+
+    if (ofFile::doesFileExist(slotAssignmentsPath_)) {
+        bool previousValid = false;
+        try {
+            SlotAssignmentMap previousAssignments;
+            std::string parseError;
+            previousValid = parseSlotAssignmentSnapshot(
+                ofLoadJson(slotAssignmentsPath_),
+                previousAssignments,
+                parseError,
+                true);
+        } catch (...) {
+            previousValid = false;
+        }
+
+        if (previousValid) {
+            ofFile::removeFile(backupPath, false);
+            if (!ofFile::moveFromTo(
+                    slotAssignmentsPath_,
+                    backupPath,
+                    false,
+                    true)) {
+                ofFile::removeFile(temporaryPath, false);
+                error =
+                    "failed to preserve last-known-good slot assignments";
+                return false;
+            }
+        } else {
+            if (!ofFile::removeFile(slotAssignmentsPath_, false)) {
+                ofFile::removeFile(temporaryPath, false);
+                error =
+                    "failed to replace invalid slot assignment primary";
+                return false;
+            }
+        }
+    }
+
+    if (!ofFile::moveFromTo(
+            temporaryPath,
+            slotAssignmentsPath_,
+            false,
+            true)) {
+        ofFile::removeFile(temporaryPath, false);
+        if (ofFile::doesFileExist(backupPath)) {
+            std::error_code restoreError;
+            std::filesystem::copy_file(
+                backupPath,
+                slotAssignmentsPath_,
+                std::filesystem::copy_options::overwrite_existing,
+                restoreError);
+            if (restoreError) {
+                error =
+                    "failed to commit slot assignments; recovery copy "
+                    "remains at " +
+                    backupPath;
+                return false;
+            }
+        }
+        error = "failed to commit slot assignments";
+        return false;
+    }
+    error.clear();
+    return true;
+}
+
+inline const ControlMappingHubState::ParameterRow*
+ControlMappingHubState::rowForAssignmentKey(
+    const std::string& assignmentKey) const {
+    const ParameterRow* match = nullptr;
+    for (const auto& row : tableModel_.rows) {
+        if (row.id != assignmentKey &&
+            assignmentKeyForRow(row) != assignmentKey) {
+            continue;
+        }
+        if (match && match->id != row.id) {
+            return nullptr;
+        }
+        match = &row;
+    }
+    return match;
+}
+
+inline bool ControlMappingHubState::prepareSlotAssignmentRoutes(
+    const SlotAssignmentMap& assignments,
+    ofJson& routingSnapshot,
+    std::vector<PreparedSlotRoute>& routes,
+    std::string& error) const {
+    routes.clear();
+    rebuildView();
+    refreshSlotCatalog();
+    if (!midiRouter_) {
+        if (assignments.empty() && slotAssignments_.empty()) {
+            routingSnapshot = ofJson();
+            error.clear();
+            return true;
+        }
+        error = "MIDI router is unavailable";
+        return false;
+    }
+
+    std::unordered_set<std::string> replacedTargets;
+    auto rememberTarget =
+        [&](const std::string& assignmentKey) {
+            if (const auto* row =
+                    rowForAssignmentKey(assignmentKey)) {
+                replacedTargets.insert(row->id);
+            } else if (
+                assignmentKey.find("::") ==
+                std::string::npos) {
+                replacedTargets.insert(assignmentKey);
+            }
+        };
+    for (const auto& pair : slotAssignments_) {
+        rememberTarget(pair.first);
+    }
+
+    routes.reserve(assignments.size());
+    for (const auto& pair : assignments) {
+        const auto* row = rowForAssignmentKey(pair.first);
+        if (!row) {
+            error =
+                "unable to resolve assignmentKey " + pair.first +
+                " to exactly one parameter";
+            return false;
+        }
+        const auto* slot = slotForLogicalKey(
+            pair.second.deviceId,
+            pair.second.slotId,
+            pair.second.analog);
+        if (!slot) {
+            error =
+                "unknown control slot " + pair.second.deviceId +
+                "." + pair.second.slotId;
+            return false;
+        }
+        const auto* binding =
+            selectColumnBindingForRow(*row, *slot);
+        if (!binding) {
+            error =
+                "no compatible column binding for " + pair.first +
+                " and slot " + pair.second.slotId;
+            return false;
+        }
+        if (binding->number < 0 || binding->number > 127 ||
+            (binding->channel != -1 &&
+             (binding->channel < 1 ||
+              binding->channel > 16))) {
+            error =
+                "slot " + pair.second.slotId +
+                " contains an invalid MIDI binding";
+            return false;
+        }
+        if (pair.second.analog) {
+            if (!row->isFloat || !row->floatParam) {
+                error =
+                    "analog slot " + pair.second.slotId +
+                    " requires a float parameter";
+                return false;
+            }
+        } else if (!row->boolParam) {
+            error =
+                "button slot " + pair.second.slotId +
+                " requires a boolean parameter";
+            return false;
+        }
+        replacedTargets.insert(row->id);
+        routes.push_back({row, slot, binding});
+    }
+
+    routingSnapshot = midiRouter_->exportMappingSnapshot();
+    auto removeReplacedTargets =
+        [&](const char* section) {
+            ofJson retained = ofJson::array();
+            if (routingSnapshot.contains(section) &&
+                routingSnapshot[section].is_array()) {
+                for (const auto& entry :
+                     routingSnapshot[section]) {
+                    const std::string target =
+                        entry.is_object()
+                            ? entry.value(
+                                  "target",
+                                  std::string())
+                            : std::string();
+                    if (replacedTargets.find(target) ==
+                        replacedTargets.end()) {
+                        retained.push_back(entry);
+                    }
+                }
+            }
+            routingSnapshot[section] = std::move(retained);
+        };
+    removeReplacedTargets("cc");
+    removeReplacedTargets("buttons");
+
+    for (const auto& prepared : routes) {
+        const auto& row = *prepared.row;
+        const auto& slot = *prepared.slot;
+        const auto& binding = *prepared.binding;
+        ofJson entry = ofJson::object();
+        entry["num"] = binding.number;
+        if (binding.channel >= 0) {
+            entry["channel"] = binding.channel;
+        }
+        entry["target"] = row.id;
+        if (!midiRouter_->activeBank().empty()) {
+            entry["bank"] = midiRouter_->activeBank();
+        }
+        if (!binding.controlId.empty() &&
+            binding.controlId != row.id) {
+            entry["control"] = binding.controlId;
+        }
+        if (!slot.deviceId.empty()) {
+            entry["device"] = slot.deviceId;
+        }
+        if (!binding.columnId.empty()) {
+            entry["column"] = binding.columnId;
+        }
+        if (!slot.slotId.empty()) {
+            entry["slot"] = slot.slotId;
+        }
+
+        if (slot.analog) {
+            float outMin = row.floatParam->meta.range.min;
+            float outMax = row.floatParam->meta.range.max;
+            if (!std::isfinite(outMin) ||
+                !std::isfinite(outMax) ||
+                std::fabs(outMax - outMin) < 1e-6f) {
+                outMin = 0.0f;
+                outMax = 1.0f;
+            }
+            const float step =
+                row.floatParam->meta.range.step;
+            const bool snapInt =
+                step > 0.0f &&
+                std::fabs(std::round(step) - step) <
+                    1e-4f;
+            entry["out"] = {outMin, outMax};
+            if (snapInt) {
+                entry["snapInt"] = true;
+            }
+            if (step > 0.0f) {
+                entry["step"] = step;
+            }
+            routingSnapshot["cc"].push_back(
+                std::move(entry));
+        } else {
+            entry["type"] = "toggle";
+            entry["setValue"] =
+                row.boolParam->baseValue ? 1.0f : 0.0f;
+            routingSnapshot["buttons"].push_back(
+                std::move(entry));
+        }
+    }
+    error.clear();
+    return true;
+}
+
+inline void ControlMappingHubState::bindPreparedSlotRoutes(
+    const std::vector<PreparedSlotRoute>& routes) const {
+    if (!midiRouter_) {
+        return;
+    }
+    for (const auto& prepared : routes) {
+        const auto& row = *prepared.row;
+        if (prepared.slot->analog) {
+            float bindMin = row.floatParam->meta.range.min;
+            float bindMax = row.floatParam->meta.range.max;
+            if (!std::isfinite(bindMin) ||
+                !std::isfinite(bindMax) ||
+                std::fabs(bindMax - bindMin) < 1e-6f) {
+                bindMin = 0.0f;
+                bindMax = 1.0f;
+            }
+            const float step =
+                row.floatParam->meta.range.step;
+            const bool snapInt =
+                step > 0.0f &&
+                std::fabs(std::round(step) - step) <
+                    1e-4f;
+            midiRouter_->bindFloat(
+                row.id,
+                row.floatParam->value,
+                bindMin,
+                bindMax,
+                snapInt,
+                step);
+        } else {
+            midiRouter_->bindBool(
+                row.id,
+                row.boolParam->value,
+                MidiRouter::BoolMode::Toggle);
+        }
+    }
+}
+
+inline ofJson
+ControlMappingHubState::exportSlotAssignmentSnapshot() const {
+    loadSlotAssignments();
+    return serializeSlotAssignmentSnapshot(slotAssignments_);
+}
+
+inline ControlMappingHubState::SlotAssignmentTransactionResult
+ControlMappingHubState::adoptSlotAssignmentSnapshot(
+    const ofJson& snapshot) const {
+    SlotAssignmentTransactionResult result;
+    SlotAssignmentMap candidate;
+    if (!parseSlotAssignmentSnapshot(
+            snapshot,
+            candidate,
+            result.error,
+            false)) {
+        return result;
+    }
+
+    loadSlotAssignments();
+    ofJson pendingRouting;
+    std::vector<PreparedSlotRoute> preparedRoutes;
+    if (!prepareSlotAssignmentRoutes(
+            candidate,
+            pendingRouting,
+            preparedRoutes,
+            result.error)) {
+        return result;
+    }
+
+    const SlotAssignmentMap previousAssignments =
+        slotAssignments_;
+    const bool previousDirty = slotAssignmentsDirty_;
+    const ofJson previousRouting =
+        midiRouter_
+            ? midiRouter_->exportMappingSnapshot()
+            : ofJson();
+    slotAssignments_ = candidate;
+    slotAssignmentsDirty_ = false;
+    if (midiRouter_ &&
+        !midiRouter_->importMappingSnapshot(
+            pendingRouting,
+            true)) {
+        slotAssignments_ = previousAssignments;
+        slotAssignmentsDirty_ = previousDirty;
+        result.rollbackSucceeded =
+            midiRouter_->importMappingSnapshot(
+                previousRouting,
+                true);
+        result.error =
+            "MIDI router rejected the prepared routing snapshot";
+        return result;
+    }
+
+    bindPreparedSlotRoutes(preparedRoutes);
+    slotMidiAssignmentsDirty_ = false;
+    tableModel_.dirty = true;
+    invalidateRowCache();
+    result.ok = true;
+    result.error.clear();
+    return result;
+}
+
+inline ControlMappingHubState::SlotAssignmentTransactionResult
+ControlMappingHubState::importSlotAssignmentSnapshotTransactional(
+    const ofJson& snapshot) const {
+    SlotAssignmentTransactionResult result;
+    SlotAssignmentMap candidate;
+    if (!parseSlotAssignmentSnapshot(
+            snapshot,
+            candidate,
+            result.error,
+            false)) {
+        return result;
+    }
+
+    loadSlotAssignments();
+    ofJson pendingRouting;
+    std::vector<PreparedSlotRoute> preparedRoutes;
+    if (!prepareSlotAssignmentRoutes(
+            candidate,
+            pendingRouting,
+            preparedRoutes,
+            result.error)) {
+        return result;
+    }
+
+    const SlotAssignmentMap previousAssignments =
+        slotAssignments_;
+    const bool previousDirty = slotAssignmentsDirty_;
+    const ofJson previousRouting =
+        midiRouter_
+            ? midiRouter_->exportMappingSnapshot()
+            : ofJson();
+    bool routingPersisted = false;
+
+    auto rollback = [&]() {
+        slotAssignments_ = previousAssignments;
+        slotAssignmentsDirty_ = previousDirty;
+        if (!midiRouter_) {
+            return true;
+        }
+        bool restored =
+            midiRouter_->importMappingSnapshot(
+                previousRouting,
+                true);
+        if (restored && routingPersisted) {
+            restored = midiRouter_->save("");
+        }
+        return restored;
+    };
+
+    slotAssignments_ = candidate;
+    slotAssignmentsDirty_ = true;
+    if (midiRouter_ &&
+        !midiRouter_->importMappingSnapshot(
+            pendingRouting,
+            true)) {
+        result.error =
+            "MIDI router rejected the prepared routing snapshot";
+        result.rollbackSucceeded = rollback();
+        return result;
+    }
+    bindPreparedSlotRoutes(preparedRoutes);
+
+    if (midiRouter_ && !midiRouter_->save("")) {
+        result.error =
+            "failed to persist prepared MIDI routes";
+        result.rollbackSucceeded = rollback();
+        return result;
+    }
+    routingPersisted = midiRouter_ != nullptr;
+
+    const ofJson canonicalSnapshot =
+        serializeSlotAssignmentSnapshot(candidate);
+    if (!writeSlotAssignmentSnapshotRecoverably(
+            canonicalSnapshot,
+            result.error)) {
+        result.rollbackSucceeded = rollback();
+        return result;
+    }
+
+    slotAssignmentsDirty_ = false;
+    slotMidiAssignmentsDirty_ = false;
+    tableModel_.dirty = true;
+    invalidateRowCache();
+    result.ok = true;
+    result.error.clear();
+    return result;
+}
+
 inline void ControlMappingHubState::loadSlotAssignments() const {
     if (slotAssignmentsLoaded_) {
         return;
     }
     slotAssignmentsLoaded_ = true;
-    slotAssignments_.clear();
-    slotAssignmentsDirty_ = false;
     if (slotAssignmentsPath_.empty() || !ofFile::doesFileExist(slotAssignmentsPath_)) {
+        slotAssignments_.clear();
+        slotAssignmentsDirty_ = false;
         return;
     }
     try {
-        ofJson doc = ofLoadJson(slotAssignmentsPath_);
-        if (doc.contains("assignments") && doc["assignments"].is_array()) {
-            for (const auto& entry : doc["assignments"]) {
-                if (!entry.is_object()) {
-                    continue;
-                }
-                std::string parameterId = entry.value("parameterId", std::string());
-                if (parameterId.empty()) {
-                    continue;
-                }
-                std::string assignmentKey = assignmentKeyForId(parameterId);
-                if (assignmentKey.empty()) {
-                    assignmentKey = parameterId;
-                }
-                LogicalSlotBinding binding;
-                binding.deviceId = entry.value("deviceId", std::string());
-                binding.deviceName = entry.value("deviceName", binding.deviceId);
-                binding.slotId = entry.value("slotId", std::string());
-                binding.slotLabel = entry.value("slotLabel", binding.slotId);
-                binding.analog = entry.value("analog", true);
-                slotAssignments_[assignmentKey] = std::move(binding);
-            }
+        SlotAssignmentMap candidate;
+        std::string error;
+        if (!parseSlotAssignmentSnapshot(
+                ofLoadJson(slotAssignmentsPath_),
+                candidate,
+                error,
+                true)) {
+            ofLogWarning("ControlMappingHub")
+                << "Failed to load slot assignments: " << error
+                << "; preserving current assignments";
+            return;
         }
+        slotAssignments_ = std::move(candidate);
+        slotAssignmentsDirty_ = false;
     } catch (const std::exception& ex) {
-        ofLogWarning("ControlMappingHub") << "Failed to load slot assignments: " << ex.what();
+        ofLogWarning("ControlMappingHub")
+            << "Failed to load slot assignments: " << ex.what()
+            << "; preserving current assignments";
     }
-}
-
-inline void ControlMappingHubState::markSlotAssignmentsDirty() const {
-    slotAssignmentsDirty_ = true;
 }
 
 inline void ControlMappingHubState::flushSlotAssignments() const {
-    if (!slotAssignmentsDirty_ || slotAssignmentsPath_.empty()) {
+    if (!slotAssignmentsDirty_ ||
+        (!slotAssignmentPersistenceCallback_ &&
+         slotAssignmentsPath_.empty())) {
         return;
     }
-    ensureSlotAssignmentDirectory();
-    ofJson doc;
-    ofJson assignments = ofJson::array();
-    for (const auto& pair : slotAssignments_) {
-        ofJson entry;
-        entry["parameterId"] = pair.first;
-        entry["deviceId"] = pair.second.deviceId;
-        entry["deviceName"] = pair.second.deviceName;
-        entry["slotId"] = pair.second.slotId;
-        entry["slotLabel"] = pair.second.slotLabel;
-        entry["analog"] = pair.second.analog;
-        assignments.push_back(entry);
-    }
-    doc["assignments"] = assignments;
-    std::string tmpPath = slotAssignmentsPath_ + ".tmp";
-    try {
-        if (!ofSavePrettyJson(tmpPath, doc)) {
-            ofLogWarning("ControlMappingHub") << "Failed to write slot assignments";
-            return;
-        }
-        if (!ofFile::moveFromTo(tmpPath, slotAssignmentsPath_, true, true)) {
-            ofLogWarning("ControlMappingHub") << "Failed to commit slot assignments";
-            return;
-        }
+    std::string error;
+    if (writeSlotAssignmentSnapshotRecoverably(
+            serializeSlotAssignmentSnapshot(slotAssignments_),
+            error)) {
         slotAssignmentsDirty_ = false;
-    } catch (const std::exception& ex) {
-        ofLogWarning("ControlMappingHub") << "Failed to save slot assignments: " << ex.what();
+    } else {
+        ofLogWarning("ControlMappingHub")
+            << "Failed to save slot assignments: " << error;
     }
 }
 
@@ -6658,63 +7534,15 @@ inline const ControlMappingHubState::LogicalSlotBinding* ControlMappingHubState:
     }
     auto it = slotAssignments_.find(key);
     if (it == slotAssignments_.end() && key != row.id) {
-        auto legacyIt = slotAssignments_.find(row.id);
+        const auto legacyIt = slotAssignments_.find(row.id);
         if (legacyIt != slotAssignments_.end()) {
-            slotAssignments_[key] = legacyIt->second;
-            slotAssignments_.erase(legacyIt);
-            markSlotAssignmentsDirty();
-            flushSlotAssignments();
-            it = slotAssignments_.find(key);
+            return &legacyIt->second;
         }
     }
     if (it == slotAssignments_.end()) {
         return nullptr;
     }
     return &it->second;
-}
-
-inline bool ControlMappingHubState::applyLogicalSlotAssignment(const ParameterRow& row, const SlotOption& slot) const {
-    loadSlotAssignments();
-    LogicalSlotBinding binding;
-    binding.deviceId = slot.deviceId;
-    binding.deviceName = slot.deviceName;
-    binding.slotId = slot.slotId;
-    binding.slotLabel = slot.label.empty() ? slot.slotId : slot.label;
-    binding.analog = slot.analog;
-    std::string key = assignmentKeyForRow(row);
-    if (key.empty()) {
-        key = row.id;
-    }
-    slotAssignments_[key] = std::move(binding);
-    markSlotAssignmentsDirty();
-    flushSlotAssignments();
-    return true;
-}
-
-inline bool ControlMappingHubState::removeLogicalSlotAssignment(const std::string& parameterId) const {
-    loadSlotAssignments();
-    auto eraseKey = [&](const std::string& key) -> bool {
-        auto it = slotAssignments_.find(key);
-        if (it == slotAssignments_.end()) {
-            return false;
-        }
-        slotAssignments_.erase(it);
-        return true;
-    };
-    std::string canonical = assignmentKeyForId(parameterId);
-    bool erased = false;
-    if (!canonical.empty()) {
-        erased = eraseKey(canonical);
-    }
-    if (!erased) {
-        erased = eraseKey(parameterId);
-    }
-    if (!erased) {
-        return false;
-    }
-    markSlotAssignmentsDirty();
-    flushSlotAssignments();
-    return true;
 }
 
 inline bool ControlMappingHubState::applySlotAssignmentToRow(const ParameterRow& row) const {
@@ -7592,12 +8420,20 @@ inline bool ControlMappingHubState::setRowBoolValue(const ParameterRow& row, boo
     if (row.isHudLayoutEntry) {
         return false;
     }
+    const synaptome::state::ParameterBaseOrigin operatorOrigin{
+        synaptome::state::ParameterBaseOriginKind::OperatorEdit,
+        "browser",
+    };
     bool changed = false;
     if (registry_) {
         if (registry_->findBool(row.id)) {
             bool current = registry_->getBoolBase(row.id);
             if (current != value) {
-                registry_->setBoolBase(row.id, value, true);
+                registry_->setBoolBase(
+                    row.id,
+                    value,
+                    operatorOrigin,
+                    true);
                 changed = true;
             }
         }
@@ -7605,7 +8441,11 @@ inline bool ControlMappingHubState::setRowBoolValue(const ParameterRow& row, boo
     if (!changed && row.boolParam && row.boolParam->value) {
         if (*row.boolParam->value != value || row.boolParam->baseValue != value) {
             *row.boolParam->value = value;
-            const_cast<ParameterRegistry::BoolParam*>(row.boolParam)->baseValue = value;
+            auto* parameter =
+                const_cast<ParameterRegistry::BoolParam*>(
+                    row.boolParam);
+            parameter->baseValue = value;
+            parameter->baseOrigin = operatorOrigin;
             changed = true;
         }
     }
@@ -7623,11 +8463,19 @@ inline bool ControlMappingHubState::setRowFloatValue(const ParameterRow& row, fl
     if (row.isHudLayoutEntry) {
         return false;
     }
+    const synaptome::state::ParameterBaseOrigin operatorOrigin{
+        synaptome::state::ParameterBaseOriginKind::OperatorEdit,
+        "browser",
+    };
     if (registry_) {
         if (registry_->findFloat(row.id)) {
             float current = registry_->getFloatBase(row.id);
             if (current != value) {
-                registry_->setFloatBase(row.id, value, true);
+                registry_->setFloatBase(
+                    row.id,
+                    value,
+                    operatorOrigin,
+                    true);
                 if (floatValueCommitCallback_) {
                     floatValueCommitCallback_(row.id, value);
                 }
@@ -7639,7 +8487,11 @@ inline bool ControlMappingHubState::setRowFloatValue(const ParameterRow& row, fl
     if (row.floatParam && row.floatParam->value) {
         if (*row.floatParam->value != value || row.floatParam->baseValue != value) {
             *row.floatParam->value = value;
-            const_cast<ParameterRegistry::FloatParam*>(row.floatParam)->baseValue = value;
+            auto* parameter =
+                const_cast<ParameterRegistry::FloatParam*>(
+                    row.floatParam);
+            parameter->baseValue = value;
+            parameter->baseOrigin = operatorOrigin;
             return true;
         }
     }
@@ -7661,16 +8513,28 @@ inline bool ControlMappingHubState::setRowStringValue(const ParameterRow& row, c
         tableModel_.dirty = true;
         return true;
     }
+    const synaptome::state::ParameterBaseOrigin operatorOrigin{
+        synaptome::state::ParameterBaseOriginKind::OperatorEdit,
+        "browser",
+    };
     if (registry_) {
         if (registry_->findString(row.id)) {
-            registry_->setStringBase(row.id, value, true);
+            registry_->setStringBase(
+                row.id,
+                value,
+                operatorOrigin,
+                true);
             return true;
         }
     }
     if (row.stringParam && row.stringParam->value) {
         if (*row.stringParam->value != value || row.stringParam->baseValue != value) {
             *row.stringParam->value = value;
-            const_cast<ParameterRegistry::StringParam*>(row.stringParam)->baseValue = value;
+            auto* parameter =
+                const_cast<ParameterRegistry::StringParam*>(
+                    row.stringParam);
+            parameter->baseValue = value;
+            parameter->baseOrigin = operatorOrigin;
             return true;
         }
     }
@@ -9069,7 +9933,8 @@ inline ControlMappingHubState::Column ControlMappingHubState::columnFromKey(cons
 }
 
 inline void ControlMappingHubState::ensurePreferencesDirectory() const {
-    if (preferencesPath_.empty()) {
+    if (preferencesPath_.empty() &&
+        !canonicalPreferencesAuthoritative_) {
         return;
     }
     auto dir = ofFilePath::getEnclosingDirectory(preferencesPath_, false);
@@ -9083,14 +9948,16 @@ inline void ControlMappingHubState::loadPreferences() {
     // compact Browser even when an older preference file recorded open rows.
     treeExpansionState_.clear();
     parameterSectionExpansionState_.clear();
-    if (preferencesPath_.empty()) {
+    if (preferencesPath_.empty() &&
+        !canonicalPreferencesAuthoritative_) {
         treeSelectionPending_ = true;
         pendingCategoryPref_.clear();
         pendingSubcategoryPref_.clear();
         pendingAssetPref_.clear();
         return;
     }
-    if (!ofFile::doesFileExist(preferencesPath_)) {
+    if (!canonicalPreferencesAuthoritative_ &&
+        !ofFile::doesFileExist(preferencesPath_)) {
         treeSelectionPending_ = true;
         pendingCategoryPref_.clear();
         pendingSubcategoryPref_.clear();
@@ -9098,8 +9965,15 @@ inline void ControlMappingHubState::loadPreferences() {
         return;
     }
     try {
-        auto buffer = ofBufferFromFile(preferencesPath_);
-        ofJson json = ofJson::parse(buffer.getText());
+        ofJson json;
+        if (canonicalPreferencesAuthoritative_) {
+            json =
+                canonicalPreferencesCompatibilitySnapshot_;
+        } else {
+            auto buffer =
+                ofBufferFromFile(preferencesPath_);
+            json = ofJson::parse(buffer.getText());
+        }
         preferences_.treeWidthRatio = json.value("treeWidthRatio", preferences_.treeWidthRatio);
         preferences_.categoryName = json.value("selectedCategory", std::string());
         preferences_.subcategoryName = json.value("selectedSubcategory", std::string());
@@ -9208,7 +10082,9 @@ inline void ControlMappingHubState::markPreferencesDirty() const {
 }
 
 inline void ControlMappingHubState::flushPreferences() const {
-    if (!preferencesDirty_ || preferencesPath_.empty()) {
+    if (!preferencesDirty_ ||
+        (preferencesPath_.empty() &&
+         !preferencesPersistenceCallback_)) {
         return;
     }
     snapshotHudPreferencesFromProvider();
@@ -9266,6 +10142,26 @@ inline void ControlMappingHubState::flushPreferences() const {
     }
     json["hudLayoutTarget"] = preferences_.hudLayoutTarget;
     json["hudStateMigrated"] = preferences_.hudStateMigrated;
+    if (preferencesPersistenceCallback_) {
+        bool published = false;
+        try {
+            published =
+                preferencesPersistenceCallback_(json);
+        } catch (...) {
+            published = false;
+        }
+        if (published) {
+            canonicalPreferencesCompatibilitySnapshot_ =
+                json;
+            preferencesDirty_ = false;
+        } else {
+            ofLogWarning("ControlMappingHub")
+                << "Failed to publish canonical preferences";
+            const_cast<ControlMappingHubState*>(this)->
+                loadPreferences();
+        }
+        return;
+    }
     std::string tmpPath = preferencesPath_ + ".tmp";
     try {
         if (!ofSavePrettyJson(tmpPath, json)) {

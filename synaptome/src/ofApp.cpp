@@ -15,6 +15,12 @@
 #include "ui/MenuSkin.h"
 #include "ui/WindowMonitorPlacement.h"
 #include "ui/ControlHubEventBridge_clean.h"
+#include "io/MappingBankDocument.h"
+#include "io/MachineProfileDocument.h"
+#include "io/OscIngressMessage.h"
+#include "io/SceneStateDocument.h"
+#include "io/PreferencesDocument.h"
+#include "io/BankDefinitionsDocument.h"
 #include "runtime/BuiltinElementHostBindings.h"
 #include "runtime/BuiltinElements.h"
 #ifdef _WIN32
@@ -33,6 +39,7 @@
 #include <sstream>
 #include <cctype>
 #include <cstdio>
+#include <set>
 #include <unordered_set>
 
 namespace {
@@ -57,26 +64,6 @@ namespace {
             && text.compare(text.size() - suffix.size(), suffix.size(), suffix) == 0;
     }
 
-    bool extractSingleNumericOscArg(const ofxOscMessage& msg, float& value) {
-        if (msg.getNumArgs() != 1) {
-            return false;
-        }
-        const ofxOscArgType type = msg.getArgType(0);
-        if (type == OFXOSC_TYPE_FLOAT) {
-            value = msg.getArgAsFloat(0);
-            return true;
-        }
-        if (type == OFXOSC_TYPE_DOUBLE) {
-            value = static_cast<float>(msg.getArgAsDouble(0));
-            return true;
-        }
-        if (type == OFXOSC_TYPE_INT32 || type == OFXOSC_TYPE_INT64) {
-            value = static_cast<float>(msg.getArgAsInt64(0));
-            return true;
-        }
-        return false;
-    }
-
     bool extractNumericOscArgs(const ofxOscMessage& msg, std::vector<float>& values) {
         values.clear();
         values.reserve(msg.getNumArgs());
@@ -96,6 +83,95 @@ namespace {
             values.push_back(ofClamp(value, -1.0f, 1.0f));
         }
         return !values.empty();
+    }
+
+    OscIngressMessage makeOscIngressMessage(const ofxOscMessage& msg,
+                                             uint64_t nowMs) {
+        OscIngressMessage event;
+        event.rawAddress = msg.getAddress();
+        event.canonicalAddress = event.rawAddress;
+        event.typeTags = msg.getTypeString();
+        event.transport = "udp";
+        const std::string remoteHost = msg.getRemoteHost();
+        const int remotePort = msg.getRemotePort();
+        event.endpoint = remoteHost;
+        if (remotePort > 0) {
+            event.endpoint += ":" + ofToString(remotePort);
+        }
+        event.timestampMs = nowMs;
+        event.arguments.reserve(msg.getNumArgs());
+        for (std::size_t i = 0; i < msg.getNumArgs(); ++i) {
+            const ofxOscArgType type = msg.getArgType(i);
+            OscIngressAtom atom;
+            switch (type) {
+                case OFXOSC_TYPE_INT32:
+                    atom = OscIngressAtom::integer(
+                        OscIngressAtomType::Int32,
+                        static_cast<std::int64_t>(msg.getArgAsInt32(i)));
+                    break;
+                case OFXOSC_TYPE_INT64:
+                    atom = OscIngressAtom::integer(
+                        OscIngressAtomType::Int64,
+                        msg.getArgAsInt64(i));
+                    break;
+                case OFXOSC_TYPE_FLOAT:
+                    atom = OscIngressAtom::numeric(
+                        OscIngressAtomType::Float32,
+                        static_cast<double>(msg.getArgAsFloat(i)));
+                    break;
+                case OFXOSC_TYPE_DOUBLE:
+                    atom = OscIngressAtom::numeric(
+                        OscIngressAtomType::Float64,
+                        msg.getArgAsDouble(i));
+                    break;
+                case OFXOSC_TYPE_STRING:
+                    atom = OscIngressAtom::text(
+                        OscIngressAtomType::String,
+                        msg.getArgAsString(i));
+                    break;
+                case OFXOSC_TYPE_SYMBOL:
+                    atom = OscIngressAtom::text(
+                        OscIngressAtomType::Symbol,
+                        msg.getArgAsSymbol(i));
+                    break;
+                case OFXOSC_TYPE_CHAR:
+                    atom.type = OscIngressAtomType::Char;
+                    atom.textValue.assign(1, msg.getArgAsChar(i));
+                    break;
+                case OFXOSC_TYPE_MIDI_MESSAGE:
+                    atom.type = OscIngressAtomType::Midi;
+                    atom.unsignedValue = msg.getArgAsMidiMessage(i);
+                    break;
+                case OFXOSC_TYPE_TRUE:
+                case OFXOSC_TYPE_FALSE:
+                    atom.type = OscIngressAtomType::Bool;
+                    atom.numericValue = msg.getArgAsBool(i) ? 1.0 : 0.0;
+                    break;
+                case OFXOSC_TYPE_NONE:
+                    atom.type = OscIngressAtomType::Nil;
+                    break;
+                case OFXOSC_TYPE_TRIGGER:
+                    atom.type = OscIngressAtomType::Impulse;
+                    break;
+                case OFXOSC_TYPE_TIMETAG:
+                    atom.type = OscIngressAtomType::Timetag;
+                    atom.unsignedValue = msg.getArgAsTimetag(i);
+                    break;
+                case OFXOSC_TYPE_BLOB:
+                    atom.type = OscIngressAtomType::Blob;
+                    atom.byteCount = msg.getArgAsBlob(i).size();
+                    break;
+                case OFXOSC_TYPE_RGBA_COLOR:
+                    atom.type = OscIngressAtomType::Rgba;
+                    atom.unsignedValue = msg.getArgAsRgbaColor(i);
+                    break;
+                default:
+                    atom.type = OscIngressAtomType::Unsupported;
+                    break;
+            }
+            event.arguments.push_back(std::move(atom));
+        }
+        return event;
     }
 
     std::string normalizeExternalAudioSourceId(const std::string& source) {
@@ -948,16 +1024,23 @@ namespace {
         return mod;
     }
 
-    void loadFloatModifiersFromJson(ParameterRegistry& registry, const std::string& id, const ofJson& array) {
+    void loadFloatModifiersFromJson(
+        ParameterRegistry& registry,
+        const std::string& id,
+        const ofJson& array,
+        const std::string& ownerPrefix) {
         if (!array.is_array()) {
             return;
         }
+        std::size_t ownerIndex = 0;
         for (const auto& element : array) {
             if (!element.is_object()) {
                 continue;
             }
             modifier::Modifier descriptor = modifierFromJson(element);
             auto& runtime = registry.addFloatModifier(id, descriptor);
+            runtime.ownerTag =
+                ownerPrefix + ":" + std::to_string(ownerIndex++);
             runtime.inputValue = element.value("inputValue", 0.0f);
             runtime.active = element.value("active", descriptor.enabled);
             if (runtime.descriptor.type == modifier::Type::kOsc) {
@@ -969,16 +1052,23 @@ namespace {
 
     }
 
-    void loadBoolModifiersFromJson(ParameterRegistry& registry, const std::string& id, const ofJson& array) {
+    void loadBoolModifiersFromJson(
+        ParameterRegistry& registry,
+        const std::string& id,
+        const ofJson& array,
+        const std::string& ownerPrefix) {
         if (!array.is_array()) {
             return;
         }
+        std::size_t ownerIndex = 0;
         for (const auto& element : array) {
             if (!element.is_object()) {
                 continue;
             }
             modifier::Modifier descriptor = modifierFromJson(element);
             auto& runtime = registry.addBoolModifier(id, descriptor);
+            runtime.ownerTag =
+                ownerPrefix + ":" + std::to_string(ownerIndex++);
             runtime.inputValue = element.value("inputValue", 0.0f);
             runtime.active = element.value("active", descriptor.enabled);
         }
@@ -1180,16 +1270,174 @@ std::vector<std::string> ofApp::loadOscChannelHints() const {
     return hints;
 }
 
+void ofApp::loadMachineProfileSettings() {
+    machineProfileDocument_ = ofJson();
+    machineProfileLoaded_ = false;
+    machineProfileLoadBlocked_ = false;
+    if (machineProfilePath_.empty()) {
+        machineProfilePath_ =
+            ofToDataPath("config/machine-profile.json", true);
+    }
+    if (!ofFile::doesFileExist(machineProfilePath_, false)) {
+        return;
+    }
+
+    auto loadCandidate =
+        [](const std::string& path)
+            -> synaptome::state::MachineProfileDocumentResult {
+        try {
+            return synaptome::state::validateMachineProfileDocument(
+                ofLoadJson(path));
+        } catch (const std::exception& ex) {
+            synaptome::state::MachineProfileDocumentResult result;
+            result.error =
+                "failed to parse machine profile: " +
+                std::string(ex.what());
+            return result;
+        }
+    };
+
+    auto primary = loadCandidate(machineProfilePath_);
+    if (primary.ok) {
+        machineProfileDocument_ = std::move(primary.document);
+        machineProfileLoaded_ = true;
+        ofLogNotice("MachineProfile")
+            << "Loaded machine-profile v"
+            << primary.sourceVersion << " from "
+            << machineProfilePath_;
+        return;
+    }
+    if (primary.errorCode ==
+        synaptome::state::MachineProfileDocumentError::
+            UnsupportedFutureVersion) {
+        machineProfileLoadBlocked_ = true;
+        ofLogWarning("MachineProfile")
+            << primary.error
+            << "; refusing backup or legacy downgrade";
+        return;
+    }
+
+    const std::string backupPath = machineProfilePath_ + ".bak";
+    if (ofFile::doesFileExist(backupPath, false)) {
+        auto backup = loadCandidate(backupPath);
+        if (backup.ok) {
+            machineProfileDocument_ = std::move(backup.document);
+            machineProfileLoaded_ = true;
+            ofLogWarning("MachineProfile")
+                << "Primary profile rejected (" << primary.error
+                << "); using validated recovery backup "
+                << backupPath;
+            return;
+        }
+        if (backup.errorCode ==
+            synaptome::state::MachineProfileDocumentError::
+                UnsupportedFutureVersion) {
+            ofLogWarning("MachineProfile")
+                << "Recovery backup is from an unsupported future "
+                   "version";
+        }
+    }
+    machineProfileLoadBlocked_ = true;
+    ofLogWarning("MachineProfile")
+        << "Machine profile rejected (" << primary.error
+        << "); preserving safe defaults and refusing fragmented "
+           "legacy fallback";
+}
+
+bool ofApp::loadOscInputSettingsFromMachineProfile() {
+    if (!machineProfileLoaded_ ||
+        !machineProfileDocument_.contains("osc") ||
+        !machineProfileDocument_["osc"].is_object()) {
+        return false;
+    }
+    const ofJson& osc = machineProfileDocument_["osc"];
+    if (!osc.contains("inputs") || !osc["inputs"].is_array()) {
+        return false;
+    }
+
+    const std::string activeInputId =
+        osc.value("activeInputId", std::string());
+    const ofJson* active = nullptr;
+    bool sawUdp = false;
+    bool sawSerial = false;
+    for (const auto& input : osc["inputs"]) {
+        if (!input.is_object()) {
+            continue;
+        }
+        const std::string transport =
+            input.value("transport", std::string());
+        if (!sawUdp && transport == "udp") {
+            const ofJson& udp = input["udp"];
+            oscInputSettings_.routerUdpHost =
+                udp.value("host", std::string("127.0.0.1"));
+            oscInputSettings_.routerUdpPort =
+                udp.value("port", 9000);
+            sawUdp = true;
+        } else if (!sawSerial && transport == "serial") {
+            const ofJson& serial = input["serial"];
+            oscInputSettings_.serialAutoPort =
+                serial.value("autoPort", true);
+            oscInputSettings_.serialPort =
+                serial.value("port", std::string());
+            oscInputSettings_.serialPortNameContains =
+                serial.value("portNameContains", std::string());
+            oscInputSettings_.serialBaud =
+                serial.value("baud", 115200);
+            sawSerial = true;
+        }
+        if (input.value("id", std::string()) == activeInputId) {
+            active = &input;
+        }
+    }
+    if (!active) {
+        // A validated explicit-empty OSC section is authoritative.
+        oscInputSettings_.mode = "disabled";
+        return true;
+    }
+
+    const std::string transport =
+        active->value("transport", std::string());
+    if (transport == "udp") {
+        const ofJson& udp = (*active)["udp"];
+        oscInputSettings_.mode = "routerUdp";
+        oscInputSettings_.routerUdpHost =
+            udp.value("host", std::string("127.0.0.1"));
+        oscInputSettings_.routerUdpPort =
+            udp.value("port", 9000);
+    } else if (transport == "serial") {
+        const ofJson& serial = (*active)["serial"];
+        oscInputSettings_.mode = "directSerial";
+        oscInputSettings_.serialAutoPort =
+            serial.value("autoPort", true);
+        oscInputSettings_.serialPort =
+            serial.value("port", std::string());
+        oscInputSettings_.serialPortNameContains =
+            serial.value("portNameContains", std::string());
+        oscInputSettings_.serialBaud =
+            serial.value("baud", 115200);
+    }
+    return true;
+}
+
 void ofApp::loadOscInputSettings() {
     oscInputSettings_ = OscInputSettings();
+    if (loadOscInputSettingsFromMachineProfile()) {
+        ofLogNotice("OscInput")
+            << "Using machine-profile OSC input binding";
+        return;
+    }
+    if (machineProfileLoadBlocked_) {
+        return;
+    }
     if (oscInputConfigPath.empty()) {
-        oscInputConfigPath = ofToDataPath("config/osc-input.json", true);
+        oscInputConfigPath =
+            ofToDataPath("config/osc-input.json", true);
     }
 
     ofFile cfgFile(oscInputConfigPath);
     if (!cfgFile.exists()) {
-        saveOscInputSettings();
-        ofLogNotice("OscInput") << "Wrote default OSC input config to " << oscInputConfigPath;
+        ofLogNotice("OscInput")
+            << "No OSC input config found; using safe defaults";
         return;
     }
 
@@ -1199,39 +1447,397 @@ void ofApp::loadOscInputSettings() {
         std::string modeLower = ofToLower(mode);
         if (modeLower == "routerudp" || modeLower == "router") {
             oscInputSettings_.mode = "routerUdp";
-        } else {
+        } else if (
+            modeLower == "directserial" ||
+            modeLower == "serial") {
             oscInputSettings_.mode = "directSerial";
+        } else {
+            throw std::runtime_error(
+                "unknown OSC input mode '" + mode + "'");
         }
-        if (cfg.contains("routerUdp") && cfg["routerUdp"].is_object()) {
-            std::string host = cfg["routerUdp"].value("host", oscInputSettings_.routerUdpHost);
+        if (cfg.contains("routerUdp") &&
+            cfg["routerUdp"].is_object()) {
+            std::string host = cfg["routerUdp"].value(
+                "host",
+                oscInputSettings_.routerUdpHost);
             host = ofTrim(host);
-            oscInputSettings_.routerUdpHost = host.empty() ? std::string("127.0.0.1") : host;
-            int port = cfg["routerUdp"].value("port", oscInputSettings_.routerUdpPort);
-            oscInputSettings_.routerUdpPort = ofClamp(port, 1, 65535);
+            oscInputSettings_.routerUdpHost =
+                host.empty() ? std::string("127.0.0.1") : host;
+            int port = cfg["routerUdp"].value(
+                "port",
+                oscInputSettings_.routerUdpPort);
+            oscInputSettings_.routerUdpPort =
+                ofClamp(port, 1, 65535);
         }
+        if (cfg.contains("serial") &&
+            cfg["serial"].is_object()) {
+            const ofJson& serial = cfg["serial"];
+            oscInputSettings_.serialAutoPort =
+                serial.value("autoPort", true);
+            oscInputSettings_.serialPort =
+                serial.value("port", std::string());
+            oscInputSettings_.serialPortNameContains =
+                serial.value("portNameContains", std::string());
+            oscInputSettings_.serialBaud =
+                std::max(1, serial.value("baud", 115200));
+        }
+        ofLogNotice("OscInput")
+            << "Using legacy OSC input compatibility config "
+            << oscInputConfigPath;
     } catch (const std::exception& ex) {
-        ofLogWarning("OscInput") << "Failed to parse " << oscInputConfigPath << ": " << ex.what();
+        ofLogWarning("OscInput")
+            << "Failed to parse " << oscInputConfigPath
+            << ": " << ex.what();
         oscInputSettings_ = OscInputSettings();
     }
 }
 
-void ofApp::saveOscInputSettings() const {
-    if (oscInputConfigPath.empty()) {
-        return;
+bool ofApp::saveOscInputSettings() {
+    if (machineProfileLoadBlocked_ || machineProfilePath_.empty()) {
+        ofLogWarning("MachineProfile")
+            << "OSC binding not saved because the machine profile "
+               "is blocked";
+        return false;
     }
-    ofJson cfg = ofJson::object();
-    cfg["version"] = 1;
-    cfg["mode"] = oscInputSettings_.mode;
-    cfg["serial"] = {
-        { "autoPort", true }
-    };
-    cfg["routerUdp"] = {
-        { "host", oscInputSettings_.routerUdpHost.empty() ? std::string("127.0.0.1") : oscInputSettings_.routerUdpHost },
-        { "port", oscInputSettings_.routerUdpPort }
-    };
-    if (!writeJsonSnapshotAtomically(oscInputConfigPath, cfg)) {
-        ofLogWarning("OscInput") << "Failed to save OSC input config to " << oscInputConfigPath;
+
+    ofJson next = machineProfileLoaded_
+        ? machineProfileDocument_
+        : ofJson::object();
+    next["schemaVersion"] =
+        synaptome::state::kCurrentMachineProfileSchemaVersion;
+    if (!next.contains("profileId")) {
+        next["profileId"] = "local.default";
     }
+
+    auto serialSettings = [this]() {
+        ofJson serial = {
+            { "autoPort", oscInputSettings_.serialAutoPort },
+            { "baud", oscInputSettings_.serialBaud }
+        };
+        if (!oscInputSettings_.serialPort.empty()) {
+            serial["port"] = oscInputSettings_.serialPort;
+        }
+        if (!oscInputSettings_.serialPortNameContains.empty()) {
+            serial["portNameContains"] =
+                oscInputSettings_.serialPortNameContains;
+        }
+        return serial;
+    };
+    auto udpEndpoint = [this](const std::string& id) {
+        return ofJson{
+            { "id", id },
+            { "enabled", true },
+            { "transport", "udp" },
+            { "udp", {
+                {
+                    "host",
+                    oscInputSettings_.routerUdpHost.empty()
+                        ? std::string("127.0.0.1")
+                        : oscInputSettings_.routerUdpHost
+                },
+                { "port", oscInputSettings_.routerUdpPort }
+            }}
+        };
+    };
+    auto serialEndpoint =
+        [&serialSettings](const std::string& id) {
+        return ofJson{
+            { "id", id },
+            { "enabled", true },
+            { "transport", "serial" },
+            { "serial", serialSettings() }
+        };
+    };
+
+    ofJson osc =
+        machineProfileLoaded_ &&
+        next.contains("osc") &&
+        next["osc"].is_object()
+            ? next["osc"]
+            : ofJson::object();
+    if (!osc.contains("inputs") ||
+        !osc["inputs"].is_array()) {
+        osc["inputs"] = ofJson::array();
+    }
+    if (!machineProfileLoaded_ && osc["inputs"].empty()) {
+        osc["inputs"].push_back(udpEndpoint("osc.router"));
+        osc["inputs"].push_back(serialEndpoint("osc.serial"));
+    }
+    const std::string desiredTransport =
+        ofToLower(oscInputSettings_.mode) == "routerudp"
+            ? "udp"
+            : "serial";
+    std::string selectedId;
+    for (const auto& input : osc["inputs"]) {
+        if (input.is_object() &&
+            input.value("enabled", false) &&
+            input.value("transport", std::string()) ==
+                desiredTransport) {
+            selectedId = input.value("id", std::string());
+            break;
+        }
+    }
+    if (selectedId.empty()) {
+        std::set<std::string> ids;
+        for (const auto& input : osc["inputs"]) {
+            if (input.is_object()) {
+                ids.insert(input.value("id", std::string()));
+            }
+        }
+        if (osc.contains("outputs") &&
+            osc["outputs"].is_array()) {
+            for (const auto& output : osc["outputs"]) {
+                if (output.is_object()) {
+                    ids.insert(
+                        output.value("id", std::string()));
+                }
+            }
+        }
+        const std::string baseId =
+            desiredTransport == "udp"
+                ? "osc.router"
+                : "osc.serial";
+        selectedId = baseId;
+        int suffix = 2;
+        while (ids.find(selectedId) != ids.end()) {
+            selectedId =
+                baseId + "." + std::to_string(suffix++);
+        }
+        osc["inputs"].push_back(
+            desiredTransport == "udp"
+                ? udpEndpoint(selectedId)
+                : serialEndpoint(selectedId));
+    }
+    osc["activeInputId"] = selectedId;
+    next["osc"] = std::move(osc);
+
+    const auto validated =
+        synaptome::state::validateMachineProfileDocument(next);
+    if (!validated.ok) {
+        ofLogWarning("MachineProfile")
+            << "Refusing invalid OSC profile write: "
+            << validated.error;
+        return false;
+    }
+    if (!writeJsonRecoverably(
+            machineProfilePath_,
+            validated.document,
+            "MachineProfile")) {
+        return false;
+    }
+    machineProfileDocument_ = validated.document;
+    machineProfileLoaded_ = true;
+    return true;
+}
+
+bool ofApp::saveMachineProfileControlSlots(
+    const ofJson& controlSlots) {
+    if (machineProfileLoadBlocked_) {
+        ofLogWarning("MachineProfile")
+            << "Control-slot assignments not saved because the "
+               "machine profile is blocked";
+        return false;
+    }
+    if (!controlSlots.is_object() ||
+        !controlSlots.contains("assignments") ||
+        !controlSlots["assignments"].is_array()) {
+        ofLogWarning("MachineProfile")
+            << "Refusing malformed control-slot snapshot";
+        return false;
+    }
+    ofJson next = machineProfileLoaded_
+        ? machineProfileDocument_
+        : ofJson::object();
+    if (!machineProfileLoaded_) {
+        next["schemaVersion"] =
+            synaptome::state::kCurrentMachineProfileSchemaVersion;
+        next["profileId"] = "local.default";
+
+        ofJson serial = {
+            { "autoPort", oscInputSettings_.serialAutoPort },
+            { "baud", oscInputSettings_.serialBaud }
+        };
+        if (!oscInputSettings_.serialPort.empty()) {
+            serial["port"] = oscInputSettings_.serialPort;
+        }
+        if (!oscInputSettings_.serialPortNameContains.empty()) {
+            serial["portNameContains"] =
+                oscInputSettings_.serialPortNameContains;
+        }
+        const ofJson udpEndpoint = {
+            { "id", "osc.router" },
+            { "enabled", true },
+            { "transport", "udp" },
+            { "udp", {
+                {
+                    "host",
+                    oscInputSettings_.routerUdpHost.empty()
+                        ? std::string("127.0.0.1")
+                        : oscInputSettings_.routerUdpHost
+                },
+                { "port", oscInputSettings_.routerUdpPort }
+            }}
+        };
+        const ofJson serialEndpoint = {
+            { "id", "osc.serial" },
+            { "enabled", true },
+            { "transport", "serial" },
+            { "serial", std::move(serial) }
+        };
+        next["osc"] = {
+            {
+                "inputs",
+                ofJson::array({udpEndpoint, serialEndpoint})
+            },
+            {
+                "activeInputId",
+                ofToLower(oscInputSettings_.mode) == "routerudp"
+                    ? "osc.router"
+                    : "osc.serial"
+            }
+        };
+    }
+    next["controlSlots"] = controlSlots;
+    const auto validated =
+        synaptome::state::validateMachineProfileDocument(next);
+    if (!validated.ok) {
+        ofLogWarning("MachineProfile")
+            << "Refusing invalid control-slot profile write: "
+            << validated.error;
+        return false;
+    }
+    if (!writeJsonRecoverably(
+            machineProfilePath_,
+            validated.document,
+            "MachineProfile")) {
+        return false;
+    }
+    machineProfileDocument_ = validated.document;
+    machineProfileLoaded_ = true;
+    return true;
+}
+
+ofJson ofApp::buildMachineProfileBaseWithCurrentOsc() const {
+    ofJson next = ofJson::object();
+    next["schemaVersion"] =
+        synaptome::state::kCurrentMachineProfileSchemaVersion;
+    next["profileId"] = "local.default";
+
+    ofJson serial = {
+        { "autoPort", oscInputSettings_.serialAutoPort },
+        { "baud", oscInputSettings_.serialBaud }
+    };
+    if (!oscInputSettings_.serialPort.empty()) {
+        serial["port"] = oscInputSettings_.serialPort;
+    }
+    if (!oscInputSettings_.serialPortNameContains.empty()) {
+        serial["portNameContains"] =
+            oscInputSettings_.serialPortNameContains;
+    }
+    const ofJson udpEndpoint = {
+        { "id", "osc.router" },
+        { "enabled", true },
+        { "transport", "udp" },
+        { "udp", {
+            {
+                "host",
+                oscInputSettings_.routerUdpHost.empty()
+                    ? std::string("127.0.0.1")
+                    : oscInputSettings_.routerUdpHost
+            },
+            { "port", oscInputSettings_.routerUdpPort }
+        }}
+    };
+    const ofJson serialEndpoint = {
+        { "id", "osc.serial" },
+        { "enabled", true },
+        { "transport", "serial" },
+        { "serial", std::move(serial) }
+    };
+    next["osc"] = {
+        {
+            "inputs",
+            ofJson::array({udpEndpoint, serialEndpoint})
+        },
+        {
+            "activeInputId",
+            ofToLower(oscInputSettings_.mode) == "routerudp"
+                ? "osc.router"
+                : "osc.serial"
+        }
+    };
+    return next;
+}
+
+bool ofApp::saveMachineProfileMidiInputs(
+    const ofJson& midiInputs) {
+    if (machineProfileLoadBlocked_) {
+        ofLogWarning("MachineProfile")
+            << "MIDI input binding not saved because the "
+               "machine profile is blocked";
+        return false;
+    }
+    if (!midiInputs.is_object() ||
+        midiInputs.size() != 1 ||
+        !midiInputs.contains("inputs") ||
+        !midiInputs["inputs"].is_array()) {
+        ofLogWarning("MachineProfile")
+            << "Refusing malformed MIDI input snapshot";
+        return false;
+    }
+    ofJson next = machineProfileLoaded_
+        ? machineProfileDocument_
+        : buildMachineProfileBaseWithCurrentOsc();
+    next["midi"] = midiInputs;
+    const auto validated =
+        synaptome::state::validateMachineProfileDocument(next);
+    if (!validated.ok) {
+        ofLogWarning("MachineProfile")
+            << "Refusing invalid MIDI input profile write: "
+            << validated.error;
+        return false;
+    }
+    if (!writeJsonRecoverably(
+            machineProfilePath_,
+            validated.document,
+            "MachineProfile")) {
+        return false;
+    }
+    machineProfileDocument_ = validated.document;
+    machineProfileLoaded_ = true;
+    return true;
+}
+
+void ofApp::configureSerialOscCollector() {
+    std::vector<std::string> hints;
+    if (!oscInputSettings_.serialPort.empty()) {
+        hints.push_back(oscInputSettings_.serialPort);
+    }
+    if (!oscInputSettings_.serialPortNameContains.empty()) {
+        hints.push_back(
+            oscInputSettings_.serialPortNameContains);
+    }
+    if (oscInputSettings_.serialAutoPort) {
+        const std::vector<std::string> compatibilityHints = {
+            "usb vid:pid=239a:811b ser=10:51:db:31:12:cc",
+            "ser=10:51:db:31:12:cc",
+            "feather esp32-s3",
+            "vid:pid=239a:811b",
+            "239a:811b",
+            "239a",
+            "feather",
+            "usbmodem",
+            "usbserial"
+        };
+        hints.insert(
+            hints.end(),
+            compatibilityHints.begin(),
+            compatibilityHints.end());
+    }
+    collector.setAutoPortHints(std::move(hints));
+    collector.setReconnectInterval(1500);
+    collector.setBaudRate(
+        std::max(1, oscInputSettings_.serialBaud));
 }
 
 void ofApp::applyOscInputMode(const std::string& mode) {
@@ -1243,16 +1849,49 @@ void ofApp::applyOscInputMode(const std::string& mode) {
         updateControlHubOscInputStatus();
         return;
     }
+    const OscInputSettings previous = oscInputSettings_;
     oscInputSettings_.mode = normalized;
-    saveOscInputSettings();
     if (oscInputSettings_.mode == "directSerial") {
         stopRouterUdpReceiver();
+        configureSerialOscCollector();
         collector.requestReconnect();
         ofLogNotice("OscInput") << "OSC input switched to direct serial";
     } else {
-        ensureRouterUdpReceiver(true);
+        if (!ensureRouterUdpReceiver(true)) {
+            oscInputSettings_ = previous;
+            if (ofToLower(previous.mode) == "routerudp") {
+                ensureRouterUdpReceiver(true);
+            } else if (
+                ofToLower(previous.mode) == "directserial") {
+                stopRouterUdpReceiver();
+                configureSerialOscCollector();
+                collector.requestReconnect();
+            } else {
+                stopRouterUdpReceiver();
+            }
+            ofLogWarning("OscInput")
+                << "OSC input switch rejected; previous binding restored";
+            updateControlHubOscInputStatus();
+            return;
+        }
         ofLogNotice("OscInput") << "OSC input switched to router UDP on "
                                 << udpEndpointLabel(oscInputSettings_.routerUdpHost, oscInputSettings_.routerUdpPort);
+    }
+    if (!saveOscInputSettings()) {
+        oscInputSettings_ = previous;
+        if (ofToLower(previous.mode) == "routerudp") {
+            ensureRouterUdpReceiver(true);
+        } else if (
+            ofToLower(previous.mode) == "directserial") {
+            stopRouterUdpReceiver();
+            configureSerialOscCollector();
+            collector.requestReconnect();
+        } else {
+            stopRouterUdpReceiver();
+        }
+        ofLogWarning("OscInput")
+            << "OSC input profile publication failed; previous "
+               "binding restored";
     }
     updateControlHubOscInputStatus();
 }
@@ -1328,33 +1967,33 @@ void ofApp::updateRouterUdpReceiver(uint64_t nowMs) {
         if (!routerOscReceiver_.getNextMessage(msg)) {
             break;
         }
+        messageThisFrame = true;
+        routerUdpPacketsSeen_++;
+        lastRouterUdpPacketMs_ = nowMs;
+
+        OscIngressMessage event = makeOscIngressMessage(msg, nowMs);
+        const bool dispatch = observeOscIngressMessage(event);
+        if (!dispatch) {
+            continue;
+        }
         if (handleExternalAudioWaveform(msg, nowMs)) {
-            messageThisFrame = true;
             continue;
         }
 
         float value = 0.0f;
-        if (!extractSingleNumericOscArg(msg, value)) {
-            routerUdpDroppedMessages_++;
-            if (routerUdpDroppedMessages_ <= 5 || (routerUdpDroppedMessages_ % kRouterUdpLogSample) == 0) {
-                ofLogVerbose("OscInput") << "ignored router UDP message address=" << msg.getAddress()
-                                         << " args=" << msg.getNumArgs()
-                                         << " types=" << msg.getTypeString();
-            }
+        if (!event.finiteNumericScalar(value)) {
             continue;
         }
 
-        messageThisFrame = true;
-        routerUdpPacketsSeen_++;
-        lastRouterUdpPacketMs_ = nowMs;
         if (routerUdpPacketsSeen_ <= 5 || (routerUdpPacketsSeen_ % kRouterUdpLogSample) == 0) {
             ofLogVerbose("OscInput") << "routerUdp packet#" << routerUdpPacketsSeen_
                                      << " t=" << nowMs
-                                     << " address=" << msg.getAddress()
+                                     << " address=" << event.canonicalAddress
                                      << " value=" << value;
         }
-        updateExternalAudioTelemetry(msg.getAddress(), value, nowMs);
-        ingestOscMessage(msg.getAddress(), value);
+        updateExternalAudioTelemetry(event.canonicalAddress, value, nowMs);
+        ingestOscMessage(event.canonicalAddress, value);
+        oscScalarMessagesRouted_++;
     }
 
     if (!messageThisFrame && routerUdpPacketsSeen_ == 0 && nowMs - lastRouterUdpWaitLogMs_ > 1000) {
@@ -1420,8 +2059,6 @@ bool ofApp::handleExternalAudioWaveform(const ofxOscMessage& msg, uint64_t nowMs
     state.waveformPacketsSeen++;
     activeExternalAudioSourceId_ = sourceId;
     static constexpr uint32_t kRouterUdpLogSample = 2000;
-    routerUdpPacketsSeen_++;
-    lastRouterUdpPacketMs_ = nowMs;
     if (routerUdpPacketsSeen_ <= 5 || (routerUdpPacketsSeen_ % kRouterUdpLogSample) == 0) {
         ofLogVerbose("OscInput") << "routerUdp waveform packet#" << routerUdpPacketsSeen_
                                  << " t=" << nowMs
@@ -1480,8 +2117,20 @@ void ofApp::updateControlHubOscInputStatus() {
     status.routerListening = routerUdpListening_ && routerOscReceiver_.isListening();
     status.hasLastMessage = lastOscMessageValid_;
     status.lastAddress = lastOscAddress_;
+    status.lastRawAddress = lastOscRawAddress_;
+    status.lastTypeTags = lastOscTypeTags_;
+    status.lastPayloadSummary = lastOscPayloadSummary_;
+    status.lastTransport = lastOscTransport_;
+    status.lastEndpoint = lastOscEndpoint_;
     status.lastValue = lastOscValue_;
     status.lastMessageMs = lastOscMessageMs_;
+    status.lastWasRoutableScalar = lastOscWasRoutableScalar_;
+    status.lastWasMeshAlias = lastOscWasMeshAlias_;
+    status.lastWasDuplicate = lastOscWasDuplicate_;
+    status.messagesObserved = oscMessagesObserved_;
+    status.scalarMessagesRouted = oscScalarMessagesRouted_;
+    status.diagnosticMessagesObserved = oscDiagnosticMessagesObserved_;
+    status.meshDuplicatesSuppressed = oscMeshDuplicatesSuppressed_;
     if (!activeExternalAudioSourceId_.empty()) {
         auto it = externalAudioSources_.find(activeExternalAudioSourceId_);
         if (it != externalAudioSources_.end()) {
@@ -1498,8 +2147,12 @@ void ofApp::updateControlHubOscInputStatus() {
         status.statusText = routerUdpStatusText_.empty()
             ? std::string("Router UDP selected; binding receiver")
             : routerUdpStatusText_;
-    } else {
+    } else if (
+        ofToLower(oscInputSettings_.mode) == "directserial") {
         status.statusText = collector.isConnected() ? "Direct serial selected" : "Direct serial selected; searching";
+    } else {
+        status.statusText =
+            "OSC input disabled by machine profile";
     }
     controlMappingHub->setOscInputStatus(status);
 }
@@ -1690,11 +2343,23 @@ void ofApp::updateLocalMicBridge(uint64_t nowMs) {
     if (!shouldEmit) {
         return;
     }
-    ingestOscMessage(localMicSettings_.levelAddress, rms);
-    ingestOscMessage(localMicSettings_.peakAddress, peak);
-    ingestOscMessage(localMicSettings_.bassAddress, bass);
-    ingestOscMessage(localMicSettings_.midsAddress, mids);
-    ingestOscMessage(localMicSettings_.highsAddress, highs);
+    auto ingestLocalMetric = [this, nowMs](const std::string& address, float value) {
+        OscIngressMessage message;
+        message.rawAddress = address;
+        message.canonicalAddress = address;
+        message.typeTags = ",f";
+        message.transport = "local-audio";
+        message.endpoint = localMicSettings_.deviceLabel;
+        message.timestampMs = nowMs;
+        message.arguments.push_back(
+            OscIngressAtom::numeric(OscIngressAtomType::Float32, value));
+        ingestOscEnvelope(std::move(message));
+    };
+    ingestLocalMetric(localMicSettings_.levelAddress, rms);
+    ingestLocalMetric(localMicSettings_.peakAddress, peak);
+    ingestLocalMetric(localMicSettings_.bassAddress, bass);
+    ingestLocalMetric(localMicSettings_.midsAddress, mids);
+    ingestLocalMetric(localMicSettings_.highsAddress, highs);
     lastLocalMicLevel_ = rms;
     lastLocalMicPeak_ = peak;
     lastLocalMicBass_ = bass;
@@ -1748,7 +2413,166 @@ void ofApp::emitOscModifierTelemetry(const std::string& paramId, float rawValue)
     publishHudTelemetrySample("hud.sensors", "osc.mod", rawValue, detail.str());
 }
 
+bool ofApp::loadOperatorPreferences() {
+    preferencesPath_ =
+        ofToDataPath("config/preferences.json", true);
+    preferencesLoadBlocked_ = false;
+    ofJson source = {
+        {"schemaVersion",
+         synaptome::state::kCurrentPreferencesSchemaVersion}
+    };
+    if (ofFile::doesFileExist(preferencesPath_)) {
+        source = loadJsonSnapshotIfExists(preferencesPath_);
+        if (!source.is_object()) {
+            preferencesLoadBlocked_ = true;
+            ofLogWarning("Preferences")
+                << "canonical preferences are unreadable; keeping safe "
+                   "defaults and blocking writes";
+            return false;
+        }
+    }
+    std::string error;
+    if (!preferencesPublisher_.adoptInitial(source, &error)) {
+        preferencesLoadBlocked_ = true;
+        ofLogWarning("Preferences")
+            << "canonical preferences rejected: " << error
+            << "; keeping safe defaults and blocking writes";
+        return false;
+    }
+    preferencesPublisher_.setPersistCallback(
+        [this](const ofJson& snapshot) {
+            return !preferencesLoadBlocked_ &&
+                writeJsonSnapshotAtomically(
+                    preferencesPath_,
+                    snapshot);
+        });
+    return true;
+}
+
+bool ofApp::loadOperatorBankDefinitions() {
+    bankDefinitionsPath_ =
+        ofToDataPath("config/bank-definitions.json", true);
+    bankDefinitionsLoaded_ = false;
+    bankDefinitionsLoadBlocked_ = false;
+    if (!ofFile::doesFileExist(bankDefinitionsPath_)) {
+        return true;
+    }
+    const ofJson source =
+        loadJsonSnapshotIfExists(bankDefinitionsPath_);
+    std::string error;
+    if (!source.is_object() ||
+        !bankDefinitionsPublisher_.adoptInitial(
+            source,
+            &error)) {
+        bankDefinitionsLoadBlocked_ = true;
+        ofLogWarning("BankDefinitions")
+            << "canonical operator bank definitions rejected: "
+            << (error.empty() ? "unreadable document" : error)
+            << "; using safe defaults and blocking legacy takeover/writes";
+        return false;
+    }
+    bankDefinitionsLoaded_ = true;
+    bankDefinitionsPublisher_.setPersistCallback(
+        [this](const ofJson& snapshot) {
+            return !bankDefinitionsLoadBlocked_ &&
+                writeJsonSnapshotAtomically(
+                    bankDefinitionsPath_,
+                    snapshot);
+        });
+    bankDefinitionsPublisher_.setAdoptCallback(
+        [this](const ofJson& snapshot) {
+            return applyCanonicalGlobalBankDefinitions(
+                snapshot);
+        });
+    return true;
+}
+
+bool ofApp::applyCanonicalGlobalBankDefinitions(
+    const ofJson& document) {
+    const auto validated =
+        synaptome::state::
+            validateBankDefinitionsDocument(document);
+    if (!validated.ok) {
+        return false;
+    }
+    bankRegistry.setGlobalBanks(
+        BankRegistry::definitionsFromJson(
+            validated.document["globalBanks"],
+            BankRegistry::Scope::kGlobal));
+    ensureActiveBankValid();
+    return true;
+}
+
+bool ofApp::publishGlobalBankDefinitions(
+    const BankRegistry::DefinitionList& definitions) {
+    if (bankDefinitionsLoadBlocked_) {
+        return false;
+    }
+    if (!bankDefinitionsLoaded_) {
+        bankDefinitionsPublisher_.setPersistCallback(
+            [this](const ofJson& snapshot) {
+                return writeJsonSnapshotAtomically(
+                    bankDefinitionsPath_,
+                    snapshot);
+            });
+        bankDefinitionsPublisher_.setAdoptCallback(
+            [this](const ofJson& snapshot) {
+                return applyCanonicalGlobalBankDefinitions(
+                    snapshot);
+            });
+    }
+    const ofJson candidate = {
+        {"schemaVersion",
+         synaptome::state::
+             kCurrentBankDefinitionsSchemaVersion},
+        {"globalBanks",
+         BankRegistry::definitionsToJson(definitions)}
+    };
+    const auto result =
+        bankDefinitionsPublisher_.publish(candidate);
+    if (result.ok) {
+        bankDefinitionsLoaded_ = true;
+    } else {
+        ofLogWarning("BankDefinitions")
+            << "global bank publication failed: "
+            << result.error;
+    }
+    return result.ok;
+}
+
+const ofJson* ofApp::canonicalPreferenceSection(
+    const std::string& section) const {
+    if (preferencesLoadBlocked_) {
+        return nullptr;
+    }
+    const auto& snapshot = preferencesPublisher_.snapshot();
+    if (!snapshot.contains(section)) {
+        return nullptr;
+    }
+    return &snapshot[section];
+}
+
+bool ofApp::publishPreferenceSection(
+    const std::string& section,
+    const ofJson& value) {
+    if (preferencesLoadBlocked_) {
+        ofLogWarning("Preferences")
+            << "publication blocked while canonical preferences are invalid";
+        return false;
+    }
+    const auto result =
+        preferencesPublisher_.publishSection(section, value);
+    if (!result.ok) {
+        ofLogWarning("Preferences")
+            << "failed to publish " << section
+            << " preferences: " << result.error;
+    }
+    return result.ok;
+}
+
 void ofApp::setup() {
+    loadOperatorPreferences();
+    loadOperatorBankDefinitions();
     primaryWindow_ = ofGetCurrentWindow();
     ofSetFrameRate(60);
     ofBackground(0);
@@ -1919,7 +2743,61 @@ void ofApp::setup() {
             << "using operator-local package activation "
             << localPackageActivationPath_;
     }
-    layerLibrary.loadOptInPackages(packageActivationPath_);
+    if (const ofJson* packagePreferences =
+            canonicalPreferenceSection("packages")) {
+        ofJson activation =
+            loadJsonSnapshotIfExists(
+                ofToDataPath("config/layer-packages.json", true));
+        if (!activation.is_object() ||
+            !activation.contains("packages") ||
+            !activation["packages"].is_array()) {
+            ofLogWarning("Preferences")
+                << "package preferences cannot resolve because the package "
+                   "declaration store is unavailable";
+        } else {
+            std::unordered_map<std::string, ofJson> choices;
+            for (const auto& choice :
+                 packagePreferences->value(
+                     "activations",
+                     ofJson::array())) {
+                choices[choice.value(
+                    "packageId",
+                    std::string())] = choice;
+            }
+            bool anyEnabled = false;
+            for (auto& package : activation["packages"]) {
+                const auto it = choices.find(
+                    package.value("id", std::string()));
+                const bool enabled =
+                    it != choices.end() &&
+                    it->second.value("enabled", false);
+                package["enabled"] = enabled;
+                anyEnabled |= enabled;
+                package.erase("presetBank");
+                if (it != choices.end() &&
+                    it->second.contains("selectedPreset")) {
+                    const auto& selected =
+                        it->second["selectedPreset"];
+                    package["presetBank"] =
+                        selected["bankId"];
+                    package["preset"] =
+                        selected["presetId"];
+                }
+            }
+            activation["enabled"] = anyEnabled;
+            layerLibrary.loadOptInPackages(
+                activation,
+                std::filesystem::path(
+                    ofToDataPath(
+                        "config/layer-packages.json",
+                        true))
+                    .parent_path()
+                    .string(),
+                preferencesPath_ + "#packages");
+        }
+    } else {
+        layerLibrary.loadOptInPackages(packageActivationPath_);
+    }
     {
         std::vector<
             synaptome::element::ElementTypeContract>
@@ -1949,15 +2827,60 @@ void ofApp::setup() {
         };
     }
 
-    midiMapPath = ofToDataPath("config/midi-map.json", true);
-    midi.load(midiMapPath);
-    registerCoreMidiTargets();
     hotkeyMapPath = ofToDataPath("config/hotkeys.json", true);
     hudConfigPath = ofToDataPath("config/hud.json", true);
     overlayLayoutPath = ofToDataPath("config/overlays.json", true);
     deviceMapsDir = ofToDataPath("device_maps", true);
     controlHubPrefsPath = ofToDataPath("config/control_hub_prefs.json", true);
     oscInputConfigPath = ofToDataPath("config/osc-input.json", true);
+    machineProfilePath_ =
+        ofToDataPath("config/machine-profile.json", true);
+    loadMachineProfileSettings();
+
+    midi.setInputBindingPersistenceCallback(
+        [this](const ofJson& snapshot) {
+            return saveMachineProfileMidiInputs(snapshot);
+        });
+    if (machineProfileLoadBlocked_) {
+        const auto result =
+            midi.adoptInputBindingSnapshot({
+                {"inputs", ofJson::array()}
+            });
+        (void)result;
+        ofLogWarning("MachineProfile")
+            << "MIDI input disabled because machine-profile "
+               "authority is blocked";
+    } else if (
+        machineProfileLoaded_ &&
+        machineProfileDocument_.contains("midi")) {
+        const auto result =
+            midi.adoptInputBindingSnapshot(
+                machineProfileDocument_["midi"]);
+        if (!result.ok) {
+            // A validated profile should never reach this branch. Claim
+            // explicit-empty authority so legacy endpoint guesses cannot
+            // take over after an internal adoption failure.
+            midi.adoptInputBindingSnapshot({
+                {"inputs", ofJson::array()}
+            });
+            ofLogWarning("MachineProfile")
+                << "MIDI binding adoption failed: "
+                << result.error;
+        } else if (!result.status.configured) {
+            ofLogNotice("MachineProfile")
+                << "Machine profile explicitly disables MIDI input";
+        } else if (!result.status.resolved) {
+            ofLogWarning("MachineProfile")
+                << "MIDI binding remains unresolved: "
+                << result.status.deviceProfileId << " -> "
+                << result.status.portName << " ("
+                << result.status.detail << ")";
+        }
+    }
+
+    midiMapPath = ofToDataPath("config/midi-map.json", true);
+    midi.load(midiMapPath);
+    registerCoreMidiTargets();
     loadOscInputSettings();
 
     overlayManager.setHudSkin(menuSkin.hud);
@@ -2101,6 +3024,18 @@ void ofApp::setup() {
         sceneLoaded = loadScene(kDefaultScenePath);
     }
     seedConsoleDefaultsIfEmpty();
+    if (bankDefinitionsLoaded_ &&
+        !applyCanonicalGlobalBankDefinitions(
+            bankDefinitionsPublisher_.snapshot())) {
+        ofLogWarning("BankDefinitions")
+            << "failed to adopt validated operator bank definitions at startup";
+    }
+    if (const ofJson* mappingPreferences =
+            canonicalPreferenceSection("mappings")) {
+        activeMidiBank = mappingPreferences->value(
+            "activeBank",
+            std::string());
+    }
     ensureActiveBankValid();
     consolePersistenceSuspended_ = false;
     if (sceneLoaded || consoleConfigNeedsUpgrade) {
@@ -2311,7 +3246,85 @@ void ofApp::setup() {
     controlMappingHub = std::make_shared<ControlMappingHubState>();
     if (controlMappingHub) {
         controlMappingHub->setMenuSkin(menuSkin);
-        controlMappingHub->setPreferencesPath(controlHubPrefsPath);
+        const bool canonicalBrowser =
+            canonicalPreferenceSection("browser") != nullptr;
+        const bool canonicalHud =
+            canonicalPreferenceSection("hud") != nullptr;
+        if (!preferencesLoadBlocked_) {
+            ofJson compatibility =
+                loadJsonSnapshotIfExists(
+                    controlHubPrefsPath);
+            if (!compatibility.is_object()) {
+                compatibility = ofJson::object();
+            }
+            const ofJson canonicalView =
+                synaptome::state::
+                    controlHubCompatibilityView(
+                        preferencesPublisher_.snapshot());
+            auto overlayKeys =
+                [&](std::initializer_list<const char*> keys) {
+                    for (const char* key : keys) {
+                        compatibility.erase(key);
+                        if (canonicalView.contains(key)) {
+                            compatibility[key] =
+                                canonicalView[key];
+                        }
+                    }
+                };
+            if (canonicalBrowser) {
+                overlayKeys({
+                    "treeWidthRatio",
+                    "selectedCategory",
+                    "selectedSubcategory",
+                    "selectedAsset",
+                    "selectedColumn",
+                    "visibleColumns",
+                    "collapsedCategories",
+                    "collapsedParameterSections",
+                });
+            }
+            if (canonicalHud) {
+                overlayKeys({
+                    "hudVisible",
+                    "hudWidgets",
+                    "hudControllerWidgets",
+                    "hudLayoutTarget",
+                    "hudStateMigrated",
+                });
+            }
+            controlMappingHub->
+                setCanonicalPreferencesSnapshot(
+                    compatibility,
+                    [this](const ofJson& legacy) {
+                        const auto normalized =
+                            synaptome::state::
+                                normalizePreferencesDocument(
+                                    legacy);
+                        if (!normalized.ok) {
+                            return false;
+                        }
+                        ofJson candidate =
+                            preferencesPublisher_.snapshot();
+                        if (normalized.document.contains(
+                                "browser")) {
+                            candidate["browser"] =
+                                normalized.document[
+                                    "browser"];
+                        }
+                        if (normalized.document.contains(
+                                "hud")) {
+                            candidate["hud"] =
+                                normalized.document["hud"];
+                        }
+                        return preferencesPublisher_.
+                            publish(candidate).ok;
+                    });
+        } else {
+            controlMappingHub->
+                setCanonicalPreferencesSnapshot(
+                    ofJson::object(),
+                    nullptr);
+        }
         controlMappingHub->setParameterRegistry(&paramRegistry);
         controlMappingHub->setOptionProviderRegistry(&optionProviderRegistry);
         controlMappingHub->setMidiRouter(&midi);
@@ -2350,24 +3363,70 @@ void ofApp::setup() {
                     return false;
                 }
 
-                ofJson activation = loadJsonSnapshotIfExists(packageActivationPath_);
-                if (!activation.is_object() ||
-                    !activation.value("enabled", false) ||
-                    !activation.contains("packages") ||
-                    !activation["packages"].is_array()) {
-                    ofLogWarning("LayerLibrary")
-                        << "cannot persist package preset without enabled activation config";
-                    return false;
+                ofJson packagePreferences = ofJson::object();
+                packagePreferences["activations"] =
+                    ofJson::array();
+                if (const ofJson* canonical =
+                        canonicalPreferenceSection("packages")) {
+                    packagePreferences = *canonical;
+                } else {
+                    const ofJson activation =
+                        loadJsonSnapshotIfExists(
+                            packageActivationPath_);
+                    if (activation.is_object() &&
+                        activation.contains("packages") &&
+                        activation["packages"].is_array()) {
+                        for (const auto& package :
+                             activation["packages"]) {
+                            if (!package.is_object()) {
+                                continue;
+                            }
+                            ofJson choice = {
+                                {"packageId",
+                                 package.value(
+                                     "id",
+                                     std::string())},
+                                {"enabled",
+                                 package.value(
+                                     "enabled",
+                                     false)}
+                            };
+                            const std::string legacyPreset =
+                                package.value(
+                                    "preset",
+                                    std::string());
+                            if (!legacyPreset.empty()) {
+                                std::string legacyBank =
+                                    package.value(
+                                        "presetBank",
+                                        std::string());
+                                if (legacyBank.empty()) {
+                                    legacyBank = bankId;
+                                }
+                                choice["selectedPreset"] = {
+                                    {"bankId", legacyBank},
+                                    {"presetId", legacyPreset}
+                                };
+                            }
+                            packagePreferences[
+                                "activations"].push_back(
+                                    std::move(choice));
+                        }
+                    }
                 }
                 bool found = false;
-                for (auto& package : activation["packages"]) {
-                    if (!package.is_object() ||
-                        package.value("id", std::string()) != assetId ||
+                for (auto& package :
+                     packagePreferences["activations"]) {
+                    if (package.value(
+                            "packageId",
+                            std::string()) != assetId ||
                         !package.value("enabled", false)) {
                         continue;
                     }
-                    package["preset"] = presetId;
-                    package["presetBank"] = bankId;
+                    package["selectedPreset"] = {
+                        {"bankId", bankId},
+                        {"presetId", presetId}
+                    };
                     found = true;
                     break;
                 }
@@ -2376,17 +3435,50 @@ void ofApp::setup() {
                         << "cannot persist preset for inactive package " << assetId;
                     return false;
                 }
-                if (!writeJsonSnapshotAtomically(
-                        localPackageActivationPath_,
-                        activation)) {
+                if (!publishPreferenceSection(
+                        "packages",
+                        packagePreferences)) {
                     return false;
                 }
-                packageActivationPath_ = localPackageActivationPath_;
                 packagePresetSelections_[assetId] = {bankId, presetId};
                 return true;
             });
         controlMappingHub->setDeviceMapsDirectory(deviceMapsDir);
-        controlMappingHub->setSlotAssignmentsPath(slotAssignmentsPath);
+        if (machineProfileLoadBlocked_) {
+            controlMappingHub->setSlotAssignmentsPath("");
+            ofLogWarning("MachineProfile")
+                << "Logical control-slot assignments remain at safe "
+                   "defaults because the machine profile is blocked";
+        } else if (
+            machineProfileLoaded_ &&
+            machineProfileDocument_.contains("controlSlots")) {
+            controlMappingHub->setSlotAssignmentsPath("");
+            const auto adoption =
+                controlMappingHub->adoptSlotAssignmentSnapshot(
+                    machineProfileDocument_["controlSlots"]);
+            if (adoption.ok) {
+                ofLogNotice("MachineProfile")
+                    << "Using machine-profile logical control-slot "
+                       "assignments";
+            } else {
+                ofLogWarning("MachineProfile")
+                    << "Machine-profile logical control-slot assignments "
+                       "could not be activated ("
+                    << adoption.error
+                    << "); preserving safe defaults without legacy "
+                       "downgrade";
+            }
+        } else {
+            controlMappingHub->setSlotAssignmentsPath(
+                slotAssignmentsPath);
+            ofLogNotice("MachineProfile")
+                << "Using the legacy logical control-slot file as a "
+                   "staged compatibility source";
+        }
+        controlMappingHub->setSlotAssignmentPersistenceCallback(
+            [this](const ofJson& snapshot) {
+                return saveMachineProfileControlSlots(snapshot);
+            });
         controlMappingHub->setOscInputModeChangeCallback([this](const std::string& mode) {
             applyOscInputMode(mode);
         });
@@ -2394,7 +3486,9 @@ void ofApp::setup() {
             if (ofToLower(oscInputSettings_.mode) == "routerudp") {
                 ensureRouterUdpReceiver(true);
                 ofLogNotice("OscInput") << "Router UDP receiver rebind requested from Browser";
-            } else {
+            } else if (
+                ofToLower(oscInputSettings_.mode) ==
+                "directserial") {
                 collector.requestReconnect();
                 ofLogNotice("OscInput") << "Serial OSC reconnect requested from Browser";
             }
@@ -2617,13 +3711,13 @@ void ofApp::setup() {
     };
 
     collector.setLogTag("CollectorSerial");
-    collector.setAutoPortHints({ "usb vid:pid=239a:811b ser=10:51:db:31:12:cc", "ser=10:51:db:31:12:cc", "feather esp32-s3", "vid:pid=239a:811b", "239a:811b", "239a", "feather", "usbmodem", "usbserial" });
-    collector.setReconnectInterval(1500);
-    collector.setBaudRate(115200);
+    configureSerialOscCollector();
 
     rebuildDynamicOscRoutes();
     setupLocalMicBridge();
     oscHistory.clear();
+    oscIngressHistory_.clear();
+    meshOscDeduper_.clear();
 
     devicesPanel = std::make_shared<DevicesPanel>();
     if (devicesPanel) {
@@ -2782,7 +3876,24 @@ void ofApp::setup() {
                    });
 
     hotkeyManager.setController(&menuController);
-    hotkeyManager.loadFromDisk();
+    if (const ofJson* canonicalHotkeys =
+            canonicalPreferenceSection("hotkeys")) {
+        if (!hotkeyManager.adoptPreferencesSnapshot(
+                *canonicalHotkeys)) {
+            ofLogWarning("Preferences")
+                << "validated canonical hotkeys could not be adopted";
+        }
+    } else if (!preferencesLoadBlocked_) {
+        hotkeyManager.loadFromDisk();
+    }
+    if (!preferencesLoadBlocked_) {
+        hotkeyManager.setPreferencesPersistenceCallback(
+            [this](const ofJson& hotkeys) {
+                return publishPreferenceSection(
+                    "hotkeys",
+                    hotkeys);
+            });
+    }
 
     publishOverlayVisibilityTelemetry("overlay.hud.visible", overlayVisibility_.hud);
     publishOverlayVisibilityTelemetry("overlay.console.visible", overlayVisibility_.console);
@@ -2841,23 +3952,30 @@ void ofApp::update() {
     midi.update();
     bool collectorPacketThisFrame = false;
     static constexpr uint32_t kCollectorLogSample = 2000;
-    const bool directSerialOscInput = ofToLower(oscInputSettings_.mode) != "routerudp";
+    const std::string oscInputModeLower =
+        ofToLower(oscInputSettings_.mode);
+    const bool directSerialOscInput =
+        oscInputModeLower == "directserial";
+    const bool routerUdpOscInput =
+        oscInputModeLower == "routerudp";
     uint64_t nowMs = static_cast<uint64_t>(ofGetElapsedTimeMillis());
     if (directSerialOscInput) {
-        collector.update([&](const std::string& address, float value) {
+        collector.update([&](OscIngressMessage message) {
             uint64_t now = static_cast<uint64_t>(ofGetElapsedTimeMillis());
+            message.timestampMs = now;
             collectorPacketThisFrame = true;
             collectorPacketsSeen_++;
             lastCollectorPacketMs_ = now;
             if (collectorPacketsSeen_ <= 5 || (collectorPacketsSeen_ % kCollectorLogSample) == 0) {
                 ofLogVerbose("CollectorSerial") << "packet#" << collectorPacketsSeen_
                                                 << " t=" << now
-                                                << " address=" << address
-                                                << " value=" << value;
+                                                << " address=" << message.rawAddress
+                                                << " types=" << message.typeTags
+                                                << " payload=" << message.payloadSummary();
             }
-            ingestOscMessage(address, value);
+            ingestOscEnvelope(std::move(message));
         });
-    } else {
+    } else if (routerUdpOscInput) {
         updateRouterUdpReceiver(nowMs);
     }
     updateLocalMicBridge(nowMs);
@@ -2883,12 +4001,31 @@ void ofApp::update() {
         }
     }
     const bool midiConnected = midi.isConnected();
-    if (!midiTelemetryInitialized_ || midiConnected != lastMidiConnected_) {
+    const auto midiBindingStatus = midi.inputBindingStatus();
+    std::string midiStatusDetail;
+    if (midiConnected) {
+        midiStatusDetail = midi.connectedPortName();
+    } else if (midiBindingStatus.authoritative) {
+        if (!midiBindingStatus.configured) {
+            midiStatusDetail = "disabled by machine profile";
+        } else {
+            midiStatusDetail =
+                midiBindingStatus.deviceProfileId + " -> " +
+                midiBindingStatus.portName + " (" +
+                midiBindingStatus.detail + ")";
+        }
+    } else {
+        midiStatusDetail = "disconnected";
+    }
+    if (!midiTelemetryInitialized_ ||
+        midiConnected != lastMidiConnected_ ||
+        midiStatusDetail != lastMidiStatusDetail_) {
         publishHudTelemetrySample("hud.debug.terminal",
                                   "midi",
                                   midiConnected ? 1.0f : 0.0f,
-                                  midiConnected ? midi.connectedPortName() : "disconnected");
+                                  midiStatusDetail);
         lastMidiConnected_ = midiConnected;
+        lastMidiStatusDetail_ = midiStatusDetail;
         midiTelemetryInitialized_ = true;
     }
     const bool collectorConnected = collector.isConnected();
@@ -3969,7 +5106,27 @@ std::string ofApp::composeHudStatus() const {
     hud << "\nMIDI: ";
     auto midiSample = hudTelemetryOverrideSample("hud.status", "midi", 5000);
     bool midiConnected = midiSample ? midiSample->value >= 0.5f : midi.isConnected();
-    std::string midiLabel = midiSample ? midiSample->detail : midi.connectedPortName();
+    const auto midiBindingStatus = midi.inputBindingStatus();
+    std::string midiLabel =
+        midiSample ? midiSample->detail : midi.connectedPortName();
+    std::string midiState =
+        midiConnected ? "connected" : "retrying";
+    if (!midiSample &&
+        midiBindingStatus.authoritative &&
+        !midiConnected) {
+        midiState = midiBindingStatus.configured
+            ? (midiBindingStatus.ambiguous
+                   ? "ambiguous"
+                   : "unresolved")
+            : "disabled";
+        if (midiBindingStatus.configured) {
+            midiLabel =
+                midiBindingStatus.deviceProfileId + " -> " +
+                midiBindingStatus.portName;
+        } else {
+            midiLabel.clear();
+        }
+    }
     if (midiConnected) {
         if (midiLabel.empty()) {
             hud << "connected";
@@ -3977,12 +5134,25 @@ std::string ofApp::composeHudStatus() const {
             hud << "connected (" << midiLabel << ")";
         }
     } else {
-        hud << "retrying";
+        hud << midiState;
+        if (!midiLabel.empty()) {
+            hud << " (" << midiLabel << ")";
+        }
     }
     ofJson midiConn;
     midiConn["connected"] = midiConnected;
-    midiConn["state"] = midiConnected ? "connected" : "retrying";
+    midiConn["state"] = midiState;
     midiConn["label"] = midiLabel;
+    if (midiBindingStatus.authoritative) {
+        midiConn["deviceProfileId"] =
+            midiBindingStatus.deviceProfileId;
+        midiConn["configuredPort"] =
+            midiBindingStatus.portName;
+        midiConn["resolved"] =
+            midiBindingStatus.resolved;
+        midiConn["ambiguous"] =
+            midiBindingStatus.ambiguous;
+    }
     midiConn["overridden"] = static_cast<bool>(midiSample);
     if (midiSample) {
         midiConn["timestampMs"] = midiSample->timestampMs;
@@ -4202,10 +5372,15 @@ std::string ofApp::composeHudSensors() const {
 
     const auto& oscSources = midi.getOscSources();
     std::ostringstream oscDetail;
-    oscDetail << oscSources.size() << " learned sources";
+    oscDetail << oscSources.size() << " learned sources"
+              << ", " << oscMessagesObserved_ << " observed"
+              << ", " << oscScalarMessagesRouted_ << " routed";
     if (lastOscMessageValid_) {
-        oscDetail << ", last " << lastOscAddress_ << "=" << ofToString(lastOscValue_, 4)
-                  << " " << ageText(lastOscMessageMs_);
+        oscDetail << ", last " << lastOscAddress_;
+        if (!lastOscPayloadSummary_.empty()) {
+            oscDetail << "=" << lastOscPayloadSummary_;
+        }
+        oscDetail << " " << ageText(lastOscMessageMs_);
     }
     appendDevice("OSC", routerUdpListening_ ? "Router UDP" : "Direct serial", freshEnough(lastOscMessageMs_), oscDetail.str());
 
@@ -4225,10 +5400,26 @@ std::string ofApp::composeHudSensors() const {
         sample["value"] = entry.second;
         osc.push_back(std::move(sample));
     }
+    ofJson ingress = ofJson::array();
+    for (const auto& entry : oscIngressHistory_) {
+        ofJson sample;
+        sample["rawAddress"] = entry.rawAddress;
+        sample["address"] = entry.canonicalAddress;
+        sample["typeTags"] = entry.typeTags;
+        sample["payload"] = entry.payloadSummary();
+        sample["transport"] = entry.transport;
+        sample["endpoint"] = entry.endpoint;
+        sample["timestampMs"] = entry.timestampMs;
+        sample["meshAlias"] = entry.meshNamespaceAlias;
+        sample["meshRouteAlias"] = entry.meshRouteAliasApplied;
+        sample["duplicateSuppressed"] = entry.duplicateSuppressed;
+        ingress.push_back(std::move(sample));
+    }
 
     feed["timestampMs"] = nowMs;
     feed["devices"] = std::move(devices);
     feed["oscHistory"] = std::move(osc);
+    feed["oscIngressHistory"] = std::move(ingress);
     hudFeedRegistry.publish("hud.sensors", std::move(feed));
 
     return hud.str();
@@ -4558,13 +5749,31 @@ void ofApp::keyPressed(int key) {
         break;
     }
     case OF_KEY_F1:
+    {
+        const std::string previousBank = activeMidiBank;
         activeMidiBank = "home";
         ensureActiveBankValid();
+        if (!publishPreferenceSection(
+                "mappings",
+                {{"activeBank", activeMidiBank}})) {
+            activeMidiBank = previousBank;
+            ensureActiveBankValid();
+        }
         break;
+    }
     case OF_KEY_F2:
+    {
+        const std::string previousBank = activeMidiBank;
         activeMidiBank = "scene";
         ensureActiveBankValid();
+        if (!publishPreferenceSection(
+                "mappings",
+                {{"activeBank", activeMidiBank}})) {
+            activeMidiBank = previousBank;
+            ensureActiveBankValid();
+        }
         break;
+    }
     case '+':
     case '=':
         param_speed = ofClamp(param_speed + 0.1f, 0.0f, 5.0f);
@@ -5074,6 +6283,69 @@ void ofApp::setupOscRoutes() {
     }
 }
 
+bool ofApp::observeOscIngressMessage(OscIngressMessage& message) {
+    OscIngressCompatibility::normalizeSynaptomeMeshV1(message);
+    const bool duplicate = meshOscDeduper_.shouldSuppress(message);
+
+    float scalar = 0.0f;
+    const bool routableScalar = message.finiteNumericScalar(scalar);
+    oscMessagesObserved_++;
+    if (!routableScalar) {
+        oscDiagnosticMessagesObserved_++;
+    }
+    if (duplicate) {
+        oscMeshDuplicatesSuppressed_++;
+    }
+
+    lastOscMessageValid_ = true;
+    lastOscAddress_ = message.canonicalAddress;
+    lastOscRawAddress_ = message.rawAddress;
+    lastOscTypeTags_ = message.typeTags;
+    lastOscPayloadSummary_ = message.payloadSummary();
+    lastOscTransport_ = message.transport;
+    lastOscEndpoint_ = message.endpoint;
+    lastOscMessageMs_ = message.timestampMs;
+    lastOscWasRoutableScalar_ = routableScalar;
+    lastOscWasMeshAlias_ = message.meshNamespaceAlias;
+    lastOscWasDuplicate_ = duplicate;
+    if (routableScalar) {
+        lastOscValue_ = scalar;
+    }
+
+    oscIngressHistory_.push_back(message);
+    while (oscIngressHistory_.size() > oscIngressHistoryMax_) {
+        oscIngressHistory_.pop_front();
+    }
+
+    static uint64_t observedLogCount = 0;
+    ++observedLogCount;
+    if (observedLogCount <= 5 || (observedLogCount % 2000) == 0) {
+        ofLogVerbose("OscIngress")
+            << "raw=" << message.rawAddress
+            << " canonical=" << message.canonicalAddress
+            << " types=" << message.typeTags
+            << " payload=" << message.payloadSummary()
+            << (duplicate ? " duplicate=suppressed" : "");
+    }
+    return !duplicate;
+}
+
+void ofApp::ingestOscEnvelope(OscIngressMessage message) {
+    if (!observeOscIngressMessage(message)) {
+        return;
+    }
+    float value = 0.0f;
+    if (!message.finiteNumericScalar(value)) {
+        return;
+    }
+    updateExternalAudioTelemetry(
+        message.canonicalAddress,
+        value,
+        message.timestampMs);
+    ingestOscMessage(message.canonicalAddress, value);
+    oscScalarMessagesRouted_++;
+}
+
 void ofApp::ingestOscMessage(const std::string& address, float value) {
     static uint64_t oscLogCount = 0;
     ++oscLogCount;
@@ -5312,6 +6584,10 @@ bool ofApp::addAssetToConsoleLayer(int layerIndex,
         request.instanceId = prefix;
         request.registryPrefix = prefix;
         request.config = layerConfig;
+        request.initialBaseOrigins =
+            layerLibrary.parameterOriginsForConfig(
+                assetId,
+                layerConfig);
         request.enabled = activate;
 
         const bool replacingElement = slot.hasElement;
@@ -6796,14 +8072,23 @@ bool ofApp::buildSceneApplyPlan(const std::string& canonicalPath,
                                 const ofJson& scene,
                                 SceneApplyPlan& plan,
                                 std::string& error) const {
-    if (!scene.is_object()) {
-        error = "scene document must be an object";
+    const auto normalized = synaptome::state::normalizeSceneDocument(scene);
+    if (!normalized.ok) {
+        plan.sceneVersionUnsupported =
+            normalized.errorCode ==
+            synaptome::state::SceneDocumentError::UnsupportedFutureVersion;
+        error = normalized.error;
         return false;
     }
 
     plan.canonicalPath = canonicalPath;
     plan.fullPath = sceneFilesystemPath(canonicalPath);
-    plan.scene = scene;
+    plan.scene = normalized.document;
+    plan.sceneSourceVersion = normalized.sourceVersion;
+    if (normalized.migratedInMemory) {
+        plan.sceneMigrationTrail.push_back("scene-v1-to-v2");
+    }
+    const ofJson& normalizedScene = plan.scene;
     plan.restoreSecondaryDisplay = secondaryDisplay_.enabled && secondaryDisplay_.active;
     plan.restoreControllerFocusConsole = param_controllerFocusConsole;
     plan.restorePersistenceSuspended = consolePersistenceSuspended_;
@@ -6812,8 +8097,8 @@ bool ofApp::buildSceneApplyPlan(const std::string& canonicalPath,
 
     if (isAutosaveScenePath(canonicalPath)) {
         plan.activeNamedScenePath.clear();
-        if (scene.contains("scene") && scene["scene"].is_object()) {
-            const auto& meta = scene["scene"];
+        if (normalizedScene.contains("scene") && normalizedScene["scene"].is_object()) {
+            const auto& meta = normalizedScene["scene"];
             if (meta.contains("source") && meta["source"].is_object()) {
                 const auto& source = meta["source"];
                 if (source.contains("path") && source["path"].is_string()) {
@@ -6834,25 +8119,37 @@ bool ofApp::buildSceneApplyPlan(const std::string& canonicalPath,
         plan.activeNamedScenePath = canonicalPath;
     }
 
-    if (scene.contains("console")) {
-        if (!validateSceneConsoleLayout(scene["console"], error)) {
+    if (normalizedScene.contains("console")) {
+        if (!validateSceneConsoleLayout(normalizedScene["console"], error)) {
             return false;
         }
         plan.consoleLayoutDefined = true;
     }
 
-    if (scene.contains(kSceneMappingsKey)) {
-        if (!scene[kSceneMappingsKey].is_object()) {
+    if (normalizedScene.contains(kSceneMappingsKey)) {
+        if (!normalizedScene[kSceneMappingsKey].is_object()) {
             error = "scene mappings must be an object";
             return false;
         }
-        const auto& mappingsNode = scene[kSceneMappingsKey];
+        const auto& mappingsNode = normalizedScene[kSceneMappingsKey];
         if (mappingsNode.contains(kSceneRouterMappingsKey)) {
             if (!mappingsNode[kSceneRouterMappingsKey].is_object()) {
                 error = "scene router mappings must be an object";
                 return false;
             }
-            plan.routerSnapshot = mappingsNode[kSceneRouterMappingsKey];
+            const auto normalizedRouter =
+                synaptome::state::normalizeMappingBankDocument(
+                    mappingsNode[kSceneRouterMappingsKey]);
+            if (!normalizedRouter.ok) {
+                plan.mappingVersionUnsupported =
+                    normalizedRouter.errorCode ==
+                    synaptome::state::
+                        MappingBankDocumentError::
+                            UnsupportedFutureVersion;
+                error = normalizedRouter.error;
+                return false;
+            }
+            plan.routerSnapshot = normalizedRouter.document;
             plan.routerMappingsDefined = true;
         }
         if (mappingsNode.contains(kSceneSlotAssignmentsKey)) {
@@ -6862,6 +8159,10 @@ bool ofApp::buildSceneApplyPlan(const std::string& canonicalPath,
             }
             plan.slotAssignmentsSnapshot = mappingsNode[kSceneSlotAssignmentsKey];
             plan.slotAssignmentsDefined = true;
+            ofLogNotice("Scene")
+                << "legacy scene slot assignments are present but "
+                   "machine-profile ownership preserves the current "
+                   "assignments";
         }
         if (mappingsNode.contains(kSceneActiveBankKey)) {
             if (!mappingsNode[kSceneActiveBankKey].is_string()) {
@@ -6886,6 +8187,8 @@ ofApp::SceneLoadRollbackSnapshot ofApp::captureSceneRollbackSnapshot(const std::
         : activeScenePath_;
     snapshot.scene = encodeSceneJson(snapshotPath);
     snapshot.routerSnapshot = midi.exportMappingSnapshot();
+    snapshot.parameterBaseOrigins =
+        paramRegistry.snapshotBaseOrigins();
     const ofJson slotSnapshot = loadJsonSnapshotIfExists(controlHubSlotAssignmentsPath());
     snapshot.slotAssignmentsSnapshot = slotSnapshot.is_object()
         ? slotSnapshot
@@ -7035,10 +8338,6 @@ ofJson ofApp::encodeSceneJson(const std::string& path) const {
     scene["effects"] = effectsJson;
 
     ofJson banksJson;
-    auto globalBanks = bankRegistry.globalBanks();
-    if (!globalBanks.empty()) {
-        banksJson["global"] = BankRegistry::definitionsToJson(globalBanks);
-    }
     auto sceneBanks = bankRegistry.sceneBanks();
     if (!sceneBanks.empty()) {
         banksJson["scene"] = BankRegistry::definitionsToJson(sceneBanks);
@@ -7061,11 +8360,6 @@ ofJson ofApp::encodeSceneJson(const std::string& path) const {
 
     ofJson mappingsJson = ofJson::object();
     mappingsJson[kSceneRouterMappingsKey] = midi.exportMappingSnapshot();
-    const ofJson slotAssignmentsSnapshot = loadJsonSnapshotIfExists(controlHubSlotAssignmentsPath());
-    mappingsJson[kSceneSlotAssignmentsKey] = slotAssignmentsSnapshot.is_object()
-        ? slotAssignmentsSnapshot
-        : emptySlotAssignmentsSnapshot();
-    mappingsJson[kSceneActiveBankKey] = activeMidiBank;
     scene[kSceneMappingsKey] = std::move(mappingsJson);
 
     return scene;
@@ -7084,6 +8378,12 @@ bool ofApp::writeSceneJson(const std::string& path, const ofJson& scene) const {
 
 bool ofApp::applyScenePlan(SceneApplyPlan& plan) {
     const ofJson& scene = plan.scene;
+    const synaptome::state::ParameterBaseOrigin sceneOrigin{
+        synaptome::state::ParameterBaseOriginKind::Scene,
+        plan.canonicalPath,
+        plan.sceneSourceVersion,
+        plan.sceneMigrationTrail,
+    };
     const bool persistenceSuspendedBeforeApply = consolePersistenceSuspended_;
     consolePersistenceSuspended_ = true;
     struct ConsolePersistenceRestore {
@@ -7113,7 +8413,10 @@ bool ofApp::applyScenePlan(SceneApplyPlan& plan) {
 
     if (scene.contains("banks") && scene["banks"].is_object()) {
         const auto& banksNode = scene["banks"];
-        if (banksNode.contains("global") && banksNode["global"].is_array()) {
+        if (!bankDefinitionsLoaded_ &&
+            !bankDefinitionsLoadBlocked_ &&
+            banksNode.contains("global") &&
+            banksNode["global"].is_array()) {
             auto defs = BankRegistry::definitionsFromJson(banksNode["global"], BankRegistry::Scope::kGlobal);
             if (!defs.empty()) {
                 bankRegistry.setGlobalBanks(std::move(defs));
@@ -7130,6 +8433,11 @@ bool ofApp::applyScenePlan(SceneApplyPlan& plan) {
         }
     }
 
+    if (bankDefinitionsLoaded_ &&
+        !applyCanonicalGlobalBankDefinitions(
+            bankDefinitionsPublisher_.snapshot())) {
+        return false;
+    }
     if (bankRegistry.globalBanks().empty()) {
         configureDefaultBanks();
     }
@@ -7153,24 +8461,41 @@ bool ofApp::applyScenePlan(SceneApplyPlan& plan) {
                 }
                 base = ofClamp(base, 0.0f, 100.0f);
             }
-            fp->baseValue = base;
-            fp->applyBaseToLive();
+            paramRegistry.setFloatBase(
+                paramId,
+                base,
+                sceneOrigin,
+                true);
             paramRegistry.clearFloatModifiers(paramId);
-        if (node.is_object() && node.contains("modifiers")) {
-                loadFloatModifiersFromJson(paramRegistry, paramId, node["modifiers"]);
+            if (node.is_object() && node.contains("modifiers")) {
+                loadFloatModifiersFromJson(
+                    paramRegistry,
+                    paramId,
+                    node["modifiers"],
+                    "scene:" + plan.canonicalPath + ":" + paramId);
             }
         } else if (auto* bp = paramRegistry.findBool(paramId)) {
             bool base = parseBaseBool(node, bp->baseValue);
-            bp->baseValue = base;
-            bp->applyBaseToLive();
+            paramRegistry.setBoolBase(
+                paramId,
+                base,
+                sceneOrigin,
+                true);
             paramRegistry.clearBoolModifiers(paramId);
             if (node.is_object() && node.contains("modifiers")) {
-                loadBoolModifiersFromJson(paramRegistry, paramId, node["modifiers"]);
+                loadBoolModifiersFromJson(
+                    paramRegistry,
+                    paramId,
+                    node["modifiers"],
+                    "scene:" + plan.canonicalPath + ":" + paramId);
             }
         } else if (auto* sp = paramRegistry.findString(paramId)) {
             std::string base = parseBaseString(node, sp->baseValue);
-            sp->baseValue = base;
-            sp->applyBaseToLive();
+            paramRegistry.setStringBase(
+                paramId,
+                base,
+                sceneOrigin,
+                true);
         }
     };
 
@@ -7330,7 +8655,8 @@ bool ofApp::applyScenePlan(SceneApplyPlan& plan) {
     }
 
     paramRegistry.evaluateAllModifiers();
-    if (plan.activeBankDefined) {
+    if (plan.activeBankDefined &&
+        canonicalPreferenceSection("mappings") == nullptr) {
         activeMidiBank = plan.activeBank;
     }
     ensureActiveBankValid();
@@ -7364,16 +8690,6 @@ bool ofApp::publishScenePlan(const SceneApplyPlan& plan,
         secondaryDisplayRenderPaused_ = false;
     }
 
-    if (plan.slotAssignmentsDefined) {
-        const std::string slotAssignmentsPath = controlHubSlotAssignmentsPath();
-        if (!writeJsonSnapshotAtomically(slotAssignmentsPath, plan.slotAssignmentsSnapshot)) {
-            error = "failed to apply slot assignment snapshot from scene";
-            return false;
-        }
-        if (controlMappingHub) {
-            controlMappingHub->setSlotAssignmentsPath(slotAssignmentsPath);
-        }
-    }
     activeScenePath_ = plan.canonicalPath;
     activeNamedScenePath_ = plan.activeNamedScenePath;
     sceneMappingSource_ = plan.routerMappingsDefined ? "scene" : "global (preserved)";
@@ -7388,6 +8704,7 @@ bool ofApp::rollbackSceneLoad(const SceneLoadRollbackSnapshot& snapshot,
                               const std::string& failedCanonicalPath,
                               const std::string& reason,
                               bool restorePersistedFiles) {
+    (void)restorePersistedFiles;
     ofLogWarning("Scene") << "rolling back scene load for " << failedCanonicalPath
                           << (reason.empty() ? std::string() : " - " + reason);
 
@@ -7428,18 +8745,10 @@ bool ofApp::rollbackSceneLoad(const SceneLoadRollbackSnapshot& snapshot,
     if (!midi.importMappingSnapshot(snapshot.routerSnapshot, true)) {
         restored = false;
     }
-    if (restorePersistedFiles) {
-        const std::string slotAssignmentsPath = controlHubSlotAssignmentsPath();
-        if (!writeJsonSnapshotAtomically(slotAssignmentsPath, snapshot.slotAssignmentsSnapshot)) {
-            restored = false;
-            ofLogWarning("Scene") << "failed to restore slot assignment snapshot during rollback";
-        }
-        if (controlMappingHub) {
-            controlMappingHub->setSlotAssignmentsPath(slotAssignmentsPath);
-        }
-    }
     syncActiveFxWithConsoleSlots();
     handleControllerFocusParamChange();
+    paramRegistry.restoreBaseOrigins(
+        snapshot.parameterBaseOrigins);
     return restored;
 }
 
@@ -7462,7 +8771,10 @@ bool ofApp::loadScene(const std::string& path) {
         const std::string primaryError = error;
         const std::string backupPath = sceneFilesystemPath(canonicalPath) + ".bak";
         bool recovered = false;
-        if (!plan.recoveredFromBackup && ofFile::doesFileExist(backupPath, false)) {
+        if (!plan.sceneVersionUnsupported &&
+            !plan.mappingVersionUnsupported &&
+            !plan.recoveredFromBackup &&
+            ofFile::doesFileExist(backupPath, false)) {
             try {
                 SceneApplyPlan backupPlan;
                 backupPlan.canonicalPath = canonicalPath;

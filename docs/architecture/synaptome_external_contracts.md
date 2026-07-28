@@ -39,7 +39,7 @@ Decision locked on 2026-04-29:
 
 | Outside World | Current Entry Point | Core Target | Public Contract We Need | Current Gap |
 | --- | --- | --- | --- | --- |
-| MIDI controllers | `MidiRouter`, `device_maps/*.json`, `midi-map.json` | Parameters, banks, slots, mappings | Device map plus MIDI mapping schema, strict target validation, learn lifecycle | Logical slots are fixture-backed; target/action binding semantics are still future policy; OSC metadata is mixed into MIDI router. |
+| MIDI controllers | `MidiRouter`, machine-profile v1, `device_maps/*.json`, `midi-map.json` | Parameters, banks, slots, mappings | Exact machine binding plus mapping-bank route v1, device-map, and strict target contracts | Physical input selection and exact re-resolution are fixture-backed, and Device Mapper can publish an explicit binding. Richer target/action semantics and live hardware evidence remain later boundaries; OSC metadata intentionally shares the router snapshot. |
 | OSC senders | `OscParameterRouter`, `osc-map.json`, Browser OSC source rows | Parameters, modifiers, telemetry | Machine-readable OSC route catalog and target parameter manifest | Runtime config/schema drift and partial fixture coverage. |
 | Helper repos | `SerialSlipOsc`, app OSC examples | Sensors, parameters, HUD telemetry | App-facing OSC contract independent of helper source | Host parser fixture gaps and route-catalog generation remain unresolved. |
 | Microphones | `AudioInputBridge`, `config/audio.json` | Sensor metrics, OSC routes, parameter modifiers | Host audio sensor contract for level/peak and optional OSC publish | No explicit app contract entry/schema/fixture for audio config. |
@@ -60,15 +60,33 @@ Current implementation anchors:
 - `synaptome/src/io/MidiRouter.h`
 - `synaptome/src/io/MidiRouter.cpp`
 - `synaptome/src/ui/DevicesPanel.*`
+- `synaptome/src/io/MachineProfileDocument.*`
 - `synaptome/bin/data/device_maps/*.json`
 - `synaptome/bin/data/config/midi-map.json`
 - `docs/examples/midi_bank_example.json`
+- `docs/examples/machine_profile_example.json`
+- `docs/schemas/mapping_bank_route_snapshot.schema.json`
+- `docs/schemas/machine_profile.schema.json`
+- `tools/testdata/mapping_bank/*.json`
+- `tools/testdata/machine_profile/midi_binding_cases.json`
 
-Contract fields that should become explicit:
+The final example above is an older Browser/interchange artifact and is not
+the runtime persistence shape. Runtime and Scene route snapshots use the flat
+`MidiRouter` vocabulary with root `schemaVersion: 1`. Missing version is
+legacy input; invalid/future versions reject before mutation. Top-level
+physical MIDI device selection is now owned by optional machine-profile v1
+`midi.inputs`. Present empty disables input; omission alone permits the
+standalone `device`/`deviceIndex` compatibility reader. A configured binding
+resolves only on one exact enumerated port name; missing, renamed, or duplicate
+exact names remain unresolved without hint, substring, index, or port-zero
+fallback.
+
+Current and remaining device/route contract fields:
 
 | Field | Meaning |
 | --- | --- |
-| Device identity | User label, optional port hint, manufacturer/model hints, local alias. |
+| Device identity | User label, manufacturer/model hints, local alias, and optional port hints used only for advisory Device Mapper discovery. |
+| Physical input binding | Current machine-profile v1 binding from logical `deviceProfileId` to one exact local `portName`; never inferred from hints at startup. |
 | Physical control | MIDI channel, CC/note/button number, input type, sensitivity, pickup behavior. |
 | Logical role | Slot, column, knob/fader/button role, human label. |
 | Target | Parameter ID, slot role, action ID, or bank control ID. |
@@ -78,10 +96,13 @@ Contract fields that should become explicit:
 
 Current gaps:
 - MIDI/scene/OSC/HUD/device-map targets now pass strict public fixture validation; target/action binding semantics still need policy coverage.
-- Device maps validate shape and logical slots, but not enough role semantics.
+- Device maps validate shape and logical slots, but not enough role semantics;
+  their advisory hints are still mixed into the permissive document.
 - `MidiRouter` also persists OSC source/mapping data, which blurs adapter ownership.
 - Button/action semantics are narrower than the public language will need.
 - Logical slot behavior now has a synthetic controller fixture plus the current MIDI Mix baseline.
+- Exact physical binding and reconnect policy are fixture-backed; live MIDI
+  hardware remains untested.
 
 ## OSC Contract
 

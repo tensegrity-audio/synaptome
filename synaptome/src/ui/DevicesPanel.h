@@ -129,6 +129,7 @@ private:
     bool beginBindingLearn(const EntryRef& ref);
     bool clearBinding(const EntryRef& ref);
     bool saveSelectedDevice();
+    bool publishSelectedMidiInputBinding();
     void cancelPendingLearn();
     void markDeviceDirty(int deviceIndex);
     void updateBindingDescription(RoleSlot& role) const;

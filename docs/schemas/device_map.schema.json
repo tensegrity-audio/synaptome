@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Synaptome Device Map",
-  "description": "Permissive G0 schema for logical controller/device slot maps.",
+  "description": "Permissive G0 schema for logical controller/device slot maps. Port hints are advisory Device Mapper discovery metadata, not canonical physical-endpoint authority.",
   "type": "object",
   "required": ["deviceId", "name", "columns"],
   "additionalProperties": true,
@@ -10,6 +10,7 @@
     "model": { "type": "string" },
     "name": { "type": "string", "minLength": 1 },
     "portHints": {
+      "description": "Advisory strings for associating observed ports with Device Mapper roster rows. Startup selection is owned by the exact machine-profile MIDI binding.",
       "type": "array",
       "items": { "type": "string" }
     },

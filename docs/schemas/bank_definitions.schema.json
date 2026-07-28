@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://synaptome.local/schemas/bank_definitions.schema.json",
+  "title": "Synaptome operator global bank definitions",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "globalBanks"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "globalBanks": {
+      "type": "array",
+      "maxItems": 128,
+      "items": { "$ref": "#/$defs/bank" }
+    }
+  },
+  "$defs": {
+    "stableId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 127,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "text": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "control": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id"],
+      "anyOf": [
+        { "required": ["target"] },
+        { "required": ["modifier"] }
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/stableId" },
+        "label": { "$ref": "#/$defs/text" },
+        "target": { "$ref": "#/$defs/stableId" },
+        "modifier": { "$ref": "#/$defs/stableId" },
+        "description": { "$ref": "#/$defs/text" },
+        "softTakeover": { "type": "boolean" }
+      }
+    },
+    "bank": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id"],
+      "properties": {
+        "id": { "$ref": "#/$defs/stableId" },
+        "label": { "$ref": "#/$defs/text" },
+        "parent": { "$ref": "#/$defs/stableId" },
+        "controls": {
+          "type": "array",
+          "maxItems": 512,
+          "items": { "$ref": "#/$defs/control" }
+        }
+      }
+    }
+  }
+}

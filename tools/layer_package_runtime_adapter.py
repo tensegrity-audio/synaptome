@@ -62,6 +62,7 @@ def build_adapter(package_path: Path) -> tuple[dict[str, Any] | None, list[str]]
     }
 
     presets: dict[str, Any] = {}
+    preset_schema_versions: dict[str, int] = {}
     preset_metadata: list[dict[str, str]] = []
     for reference in as_list(package.get("presets")):
         if not isinstance(reference, dict):
@@ -77,6 +78,9 @@ def build_adapter(package_path: Path) -> tuple[dict[str, Any] | None, list[str]]
             errors.append(str(exc))
             continue
         presets[preset_id] = as_dict(preset.get("parameters"))
+        preset_schema_versions[preset_id] = int(
+            preset.get("schemaVersion", 0)
+        )
         preset_metadata.append(
             {
                 "id": preset_id,
@@ -108,6 +112,8 @@ def build_adapter(package_path: Path) -> tuple[dict[str, Any] | None, list[str]]
         return None, errors
 
     adapter = {
+        "schemaVersion": int(package.get("schemaVersion", 0)),
+        "packageVersion": str(package.get("packageVersion", "")),
         "id": str(asset.get("id", "")),
         "label": str(asset.get("label", "")),
         "category": str(asset.get("category", "")),
@@ -119,6 +125,7 @@ def build_adapter(package_path: Path) -> tuple[dict[str, Any] | None, list[str]]
         "opacity": 1.0,
         "defaults": defaults,
         "presets": presets,
+        "presetSchemaVersions": preset_schema_versions,
         "presetMetadata": preset_metadata,
         "presetBanks": preset_banks,
         "mappingPresets": mapping_presets,

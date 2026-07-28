@@ -2,11 +2,12 @@
 """Validate saved scene persistence fixtures.
 
 This is a static contract gate. It checks committed scene JSON for stable
-scene-owned shape and compares a compact golden summary. A missing ``mappings``
-member is intentionally represented as ``preserve-live`` for legacy-scene
-compatibility; a present member is an explicit scene-owned snapshot, including
-an intentionally empty snapshot. Runtime staged apply and rollback semantics
-remain owned by the scene/display transaction child.
+scene-owned shape and compares a compact golden summary. Router mappings retain
+their existing presence-is-authoritative semantics. ``mappings.slotAssignments``
+is accepted only as a legacy compatibility input; ordinary loads preserve the
+machine owner, including when the legacy snapshot is explicitly empty. Runtime
+staged apply and rollback semantics remain owned by the scene/display
+transaction child.
 """
 from __future__ import annotations
 
@@ -24,6 +25,10 @@ FIXTURE_SCENE_DIR = ROOT / "tools/testdata/runtime_state/layers/scenes"
 FIXTURE_SCENE_LAST = ROOT / "tools/testdata/runtime_state/config/scene-last.json"
 LAYER_DIR = ROOT / "synaptome/bin/data/layers"
 EXPECTED = ROOT / "tools/testdata/scene_persistence/expected_scene_contract.json"
+SLOT_ASSIGNMENT_OWNERSHIP_CASES = (
+    ROOT /
+    "tools/testdata/scene_persistence/slot_assignment_ownership_cases.json"
+)
 
 
 class ContractError(RuntimeError):
@@ -92,11 +97,41 @@ def collect_bank_targets(node: Any) -> list[str]:
     return sorted(set(targets))
 
 
+def summarize_scene_version(data: dict[str, Any], path: Path) -> dict[str, Any]:
+    metadata = data.get("scene")
+    if metadata is None:
+        return {
+            "sceneSourceVersion": 1,
+            "sceneCompatibility": "legacy-v1-unversioned",
+            "sceneNormalizedVersion": 2,
+        }
+    if not isinstance(metadata, dict):
+        raise ContractError(f"{path}: scene metadata must be an object")
+    if "schemaVersion" not in metadata:
+        return {
+            "sceneSourceVersion": 1,
+            "sceneCompatibility": "legacy-v1-unversioned",
+            "sceneNormalizedVersion": 2,
+        }
+    version = metadata["schemaVersion"]
+    if isinstance(version, bool) or not isinstance(version, int):
+        raise ContractError(f"{path}: scene.schemaVersion must be an integer")
+    if version not in (1, 2):
+        raise ContractError(f"{path}: unsupported scene.schemaVersion {version}")
+    return {
+        "sceneSourceVersion": version,
+        "sceneCompatibility": "legacy-v1-explicit" if version == 1 else "current-v2",
+        "sceneNormalizedVersion": 2,
+    }
+
+
 def summarize_mappings(data: dict[str, Any], path: Path) -> dict[str, Any]:
     if "mappings" not in data:
         return {
             "ownership": "preserve-live",
             "routerOwnership": "preserve-live",
+            "routerSourceVersion": None,
+            "routerNormalizedVersion": None,
             "routerCounts": {},
             "slotAssignmentOwnership": "preserve-live",
             "slotAssignmentCount": None,
@@ -111,6 +146,23 @@ def summarize_mappings(data: dict[str, Any], path: Path) -> dict[str, Any]:
     router = mappings.get("router", {})
     if not isinstance(router, dict):
         raise ContractError(f"{path}: mappings.router must be an object")
+    router_source_version: int | None = None
+    router_normalized_version: int | None = None
+    if router_defined:
+        if "schemaVersion" in router:
+            version = router["schemaVersion"]
+            if not isinstance(version, int) or isinstance(version, bool):
+                raise ContractError(
+                    f"{path}: mappings.router.schemaVersion must be an integer"
+                )
+            if version != 1:
+                raise ContractError(
+                    f"{path}: unsupported mappings.router.schemaVersion {version}"
+                )
+            router_source_version = version
+        else:
+            router_source_version = 0
+        router_normalized_version = 1
     router_counts: dict[str, int] = {}
     for key in ("cc", "buttons", "osc", "oscSources"):
         if key not in router:
@@ -145,8 +197,14 @@ def summarize_mappings(data: dict[str, Any], path: Path) -> dict[str, Any]:
         if router_defined or slot_assignments_defined or active_bank is not None
         else "preserve-live",
         "routerOwnership": "scene-snapshot" if router_defined else "preserve-live",
+        "routerSourceVersion": router_source_version,
+        "routerNormalizedVersion": router_normalized_version,
         "routerCounts": router_counts,
-        "slotAssignmentOwnership": "scene-snapshot" if slot_assignments_defined else "preserve-live",
+        "slotAssignmentOwnership": (
+            "legacy-input-preserve-machine"
+            if slot_assignments_defined
+            else "preserve-live"
+        ),
         "slotAssignmentCount": len(assignments) if slot_assignments_defined else None,
         "activeBank": active_bank,
     }
@@ -244,7 +302,7 @@ def summarize_scene(path: Path, asset_ids: set[str]) -> dict[str, Any]:
 
     bank_targets = collect_bank_targets(data.get("banks", {}))
     mapping_summary = summarize_mappings(data, path)
-    return {
+    summary = {
         "path": relative(path),
         "hash": sha256_text(canonical_json(data)),
         "topLevelKeys": sorted(data.keys()),
@@ -258,11 +316,15 @@ def summarize_scene(path: Path, asset_ids: set[str]) -> dict[str, Any]:
         "bankTargets": bank_targets,
         "mappingOwnership": mapping_summary["ownership"],
         "mappingRouterOwnership": mapping_summary["routerOwnership"],
+        "mappingRouterSourceVersion": mapping_summary["routerSourceVersion"],
+        "mappingRouterNormalizedVersion": mapping_summary["routerNormalizedVersion"],
         "mappingRouterCounts": mapping_summary["routerCounts"],
         "slotAssignmentOwnership": mapping_summary["slotAssignmentOwnership"],
         "slotAssignmentCount": mapping_summary["slotAssignmentCount"],
         "mappingActiveBank": mapping_summary["activeBank"],
     }
+    summary.update(summarize_scene_version(data, path))
+    return summary
 
 
 def build_snapshot(scene_dir: Path, scene_last: Path) -> dict[str, Any]:
@@ -279,6 +341,123 @@ def build_snapshot(scene_dir: Path, scene_last: Path) -> dict[str, Any]:
     }
 
 
+def validate_slot_assignment_ownership_cases() -> None:
+    fixture = load_json(SLOT_ASSIGNMENT_OWNERSHIP_CASES)
+    if not isinstance(fixture, dict) or fixture.get("policyVersion") != 1:
+        raise ContractError(
+            f"{SLOT_ASSIGNMENT_OWNERSHIP_CASES}: policyVersion must be 1"
+        )
+
+    writer_cases = fixture.get("writerCases")
+    if not isinstance(writer_cases, list) or not writer_cases:
+        raise ContractError(
+            f"{SLOT_ASSIGNMENT_OWNERSHIP_CASES}: writerCases must be non-empty"
+        )
+    writer_kinds: set[str] = set()
+    seen_ids: set[str] = set()
+    for index, case in enumerate(writer_cases):
+        context = f"{SLOT_ASSIGNMENT_OWNERSHIP_CASES}: writerCases[{index}]"
+        if not isinstance(case, dict):
+            raise ContractError(f"{context} must be an object")
+        case_id = case.get("id")
+        if (
+            not isinstance(case_id, str)
+            or not case_id
+            or case_id in seen_ids
+        ):
+            raise ContractError(f"{context}.id must be unique and non-empty")
+        seen_ids.add(case_id)
+        storage_kind = case.get("storageKind")
+        if storage_kind not in {"named", "autosave"}:
+            raise ContractError(f"{context}.storageKind must be named or autosave")
+        writer_kinds.add(storage_kind)
+        document = case.get("document")
+        if not isinstance(document, dict):
+            raise ContractError(f"{context}.document must be an object")
+        scene = document.get("scene")
+        if (
+            not isinstance(scene, dict)
+            or scene.get("schemaVersion") != 2
+            or not isinstance(scene.get("storage"), dict)
+            or scene["storage"].get("kind") != storage_kind
+        ):
+            raise ContractError(
+                f"{context}.document must identify a current {storage_kind} Scene"
+            )
+        mappings = document.get("mappings", {})
+        if not isinstance(mappings, dict):
+            raise ContractError(f"{context}.document.mappings must be an object")
+        if "slotAssignments" in mappings:
+            raise ContractError(
+                f"{context}: canonical writer output must omit "
+                "mappings.slotAssignments"
+            )
+    if writer_kinds != {"named", "autosave"}:
+        raise ContractError(
+            f"{SLOT_ASSIGNMENT_OWNERSHIP_CASES}: writer policy must cover "
+            "named and recovery-autosave output"
+        )
+
+    read_cases = fixture.get("legacyReadCases")
+    if not isinstance(read_cases, list) or not read_cases:
+        raise ContractError(
+            f"{SLOT_ASSIGNMENT_OWNERSHIP_CASES}: legacyReadCases must be non-empty"
+        )
+    empty_covered = False
+    nonempty_covered = False
+    for index, case in enumerate(read_cases):
+        context = f"{SLOT_ASSIGNMENT_OWNERSHIP_CASES}: legacyReadCases[{index}]"
+        if not isinstance(case, dict):
+            raise ContractError(f"{context} must be an object")
+        case_id = case.get("id")
+        if (
+            not isinstance(case_id, str)
+            or not case_id
+            or case_id in seen_ids
+        ):
+            raise ContractError(f"{context}.id must be unique and non-empty")
+        seen_ids.add(case_id)
+        if (
+            case.get("expectedCompatibility") != "accepted"
+            or case.get("expectedNormalLoadAction") != "preserve-machine"
+            or case.get("explicitImportRequired") is not True
+        ):
+            raise ContractError(
+                f"{context}: legacy input must be accepted, preserve machine "
+                "state by default, and require explicit import"
+            )
+        document = case.get("document")
+        mappings = document.get("mappings") if isinstance(document, dict) else None
+        slot_assignments = (
+            mappings.get("slotAssignments")
+            if isinstance(mappings, dict)
+            else None
+        )
+        assignments = (
+            slot_assignments.get("assignments")
+            if isinstance(slot_assignments, dict)
+            else None
+        )
+        if not isinstance(assignments, list):
+            raise ContractError(
+                f"{context}.document.mappings.slotAssignments.assignments "
+                "must be an array"
+            )
+        for assignment_index, assignment in enumerate(assignments):
+            if not isinstance(assignment, dict):
+                raise ContractError(
+                    f"{context}.document.mappings.slotAssignments.assignments"
+                    f"[{assignment_index}] must be an object"
+                )
+        empty_covered |= not assignments
+        nonempty_covered |= bool(assignments)
+    if not empty_covered or not nonempty_covered:
+        raise ContractError(
+            f"{SLOT_ASSIGNMENT_OWNERSHIP_CASES}: legacy coverage must include "
+            "non-empty and explicitly empty snapshots"
+        )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--write", action="store_true", help="refresh the expected scene contract fixture")
@@ -293,6 +472,7 @@ def main() -> int:
     args = parser.parse_args()
 
     try:
+        validate_slot_assignment_ownership_cases()
         scene_dir = args.scene_dir if args.scene_dir else (LIVE_SCENE_DIR if args.live else FIXTURE_SCENE_DIR)
         scene_last = args.scene_last if args.scene_last else (LIVE_SCENE_LAST if args.live else FIXTURE_SCENE_LAST)
         if not scene_dir.is_absolute():

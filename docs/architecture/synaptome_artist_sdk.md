@@ -42,7 +42,7 @@ Synaptome should not replace openFrameworks. It should package the repetitive li
 | Layer hosting | A visual can be loaded into an eight-slot Console. | `Layer`, `LayerFactory`, `LayerLibrary`, Console slots. | Public authoring guide and fixture-backed catalog. |
 | Parameter UI | Declared values appear in the Browser with labels/ranges/groups. | `ParameterRegistry`, Browser rows. | Parameter vocabulary and generated manifest. |
 | Mapping | Same parameters can be controlled by MIDI, OSC, devices, and sensors. | `MidiRouter`, `OscParameterRouter`, Device Mapper. | Target validation and mapping lifecycle docs. |
-| Scene persistence | Slot assignments and parameter values can be saved/reloaded. | `ofApp::encodeSceneJson`, `ofApp::loadScene`. | Transaction-safe scene load and round-trip fixtures. |
+| Scene persistence | Composition-layer assignments and parameter values can be saved/reloaded; logical hardware control slots remain machine-profile state. | `ofApp::encodeSceneJson`, `ofApp::loadScene`. | Transaction-safe Scene load and round-trip fixtures. |
 | Transport | Layers receive time, BPM, speed, and beat context. | `LayerUpdateParams`, `LayerDrawParams`, `transport.bpm`. | Public beat/phase contract and clock source plan. |
 | Media | Video clips and webcams can be used as layers. | `VideoCatalog`, `VideoClipLayer`, `VideoGrabberLayer`. | Media discovery policy and media parameter vocabulary. |
 | HUD feedback | Runtime state can be visible to the performer. | `HudRegistry`, `HudFeedRegistry`, overlays. | Feed/layout schema and stable widget authoring path. |

@@ -1,0 +1,240 @@
+{
+  "policyVersion": 1,
+  "acceptedDocuments": [
+    {
+      "id": "midi-section-omitted-preserves-current-binding",
+      "expectedApplyAction": "preserve-current",
+      "document": {
+        "schemaVersion": 1,
+        "profileId": "fixture-midi-omitted",
+        "osc": {
+          "inputs": []
+        }
+      }
+    },
+    {
+      "id": "midi-exact-single-input",
+      "expectedApplyAction": "replace",
+      "document": {
+        "schemaVersion": 1,
+        "profileId": "fixture-midi-exact",
+        "osc": {
+          "inputs": []
+        },
+        "midi": {
+          "inputs": [
+            {
+              "deviceProfileId": "MIDI Mix 0",
+              "portName": "MIDI Mix 0"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "midi-explicit-empty-disables-binding",
+      "expectedApplyAction": "clear",
+      "document": {
+        "schemaVersion": 1,
+        "profileId": "fixture-midi-empty",
+        "osc": {
+          "inputs": []
+        },
+        "midi": {
+          "inputs": []
+        }
+      }
+    }
+  ],
+  "invalidDocuments": [
+    {
+      "id": "midi-inputs-not-array",
+      "document": {
+        "schemaVersion": 1,
+        "profileId": "fixture-midi-invalid",
+        "osc": {
+          "inputs": []
+        },
+        "midi": {
+          "inputs": {}
+        }
+      }
+    },
+    {
+      "id": "midi-more-than-one-input",
+      "document": {
+        "schemaVersion": 1,
+        "profileId": "fixture-midi-invalid",
+        "osc": {
+          "inputs": []
+        },
+        "midi": {
+          "inputs": [
+            {
+              "deviceProfileId": "MIDI Mix 0",
+              "portName": "MIDI Mix 0"
+            },
+            {
+              "deviceProfileId": "Backup Controller",
+              "portName": "Backup Controller"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "midi-missing-device-profile-id",
+      "document": {
+        "schemaVersion": 1,
+        "profileId": "fixture-midi-invalid",
+        "osc": {
+          "inputs": []
+        },
+        "midi": {
+          "inputs": [
+            {
+              "portName": "MIDI Mix 0"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "midi-missing-port-name",
+      "document": {
+        "schemaVersion": 1,
+        "profileId": "fixture-midi-invalid",
+        "osc": {
+          "inputs": []
+        },
+        "midi": {
+          "inputs": [
+            {
+              "deviceProfileId": "MIDI Mix 0"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "midi-blank-port-name",
+      "document": {
+        "schemaVersion": 1,
+        "profileId": "fixture-midi-invalid",
+        "osc": {
+          "inputs": []
+        },
+        "midi": {
+          "inputs": [
+            {
+              "deviceProfileId": "MIDI Mix 0",
+              "portName": "   "
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "midi-port-hints-forbidden",
+      "document": {
+        "schemaVersion": 1,
+        "profileId": "fixture-midi-invalid",
+        "osc": {
+          "inputs": []
+        },
+        "midi": {
+          "inputs": [
+            {
+              "deviceProfileId": "MIDI Mix 0",
+              "portName": "MIDI Mix 0",
+              "portHints": [
+                "MIDI Mix"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "midi-device-index-forbidden",
+      "document": {
+        "schemaVersion": 1,
+        "profileId": "fixture-midi-invalid",
+        "osc": {
+          "inputs": []
+        },
+        "midi": {
+          "inputs": [
+            {
+              "deviceProfileId": "MIDI Mix 0",
+              "portName": "MIDI Mix 0",
+              "deviceIndex": 0
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "resolutionCases": [
+    {
+      "id": "unique-exact-match",
+      "availablePorts": [
+        "Other Controller",
+        "MIDI Mix 0"
+      ],
+      "expectedState": "resolved",
+      "expectedPortName": "MIDI Mix 0"
+    },
+    {
+      "id": "missing-device",
+      "availablePorts": [],
+      "expectedState": "unresolved"
+    },
+    {
+      "id": "renamed-substring-is-not-a-match",
+      "availablePorts": [
+        "MIDI Mix 0 Port 2"
+      ],
+      "expectedState": "unresolved"
+    },
+    {
+      "id": "duplicate-exact-name-is-ambiguous",
+      "availablePorts": [
+        "MIDI Mix 0",
+        "MIDI Mix 0"
+      ],
+      "expectedState": "ambiguous"
+    }
+  ],
+  "reconnectCase": {
+    "id": "unplugged-then-exact-reconnect",
+    "initialPorts": [],
+    "reconnectPorts": [
+      "MIDI Mix 0"
+    ],
+    "expectedInitialState": "unresolved",
+    "expectedReconnectState": "resolved",
+    "expectedPortName": "MIDI Mix 0"
+  },
+  "legacyRouteFiltering": {
+    "activeDeviceProfileId": "MIDI Mix 0",
+    "routes": [
+      {
+        "target": "tests.midi.compatible",
+        "deviceId": ""
+      },
+      {
+        "target": "tests.midi.active-profile",
+        "deviceId": "MIDI Mix 0"
+      },
+      {
+        "target": "tests.midi.other-profile",
+        "deviceId": "Other Controller"
+      }
+    ],
+    "expectedRetainedTargets": [
+      "tests.midi.compatible",
+      "tests.midi.active-profile"
+    ]
+  }
+}

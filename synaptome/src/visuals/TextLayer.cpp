@@ -4,6 +4,7 @@
 #include "ofLog.h"
 #include "ofUtils.h"
 #include <cmath>
+#include <utility>
 
 namespace {
     constexpr float kColorMin = 0.0f;
@@ -25,35 +26,45 @@ void TextLayer::configure(const ofJson& config) {
     if (!config.contains("defaults") || !config["defaults"].is_object()) {
         return;
     }
-    auto& state = TextLayerState::instance();
+    auto staged = TextLayerState::instance().snapshot();
     const auto& defaults = config["defaults"];
-    state.content = defaults.value("content", state.content);
-    state.topLeft = defaults.value("topLeft", state.topLeft);
-    state.topRight = defaults.value("topRight", state.topRight);
-    state.bottomLeft = defaults.value("bottomLeft", state.bottomLeft);
-    state.bottomRight = defaults.value("bottomRight", state.bottomRight);
-    state.font = defaults.value("font", state.font);
-    state.fontSize = defaults.value("size", state.fontSize);
-    state.cornerFontSize = defaults.value("cornerSize", state.cornerFontSize);
+    staged.content = defaults.value("content", staged.content);
+    staged.topLeft = defaults.value("topLeft", staged.topLeft);
+    staged.topRight = defaults.value("topRight", staged.topRight);
+    staged.bottomLeft =
+        defaults.value("bottomLeft", staged.bottomLeft);
+    staged.bottomRight =
+        defaults.value("bottomRight", staged.bottomRight);
+    staged.font = defaults.value("font", staged.font);
+    staged.fontSize = defaults.value("size", staged.fontSize);
+    staged.cornerFontSize =
+        defaults.value("cornerSize", staged.cornerFontSize);
     if (defaults.contains("color") && defaults["color"].is_array()) {
         const auto& arr = defaults["color"];
         if (arr.size() >= 3) {
-            state.colorR = static_cast<float>(arr[0].get<double>());
-            state.colorG = static_cast<float>(arr[1].get<double>());
-            state.colorB = static_cast<float>(arr[2].get<double>());
+            staged.colorR = static_cast<float>(arr[0].get<double>());
+            staged.colorG = static_cast<float>(arr[1].get<double>());
+            staged.colorB = static_cast<float>(arr[2].get<double>());
         }
     }
+    stagedState_ = std::move(staged);
 }
 
 void TextLayer::setup(ParameterRegistry& registry) {
     (void)registry;
+    // Text configuration is shared compatibility state. Candidate
+    // preparation must not attach to or normalize the live singleton.
+    // Resource loading is deferred until Runtime commits this element.
+}
+
+void TextLayer::onParameterRegistryCommitted(
+    ParameterRegistry& registry) noexcept {
+    (void)registry;
     state_ = &TextLayerState::instance();
-    if (state_) {
-        state_->refreshAvailableFonts();
-        state_->syncFontSelection();
+    if (stagedState_) {
+        state_->adoptSnapshot(std::move(*stagedState_));
+        stagedState_.reset();
     }
-    ensureFontLoaded();
-    ensureCornerFontLoaded();
 }
 
 void TextLayer::update(const LayerUpdateParams& params) {

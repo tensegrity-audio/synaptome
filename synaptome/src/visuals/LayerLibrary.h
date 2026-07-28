@@ -2,6 +2,7 @@
 
 #include <synaptome/element/Parameter.h>
 
+#include "../core/ParameterValueOrigin.h"
 #include "ofMain.h"
 #include "ofJson.h"
 #include <string>
@@ -51,6 +52,10 @@ public:
     // Loads only explicitly enabled, source-registered package catalog entries.
     // A missing/disabled activation file is a successful no-op.
     bool loadOptInPackages(const std::string& activationPath);
+    bool loadOptInPackages(
+        const ofJson& activation,
+        const std::string& activationDirectory,
+        const std::string& sourceLabel);
     void applyElementParameterDeclarations(
         const std::vector<
             synaptome::element::ElementTypeContract>& contracts);
@@ -61,6 +66,12 @@ public:
                                 const std::string& presetId,
                                 ofJson& resolvedConfig,
                                 std::string* error = nullptr) const;
+    // Returns suffix-keyed, nonserialized origins for the effective defaults
+    // in a resolved definition config.
+    synaptome::state::ParameterBaseOrigins
+        parameterOriginsForConfig(
+            const std::string& assetId,
+            const ofJson& resolvedConfig) const;
 
     const std::vector<Entry>& entries() const { return entries_; }
     const Entry* find(const std::string& id) const;

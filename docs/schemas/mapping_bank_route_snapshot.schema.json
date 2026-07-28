@@ -1,0 +1,248 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Synaptome mapping-bank v1 applied-route snapshot",
+  "description": "Canonical owner-scoped MidiRouter route snapshot. Standalone local files may retain legacy device/deviceIndex envelope fields until machine-profile v1; those fields are intentionally excluded here. Resolved MIDI channel/number routes are not universally portable across machines.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "cc",
+    "buttons",
+    "oscSources",
+    "osc"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "cc": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/ccRoute"
+      }
+    },
+    "buttons": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/buttonRoute"
+      }
+    },
+    "oscSources": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/oscSource"
+      }
+    },
+    "osc": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/oscRoute"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "logicalIdentity": {
+      "type": "object",
+      "properties": {
+        "bank": {
+          "type": "string"
+        },
+        "control": {
+          "type": "string"
+        },
+        "device": {
+          "type": "string"
+        },
+        "column": {
+          "type": "string"
+        },
+        "slot": {
+          "type": "string"
+        }
+      }
+    },
+    "channel": {
+      "anyOf": [
+        {
+          "const": -1
+        },
+        {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16
+        }
+      ]
+    },
+    "range": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "number"
+      }
+    },
+    "ccRoute": {
+      "type": "object",
+      "required": [
+        "num",
+        "target",
+        "out"
+      ],
+      "properties": {
+        "num": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 127
+        },
+        "channel": {
+          "$ref": "#/definitions/channel"
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1
+        },
+        "bank": {
+          "type": "string"
+        },
+        "control": {
+          "type": "string"
+        },
+        "device": {
+          "type": "string"
+        },
+        "column": {
+          "type": "string"
+        },
+        "slot": {
+          "type": "string"
+        },
+        "out": {
+          "$ref": "#/definitions/range"
+        },
+        "snapInt": {
+          "type": "boolean"
+        },
+        "step": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "buttonRoute": {
+      "type": "object",
+      "required": [
+        "num",
+        "type",
+        "target",
+        "setValue"
+      ],
+      "properties": {
+        "num": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 127
+        },
+        "channel": {
+          "$ref": "#/definitions/channel"
+        },
+        "type": {
+          "enum": [
+            "toggle",
+            "set"
+          ]
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1
+        },
+        "bank": {
+          "type": "string"
+        },
+        "control": {
+          "type": "string"
+        },
+        "device": {
+          "type": "string"
+        },
+        "column": {
+          "type": "string"
+        },
+        "slot": {
+          "type": "string"
+        },
+        "setValue": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "oscSource": {
+      "type": "object",
+      "required": [
+        "pattern",
+        "in",
+        "out",
+        "blend",
+        "relative"
+      ],
+      "properties": {
+        "pattern": {
+          "type": "string",
+          "pattern": "^/"
+        },
+        "in": {
+          "$ref": "#/definitions/range"
+        },
+        "out": {
+          "$ref": "#/definitions/range"
+        },
+        "smooth": {
+          "type": "number",
+          "minimum": 0
+        },
+        "deadband": {
+          "type": "number",
+          "minimum": 0
+        },
+        "blend": {
+          "enum": [
+            "additive",
+            "absolute",
+            "scale",
+            "clamp",
+            "toggle"
+          ]
+        },
+        "relative": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "oscRoute": {
+      "type": "object",
+      "required": [
+        "pattern",
+        "target"
+      ],
+      "properties": {
+        "pattern": {
+          "type": "string",
+          "pattern": "^/"
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1
+        },
+        "bank": {
+          "type": "string"
+        },
+        "control": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

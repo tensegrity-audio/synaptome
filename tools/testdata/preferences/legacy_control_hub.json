@@ -1,0 +1,14 @@
+{
+  "treeWidthRatio": 0.16,
+  "selectedCategory": "Scenes",
+  "selectedSubcategory": "Saved",
+  "selectedAsset": "",
+  "selectedColumn": "value",
+  "visibleColumns": {
+    "name": true,
+    "value": true
+  },
+  "hudVisible": true,
+  "hudLayoutTarget": "controller",
+  "hudWidgets": []
+}

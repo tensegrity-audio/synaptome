@@ -1,0 +1,18 @@
+{
+  "cc": [
+    {
+      "num": 23,
+      "target": "console.layer1.opacity",
+      "out": [
+        0.0,
+        1.0
+      ]
+    }
+  ],
+  "osc": [
+    {
+      "pattern": "/sensor/host/localmic/mic-level",
+      "target": "effects.crt.softness"
+    }
+  ]
+}

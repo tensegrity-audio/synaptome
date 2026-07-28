@@ -16,6 +16,38 @@ TextLayerState& TextLayerState::instance() {
     return state;
 }
 
+TextLayerState::Snapshot TextLayerState::snapshot() const {
+    Snapshot result;
+    result.content = content;
+    result.topLeft = topLeft;
+    result.topRight = topRight;
+    result.bottomLeft = bottomLeft;
+    result.bottomRight = bottomRight;
+    result.font = font;
+    result.fontIndex = fontIndex;
+    result.fontSize = fontSize;
+    result.cornerFontSize = cornerFontSize;
+    result.colorR = colorR;
+    result.colorG = colorG;
+    result.colorB = colorB;
+    return result;
+}
+
+void TextLayerState::adoptSnapshot(Snapshot&& snapshot) noexcept {
+    content.swap(snapshot.content);
+    topLeft.swap(snapshot.topLeft);
+    topRight.swap(snapshot.topRight);
+    bottomLeft.swap(snapshot.bottomLeft);
+    bottomRight.swap(snapshot.bottomRight);
+    font.swap(snapshot.font);
+    fontIndex = snapshot.fontIndex;
+    fontSize = snapshot.fontSize;
+    cornerFontSize = snapshot.cornerFontSize;
+    colorR = snapshot.colorR;
+    colorG = snapshot.colorG;
+    colorB = snapshot.colorB;
+}
+
 void TextLayerState::refreshAvailableFonts() {
     availableFonts_.clear();
     ofDirectory dir(ofToDataPath("fonts", true));

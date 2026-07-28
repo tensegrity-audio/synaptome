@@ -60,6 +60,21 @@
 
 
 		</ns0:ClCompile>
+		<ns0:ClCompile Include="src\io\MappingBankDocument.cpp">
+			<ns0:Filter>src</ns0:Filter>
+		</ns0:ClCompile>
+		<ns0:ClCompile Include="src\io\PreferencesDocument.cpp">
+			<ns0:Filter>src</ns0:Filter>
+		</ns0:ClCompile>
+		<ns0:ClCompile Include="src\io\BankDefinitionsDocument.cpp">
+			<ns0:Filter>src</ns0:Filter>
+		</ns0:ClCompile>
+		<ns0:ClCompile Include="src\io\MachineProfileDocument.cpp">
+			<ns0:Filter>src</ns0:Filter>
+		</ns0:ClCompile>
+		<ns0:ClCompile Include="src\io\SceneStateDocument.cpp">
+			<ns0:Filter>src</ns0:Filter>
+		</ns0:ClCompile>
 
 
 
@@ -2556,6 +2571,9 @@
 		<ns0:ClInclude Include="src\core\OptionProviderRegistry.h">
 			<ns0:Filter>src</ns0:Filter>
 		</ns0:ClInclude>
+		<ns0:ClInclude Include="src\core\ParameterValueOrigin.h">
+			<ns0:Filter>src</ns0:Filter>
+		</ns0:ClInclude>
 
 
 
@@ -2573,6 +2591,24 @@
 
 
 
+		</ns0:ClInclude>
+		<ns0:ClInclude Include="src\io\MappingBankDocument.h">
+			<ns0:Filter>src</ns0:Filter>
+		</ns0:ClInclude>
+		<ns0:ClInclude Include="src\io\PreferencesDocument.h">
+			<ns0:Filter>src</ns0:Filter>
+		</ns0:ClInclude>
+		<ns0:ClInclude Include="src\io\BankDefinitionsDocument.h">
+			<ns0:Filter>src</ns0:Filter>
+		</ns0:ClInclude>
+		<ns0:ClInclude Include="src\io\MachineProfileDocument.h">
+			<ns0:Filter>src</ns0:Filter>
+		</ns0:ClInclude>
+		<ns0:ClInclude Include="src\io\OscIngressMessage.h">
+			<ns0:Filter>src</ns0:Filter>
+		</ns0:ClInclude>
+		<ns0:ClInclude Include="src\io\SceneStateDocument.h">
+			<ns0:Filter>src</ns0:Filter>
 		</ns0:ClInclude>
 
 

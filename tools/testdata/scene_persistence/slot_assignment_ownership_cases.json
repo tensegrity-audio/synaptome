@@ -1,0 +1,90 @@
+{
+  "policyVersion": 1,
+  "writerCases": [
+    {
+      "id": "named-scene-omits-machine-assignments",
+      "path": "layers/scenes/ownership-fixture.json",
+      "storageKind": "named",
+      "document": {
+        "scene": {
+          "schemaVersion": 2,
+          "storage": {
+            "kind": "named",
+            "path": "layers/scenes/ownership-fixture.json",
+            "name": "Ownership Fixture"
+          }
+        },
+        "mappings": {
+          "router": {
+            "schemaVersion": 1
+          },
+          "activeBank": "default"
+        }
+      }
+    },
+    {
+      "id": "recovery-autosave-omits-machine-assignments",
+      "path": "config/scene-last.json",
+      "storageKind": "autosave",
+      "document": {
+        "scene": {
+          "schemaVersion": 2,
+          "storage": {
+            "kind": "autosave",
+            "path": "config/scene-last.json",
+            "name": "Recovery Autosave"
+          }
+        },
+        "mappings": {
+          "router": {
+            "schemaVersion": 1
+          },
+          "activeBank": "default"
+        }
+      }
+    }
+  ],
+  "legacyReadCases": [
+    {
+      "id": "legacy-nonempty-preserves-machine-by-default",
+      "expectedCompatibility": "accepted",
+      "expectedNormalLoadAction": "preserve-machine",
+      "explicitImportRequired": true,
+      "document": {
+        "scene": {
+          "schemaVersion": 2
+        },
+        "mappings": {
+          "slotAssignments": {
+            "assignments": [
+              {
+                "parameterId": "console.layer1.opacity",
+                "deviceId": "fixture-controller",
+                "deviceName": "Fixture Controller",
+                "slotId": "column1.K1",
+                "slotLabel": "Column 1 K1",
+                "analog": true
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "legacy-explicit-empty-preserves-machine-by-default",
+      "expectedCompatibility": "accepted",
+      "expectedNormalLoadAction": "preserve-machine",
+      "explicitImportRequired": true,
+      "document": {
+        "scene": {
+          "schemaVersion": 2
+        },
+        "mappings": {
+          "slotAssignments": {
+            "assignments": []
+          }
+        }
+      }
+    }
+  ]
+}

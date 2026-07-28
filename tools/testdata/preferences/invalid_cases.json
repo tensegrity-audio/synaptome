@@ -1,0 +1,44 @@
+[
+  {
+    "id": "future-version",
+    "document": {
+      "schemaVersion": 2
+    }
+  },
+  {
+    "id": "unknown-top-level",
+    "document": {
+      "schemaVersion": 1,
+      "machine": {}
+    }
+  },
+  {
+    "id": "invalid-tree-ratio",
+    "document": {
+      "schemaVersion": 1,
+      "browser": {
+        "treeWidthRatio": 0.01
+      }
+    }
+  },
+  {
+    "id": "name-column-hidden",
+    "document": {
+      "schemaVersion": 1,
+      "browser": {
+        "visibleColumns": {
+          "name": false
+        }
+      }
+    }
+  },
+  {
+    "id": "invalid-active-bank",
+    "document": {
+      "schemaVersion": 1,
+      "mappings": {
+        "activeBank": "bad bank"
+      }
+    }
+  }
+]

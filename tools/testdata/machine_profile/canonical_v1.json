@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "profileId": "fixture-workstation",
+  "osc": {
+    "inputs": [
+      {
+        "id": "osc.router",
+        "enabled": true,
+        "transport": "udp",
+        "udp": {
+          "host": "127.0.0.1",
+          "port": 9000
+        }
+      },
+      {
+        "id": "osc.gateway",
+        "enabled": true,
+        "transport": "serial",
+        "serial": {
+          "autoPort": true,
+          "baud": 115200,
+          "portNameContains": "Fixture Gateway"
+        }
+      }
+    ],
+    "activeInputId": "osc.router",
+    "outputs": [
+      {
+        "id": "osc.monitor",
+        "enabled": false,
+        "transport": "udp",
+        "udp": {
+          "host": "127.0.0.1",
+          "port": 9001
+        }
+      }
+    ]
+  },
+  "midi": {
+    "inputs": [
+      {
+        "deviceProfileId": "MIDI Mix 0",
+        "portName": "MIDI Mix 0"
+      }
+    ]
+  },
+  "controlSlots": {
+    "assignments": [
+      {
+        "assignmentKey": "generative.perlin::scale",
+        "deviceProfileId": "MIDI Mix 0",
+        "slotId": "K1",
+        "analog": true
+      },
+      {
+        "assignmentKey": "generative.perlin::visible",
+        "deviceProfileId": "MIDI Mix 0",
+        "slotId": "B1",
+        "analog": false
+      }
+    ]
+  }
+}

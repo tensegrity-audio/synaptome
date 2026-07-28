@@ -1,0 +1,575 @@
+{
+  "cases": [
+    {
+      "id": "non-object-root",
+      "document": [],
+      "error": "invalid"
+    },
+    {
+      "id": "missing-version",
+      "document": {
+        "profileId": "fixture",
+        "osc": {
+          "inputs": []
+        }
+      },
+      "error": "invalid"
+    },
+    {
+      "id": "string-version",
+      "document": {
+        "schemaVersion": "1",
+        "profileId": "fixture",
+        "osc": {
+          "inputs": []
+        }
+      },
+      "error": "invalid"
+    },
+    {
+      "id": "zero-version",
+      "document": {
+        "schemaVersion": 0,
+        "profileId": "fixture",
+        "osc": {
+          "inputs": []
+        }
+      },
+      "error": "invalid"
+    },
+    {
+      "id": "future-version",
+      "document": {
+        "schemaVersion": 2,
+        "profileId": "fixture",
+        "osc": {
+          "inputs": []
+        }
+      },
+      "error": "future"
+    },
+    {
+      "id": "unknown-root-field",
+      "document": {
+        "schemaVersion": 1,
+        "profileId": "fixture",
+        "osc": {
+          "inputs": []
+        },
+        "layers": []
+      },
+      "error": "invalid"
+    },
+    {
+      "id": "duplicate-endpoint-id",
+      "document": {
+        "schemaVersion": 1,
+        "profileId": "fixture",
+        "osc": {
+          "inputs": [
+            {
+              "id": "osc.same",
+              "enabled": true,
+              "transport": "udp",
+              "udp": {
+                "host": "127.0.0.1",
+                "port": 9000
+              }
+            }
+          ],
+          "activeInputId": "osc.same",
+          "outputs": [
+            {
+              "id": "osc.same",
+              "enabled": true,
+              "transport": "udp",
+              "udp": {
+                "host": "127.0.0.1",
+                "port": 9001
+              }
+            }
+          ]
+        }
+      },
+      "error": "invalid"
+    },
+    {
+      "id": "active-input-is-disabled",
+      "document": {
+        "schemaVersion": 1,
+        "profileId": "fixture",
+        "osc": {
+          "inputs": [
+            {
+              "id": "osc.disabled",
+              "enabled": false,
+              "transport": "udp",
+              "udp": {
+                "host": "127.0.0.1",
+                "port": 9000
+              }
+            }
+          ],
+          "activeInputId": "osc.disabled"
+        }
+      },
+      "error": "invalid"
+    },
+    {
+      "id": "enabled-input-needs-active-reference",
+      "document": {
+        "schemaVersion": 1,
+        "profileId": "fixture",
+        "osc": {
+          "inputs": [
+            {
+              "id": "osc.router",
+              "enabled": true,
+              "transport": "udp",
+              "udp": {
+                "host": "127.0.0.1",
+                "port": 9000
+              }
+            }
+          ]
+        }
+      },
+      "error": "invalid"
+    },
+    {
+      "id": "udp-port-out-of-range",
+      "document": {
+        "schemaVersion": 1,
+        "profileId": "fixture",
+        "osc": {
+          "inputs": [
+            {
+              "id": "osc.router",
+              "enabled": true,
+              "transport": "udp",
+              "udp": {
+                "host": "127.0.0.1",
+                "port": 70000
+              }
+            }
+          ],
+          "activeInputId": "osc.router"
+        }
+      },
+      "error": "invalid"
+    },
+    {
+      "id": "transport-payload-mismatch",
+      "document": {
+        "schemaVersion": 1,
+        "profileId": "fixture",
+        "osc": {
+          "inputs": [
+            {
+              "id": "osc.gateway",
+              "enabled": true,
+              "transport": "serial",
+              "udp": {
+                "host": "127.0.0.1",
+                "port": 9000
+              }
+            }
+          ],
+          "activeInputId": "osc.gateway"
+        }
+      },
+      "error": "invalid"
+    },
+    {
+      "id": "manual-serial-needs-selector",
+      "document": {
+        "schemaVersion": 1,
+        "profileId": "fixture",
+        "osc": {
+          "inputs": [
+            {
+              "id": "osc.gateway",
+              "enabled": true,
+              "transport": "serial",
+              "serial": {
+                "autoPort": false,
+                "baud": 115200
+              }
+            }
+          ],
+          "activeInputId": "osc.gateway"
+        }
+      },
+      "error": "invalid"
+    },
+    {
+      "id": "midi-not-object",
+      "document": {
+        "schemaVersion": 1,
+        "profileId": "fixture",
+        "osc": {
+          "inputs": []
+        },
+        "midi": []
+      },
+      "error": "invalid"
+    },
+    {
+      "id": "midi-missing-inputs",
+      "document": {
+        "schemaVersion": 1,
+        "profileId": "fixture",
+        "osc": {
+          "inputs": []
+        },
+        "midi": {}
+      },
+      "error": "invalid"
+    },
+    {
+      "id": "midi-unknown-field",
+      "document": {
+        "schemaVersion": 1,
+        "profileId": "fixture",
+        "osc": {
+          "inputs": []
+        },
+        "midi": {
+          "inputs": [],
+          "autoOpen": true
+        }
+      },
+      "error": "invalid"
+    },
+    {
+      "id": "midi-inputs-not-array",
+      "document": {
+        "schemaVersion": 1,
+        "profileId": "fixture",
+        "osc": {
+          "inputs": []
+        },
+        "midi": {
+          "inputs": {}
+        }
+      },
+      "error": "invalid"
+    },
+    {
+      "id": "midi-more-than-one-input",
+      "document": {
+        "schemaVersion": 1,
+        "profileId": "fixture",
+        "osc": {
+          "inputs": []
+        },
+        "midi": {
+          "inputs": [
+            {
+              "deviceProfileId": "MIDI Mix 0",
+              "portName": "MIDI Mix 0"
+            },
+            {
+              "deviceProfileId": "synthetic-two-bank-controller",
+              "portName": "Synthetic Controller"
+            }
+          ]
+        }
+      },
+      "error": "invalid"
+    },
+    {
+      "id": "midi-input-not-object",
+      "document": {
+        "schemaVersion": 1,
+        "profileId": "fixture",
+        "osc": {
+          "inputs": []
+        },
+        "midi": {
+          "inputs": [
+            "MIDI Mix 0"
+          ]
+        }
+      },
+      "error": "invalid"
+    },
+    {
+      "id": "midi-input-missing-port-name",
+      "document": {
+        "schemaVersion": 1,
+        "profileId": "fixture",
+        "osc": {
+          "inputs": []
+        },
+        "midi": {
+          "inputs": [
+            {
+              "deviceProfileId": "MIDI Mix 0"
+            }
+          ]
+        }
+      },
+      "error": "invalid"
+    },
+    {
+      "id": "midi-input-index-is-not-canonical",
+      "document": {
+        "schemaVersion": 1,
+        "profileId": "fixture",
+        "osc": {
+          "inputs": []
+        },
+        "midi": {
+          "inputs": [
+            {
+              "deviceProfileId": "MIDI Mix 0",
+              "portName": "MIDI Mix 0",
+              "portIndex": 0
+            }
+          ]
+        }
+      },
+      "error": "invalid"
+    },
+    {
+      "id": "midi-input-blank-device-profile-id",
+      "document": {
+        "schemaVersion": 1,
+        "profileId": "fixture",
+        "osc": {
+          "inputs": []
+        },
+        "midi": {
+          "inputs": [
+            {
+              "deviceProfileId": "   ",
+              "portName": "MIDI Mix 0"
+            }
+          ]
+        }
+      },
+      "error": "invalid"
+    },
+    {
+      "id": "midi-input-blank-port-name",
+      "document": {
+        "schemaVersion": 1,
+        "profileId": "fixture",
+        "osc": {
+          "inputs": []
+        },
+        "midi": {
+          "inputs": [
+            {
+              "deviceProfileId": "MIDI Mix 0",
+              "portName": "   "
+            }
+          ]
+        }
+      },
+      "error": "invalid"
+    },
+    {
+      "id": "control-slots-not-object",
+      "document": {
+        "schemaVersion": 1,
+        "profileId": "fixture",
+        "osc": {
+          "inputs": []
+        },
+        "controlSlots": []
+      },
+      "error": "invalid"
+    },
+    {
+      "id": "control-slots-missing-assignments",
+      "document": {
+        "schemaVersion": 1,
+        "profileId": "fixture",
+        "osc": {
+          "inputs": []
+        },
+        "controlSlots": {}
+      },
+      "error": "invalid"
+    },
+    {
+      "id": "control-slots-unknown-field",
+      "document": {
+        "schemaVersion": 1,
+        "profileId": "fixture",
+        "osc": {
+          "inputs": []
+        },
+        "controlSlots": {
+          "assignments": [],
+          "deviceMaps": []
+        }
+      },
+      "error": "invalid"
+    },
+    {
+      "id": "control-slot-assignments-not-array",
+      "document": {
+        "schemaVersion": 1,
+        "profileId": "fixture",
+        "osc": {
+          "inputs": []
+        },
+        "controlSlots": {
+          "assignments": {}
+        }
+      },
+      "error": "invalid"
+    },
+    {
+      "id": "control-slot-assignment-not-object",
+      "document": {
+        "schemaVersion": 1,
+        "profileId": "fixture",
+        "osc": {
+          "inputs": []
+        },
+        "controlSlots": {
+          "assignments": [
+            "generative.perlin::scale"
+          ]
+        }
+      },
+      "error": "invalid"
+    },
+    {
+      "id": "control-slot-legacy-parameter-id-field",
+      "document": {
+        "schemaVersion": 1,
+        "profileId": "fixture",
+        "osc": {
+          "inputs": []
+        },
+        "controlSlots": {
+          "assignments": [
+            {
+              "parameterId": "generative.perlin::scale",
+              "deviceProfileId": "synthetic-two-bank-controller",
+              "slotId": "K1",
+              "analog": true
+            }
+          ]
+        }
+      },
+      "error": "invalid"
+    },
+    {
+      "id": "control-slot-invalid-assignment-key",
+      "document": {
+        "schemaVersion": 1,
+        "profileId": "fixture",
+        "osc": {
+          "inputs": []
+        },
+        "controlSlots": {
+          "assignments": [
+            {
+              "assignmentKey": "generative.perlin::",
+              "deviceProfileId": "synthetic-two-bank-controller",
+              "slotId": "K1",
+              "analog": true
+            }
+          ]
+        }
+      },
+      "error": "invalid"
+    },
+    {
+      "id": "control-slot-invalid-device-profile-id",
+      "document": {
+        "schemaVersion": 1,
+        "profileId": "fixture",
+        "osc": {
+          "inputs": []
+        },
+        "controlSlots": {
+          "assignments": [
+            {
+              "assignmentKey": "generative.perlin::scale",
+              "deviceProfileId": "",
+              "slotId": "K1",
+              "analog": true
+            }
+          ]
+        }
+      },
+      "error": "invalid"
+    },
+    {
+      "id": "control-slot-invalid-slot-id",
+      "document": {
+        "schemaVersion": 1,
+        "profileId": "fixture",
+        "osc": {
+          "inputs": []
+        },
+        "controlSlots": {
+          "assignments": [
+            {
+              "assignmentKey": "generative.perlin::scale",
+              "deviceProfileId": "synthetic-two-bank-controller",
+              "slotId": "",
+              "analog": true
+            }
+          ]
+        }
+      },
+      "error": "invalid"
+    },
+    {
+      "id": "control-slot-analog-not-boolean",
+      "document": {
+        "schemaVersion": 1,
+        "profileId": "fixture",
+        "osc": {
+          "inputs": []
+        },
+        "controlSlots": {
+          "assignments": [
+            {
+              "assignmentKey": "generative.perlin::scale",
+              "deviceProfileId": "synthetic-two-bank-controller",
+              "slotId": "K1",
+              "analog": 1
+            }
+          ]
+        }
+      },
+      "error": "invalid"
+    },
+    {
+      "id": "duplicate-control-slot-assignment-key",
+      "document": {
+        "schemaVersion": 1,
+        "profileId": "fixture",
+        "osc": {
+          "inputs": []
+        },
+        "controlSlots": {
+          "assignments": [
+            {
+              "assignmentKey": "generative.perlin::scale",
+              "deviceProfileId": "synthetic-two-bank-controller",
+              "slotId": "K1",
+              "analog": true
+            },
+            {
+              "assignmentKey": "generative.perlin::scale",
+              "deviceProfileId": "synthetic-two-bank-controller",
+              "slotId": "F",
+              "analog": true
+            }
+          ]
+        }
+      },
+      "error": "invalid"
+    }
+  ]
+}

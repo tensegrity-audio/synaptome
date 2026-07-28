@@ -305,10 +305,11 @@ This should become a documented parameter library: a small set of recommended ID
 The Console is the current performance deck:
 
 - fixed eight-slot model,
-- slot asset assignment,
+- composition-slot asset assignment,
 - per-slot opacity and coverage,
 - keyboard access through `Ctrl+1..8`,
-- persistence through scene JSON and slot assignment config,
+- composition persistence through Scene JSON; logical hardware control-slot
+  assignments persist separately in machine-profile v1,
 - slot inventory surfaced in the Browser and HUD.
 
 The public Synaptome language should call this the Console or eight-slot Console. It is a primary feature, not just an internal UI.
@@ -347,7 +348,7 @@ The Device Mapper is a core Synaptome idea.
 Current device maps are JSON files such as `bin/data/device_maps/MIDI Mix 0.json`. They describe:
 
 - device identity,
-- port hints,
+- advisory port-discovery hints,
 - columns/groups,
 - roles like knob, fader, and button,
 - MIDI binding metadata,
@@ -357,12 +358,17 @@ This lets Synaptome understand a controller as an operator surface. The future p
 
 ```text
 Add a JSON device map
-  -> Synaptome sees the controller
-  -> map roles to parameters
+  -> Device Mapper suggests an available-port association
+  -> operator explicitly binds the observed exact port
+  -> machine-profile v1 saves the local binding
+  -> map logical roles to parameters
   -> save the mapping
 ```
 
-That is separate from hardware helpers. MIDI devices, OSC sources, and radio/helper devices should all become inputs to the same parameter/control model.
+Hints help build the operator roster; they are not canonical startup selection.
+Exact MIDI input resolution uses only the machine-profile `portName`. That is
+separate from hardware helpers. MIDI devices, OSC sources, and radio/helper
+devices should all become inputs to the same parameter/control model.
 
 ### HUD
 

@@ -12,6 +12,7 @@
 #include <utility>
 #include <vector>
 #include "../common/modifier.h"
+#include "ParameterValueOrigin.h"
 
 class ParameterRegistry {
 public:
@@ -51,6 +52,7 @@ public:
         float* value = nullptr;
         float defaultValue = 0.0f;
         float baseValue = 0.0f;
+        synaptome::state::ParameterBaseOrigin baseOrigin;
         std::vector<RuntimeModifier> modifiers;
 
         void applyBaseToLive() const {
@@ -69,6 +71,7 @@ public:
         bool* value = nullptr;
         bool defaultValue = false;
         bool baseValue = false;
+        synaptome::state::ParameterBaseOrigin baseOrigin;
         std::vector<RuntimeModifier> modifiers;
 
         void applyBaseToLive() const {
@@ -87,6 +90,7 @@ public:
         std::string* value = nullptr;
         std::string defaultValue;
         std::string baseValue;
+        synaptome::state::ParameterBaseOrigin baseOrigin;
 
         void applyBaseToLive() const {
             if (value) {
@@ -125,12 +129,27 @@ public:
 
     float getFloatBase(const std::string& id) const;
     void setFloatBase(const std::string& id, float value, bool applyToLive = false);
+    void setFloatBase(
+        const std::string& id,
+        float value,
+        const synaptome::state::ParameterBaseOrigin& origin,
+        bool applyToLive = false);
 
     bool getBoolBase(const std::string& id) const;
     void setBoolBase(const std::string& id, bool value, bool applyToLive = false);
+    void setBoolBase(
+        const std::string& id,
+        bool value,
+        const synaptome::state::ParameterBaseOrigin& origin,
+        bool applyToLive = false);
 
     std::string getStringBase(const std::string& id) const;
     void setStringBase(const std::string& id, const std::string& value, bool applyToLive = false);
+    void setStringBase(
+        const std::string& id,
+        const std::string& value,
+        const synaptome::state::ParameterBaseOrigin& origin,
+        bool applyToLive = false);
 
     RuntimeModifier& addFloatModifier(const std::string& id, const modifier::Modifier& modifier);
     void clearFloatModifiers(const std::string& id);
@@ -161,6 +180,12 @@ public:
     std::vector<std::pair<std::string, float>> snapshotFloatBases() const;
     std::vector<std::pair<std::string, bool>> snapshotBoolBases() const;
     std::vector<std::pair<std::string, std::string>> snapshotStringBases() const;
+    std::vector<synaptome::state::ParameterValueSnapshot>
+        snapshotValues() const;
+    synaptome::state::ParameterBaseOrigins
+        snapshotBaseOrigins() const;
+    void restoreBaseOrigins(
+        const synaptome::state::ParameterBaseOrigins& origins);
 
     const std::vector<FloatParam>& floats() const { return floats_; }
     const std::vector<BoolParam>& bools() const { return bools_; }
@@ -314,7 +339,11 @@ inline ParameterRegistry::FloatParam& ParameterRegistry::addFloat(const std::str
     if (findFloat(descriptor.id) || findBool(descriptor.id) || findString(descriptor.id)) {
         throw std::logic_error("ParameterRegistry::addFloat duplicate id: " + descriptor.id);
     }
-    FloatParam param{ descriptor, valuePtr, defaultValue, defaultValue };
+    FloatParam param;
+    param.meta = descriptor;
+    param.value = valuePtr;
+    param.defaultValue = defaultValue;
+    param.baseValue = defaultValue;
     if (param.value) {
         *param.value = defaultValue;
     }
@@ -334,7 +363,11 @@ inline ParameterRegistry::StringParam& ParameterRegistry::addString(const std::s
     if (findFloat(descriptor.id) || findBool(descriptor.id) || findString(descriptor.id)) {
         throw std::logic_error("ParameterRegistry::addString duplicate id: " + descriptor.id);
     }
-    StringParam param{ descriptor, valuePtr, defaultValue, defaultValue };
+    StringParam param;
+    param.meta = descriptor;
+    param.value = valuePtr;
+    param.defaultValue = defaultValue;
+    param.baseValue = defaultValue;
     if (param.value) {
         *param.value = defaultValue;
     }
@@ -365,11 +398,28 @@ inline std::string ParameterRegistry::getStringBase(const std::string& id) const
 }
 
 inline void ParameterRegistry::setStringBase(const std::string& id, const std::string& value, bool applyToLive) {
+    const auto* parameter = findString(id);
+    if (!parameter) {
+        throw std::out_of_range("ParameterRegistry::setStringBase missing id: " + id);
+    }
+    setStringBase(
+        id,
+        value,
+        parameter->baseOrigin,
+        applyToLive);
+}
+
+inline void ParameterRegistry::setStringBase(
+    const std::string& id,
+    const std::string& value,
+    const synaptome::state::ParameterBaseOrigin& origin,
+    bool applyToLive) {
     auto* param = const_cast<ParameterRegistry::StringParam*>(findString(id));
     if (!param) {
         throw std::out_of_range("ParameterRegistry::setStringBase missing id: " + id);
     }
     param->baseValue = value;
+    param->baseOrigin = origin;
     if (applyToLive) {
         param->applyBaseToLive();
     }
@@ -386,7 +436,11 @@ inline ParameterRegistry::BoolParam& ParameterRegistry::addBool(const std::strin
     if (findFloat(descriptor.id) || findBool(descriptor.id) || findString(descriptor.id)) {
         throw std::logic_error("ParameterRegistry::addBool duplicate id: " + descriptor.id);
     }
-    BoolParam param{ descriptor, valuePtr, defaultValue, defaultValue };
+    BoolParam param;
+    param.meta = descriptor;
+    param.value = valuePtr;
+    param.defaultValue = defaultValue;
+    param.baseValue = defaultValue;
     if (param.value) {
         *param.value = defaultValue;
     }
@@ -431,11 +485,28 @@ inline float ParameterRegistry::getFloatBase(const std::string& id) const {
 }
 
 inline void ParameterRegistry::setFloatBase(const std::string& id, float value, bool applyToLive) {
+    const auto* parameter = findFloat(id);
+    if (!parameter) {
+        throw std::out_of_range("ParameterRegistry::setFloatBase missing id: " + id);
+    }
+    setFloatBase(
+        id,
+        value,
+        parameter->baseOrigin,
+        applyToLive);
+}
+
+inline void ParameterRegistry::setFloatBase(
+    const std::string& id,
+    float value,
+    const synaptome::state::ParameterBaseOrigin& origin,
+    bool applyToLive) {
     auto* param = findFloat(id);
     if (!param) {
         throw std::out_of_range("ParameterRegistry::setFloatBase missing id: " + id);
     }
     param->baseValue = value;
+    param->baseOrigin = origin;
     if (applyToLive) {
         param->applyBaseToLive();
     }
@@ -450,11 +521,28 @@ inline bool ParameterRegistry::getBoolBase(const std::string& id) const {
 }
 
 inline void ParameterRegistry::setBoolBase(const std::string& id, bool value, bool applyToLive) {
+    const auto* parameter = findBool(id);
+    if (!parameter) {
+        throw std::out_of_range("ParameterRegistry::setBoolBase missing id: " + id);
+    }
+    setBoolBase(
+        id,
+        value,
+        parameter->baseOrigin,
+        applyToLive);
+}
+
+inline void ParameterRegistry::setBoolBase(
+    const std::string& id,
+    bool value,
+    const synaptome::state::ParameterBaseOrigin& origin,
+    bool applyToLive) {
     auto* param = findBool(id);
     if (!param) {
         throw std::out_of_range("ParameterRegistry::setBoolBase missing id: " + id);
     }
     param->baseValue = value;
+    param->baseOrigin = origin;
     if (applyToLive) {
         param->applyBaseToLive();
     }
@@ -513,6 +601,98 @@ inline std::vector<std::pair<std::string, std::string>> ParameterRegistry::snaps
     }
     return result;
 }
+
+inline std::vector<synaptome::state::ParameterValueSnapshot>
+ParameterRegistry::snapshotValues() const {
+    using synaptome::state::ParameterModifierOriginSnapshot;
+    using synaptome::state::ParameterValueKind;
+    using synaptome::state::ParameterValueSnapshot;
+
+    std::vector<ParameterValueSnapshot> result;
+    result.reserve(floats_.size() + bools_.size() + strings_.size());
+    const auto copyActiveModifiers = [](
+        const std::vector<RuntimeModifier>& modifiers) {
+        std::vector<ParameterModifierOriginSnapshot> snapshots;
+        for (std::size_t index = 0; index < modifiers.size(); ++index) {
+            const auto& modifier = modifiers[index];
+            if (!modifier.descriptor.enabled || !modifier.active) {
+                continue;
+            }
+            snapshots.push_back({
+                index,
+                modifier.ownerTag,
+                modifier.active,
+                modifier.applied,
+            });
+        }
+        return snapshots;
+    };
+    for (const auto& entry : floats_) {
+        ParameterValueSnapshot snapshot;
+        snapshot.id = entry.meta.id;
+        snapshot.kind = ParameterValueKind::Float;
+        snapshot.baseValue = entry.baseValue;
+        snapshot.liveValue =
+            entry.value ? *entry.value : entry.baseValue;
+        snapshot.baseOrigin = entry.baseOrigin;
+        snapshot.modifiers = copyActiveModifiers(entry.modifiers);
+        result.push_back(std::move(snapshot));
+    }
+    for (const auto& entry : bools_) {
+        ParameterValueSnapshot snapshot;
+        snapshot.id = entry.meta.id;
+        snapshot.kind = ParameterValueKind::Bool;
+        snapshot.baseValue = entry.baseValue;
+        snapshot.liveValue =
+            entry.value ? *entry.value : entry.baseValue;
+        snapshot.baseOrigin = entry.baseOrigin;
+        snapshot.modifiers = copyActiveModifiers(entry.modifiers);
+        result.push_back(std::move(snapshot));
+    }
+    for (const auto& entry : strings_) {
+        ParameterValueSnapshot snapshot;
+        snapshot.id = entry.meta.id;
+        snapshot.kind = ParameterValueKind::String;
+        snapshot.baseValue = entry.baseValue;
+        snapshot.liveValue =
+            entry.value ? *entry.value : entry.baseValue;
+        snapshot.baseOrigin = entry.baseOrigin;
+        result.push_back(std::move(snapshot));
+    }
+    return result;
+}
+
+inline synaptome::state::ParameterBaseOrigins
+ParameterRegistry::snapshotBaseOrigins() const {
+    synaptome::state::ParameterBaseOrigins origins;
+    origins.reserve(floats_.size() + bools_.size() + strings_.size());
+    for (const auto& entry : floats_) {
+        origins.emplace(entry.meta.id, entry.baseOrigin);
+    }
+    for (const auto& entry : bools_) {
+        origins.emplace(entry.meta.id, entry.baseOrigin);
+    }
+    for (const auto& entry : strings_) {
+        origins.emplace(entry.meta.id, entry.baseOrigin);
+    }
+    return origins;
+}
+
+inline void ParameterRegistry::restoreBaseOrigins(
+    const synaptome::state::ParameterBaseOrigins& origins) {
+    const auto restore = [&](auto& entries) {
+        for (auto& entry : entries) {
+            const auto found = origins.find(entry.meta.id);
+            if (found != origins.end()) {
+                entry.baseOrigin = found->second;
+            }
+        }
+    };
+    restore(floats_);
+    restore(bools_);
+    restore(strings_);
+}
+
 inline ParameterRegistry::RuntimeModifier& ParameterRegistry::addFloatModifier(const std::string& id, const modifier::Modifier& modifier) {
     auto* param = findFloat(id);
     if (!param) {

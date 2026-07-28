@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "globalBanks": [
+    {
+      "id": "home",
+      "label": "Home",
+      "controls": [
+        {
+          "id": "speed",
+          "label": "Speed",
+          "target": "globals.speed",
+          "description": "Global animation speed",
+          "softTakeover": true
+        },
+        {
+          "id": "masterFx",
+          "label": "Master FX",
+          "target": "fx.master",
+          "softTakeover": true
+        }
+      ]
+    },
+    {
+      "id": "performance",
+      "label": "Performance",
+      "parent": "home",
+      "controls": [
+        {
+          "id": "tempo",
+          "label": "Tempo",
+          "target": "transport.bpm",
+          "softTakeover": true
+        }
+      ]
+    }
+  ]
+}

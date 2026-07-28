@@ -350,6 +350,7 @@ MenuController::StateView DevicesPanel::view() const {
 
     if (mode_ == Mode::DeviceList) {
         builder.addHotkey(OF_KEY_RETURN, "Enter", "Edit mapping");
+        builder.addHotkey('A', "A", "Bind exact MIDI port");
         builder.addHotkey(OF_KEY_ESC, "Esc", "Close");
         return buildDeviceListView(builder);
     }
@@ -566,6 +567,11 @@ bool DevicesPanel::handleInput(MenuController& controller, int key) {
     int baseKey = key & 0xFFFF;
 
     if (mode_ == Mode::DeviceList) {
+        if (baseKey == 'A' || baseKey == 'a') {
+            publishSelectedMidiInputBinding();
+            controller.requestViewModelRefresh();
+            return true;
+        }
         switch (baseKey) {
         case OF_KEY_UP:
             moveSelection(-1);
@@ -610,6 +616,13 @@ bool DevicesPanel::handleInput(MenuController& controller, int key) {
         if (saveSelectedDevice()) {
             controller.requestViewModelRefresh();
         }
+        return true;
+    }
+
+    if (baseKey == 'A' || baseKey == 'a') {
+        cancelPendingLearn();
+        publishSelectedMidiInputBinding();
+        controller.requestViewModelRefresh();
         return true;
     }
 
@@ -988,6 +1001,72 @@ bool DevicesPanel::deviceMatchesPort(const DeviceRow& device, const std::string&
         }
     }
     return false;
+}
+
+bool DevicesPanel::publishSelectedMidiInputBinding() {
+    refreshDeviceRoster();
+    int deviceIndex = selectedDeviceIndex_;
+    if (mode_ == Mode::DeviceList &&
+        selectedEntryIndex_ >= 0 &&
+        selectedEntryIndex_ <
+            static_cast<int>(entryRefs_.size()) &&
+        entryRefs_[selectedEntryIndex_].kind ==
+            EntryRef::Kind::DeviceRow) {
+        deviceIndex =
+            entryRefs_[selectedEntryIndex_].deviceIndex;
+    }
+    if (!midiRouter_ ||
+        deviceIndex < 0 ||
+        deviceIndex >=
+            static_cast<int>(devices_.size())) {
+        ofLogWarning("DevicesPanel")
+            << "Cannot bind MIDI input without a selected device";
+        return false;
+    }
+    const auto& device = devices_[
+        static_cast<std::size_t>(deviceIndex)];
+    if (!device.hasMapping ||
+        device.id.empty() ||
+        device.portLabel.empty()) {
+        ofLogWarning("DevicesPanel")
+            << "Select an online device profile before binding MIDI";
+        return false;
+    }
+    const auto resolution =
+        midiRouter_->resolveInputBinding(
+            device.id,
+            device.portLabel);
+    if (!resolution.resolved) {
+        ofLogWarning("DevicesPanel")
+            << "Cannot publish MIDI input binding for exact port '"
+            << device.portLabel << "': "
+            << resolution.detail;
+        return false;
+    }
+
+    const ofJson snapshot = {
+        {
+            "inputs",
+            ofJson::array({
+                {
+                    {"deviceProfileId", device.id},
+                    {"portName", device.portLabel},
+                },
+            })
+        },
+    };
+    const auto result =
+        midiRouter_->publishInputBindingSnapshot(snapshot);
+    if (!result.ok) {
+        ofLogWarning("DevicesPanel")
+            << "MIDI input binding failed: " << result.error;
+        return false;
+    }
+    ofLogNotice("DevicesPanel")
+        << "Published device profile '" << device.id
+        << "' to exact MIDI port '" << device.portLabel << "'";
+    markRosterDirty();
+    return true;
 }
 bool DevicesPanel::beginBindingLearn(const EntryRef& ref) {
     if (!midiRouter_) {

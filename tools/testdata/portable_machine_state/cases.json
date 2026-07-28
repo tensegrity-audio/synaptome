@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "portable-webcam-device-name",
+      "classification": "portable",
+      "expected": "reject",
+      "document": {
+        "id": "media.webcam.fixture",
+        "type": "media.webcam",
+        "defaults": {
+          "deviceName": "Integrated"
+        }
+      }
+    },
+    {
+      "id": "portable-webcam-device-index",
+      "classification": "portable",
+      "expected": "reject",
+      "document": {
+        "id": "media.webcam.fixture",
+        "type": "media.webcam",
+        "defaults": {
+          "deviceIndex": 0
+        }
+      }
+    },
+    {
+      "id": "portable-windows-absolute-path",
+      "classification": "portable",
+      "expected": "reject",
+      "document": {
+        "scene": {
+          "source": "C:\\Users\\fixture\\show.scene.json"
+        }
+      }
+    },
+    {
+      "id": "portable-posix-home-path",
+      "classification": "portable",
+      "expected": "reject",
+      "document": {
+        "asset": {
+          "source": "/home/fixture/media/clip.mp4"
+        }
+      }
+    },
+    {
+      "id": "portable-unc-path",
+      "classification": "portable",
+      "expected": "reject",
+      "document": {
+        "packageRoot": "\\\\show-machine\\content\\packages"
+      }
+    },
+    {
+      "id": "portable-relative-path-and-osc-address",
+      "classification": "portable",
+      "expected": "accept",
+      "document": {
+        "scene": {
+          "source": "layers/scenes/default.json"
+        },
+        "oscAddress": "/sensor/host/localmic/mic-level"
+      }
+    },
+    {
+      "id": "local-machine-profile-physical-values",
+      "classification": "local",
+      "expected": "accept",
+      "document": {
+        "schemaVersion": 1,
+        "profileId": "fixture",
+        "midi": {
+          "inputs": [
+            {
+              "deviceProfileId": "fixture-controller",
+              "portName": "Fixture Controller"
+            }
+          ]
+        },
+        "contentRoot": "C:\\Users\\fixture\\show"
+      }
+    },
+    {
+      "id": "legacy-webcam-selector",
+      "classification": "legacy-compatibility",
+      "expected": "accept",
+      "document": {
+        "type": "media.webcam",
+        "defaults": {
+          "deviceName": "Fixture Camera"
+        }
+      }
+    }
+  ]
+}

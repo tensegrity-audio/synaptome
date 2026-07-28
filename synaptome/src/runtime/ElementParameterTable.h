@@ -123,7 +123,9 @@ public:
 
     void populate(
         std::string_view registryPrefix,
-        ParameterRegistry& registry) const {
+        ParameterRegistry& registry,
+        const synaptome::state::ParameterBaseOrigins&
+            initialBaseOrigins = {}) const {
         const auto error = contractError();
         if (!error.empty()) {
             throw std::logic_error(error);
@@ -150,6 +152,7 @@ public:
 
             const std::string id =
                 std::string(registryPrefix) + "." + declaration.id;
+            const auto origin = initialBaseOrigins.find(declaration.id);
             switch (declaration.kind) {
             case element::ParameterKind::Float: {
                 auto* value = std::get<float*>(entry.storage);
@@ -162,6 +165,9 @@ public:
                 parameter.meta = descriptor;
                 parameter.meta.id = id;
                 parameter.baseValue = effectiveValue;
+                if (origin != initialBaseOrigins.end()) {
+                    parameter.baseOrigin = origin->second;
+                }
                 *value = effectiveValue;
                 break;
             }
@@ -176,6 +182,9 @@ public:
                 parameter.meta = descriptor;
                 parameter.meta.id = id;
                 parameter.baseValue = effectiveValue;
+                if (origin != initialBaseOrigins.end()) {
+                    parameter.baseOrigin = origin->second;
+                }
                 *value = effectiveValue;
                 break;
             }
@@ -190,6 +199,9 @@ public:
                 parameter.meta = descriptor;
                 parameter.meta.id = id;
                 parameter.baseValue = effectiveValue;
+                if (origin != initialBaseOrigins.end()) {
+                    parameter.baseOrigin = origin->second;
+                }
                 *value = effectiveValue;
                 break;
             }

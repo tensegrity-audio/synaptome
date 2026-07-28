@@ -194,9 +194,12 @@ new visual algorithms remain paused until this checkpoint is complete.
   working router configuration. A scene-owned `mappings.router` snapshot
   explicitly replaces the current routes, including an intentionally empty
   snapshot; a legacy scene that omits it preserves the loaded global mapping
-  file. Slot assignments follow the same present-versus-omitted rule.
-  Scene and slot-assignment writes now verify a `.tmp` JSON document, preserve
-  the previous file as `.bak`, and restore it if promotion fails. Mapping files
+  file. This historical slot-assignment policy was superseded on 2026-07-28:
+  logical hardware slots are now machine-profile owned, legacy Scene fields
+  preserve that owner during normal load, and new Scene/autosave writers omit
+  them. Machine-profile assignment writes verify a `.tmp` JSON document,
+  preserve the previous file as `.bak`, and restore it if promotion fails.
+  Mapping files
   follow the same verified backup/recovery path; rejected primary scenes and
   mappings can load their last-known-good backup without discarding live state.
 - 2026-07-25: Added operator-visible `SAVED`, `MODIFIED`, load/save results,

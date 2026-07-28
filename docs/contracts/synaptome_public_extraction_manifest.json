@@ -245,6 +245,11 @@
       "required": true
     },
     {
+      "pattern": "tests/midi_input_binding_flow.inc",
+      "reason": "BrowserFlow physical-MIDI resolver, reconnect, route-filtering, and Device Mapper transaction scenarios.",
+      "required": false
+    },
+    {
       "pattern": "tests/hotkey_manager_tests.cpp",
       "reason": "App-native hotkey regression source.",
       "required": true
@@ -335,6 +340,36 @@
       "required": true
     },
     {
+      "pattern": "tools/validate_machine_profile_contract.py",
+      "reason": "Machine-profile v1 OSC, physical-MIDI input, and logical-slot contract validator.",
+      "required": false
+    },
+    {
+      "pattern": "tools/validate_preferences_contract.py",
+      "reason": "Preferences-v1 schema, migration, and rejection contract validator.",
+      "required": false
+    },
+    {
+      "pattern": "tools/validate_bank_definitions_contract.py",
+      "reason": "Operator global bank-definitions-v1 contract validator.",
+      "required": false
+    },
+    {
+      "pattern": "tools/validate_portable_machine_state.py",
+      "reason": "Portable Scene/layer/package machine-state separation promotion gate.",
+      "required": false
+    },
+    {
+      "pattern": "tools/validate_mapping_bank_contract.py",
+      "reason": "Mapping-bank v1 route persistence contract validator.",
+      "required": false
+    },
+    {
+      "pattern": "tools/validate_osc_ingress_contract.py",
+      "reason": "Typed OSC and Synaptome Mesh consumer compatibility validator.",
+      "required": false
+    },
+    {
       "pattern": "tools/validate_scene_display_transaction.py",
       "reason": "Scene/display source-level transaction guard.",
       "required": true
@@ -360,6 +395,11 @@
       "required": true
     },
     {
+      "pattern": "tools/testdata/circuit_lenia/**",
+      "reason": "Committed Circuit Lenia default route fixture independent of live operator mappings.",
+      "required": false
+    },
+    {
       "pattern": "tools/testdata/console_layout/**",
       "reason": "Console/display golden fixture.",
       "required": true
@@ -373,6 +413,36 @@
       "pattern": "tools/testdata/hud_layout/**",
       "reason": "HUD golden fixture.",
       "required": true
+    },
+    {
+      "pattern": "tools/testdata/machine_profile/**",
+      "reason": "Synthetic machine-profile canonical, empty, rejection, MIDI resolution, and reconnect fixtures.",
+      "required": false
+    },
+    {
+      "pattern": "tools/testdata/mapping_bank/**",
+      "reason": "Mapping-bank v1 canonical and legacy fixtures.",
+      "required": false
+    },
+    {
+      "pattern": "tools/testdata/preferences/**",
+      "reason": "Preferences-v1 canonical, legacy Control Hub, and rejection fixtures.",
+      "required": false
+    },
+    {
+      "pattern": "tools/testdata/bank_definitions/**",
+      "reason": "Global bank-definitions-v1 canonical, empty, and rejection fixtures.",
+      "required": false
+    },
+    {
+      "pattern": "tools/testdata/osc_ingress/**",
+      "reason": "Typed OSC and Synaptome Mesh consumer fixtures.",
+      "required": false
+    },
+    {
+      "pattern": "tools/testdata/portable_machine_state/**",
+      "reason": "Portable/local/legacy artifact classification and promotion-gate cases.",
+      "required": false
     },
     {
       "pattern": "tools/testdata/*_catalog/*",

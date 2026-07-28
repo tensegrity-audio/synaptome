@@ -526,12 +526,33 @@ without pretending Synaptome has hot-loaded plugins before it does.
 
 SEAC-4 is complete: built-in parameter declarations and generated catalog
 views are authoritative without expanding the minimal type/kind/action
-descriptor. The current architecture gate is SEAC-5: define versioned state
-ownership, value provenance, compatibility readers, and migrations for
-defaults, presets, scenes, mappings, machine profiles, and operator
-preferences. Then serialize the broader package descriptor in SEAC-7,
-generate controlled registration in SEAC-8, and add transactional
-parameter/action mapping controls in SEAC-9.
+descriptor. SEAC-5A has frozen the state ownership/provenance matrix and
+compatibility rules in
+[`state_ownership_and_provenance.md`](../contracts/state_ownership_and_provenance.md).
+The pure Scene compatibility reader is now implemented: missing/explicit v1
+normalizes in memory, current v2 passes unchanged, invalid/future versions
+reject before mutation, future versions do not silently recover an older
+backup, and independent omitted-versus-empty mapping semantics remain intact.
+Read-only value-origin inspection now carries declaration/definition defaults,
+package preset and activation identities, Scene source version/migration
+history, Browser edits, and ordered active modifier owners. The actual flat
+`MidiRouter` route snapshot is now mapping-bank v1: legacy unversioned input
+normalizes in memory, canonical writers emit complete route arrays, and
+invalid/future versions reject before mutation or backup downgrade. Active
+bank and bank definitions remain independent app-level ownership records.
+Strict machine-profile v1 now owns OSC transport/endpoints, one exact physical
+MIDI input binding, and logical control-slot assignments behind read-only
+legacy compatibility readers. New Scene/autosave writers omit machine-local
+assignments and route snapshots omit endpoint selection. Physical-MIDI
+resolution, reconnect, explicit-empty disable, active-profile filtering, and
+recoverable Device Mapper publication are fixture-backed; live hardware
+remains untested. Preferences v1, transactional Text adoption, and the
+portable/local-state gate close SEAC-5. Audio, webcam, display, and path
+selection remain named compatibility adapters for a future independently
+transactional machine-profile version.
+Next generalize the isolated confidence suite in SEAC-6, serialize the broader package descriptor in SEAC-7, generate controlled
+registration in SEAC-8, and add transactional parameter/action mapping
+controls in SEAC-9.
 
 Keep package scanning and generated/plugin registration disabled until their
 ordered gates cover duplicate handling, dependency policy, rollback, and ABI

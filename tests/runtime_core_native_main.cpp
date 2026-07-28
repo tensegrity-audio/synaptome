@@ -3032,6 +3032,16 @@ void RunDeclaredParameterBindingScenario() {
         {"gate", false},
         {"name", "configured"},
     };
+    const synaptome::state::ParameterBaseOrigin definitionOrigin{
+        synaptome::state::ParameterBaseOriginKind::DefinitionDefault,
+        request.definitionId,
+        1,
+    };
+    request.initialBaseOrigins = {
+        {"amount", definitionOrigin},
+        {"gate", definitionOrigin},
+        {"name", definitionOrigin},
+    };
 
     auto prepared = runtime.prepareElement(request);
     require(
@@ -3060,39 +3070,112 @@ void RunDeclaredParameterBindingScenario() {
             amount->meta.quickAccessOrder == 3 &&
             amount->defaultValue == 0.5f &&
             amount->baseValue == 0.75f &&
+            amount->baseOrigin == definitionOrigin &&
             amount->value &&
             *amount->value == 0.75f &&
             gate &&
             gate->meta.label == "Gate" &&
             gate->defaultValue &&
             !gate->baseValue &&
+            gate->baseOrigin == definitionOrigin &&
             gate->value &&
             !*gate->value &&
             name &&
             name->meta.label == "Name" &&
             name->defaultValue == "static" &&
             name->baseValue == "configured" &&
+            name->baseOrigin == definitionOrigin &&
             name->value &&
             *name->value == "configured",
         "declared parameter metadata/default/base/live authority drifted");
 
+    const synaptome::state::ParameterBaseOrigin sceneOrigin{
+        synaptome::state::ParameterBaseOriginKind::Scene,
+        "layers/scenes/origin-test.json",
+        1,
+        {"scene-v1-to-v2"},
+    };
+    parameters.setFloatBase(
+        "console.layer1.amount",
+        0.4f,
+        sceneOrigin,
+        true);
+    parameters.setBoolBase(
+        "console.layer1.gate",
+        false,
+        sceneOrigin,
+        true);
+    parameters.setStringBase(
+        "console.layer1.name",
+        "scene",
+        sceneOrigin,
+        true);
+    require(
+        amount->baseOrigin == sceneOrigin &&
+            gate->baseOrigin == sceneOrigin &&
+            name->baseOrigin == sceneOrigin,
+        "scene value origin did not replace configured origin");
+
+    const synaptome::state::ParameterBaseOrigin operatorOrigin{
+        synaptome::state::ParameterBaseOriginKind::OperatorEdit,
+        "tests.operator",
+    };
     parameters.setFloatBase(
         "console.layer1.amount",
         0.25f,
+        operatorOrigin,
         true);
     parameters.setBoolBase(
         "console.layer1.gate",
         true,
+        operatorOrigin,
         true);
     parameters.setStringBase(
         "console.layer1.name",
         "operator",
+        operatorOrigin,
         true);
     require(
         *amount->value == 0.25f &&
             *gate->value &&
-            *name->value == "operator",
+            *name->value == "operator" &&
+            amount->baseOrigin.kind ==
+                synaptome::state::ParameterBaseOriginKind::OperatorEdit &&
+            gate->baseOrigin.kind ==
+                synaptome::state::ParameterBaseOriginKind::OperatorEdit &&
+            name->baseOrigin.kind ==
+                synaptome::state::ParameterBaseOriginKind::OperatorEdit,
         "declared parameter bindings did not reach live element storage");
+
+    modifier::Modifier modifier;
+    modifier.enabled = true;
+    modifier.inputRange = {0.0f, 1.0f, false};
+    modifier.outputRange = {0.0f, 1.0f, false};
+    auto& runtimeModifier = parameters.addFloatModifier(
+        "console.layer1.amount",
+        modifier);
+    runtimeModifier.ownerTag = "tests.origin.modifier";
+    runtimeModifier.inputValue = 0.5f;
+    runtimeModifier.active = true;
+    parameters.evaluateAllModifiers();
+    const auto valueSnapshots = parameters.snapshotValues();
+    const auto amountSnapshot = std::find_if(
+        valueSnapshots.begin(),
+        valueSnapshots.end(),
+        [](const auto& snapshot) {
+            return snapshot.id == "console.layer1.amount";
+        });
+    require(
+        amountSnapshot != valueSnapshots.end() &&
+            std::get<float>(amountSnapshot->baseValue) == 0.25f &&
+            std::get<float>(amountSnapshot->liveValue) == 0.75f &&
+            amountSnapshot->baseOrigin.kind ==
+                synaptome::state::ParameterBaseOriginKind::OperatorEdit &&
+            amountSnapshot->modifiers.size() == 1 &&
+            amountSnapshot->modifiers.front().ownerTag ==
+                "tests.origin.modifier" &&
+            amountSnapshot->modifiers.front().applied,
+        "pointer-free value snapshot lost base, live, or modifier origin");
 
     require(
         runtime.clearCompositionLayer(0) &&

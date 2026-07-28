@@ -192,9 +192,6 @@
           "deadband": 0.01
         }
       ]
-    },
-    "slotAssignments": {
-      "assignments": []
     }
   },
   "scene": {
