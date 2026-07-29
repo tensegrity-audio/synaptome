@@ -1,8 +1,9 @@
 # Synaptome Artist SDK And Compatibility Layer
 
-Status: Supporting architecture draft; reviewed 2026-07-19. The validated
-source-registration example remains the honest public baseline. SDK packaging
-is not an independently active workstream; priority and promotion are owned by
+Status: Supporting architecture draft; reviewed 2026-07-29. The validated
+Package v1 plus controlled generated source-registration path is the honest
+public baseline. SDK packaging is not an independently active workstream;
+priority and promotion are owned by
 [`../project_ops/roadmap.md`](../project_ops/roadmap.md). This document describes
 what Synaptome can provide to openFrameworks artists and what gaps remain.
 
@@ -97,7 +98,8 @@ Current gap:
 - `LayerFactory::registerType()` now accepts one atomic static
   descriptor-plus-creator record and rejects invalid descriptors, missing
   creators, and duplicate type IDs before activation. Package ownership,
-  serialized descriptors, and generated registration remain later gates.
+  serialized descriptors, and controlled generated registration are now
+  proven by Signal Bloom.
 
 ### Level 2: Parametric Layer
 
@@ -166,7 +168,7 @@ The artist ships:
 - source layer class,
 - package manifest with asset metadata, parameters, modes, options, presets,
   media, tests, and compatibility expectations,
-- source registration file,
+- creator-only source registration file,
 - optional presets/scenes,
 - optional media files,
 - parameter documentation generated from package declarations,
@@ -177,25 +179,26 @@ Target:
   `ofApp.cpp` or a handwritten host aggregate.
 
 Current gap:
-- A draft package layout exists, but there is no automatic extension loader or
-  generated registration path.
-- Factory registration still requires a source-level package leaf, aggregate
-  call, and build-project integration.
-- Public dependency boundaries are not split from the current monolithic app.
+- Strict Package v1 and controlled generated registration exist, but there is
+  no automatic extension loader.
+- Runtime discovery, activation recovery, and native-module policy remain
+  separate later gates.
+- Broader built-in migration and public dependency guidance remain incomplete.
 - Extension install and validation should eventually avoid editing the
   controlled host aggregate or project files.
 
 First public decision:
-- The first public Synaptome repo may ship with an honest source-registration SDK path.
-- Artist examples should use a dedicated package leaf registrar, catalog JSON,
-  scene fixture, and validator instead of implying hot-loaded plugins already
-  exist. Signal Bloom's leaf is shared by the host aggregate and package bench.
-- Synaptome must not claim no-source-edit installation until a generated registration, module manifest, or plugin/package loader is implemented and validated.
+- The first public Synaptome repo may ship with an honest controlled generated
+  source-registration SDK path.
+- Artist packages use a creator-only leaf, Package v1, catalog/scene fixtures,
+  and validators instead of implying hot-loaded plugins exist.
+- Synaptome may claim no project-list or host-aggregate edit for controlled
+  source packages, but not runtime discovery or native plug-in loading.
 - `LayerFactory::registerType()` fails loudly for invalid descriptors, missing
   creators, and duplicate type IDs, so malformed or colliding source
-  registrations cannot partially activate or silently replace implementations.
-  This validation does not yet provide package serialization, generated
-  registration, discovery, or persisted mappings.
+  registrations cannot silently replace implementations. Generated
+  registration preflights the complete controlled type set before mutation.
+  Discovery and transactional operator mappings remain later phases.
 
 ## Layer System Roadmap
 
@@ -219,7 +222,7 @@ That roadmap owns:
 - layer presets and preset banks,
 - package OSC mapping presets that appear in the Browser mapping surface,
 - single-layer validation and runtime bench work,
-- source registration now and generated/module loading later.
+- controlled generated source registration now; discovery/module loading later.
 
 The Artist SDK depends on that roadmap, but does not own all of its internal
 implementation details.
@@ -349,8 +352,8 @@ This fixture proves the current honest path: a source-registered `Layer`
 subclass, one package leaf registrar shared by the host aggregate and bench, a
 Browser catalog entry, a saved scene with a Console slot, reusable parameter
 suffixes, MIDI/OSC/sensor route targets, and a paired media layer. It is
-intentionally not the final extension mechanism; source registration remains
-explicit until Synaptome implements generated registration or a package loader.
+intentionally not the final extension mechanism; controlled generated source
+registration is implemented, while discovery and native loading remain later.
 
 ## Existing oF Code Migration Checklist
 
@@ -389,7 +392,7 @@ For a normal openFrameworks sketch:
 | Public layer authoring guide | Architecture docs plus validated `docs/examples/artist_sdk/**` fixture. | Step-by-step guide expanded from the fixture. |
 | Parameter vocabulary | Implicit in code and examples. | Versioned reference plus generated manifest. |
 | Layer system roadmap | Layer package, folder discovery, file-backed generated layers, package params, options, presets, mapping presets, and bench work are larger than the SDK overview. | Use `synaptome_layer_system_roadmap.md` as the primary roadmap for improving the layer system. |
-| Factory registration | Source-level package leaf registration is the first public path; the host aggregate and package bench share Signal Bloom's leaf, while duplicate/empty type IDs fail loudly. | Generated registration, plugin manifest, or module loader that removes handwritten aggregate/project edits. |
+| Factory registration | Package v1 generates Signal Bloom's complete contract and build record; its leaf supplies only the creator, and the host/benches share one generated entrypoint. | Extend the controlled set without host/project edits; decide discovery and native loading separately. |
 | Transport/reactivity contract | BPM and beat context exist, but clock source, confidence, onset/downbeat, and fallback policy are runtime concerns outside the layer roadmap. | Use `synaptome_transport_reactivity.md` for BPM, beat detection, and timing-source work. |
 | Catalog fixture | Golden static `LayerLibrary` ingestion snapshot plus validated artist-authored source/catalog/scene fixture. | Use both fixtures to tighten the public authoring guide and future package seam. |
 | Mapping lifecycle | Real Browser/MIDI/OSC flows. | Public docs for global/scene/local mapping ownership. |

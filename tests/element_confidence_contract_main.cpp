@@ -28,8 +28,8 @@
 #if defined(SYNAPTOME_CONFIDENCE_GRID)
 #include "../synaptome/src/visuals/GridLayer.h"
 #elif defined(SYNAPTOME_CONFIDENCE_SIGNAL_BLOOM)
-#include "../synaptome/src/visuals/SignalBloomLayer.h"
-#include "../synaptome/src/runtime/SignalBloomRegistration.h"
+#include "../docs/examples/layer_packages/signal_bloom/source/SignalBloomLayer.h"
+#include "../synaptome/src/runtime/GeneratedElementPackageRegistrations.h"
 #else
 #error An element confidence fixture must be selected.
 #endif
@@ -88,7 +88,7 @@ void registerFixture(LayerFactory& factory) {
         [] { return std::make_unique<GridLayer>(); },
         LayerFactory::ParameterBindingMode::LegacySetupAdapter);
 #else
-    synaptome::runtime::registerSignalBloomElement(factory);
+    synaptome::runtime::registerGeneratedElementPackages(factory);
 #endif
 }
 

@@ -318,7 +318,8 @@ ElementTypeContract signalBloomTypeContract() {
 
 } // namespace
 
-void registerSignalBloomLayer(LayerFactory& factory) {
+void synaptomeRegisterElementPackage_examples_signal_bloom(
+    LayerFactory& factory) {
     factory.registerType(
         signalBloomTypeContract(),
         []() {

@@ -82,6 +82,8 @@
 
 		<RootNamespace>Synaptome</RootNamespace>
 
+		<SynaptomeEnableGeneratedElementPackages>true</SynaptomeEnableGeneratedElementPackages>
+
 	</PropertyGroup>
 
 	<PropertyGroup Label="SynaptomeOpenFrameworksRootFallback">
@@ -505,7 +507,6 @@
 		<ClCompile Include="src\runtime\BuiltinElementContractExporter.cpp" />
 		<ClCompile Include="src\runtime\BuiltinElementHostBindings.cpp" />
 		<ClCompile Include="src\runtime\BuiltinElements.cpp" />
-		<ClCompile Include="src\runtime\SignalBloomRegistration.cpp" />
 		<ClCompile Include="src\visuals\CircuitTraceLayer.cpp" />
 
 		<ClCompile Include="src\io\MidiRouter.cpp" />
@@ -705,10 +706,8 @@
 		<ClInclude Include="src\runtime\BuiltinElementContractExporter.h" />
 		<ClInclude Include="src\runtime\BuiltinElementHostBindings.h" />
 		<ClInclude Include="src\runtime\BuiltinElements.h" />
-		<ClInclude Include="src\runtime\SignalBloomRegistration.h" />
 		<ClInclude Include="src\visuals\CircuitTraceLayer.h" />
 		<ClInclude Include="src\visuals\EightDirectionMotion.h" />
-		<ClInclude Include="src\visuals\SignalBloomLayer.h" />
 
 		<ClInclude Include="src\io\MidiRouter.h" />
 		<ClInclude Include="src\io\MachineProfileDocument.h" />
@@ -2815,10 +2814,6 @@
 
 			<Project>{5837595d-aca9-485c-8e76-729040ce4b0b}</Project>
 
-		</ProjectReference>
-		<ProjectReference Include="elements\signal_bloom\Element_SignalBloom.vcxproj">
-			<Project>{d9f5486b-17a6-4ebe-8b51-443948e223c4}</Project>
-			<LinkLibraryDependencies>true</LinkLibraryDependencies>
 		</ProjectReference>
 		<ProjectReference Include="runtime\SynaptomeRuntimeCore.vcxproj">
 			<Project>{9ae98481-c999-4438-a0cd-5fc3d230de95}</Project>

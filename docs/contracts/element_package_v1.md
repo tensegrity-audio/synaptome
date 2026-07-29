@@ -211,3 +211,9 @@ SEAC-8 owns how this validated record drives controlled or generated
 registration. Element Package v1 does not serialize project-list edits,
 factory mutation, discovery policy, native-module loading, or activation
 transactions.
+
+SEAC-8 is implemented by
+[`generated_element_package_registration_v1.md`](generated_element_package_registration_v1.md).
+The package registration source now supplies only the deterministically named
+creator; the generated aggregate owns the complete normalized Runtime
+contract and build-source record.

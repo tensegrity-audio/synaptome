@@ -21,26 +21,21 @@
   },
   "dependencies": [
     {
-      "kind": "source",
-      "id": "shipping-signal-bloom-header",
-      "path": "synaptome/src/visuals/SignalBloomLayer.h"
-    },
-    {
-      "kind": "source",
-      "id": "shipping-signal-bloom-implementation",
-      "path": "synaptome/src/visuals/SignalBloomLayer.cpp"
-    },
-    {
       "kind": "registry-entry",
       "id": "signal-bloom-registry-entry",
-      "path": "synaptome/src/runtime/SignalBloomRegistration.cpp",
-      "contains": "\"example.signalBloom\"",
+      "path": "synaptome/src/runtime/GeneratedElementPackageRegistrations.cpp",
+      "contains": "\"39e6e7934d09689bd1a952e2d040f3a36ebdf595a47446778d1745a2fcdb00de\"",
       "expectedCount": 1
     },
     {
-      "kind": "project",
-      "id": "signal-bloom-static-library-project",
-      "path": "synaptome/elements/signal_bloom/Element_SignalBloom.vcxproj"
+      "kind": "registration-set",
+      "id": "controlled-registration-set",
+      "path": "docs/contracts/element_package_registration_set_v1.json"
+    },
+    {
+      "kind": "generated-build",
+      "id": "generated-package-build-target",
+      "path": "synaptome/build/GeneratedElementPackages.targets"
     },
     {
       "kind": "project",
@@ -63,6 +58,10 @@
     "executable": "synaptome/tests/ElementConfidenceSignalBloomContract/x64/Release/ElementConfidenceSignalBloomContract.exe"
   },
   "validators": [
+    {
+      "id": "generated-package-registration",
+      "command": ["{python}", "tools/generate_element_package_registrations.py", "--check"]
+    },
     {
       "id": "artist-sdk-example",
       "command": ["{python}", "tools/validate_artist_sdk_example.py"]

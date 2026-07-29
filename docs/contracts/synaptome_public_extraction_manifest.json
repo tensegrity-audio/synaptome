@@ -70,8 +70,8 @@
       "required": true
     },
     {
-      "pattern": "synaptome/elements/signal_bloom/Element_SignalBloom.vcxproj",
-      "reason": "Reference element static-library project linked by the app.",
+      "pattern": "synaptome/Directory.Build.targets",
+      "reason": "Imports the opt-in generated source-package build target.",
       "required": true
     },
     {

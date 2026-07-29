@@ -12,7 +12,7 @@
     "synaptome/src/ofApp.cpp",
     "synaptome/src/runtime/BuiltinElementHostBindings.cpp",
     "synaptome/src/runtime/BuiltinElements.cpp",
-    "synaptome/src/runtime/SignalBloomRegistration.cpp",
+    "docs/examples/layer_packages/signal_bloom/source/register_signal_bloom.cpp",
     "docs/contracts/builtin_element_parameters.json",
     "synaptome/bin/data/layers/**/*.json"
   ],

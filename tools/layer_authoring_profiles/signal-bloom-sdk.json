@@ -31,15 +31,11 @@
         ]
       },
       {
-        "label": "shipping Signal Bloom static library",
+        "label": "generated package registration is current",
         "command": [
-          "{msbuild}",
-          "synaptome/elements/signal_bloom/Element_SignalBloom.vcxproj",
-          "/t:Rebuild",
-          "/p:Configuration=Release",
-          "/p:Platform=x64",
-          "/m",
-          "/v:minimal"
+          "{python}",
+          "tools/generate_element_package_registrations.py",
+          "--check"
         ]
       },
       {

@@ -799,6 +799,59 @@ CONTRACT_ENTRIES: tuple[ContractEntry, ...] = (
         public_app=True,
     ),
     ContractEntry(
+        name="Generated element package registration",
+        status="validated",
+        sources=(
+            Path(
+                "docs/contracts/"
+                "element_package_registration_set_v1.json"
+            ),
+            Path(
+                "docs/examples/layer_packages/signal_bloom/"
+                "layer.package.json"
+            ),
+            Path(
+                "synaptome/src/runtime/"
+                "GeneratedElementPackageRegistrations.h"
+            ),
+            Path(
+                "synaptome/src/runtime/"
+                "GeneratedElementPackageRegistrations.cpp"
+            ),
+            Path(
+                "synaptome/build/GeneratedElementPackages.targets"
+            ),
+            Path("tools/generate_element_package_registrations.py"),
+        ),
+        validator_command=(
+            "python tools\\generate_element_package_registrations.py "
+            "--check"
+        ),
+        fixtures=(
+            Path(
+                "docs/contracts/"
+                "element_package_registration_set_v1.json"
+            ),
+            Path(
+                "docs/examples/layer_packages/signal_bloom/"
+                "layer.package.json"
+            ),
+        ),
+        notes=(
+            "Validates the explicit registration set before emitting a "
+            "deterministic aggregate record and opt-in MSBuild source list; "
+            "duplicate identities, unresolved required package "
+            "dependencies, stale outputs, and leaf-symbol drift fail before "
+            "factory mutation."
+        ),
+        check_command=(
+            sys.executable,
+            "tools/generate_element_package_registrations.py",
+            "--check",
+        ),
+        public_app=True,
+    ),
+    ContractEntry(
         name="Parameter ID manifest",
         status="validated",
         sources=(
@@ -921,7 +974,7 @@ CONTRACT_ENTRIES: tuple[ContractEntry, ...] = (
             Path("docs/examples/artist_sdk"),
             Path("tools/testdata/artist_sdk/expected_artist_sdk_example.json"),
         ),
-        notes="Static public SDK fixture proves a source-registered Layer, Browser catalog entry, Console scene slot, media pairing, reusable parameter suffixes, and MIDI/OSC/sensor route targets. Source registration remains explicit until the extension/package seam is chosen.",
+        notes="Static public SDK fixture and package-contained shipping source prove a Layer, Browser entry, Console scene slot, media pairing, reusable parameter suffixes, and mapping targets. The shipping leaf is creator-only; Package v1 generates the Runtime contract and build record.",
         check_command=(sys.executable, "tools/validate_artist_sdk_example.py", "--check"),
         public_app=True,
     ),
@@ -965,7 +1018,7 @@ CONTRACT_ENTRIES: tuple[ContractEntry, ...] = (
             Path("docs/examples/layer_packages/signal_bloom"),
             Path("synaptome/bin/data/config/layer-package-inspection.json"),
         ),
-        notes="Separates manifest-only Browser inspection from disabled-by-default, source-registered activation; package mapping presets remain suggestion-only.",
+        notes="Separates generated compile-time source registration from disabled-by-default runtime catalog activation; package mapping presets remain suggestion-only and discovery remains off.",
         check_command=(
             sys.executable,
             "tools/signal_bloom_runtime_contract.py",

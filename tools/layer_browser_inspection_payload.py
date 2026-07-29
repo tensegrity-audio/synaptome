@@ -47,11 +47,12 @@ def parameter_section(label: str) -> str:
 
 def normalize_parameter(raw: dict[str, Any]) -> dict[str, Any]:
     label = str(raw.get("label", ""))
+    group_label = str(raw.get("groupLabel", ""))
     entry: dict[str, Any] = {
         "id": str(raw.get("id", "")),
         "kind": str(raw.get("kind", "")),
         "label": label,
-        "section": parameter_section(label),
+        "section": group_label or parameter_section(label),
         "default": raw.get("default"),
     }
     if "range" in raw:

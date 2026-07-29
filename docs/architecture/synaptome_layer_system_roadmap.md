@@ -53,7 +53,8 @@ creative modules without churning stable public IDs.
 - Package-supplied OSC/audio/control mapping presets that appear in the Browser
   mapping surface.
 - Layer catalog and parameter manifest generation from package metadata.
-- Source registration now, generated registration or loaders later.
+- Controlled generated source registration now; discovery and native loaders
+  remain later.
 - Single-layer static validation and a stub-backed lifecycle/draw-dispatch bench.
 
 ## What Does Not Belong Here
@@ -190,7 +191,7 @@ What is not implemented yet:
 - Runtime or Browser scanning of STL/model/media folders.
 - Browser apply/edit controls for package mapping presets.
 - Runtime activation controls for fixture-only generated layers.
-- Runtime package loading or generated registration.
+- Default-off runtime package discovery and activation.
 
 Current breakage risk is low because the new work is mostly schemas, fixtures,
 and opt-in checks. Risk rises when package outputs start changing Browser or
@@ -203,7 +204,7 @@ runtime behavior.
 | Read-only inspection payload | Low | It is schema-checked fixture output and cannot claim runtime loading, instantiation, or scene mutation. |
 | Browser package/preset/mapping UI | Medium-High | UI state, scenes, and operator edits can conflict if merge rules are vague. |
 | Canonical manifest/catalog integration | Medium-High | Package metadata, runtime registration, scenes, and mappings must not drift. |
-| Runtime package loading or generated registration | High | This touches installation, registration, C++ build/runtime seams, and compatibility policy. |
+| Runtime package discovery or native loading | High | This touches installation, activation, C++ build/runtime seams, recovery, and compatibility policy. |
 
 ## Safety Strategy
 
@@ -228,9 +229,9 @@ Rules for minimizing breakage:
   they must appear as editable mapping rows.
 - Introduce Browser behavior as read-only inspection first, then opt-in
   activation, then default behavior after scene/mapping compatibility is proven.
-- Runtime package loading or generated registration only comes after static
-  package checks, combined checks, Browser inspection, and a single-layer bench
-  exist.
+- Controlled generated registration now follows static package checks,
+  combined checks, Browser inspection, and a single-layer bench. Runtime
+  discovery must preserve those gates and add inspect-before-activate recovery.
 
 Promotion ladder:
 
@@ -256,8 +257,8 @@ indexes them, but this document owns their meaning and next actions.
 | --- | --- | --- | --- |
 | CG-02 | Layer asset golden fixtures | Layer catalog regression mirrors `LayerLibrary` ingestion and checks factory registrations; the artist SDK fixture proves a minimal source/catalog/scene path. | Use the catalog and SDK fixtures to drive package fixture design and the public layer authoring guide. |
 | CG-07 | Public parameter vocabulary | A first reusable vocabulary exists and the artist SDK fixture enforces selected suffix/type families; broader range/unit policy remains advisory. | Tighten suffix/range/unit rules after package fixtures and real examples agree. |
-| CG-11 | Artist SDK compatibility slice | The first public path is honest source registration with a validated source/catalog/scene fixture. | Keep source-registration language honest while package tooling evolves toward generated registration or a loader. |
-| CG-12 | Layer package layout and schema | Draft schemas, a Signal Bloom fixture, shared package discovery roots, and static validation now exist. | Extend the explicit package roots toward template-backed content folders and runtime Browser loading. |
+| CG-11 | Artist SDK compatibility slice | The public path is a validated source/catalog/scene fixture plus controlled generated registration for the package-contained shipping source. | Keep generated source registration distinct from runtime discovery and native loading. |
+| CG-12 | Layer package layout and schema | Strict Element Package v1, a complete Signal Bloom fixture, contained paths, and static validation now exist. | Extend only through default-off inspect-before-activate discovery after SEAC-9. |
 | CG-13 | Manifest generation from package parameters | Package-derived parameter manifest snapshots expand package suffixes through `registryPrefix`; `gen_parameter_manifest.py --include-packages` now writes/checks a draft combined manifest without changing the canonical manifest. | Decide when package-derived entries become part of the canonical `parameter_manifest.json` rather than a draft combined gate. |
 | CG-14 | Dropdown option metadata and dynamic providers | Matching live package parameters use one labeled picker for static `options[]` and registered `optionsSource` choices. Selection updates the existing registry value, provider revisions close stale pickers, and unavailable current values remain preserved until explicit replacement. | Reuse the same metadata/picker path on the next packaged layer and keep raw numeric/string editing available only where no choices are declared. |
 | CG-15 | Layer preset package contract | Package-owned suffix-based presets and ordered banks are schema-validated. The Browser persists a stable bank/preset selection in the operator-local override and applies it on the next layer load with tested precedence and rollback. | Keep current scene values authoritative; consider live preset application only after value provenance and transactional rollback exist. |
@@ -502,20 +503,19 @@ Keep source registration honest until a better mechanism exists.
 Current public path:
 
 ```text
-source files
-  -> register_<packageId>.cpp
-  -> LayerFactory::registerType(
-       ElementDescriptor{typeId, kind, ordered actions},
-       creator)
+validated Element Package v1
+  -> explicit controlled registration set
+  -> generated ElementTypeContract + build source record
+  -> creator-only package leaf
+  -> LayerFactory::registerType(...)
 ```
 
-This remains handwritten source registration. It is not package descriptor
-serialization, package discovery, or SEAC-8 generated registration.
+This is controlled compile-time generated registration. It is not runtime
+package discovery or native binary loading.
 
 Future options:
 
-- generated registration from discovered packages,
-- a centralized module manifest,
+- default-off discovery feeding a separately explicit activation flow,
 - a plugin/package loader with explicit dependency and binary compatibility
   rules.
 

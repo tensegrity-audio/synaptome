@@ -8,6 +8,7 @@
     <ProjectGuid>{37E9D181-C77E-4E42-A541-82C2483B65CE}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>LayerPackageBench</RootNamespace>
+    <SynaptomeEnableGeneratedElementPackages>true</SynaptomeEnableGeneratedElementPackages>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -31,7 +32,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="$(SynaptomeTestRoot)\layer_package_bench_main.cpp" />
-    <ClCompile Include="$(SynaptomeAppRoot)\src\runtime\SignalBloomRegistration.cpp" />
     <ClCompile Include="$(SynaptomeAppRoot)\src\visuals\LayerFactory.cpp" />
   </ItemGroup>
   <ItemGroup>

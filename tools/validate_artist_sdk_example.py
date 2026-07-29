@@ -10,6 +10,8 @@ import sys
 from pathlib import Path
 from typing import Any, Iterable
 
+import element_package_v1
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 EXAMPLE_ROOT = REPO_ROOT / "docs" / "examples" / "artist_sdk"
 EXPECTED_PATH = REPO_ROOT / "tools" / "testdata" / "artist_sdk" / "expected_artist_sdk_example.json"
@@ -19,15 +21,21 @@ SOURCE_PATH = EXAMPLE_ROOT / "SignalBloomLayer.cpp"
 REGISTRATION_PATH = EXAMPLE_ROOT / "register_signal_bloom.cpp"
 CATALOG_PATH = EXAMPLE_ROOT / "signal_bloom.layer.json"
 SCENE_PATH = EXAMPLE_ROOT / "signal_bloom.scene.json"
-RUNTIME_HEADER_PATH = REPO_ROOT / "synaptome" / "src" / "visuals" / "SignalBloomLayer.h"
-RUNTIME_SOURCE_PATH = REPO_ROOT / "synaptome" / "src" / "visuals" / "SignalBloomLayer.cpp"
-RUNTIME_PROJECT_PATH = REPO_ROOT / "synaptome" / "Synaptome.vcxproj"
-ELEMENT_PROJECT_PATH = (
+PACKAGE_SOURCE_ROOT = (
     REPO_ROOT
-    / "synaptome"
-    / "elements"
+    / "docs"
+    / "examples"
+    / "layer_packages"
     / "signal_bloom"
-    / "Element_SignalBloom.vcxproj"
+    / "source"
+)
+PACKAGE_HEADER_PATH = PACKAGE_SOURCE_ROOT / "SignalBloomLayer.h"
+PACKAGE_SOURCE_PATH = PACKAGE_SOURCE_ROOT / "SignalBloomLayer.cpp"
+PACKAGE_REGISTRATION_PATH = PACKAGE_SOURCE_ROOT / "register_signal_bloom.cpp"
+PACKAGE_MANIFEST_PATH = PACKAGE_SOURCE_ROOT.parent / "layer.package.json"
+RUNTIME_PROJECT_PATH = REPO_ROOT / "synaptome" / "Synaptome.vcxproj"
+GENERATED_TARGETS_PATH = (
+    REPO_ROOT / "synaptome" / "build" / "GeneratedElementPackages.targets"
 )
 
 EXPECTED_ASSET_ID = "examples.signal_bloom"
@@ -277,10 +285,12 @@ def build_contract() -> tuple[dict[str, Any], list[str]]:
             REGISTRATION_PATH,
             CATALOG_PATH,
             SCENE_PATH,
-            RUNTIME_HEADER_PATH,
-            RUNTIME_SOURCE_PATH,
+            PACKAGE_HEADER_PATH,
+            PACKAGE_SOURCE_PATH,
+            PACKAGE_REGISTRATION_PATH,
+            PACKAGE_MANIFEST_PATH,
             RUNTIME_PROJECT_PATH,
-            ELEMENT_PROJECT_PATH,
+            GENERATED_TARGETS_PATH,
         )
         if not path.exists()
     ]
@@ -290,10 +300,15 @@ def build_contract() -> tuple[dict[str, Any], list[str]]:
 
     header_text = HEADER_PATH.read_text(encoding="utf-8")
     source_text = SOURCE_PATH.read_text(encoding="utf-8")
-    runtime_header_text = RUNTIME_HEADER_PATH.read_text(encoding="utf-8")
-    runtime_source_text = RUNTIME_SOURCE_PATH.read_text(encoding="utf-8")
+    package_header_text = PACKAGE_HEADER_PATH.read_text(encoding="utf-8")
+    package_source_text = PACKAGE_SOURCE_PATH.read_text(encoding="utf-8")
+    package_registration_text = PACKAGE_REGISTRATION_PATH.read_text(
+        encoding="utf-8"
+    )
     runtime_project_text = RUNTIME_PROJECT_PATH.read_text(encoding="utf-8")
-    element_project_text = ELEMENT_PROJECT_PATH.read_text(encoding="utf-8")
+    generated_targets_text = GENERATED_TARGETS_PATH.read_text(
+        encoding="utf-8"
+    )
     registration_text = REGISTRATION_PATH.read_text(encoding="utf-8")
     catalog = load_json(CATALOG_PATH)
     scene = load_json(SCENE_PATH)
@@ -346,29 +361,71 @@ def build_contract() -> tuple[dict[str, Any], list[str]]:
     }
 
     errors = collect_errors(header_text, source_text, registration_text, catalog, scene, parameters)
-    if runtime_header_text != header_text:
-        errors.append("runtime SignalBloomLayer.h must match the public SDK example")
-    if runtime_source_text != source_text:
-        errors.append("runtime SignalBloomLayer.cpp must match the public SDK example")
-
-    if r'ClCompile Include="src\visuals\SignalBloomLayer.cpp"' in runtime_project_text:
-        errors.append("host project must not compile Signal Bloom directly")
-    if (
-        r'ProjectReference Include="elements\signal_bloom\Element_SignalBloom.vcxproj"'
-        not in runtime_project_text
-    ):
-        errors.append("host project must reference the shipping Signal Bloom element target")
-    element_project_entries = (
-        r'ClCompile Include="$(SynaptomeAppRoot)\src\visuals\SignalBloomLayer.cpp"',
-        r'ClInclude Include="$(SynaptomeAppRoot)\src\visuals\SignalBloomLayer.h"',
+    if package_header_text != header_text:
+        errors.append(
+            "package SignalBloomLayer.h must match the public SDK example"
+        )
+    package_result = element_package_v1.validate_package(
+        PACKAGE_MANIFEST_PATH
     )
-    for entry in element_project_entries:
-        if entry not in element_project_text:
-            errors.append(f"Signal Bloom element project is missing source entry: {entry}")
-    if "Synaptome.ElementSdk.props" not in element_project_text:
-        errors.append("Signal Bloom element project must compile through the public SDK include root")
-    if r'..\docs\examples\artist_sdk\SignalBloomLayer' in runtime_project_text:
-        errors.append("runtime project must not compile Signal Bloom through the repository docs path")
+    if not package_result.valid or package_result.normalized is None:
+        errors.extend(
+            "package shipping source: " + diagnostic.render()
+            for diagnostic in package_result.diagnostics
+        )
+        package_parameters: dict[str, str] = {}
+    else:
+        package_parameters = {
+            str(parameter["id"]): str(parameter["kind"])
+            for parameter in package_result.normalized["parameters"]
+        }
+    for method in ("configure", "setup", "update", "draw"):
+        if f"void SignalBloomLayer::{method}" not in package_source_text:
+            errors.append(
+                "package shipping source: SignalBloomLayer.cpp must "
+                f"implement {method}()"
+            )
+    for banned in sorted(DISALLOWED_SOURCE_STRINGS):
+        if banned in package_source_text:
+            errors.append(
+                "package shipping source: SignalBloomLayer.cpp uses "
+                f"heavy setup/resource call '{banned}'"
+            )
+    for token in (
+        "synaptomeCreateElementPackage_examples_signal_bloom",
+        "std::make_unique<SignalBloomLayer>",
+    ):
+        if token not in package_registration_text:
+            errors.append(
+                "package shipping creator is missing " + token
+            )
+    if package_parameters != parameters:
+        errors.append(
+            "package and public SDK registration parameter surfaces differ"
+        )
+
+    if "SynaptomeEnableGeneratedElementPackages>true" not in runtime_project_text:
+        errors.append(
+            "host project must opt into controlled generated package sources"
+        )
+    for token in (
+        "SignalBloomRegistration.cpp",
+        "Element_SignalBloom.vcxproj",
+        r"src\visuals\SignalBloomLayer.cpp",
+    ):
+        if token in runtime_project_text:
+            errors.append(
+                f"host project retains obsolete handwritten source entry: {token}"
+            )
+    for token in (
+        r"docs\examples\layer_packages\signal_bloom\source\SignalBloomLayer.cpp",
+        r"docs\examples\layer_packages\signal_bloom\source\register_signal_bloom.cpp",
+        "GeneratedElementPackageRegistrations.cpp",
+    ):
+        if token not in generated_targets_text:
+            errors.append(
+                f"generated package build target is missing {token}"
+            )
     if runtime_project_text.count("<MultiProcessorCompilation>true</MultiProcessorCompilation>") < 2:
         errors.append("runtime project must enable parallel compilation for Debug and Release")
     if "<UseMultiToolTask>true</UseMultiToolTask>" not in runtime_project_text:

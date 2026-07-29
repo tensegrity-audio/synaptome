@@ -11,7 +11,14 @@ ROOT = Path(__file__).resolve().parents[1]
 APP = ROOT / "synaptome"
 SDK = APP / "sdk" / "include" / "synaptome" / "element" / "compat"
 EXAMPLE = ROOT / "docs" / "examples" / "artist_sdk"
-RUNTIME_SIGNAL = APP / "src" / "visuals"
+PACKAGE_SIGNAL = (
+    ROOT
+    / "docs"
+    / "examples"
+    / "layer_packages"
+    / "signal_bloom"
+    / "source"
+)
 
 
 def read(path: Path, errors: list[str]) -> str:
@@ -63,8 +70,8 @@ def main() -> int:
     builder_forwarder = read(SDK / "LayerParameterBuilder.h", errors)
     example_header = read(EXAMPLE / "SignalBloomLayer.h", errors)
     example_source = read(EXAMPLE / "SignalBloomLayer.cpp", errors)
-    runtime_header = read(RUNTIME_SIGNAL / "SignalBloomLayer.h", errors)
-    runtime_source = read(RUNTIME_SIGNAL / "SignalBloomLayer.cpp", errors)
+    runtime_header = read(PACKAGE_SIGNAL / "SignalBloomLayer.h", errors)
+    runtime_source = read(PACKAGE_SIGNAL / "SignalBloomLayer.cpp", errors)
     public_sdk_headers = sorted(
         path
         for path in (APP / "sdk" / "include").rglob("*")
@@ -79,7 +86,7 @@ def main() -> int:
         errors,
     )
     element_project = read(
-        APP / "elements" / "signal_bloom" / "Element_SignalBloom.vcxproj",
+        APP / "build" / "GeneratedElementPackages.targets",
         errors,
     )
     app_project = read(APP / "Synaptome.vcxproj", errors)
@@ -111,7 +118,20 @@ def main() -> int:
     )
     builtin_source = read(APP / "src" / "runtime" / "BuiltinElements.cpp", errors)
     signal_registration_source = read(
-        APP / "src" / "runtime" / "SignalBloomRegistration.cpp",
+        PACKAGE_SIGNAL / "register_signal_bloom.cpp", errors
+    )
+    generated_registration_header = read(
+        APP
+        / "src"
+        / "runtime"
+        / "GeneratedElementPackageRegistrations.h",
+        errors,
+    )
+    generated_registration_source = read(
+        APP
+        / "src"
+        / "runtime"
+        / "GeneratedElementPackageRegistrations.cpp",
         errors,
     )
     bench_project = read(
@@ -389,8 +409,21 @@ def main() -> int:
         errors.append("declared Signal Bloom must not retain legacy metadata registration")
     if "__has_include" in example_header:
         errors.append("Signal Bloom header must not use include-order-dependent fallback logic")
-    if example_header != runtime_header or example_source != runtime_source:
-        errors.append("public and shipping Signal Bloom sources must remain byte-identical")
+    if example_header != runtime_header:
+        errors.append(
+            "public and package Signal Bloom headers must remain byte-identical"
+        )
+    public_methods = set(
+        re.findall(r"void\s+SignalBloomLayer::([A-Za-z0-9_]+)\s*\(", example_source)
+    )
+    package_methods = set(
+        re.findall(r"void\s+SignalBloomLayer::([A-Za-z0-9_]+)\s*\(", runtime_source)
+    )
+    if public_methods != package_methods:
+        errors.append(
+            "public and package Signal Bloom implementations expose "
+            "different method sets"
+        )
 
     contract_lower = contract_project.lower()
     required_contract_tokens = (
@@ -444,20 +477,29 @@ def main() -> int:
 
     element_lower = element_project.lower()
     for token in (
-        "configurationtype>staticlibrary",
-        "synaptome.elementsdk.props",
-        "openframeworksrelease.props",
-        r"src\visuals\signalbloomlayer.cpp",
-        r"\synaptome\element\parameterbinding.h",
+        "synaptomeenablegeneratedelementpackages",
+        r"docs\examples\layer_packages\signal_bloom\source\signalbloomlayer.cpp",
+        r"docs\examples\layer_packages\signal_bloom\source\register_signal_bloom.cpp",
+        "generatedelementpackageregistrations.cpp",
     ):
         if token not in element_lower:
-            errors.append(f"shipping Signal Bloom project missing {token}")
+            errors.append(f"generated package build target missing {token}")
 
     app_lower = app_project.lower()
-    if r'clcompile include="src\visuals\signalbloomlayer.cpp"' in app_lower:
-        errors.append("host must not compile Signal Bloom directly")
-    if r"elements\signal_bloom\element_signalbloom.vcxproj" not in app_lower:
-        errors.append("host must link the shipping Signal Bloom element project")
+    for token in (
+        r'clcompile include="src\visuals\signalbloomlayer.cpp"',
+        r"elements\signal_bloom\element_signalbloom.vcxproj",
+        r'clcompile include="src\runtime\signalbloomregistration.cpp"',
+    ):
+        if token in app_lower:
+            errors.append(
+                "host project retains obsolete Signal Bloom wiring: "
+                + token
+            )
+    if "synaptomeenablegeneratedelementpackages>true" not in app_lower:
+        errors.append(
+            "host must opt into the generated package build target"
+        )
     if r'clcompile include="src\runtime\builtinelements.cpp"' not in app_lower:
         errors.append("host project must compile the controlled registration unit")
     if (
@@ -470,8 +512,6 @@ def main() -> int:
         not in app_lower
     ):
         errors.append("host project must include the built-in host binding header")
-    if r'clcompile include="src\runtime\signalbloomregistration.cpp"' not in app_lower:
-        errors.append("host project must compile the Signal Bloom registration bridge")
     if "SignalBloomLayer" in app_source:
         errors.append("ofApp.cpp must not know the Signal Bloom concrete class")
     if ".registerType(" in app_source:
@@ -556,36 +596,65 @@ def main() -> int:
             "built-in host binding source must own exactly the 12 text "
             "parameter IDs"
         )
-    if "registerSignalBloomElement(elementTypes)" not in builtin_source:
-        errors.append("built-in registration unit must compose the Signal Bloom bridge")
+    if "registerGeneratedElementPackages(elementTypes)" not in builtin_source:
+        errors.append(
+            "built-in registration unit must compose generated packages"
+        )
     for token in (
-        "ElementTypeContract signalBloomTypeContract()",
-        '\"example.signalBloom\"',
+        "GeneratedElementPackageRegistration",
+        "generatedElementPackageRegistrations",
+        "registerGeneratedElementPackages",
+        '"examples.signal_bloom"',
+        '"example.signalBloom"',
+        '"39e6e7934d09689bd1a952e2d040f3a36ebdf595a47446778d1745a2fcdb00de"',
+    ):
+        if token not in (
+            generated_registration_header
+            + "\n"
+            + generated_registration_source
+        ):
+            errors.append(
+                "generated registration surface is missing " + token
+            )
+    for token in (
+        "ElementTypeContract generatedContract0()",
+        '"example.signalBloom"',
         "contract.parameters.groups =",
-        "contract.parameters.parameters =",
+        "contract.parameters.parameters.push_back",
         "ParameterOptionSource{",
-        '\"transport.bpmMultipliers\"',
+        '"transport.bpmMultipliers"',
         "ParameterDeprecation{",
-        '\"opacity\"',
+        '"opacity"',
         "elementTypes.registerType(",
-        "signalBloomTypeContract()",
+        "generatedContract0()",
+        "synaptomeCreateElementPackage_examples_signal_bloom",
+    ):
+        if token not in generated_registration_source:
+            errors.append(
+                "generated Signal Bloom registration is missing " + token
+            )
+    for token in (
+        "synaptomeCreateElementPackage_examples_signal_bloom",
+        "std::make_unique<SignalBloomLayer>",
     ):
         if token not in signal_registration_source:
-            errors.append(
-                "Signal Bloom declared registration is missing " + token
-            )
+            errors.append("Signal Bloom creator is missing " + token)
     bench_project_lower = bench_project.lower()
     if r"\src\runtime\builtinelements.cpp" in bench_project_lower:
         errors.append("package bench must not compile the full host built-in registrar")
-    if r"\src\runtime\signalbloomregistration.cpp" not in bench_project_lower:
-        errors.append("package bench must compile the narrow Signal Bloom registrar")
-    if "registerSignalBloomElement(factory)" not in bench_source:
-        errors.append("package bench must call the narrow Signal Bloom registrar")
+    if "synaptomeenablegeneratedelementpackages>true" not in bench_project_lower:
+        errors.append(
+            "package bench must opt into generated package registration"
+        )
+    if "registerGeneratedElementPackages(factory)" not in bench_source:
+        errors.append(
+            "package bench must call generated package registration"
+        )
 
     registered_types = set(
         re.findall(
             r'registerType\(\s*(?:ElementDescriptor\s*)?\{\s*"([^"]+)"',
-            builtin_source + "\n" + signal_registration_source,
+            builtin_source + "\n" + generated_registration_source,
         )
     )
     registered_types.update(
@@ -595,8 +664,8 @@ def main() -> int:
         )
     )
     if (
-        "elementTypes.registerType(" in signal_registration_source
-        and "signalBloomTypeContract()" in signal_registration_source
+        "elementTypes.registerType(" in generated_registration_source
+        and "generatedContract0()" in generated_registration_source
     ):
         registered_types.add("example.signalBloom")
     canonical_types: set[str] = set()
@@ -697,7 +766,7 @@ def main() -> int:
             contract_project + "\n" + example_header + "\n" + example_source,
         ),
         (
-            "Signal Bloom element",
+        "generated Signal Bloom package target",
             element_project + "\n" + runtime_header + "\n" + runtime_source,
         ),
         ("layer package bench", bench_project + "\n" + bench_source),
@@ -717,7 +786,7 @@ def main() -> int:
     for registration_unit in (
         "builtinelementhostbindings.cpp",
         "builtinelements.cpp",
-        "signalbloomregistration.cpp",
+        "generatedelementpackageregistrations.cpp",
     ):
         if registration_unit in runtime_project_lower:
             errors.append(
@@ -758,7 +827,7 @@ def main() -> int:
             print(f"  - {error}")
         return 1
     print(
-        "[element-sdk-boundary] PASS public includes, shipping static library, "
+        "[element-sdk-boundary] PASS public includes, generated package sources, "
         "pointer-free static element/action/parameter declarations, explicit "
         "legacy/declared registration, bind-only live actions, typed telemetry, "
         "controlled registration, compile-contract roots, and no "

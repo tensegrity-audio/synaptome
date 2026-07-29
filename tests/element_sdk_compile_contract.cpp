@@ -63,6 +63,7 @@ struct ExpectedParameterDeclarationShape {
     std::optional<int> quickAccessOrder;
     std::vector<std::string> aliases;
     std::optional<synaptome::element::ParameterDeprecation> deprecation;
+    bool visible;
 };
 
 struct ExpectedParameterDeclarationSetShape {

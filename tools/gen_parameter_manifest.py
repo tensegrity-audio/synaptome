@@ -359,9 +359,6 @@ def build_manifest(
         APP_ROOT / "src" / "runtime" / "BuiltinElementHostBindings.cpp"
     )
     builtin_elements = APP_ROOT / "src" / "runtime" / "BuiltinElements.cpp"
-    signal_bloom_registration = (
-        APP_ROOT / "src" / "runtime" / "SignalBloomRegistration.cpp"
-    )
     layer_templates = declared_layer_templates()
     _, explicit_parameters = parse_layer_templates({})
 
@@ -549,7 +546,8 @@ def build_manifest(
             "synaptome/src/ofApp.cpp",
             "synaptome/src/runtime/BuiltinElementHostBindings.cpp",
             "synaptome/src/runtime/BuiltinElements.cpp",
-            "synaptome/src/runtime/SignalBloomRegistration.cpp",
+            "docs/examples/layer_packages/signal_bloom/"
+            "source/register_signal_bloom.cpp",
             "docs/contracts/builtin_element_parameters.json",
             "synaptome/bin/data/layers/**/*.json",
         ],

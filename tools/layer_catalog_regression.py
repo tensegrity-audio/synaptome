@@ -18,6 +18,7 @@ from typing import Any
 
 import layer_package_catalog_regression
 import layer_package_discovery
+import generate_element_package_registrations
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 APP_ROOT = REPO_ROOT / "synaptome"
@@ -38,7 +39,13 @@ def load_json(path: Path) -> Any:
 def parse_factory_types() -> dict[str, str]:
     sources = (
         APP_ROOT / "src" / "runtime" / "BuiltinElements.cpp",
-        APP_ROOT / "src" / "runtime" / "SignalBloomRegistration.cpp",
+        REPO_ROOT
+        / "docs"
+        / "examples"
+        / "layer_packages"
+        / "signal_bloom"
+        / "source"
+        / "register_signal_bloom.cpp",
     )
     text = "\n".join(
         source.read_text(encoding="utf-8", errors="replace")
@@ -83,6 +90,15 @@ def parse_factory_types() -> dict[str, str]:
         layer_type = contract_types.get(match.group(1))
         if layer_type:
             factory_types[layer_type] = match.group(2)
+    for record in generate_element_package_registrations.load_records():
+        creator_source = record.registration_path.read_text(
+            encoding="utf-8", errors="replace"
+        )
+        creator = re.search(
+            r"std::make_unique<([^>]+)>", creator_source
+        )
+        if creator is not None:
+            factory_types[record.type_id] = creator.group(1)
     return factory_types
 
 
@@ -232,7 +248,9 @@ def build_catalog(
             rel(root),
             "synaptome/src/visuals/LayerLibrary.cpp",
             "synaptome/src/runtime/BuiltinElements.cpp",
-            "synaptome/src/runtime/SignalBloomRegistration.cpp",
+            "docs/contracts/element_package_registration_set_v1.json",
+            "synaptome/src/runtime/"
+            "GeneratedElementPackageRegistrations.cpp",
         ],
         "counts": {
             "entries": len(entries),

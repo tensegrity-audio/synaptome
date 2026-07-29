@@ -42,10 +42,16 @@ def as_list(value: Any) -> list[Any]:
     return value if isinstance(value, list) else []
 
 
-def normalize_parameter(raw: dict[str, Any]) -> dict[str, Any]:
+def normalize_parameter(
+    raw: dict[str, Any],
+    group_labels: dict[str, str],
+) -> dict[str, Any]:
+    group_id = str(raw.get("groupId", ""))
     entry: dict[str, Any] = {
         "id": str(raw.get("id", "")),
         "kind": str(raw.get("kind", "")),
+        "groupId": group_id,
+        "groupLabel": group_labels.get(group_id, group_id),
         "label": str(raw.get("label", "")),
         "default": raw.get("default"),
     }
@@ -78,8 +84,13 @@ def normalize_package(package_path: Path) -> tuple[dict[str, Any] | None, list[s
     asset = as_dict(package.get("asset"))
     source = as_dict(package.get("source"))
     compatibility = as_dict(package.get("compatibility"))
+    group_labels = {
+        str(group.get("id", "")): str(group.get("label", ""))
+        for group in as_list(package.get("parameterGroups"))
+        if isinstance(group, dict)
+    }
     parameters = [
-        normalize_parameter(param)
+        normalize_parameter(param, group_labels)
         for param in as_list(package.get("parameters"))
         if isinstance(param, dict)
     ]

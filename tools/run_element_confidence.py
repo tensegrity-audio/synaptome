@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import element_package_v1
+import generate_element_package_registrations
 from element_confidence import (
     ConfidenceError,
     CheckResult,
@@ -155,7 +156,57 @@ def main(argv: list[str]) -> int:
             "parity": {"status": "not-run", "diagnostics": []},
             "migrationPath": package_result.migration_path,
             "inventory": package_result.inventory,
+            "registration": {
+                "status": "not-run",
+                "registrationSet": (
+                    "docs/contracts/"
+                    "element_package_registration_set_v1.json"
+                ),
+                "generatedSource": (
+                    "synaptome/src/runtime/"
+                    "GeneratedElementPackageRegistrations.cpp"
+                ),
+                "generatedBuildTarget": (
+                    "synaptome/build/"
+                    "GeneratedElementPackages.targets"
+                ),
+                "record": None,
+            },
         }
+        try:
+            registration_records = (
+                generate_element_package_registrations.load_records()
+            )
+            registration_record = next(
+                (
+                    item
+                    for item in registration_records
+                    if item.package_id == document.get("packageId")
+                ),
+                None,
+            )
+            if registration_record is not None:
+                report.package["registration"]["record"] = {
+                    "packageId": registration_record.package_id,
+                    "packageVersion": registration_record.package_version,
+                    "implementationVersion": (
+                        registration_record.implementation_version
+                    ),
+                    "typeId": registration_record.type_id,
+                    "kind": registration_record.kind,
+                    "bindingMode": registration_record.binding_mode,
+                    "definitionId": registration_record.definition_id,
+                    "registryPrefix": registration_record.registry_prefix,
+                    "sourceRegistration": (
+                        registration_record.registration_reference
+                    ),
+                    "descriptorSignature": (
+                        registration_record.descriptor_signature
+                    ),
+                    "symbol": registration_record.symbol,
+                }
+        except generate_element_package_registrations.GenerationError:
+            pass
         report.checks.append(
             CheckResult(
                 check_id="element-package-v1-preflight",
@@ -198,6 +249,15 @@ def main(argv: list[str]) -> int:
                 f"[element-confidence] {check.status.upper()} {check.check_id}: "
                 f"{check.diagnostic}"
             )
+            if check.required and check.status != "pass":
+                errors.append(
+                    f"{check.check_id}: {check.diagnostic}"
+                )
+            if (
+                report.package is not None
+                and check.check_id == "generated-package-registration"
+            ):
+                report.package["registration"]["status"] = check.status
 
     selected_tiers = TIER_NUMBERS[args.tier]
     contract_ok = False

@@ -36,10 +36,10 @@ python tools\validate_layer_authoring.py signal-bloom-sdk --native
 ```
 
 It compiles the public example through SDK-only compatibility includes using
-the headless stubs, compiles the shipping static library against the pinned
-openFrameworks toolchain, builds the lifecycle bench against the shared
-registration entrypoint, and runs that bench. Add `--incremental-app` to prove
-the host links the shipping element target.
+the headless stubs, checks the deterministic package-registration outputs,
+builds the lifecycle bench against the generated aggregate and contained
+creator, and runs that bench. Add `--incremental-app` to prove the host compiles
+and links the generated package sources.
 
 The runtime lifecycle profile checks the first host/runtime ownership seam:
 

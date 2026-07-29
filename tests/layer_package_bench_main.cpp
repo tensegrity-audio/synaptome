@@ -18,10 +18,10 @@
 inline float ofDegToRad(float degrees) { return degrees * 0.01745329251994329577f; }
 
 #define private public
-#include "../synaptome/src/visuals/SignalBloomLayer.h"
+#include "../docs/examples/layer_packages/signal_bloom/source/SignalBloomLayer.h"
 #undef private
 #include "../synaptome/src/runtime/ElementParameterTable.h"
-#include "../synaptome/src/runtime/SignalBloomRegistration.h"
+#include "../synaptome/src/runtime/GeneratedElementPackageRegistrations.h"
 #include "../synaptome/src/visuals/LayerFactory.h"
 
 using synaptome::tests::element_confidence::require;
@@ -32,7 +32,7 @@ using synaptome::tests::element_confidence::
 int main() {
     try {
         LayerFactory factory;
-        synaptome::runtime::registerSignalBloomElement(factory);
+        synaptome::runtime::registerGeneratedElementPackages(factory);
 
         const std::vector<std::pair<std::string, std::string>>
             expectedGroups = {
@@ -253,7 +253,7 @@ int main() {
 
         bool duplicateRejected = false;
         try {
-            synaptome::runtime::registerSignalBloomElement(factory);
+            synaptome::runtime::registerGeneratedElementPackages(factory);
         } catch (const std::logic_error&) {
             duplicateRejected = true;
         }

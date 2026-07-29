@@ -52,10 +52,10 @@
         "kind": "layer-package",
         "path": "docs/examples/layer_packages/signal_bloom/layer.package.json",
         "strategy": "source-registration",
-        "sourceRegistrationRequired": true
+        "sourceRegistrationRequired": false
       },
       "inspection": {
-        "manifestInspectionOnly": true,
+        "manifestInspectionOnly": false,
         "runtimeLoadable": false,
         "requiresInstantiation": false,
         "mutatesScene": false
@@ -63,20 +63,41 @@
       "controls": {
         "count": 18,
         "sections": {
-          "Color": 6,
-          "Force": 1,
-          "Input": 3,
-          "Motion": 2,
-          "Scale": 1,
-          "Time": 2,
-          "Visibility": 3
+          "Example": 1,
+          "Example Color": 8,
+          "Example Modulation": 4,
+          "Example Motion": 3,
+          "Example Transform": 2
         },
         "parameters": [
           {
+            "id": "visible",
+            "kind": "bool",
+            "label": "Visible",
+            "section": "Example",
+            "default": true
+          },
+          {
+            "id": "alpha",
+            "kind": "float",
+            "label": "Alpha",
+            "section": "Example Color",
+            "default": 0.86,
+            "range": {
+              "min": 0.0,
+              "max": 1.0,
+              "step": 0.01
+            },
+            "deprecated": {
+              "replacement": "opacity",
+              "reason": "New layers should prefer opacity/visibility naming, but this fixture preserves the current public SDK parameter."
+            }
+          },
+          {
             "id": "bgColorB",
             "kind": "float",
-            "label": "Color: Background Blue",
-            "section": "Color",
+            "label": "Background Blue",
+            "section": "Example Color",
             "default": 0.08,
             "range": {
               "min": 0.0,
@@ -87,8 +108,8 @@
           {
             "id": "bgColorG",
             "kind": "float",
-            "label": "Color: Background Green",
-            "section": "Color",
+            "label": "Background Green",
+            "section": "Example Color",
             "default": 0.04,
             "range": {
               "min": 0.0,
@@ -99,8 +120,8 @@
           {
             "id": "bgColorR",
             "kind": "float",
-            "label": "Color: Background Red",
-            "section": "Color",
+            "label": "Background Red",
+            "section": "Example Color",
             "default": 0.02,
             "range": {
               "min": 0.0,
@@ -111,8 +132,8 @@
           {
             "id": "colorB",
             "kind": "float",
-            "label": "Color: Blue",
-            "section": "Color",
+            "label": "Blue",
+            "section": "Example Color",
             "default": 1.0,
             "range": {
               "min": 0.0,
@@ -123,9 +144,21 @@
           {
             "id": "colorG",
             "kind": "float",
-            "label": "Color: Green",
-            "section": "Color",
+            "label": "Green",
+            "section": "Example Color",
             "default": 0.78,
+            "range": {
+              "min": 0.0,
+              "max": 1.0,
+              "step": 0.01
+            }
+          },
+          {
+            "id": "lineOpacity",
+            "kind": "float",
+            "label": "Line Opacity",
+            "section": "Example Color",
+            "default": 0.72,
             "range": {
               "min": 0.0,
               "max": 1.0,
@@ -135,8 +168,8 @@
           {
             "id": "colorR",
             "kind": "float",
-            "label": "Color: Red",
-            "section": "Color",
+            "label": "Red",
+            "section": "Example Color",
             "default": 0.12,
             "range": {
               "min": 0.0,
@@ -147,8 +180,8 @@
           {
             "id": "gain",
             "kind": "float",
-            "label": "Force: Sensor Gain",
-            "section": "Force",
+            "label": "Sensor Gain",
+            "section": "Example Modulation",
             "default": 0.62,
             "range": {
               "min": 0.0,
@@ -160,8 +193,8 @@
           {
             "id": "speedInput",
             "kind": "float",
-            "label": "Input: Speed",
-            "section": "Input",
+            "label": "Speed",
+            "section": "Example Modulation",
             "default": 0.0,
             "range": {
               "min": 0.0,
@@ -172,8 +205,8 @@
           {
             "id": "xInput",
             "kind": "float",
-            "label": "Input: X",
-            "section": "Input",
+            "label": "X",
+            "section": "Example Modulation",
             "default": 0.5,
             "range": {
               "min": 0.0,
@@ -184,8 +217,8 @@
           {
             "id": "yInput",
             "kind": "float",
-            "label": "Input: Y",
-            "section": "Input",
+            "label": "Y",
+            "section": "Example Modulation",
             "default": 0.5,
             "range": {
               "min": 0.0,
@@ -194,23 +227,35 @@
             }
           },
           {
-            "id": "rotationDeg",
+            "id": "bpmMultiplier",
             "kind": "float",
-            "label": "Motion: Rotation",
-            "section": "Motion",
-            "default": 0.0,
+            "label": "BPM Multiplier",
+            "section": "Example Motion",
+            "default": 1.0,
             "range": {
-              "min": -180.0,
-              "max": 180.0,
-              "step": 1.0
+              "min": 0.25,
+              "max": 8.0,
+              "step": 0.25
             },
-            "units": "deg"
+            "units": "multiplier",
+            "optionsSource": {
+              "id": "transport.bpmMultipliers",
+              "value": "multiplier",
+              "label": "label"
+            }
+          },
+          {
+            "id": "bpmSync",
+            "kind": "bool",
+            "label": "BPM Sync",
+            "section": "Example Motion",
+            "default": true
           },
           {
             "id": "speed",
             "kind": "float",
-            "label": "Motion: Speed",
-            "section": "Motion",
+            "label": "Speed",
+            "section": "Example Motion",
             "default": 0.65,
             "range": {
               "min": 0.0,
@@ -220,10 +265,23 @@
             "units": "multiplier"
           },
           {
+            "id": "rotationDeg",
+            "kind": "float",
+            "label": "Rotation",
+            "section": "Example Transform",
+            "default": 0.0,
+            "range": {
+              "min": -180.0,
+              "max": 180.0,
+              "step": 1.0
+            },
+            "units": "deg"
+          },
+          {
             "id": "scale",
             "kind": "float",
-            "label": "Scale: Size",
-            "section": "Scale",
+            "label": "Size",
+            "section": "Example Transform",
             "default": 0.82,
             "range": {
               "min": 0.1,
@@ -248,66 +306,6 @@
                 "description": "Use the full normalized layer scale."
               }
             ]
-          },
-          {
-            "id": "bpmMultiplier",
-            "kind": "float",
-            "label": "Time: BPM Multiplier",
-            "section": "Time",
-            "default": 1.0,
-            "range": {
-              "min": 0.25,
-              "max": 8.0,
-              "step": 0.25
-            },
-            "units": "multiplier",
-            "optionsSource": {
-              "id": "transport.bpmMultipliers",
-              "value": "multiplier",
-              "label": "label"
-            }
-          },
-          {
-            "id": "bpmSync",
-            "kind": "bool",
-            "label": "Time: BPM Sync",
-            "section": "Time",
-            "default": true
-          },
-          {
-            "id": "alpha",
-            "kind": "float",
-            "label": "Visibility: Alpha",
-            "section": "Visibility",
-            "default": 0.86,
-            "range": {
-              "min": 0.0,
-              "max": 1.0,
-              "step": 0.01
-            },
-            "deprecated": {
-              "replacement": "opacity",
-              "reason": "New layers should prefer opacity/visibility naming, but this fixture preserves the current public SDK parameter."
-            }
-          },
-          {
-            "id": "lineOpacity",
-            "kind": "float",
-            "label": "Visibility: Line Opacity",
-            "section": "Visibility",
-            "default": 0.72,
-            "range": {
-              "min": 0.0,
-              "max": 1.0,
-              "step": 0.01
-            }
-          },
-          {
-            "id": "visible",
-            "kind": "bool",
-            "label": "Visibility: Visible",
-            "section": "Visibility",
-            "default": true
           }
         ]
       },

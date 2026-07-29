@@ -61,9 +61,9 @@
       "packageVersion": "0.1.0",
       "path": "docs/examples/layer_packages/signal_bloom/layer.package.json",
       "sourceStrategy": "source-registration",
-      "sourceRegistration": "../../artist_sdk/register_signal_bloom.cpp",
-      "sourceRegistrationRequired": true,
-      "manifestInspectionOnly": true,
+      "sourceRegistration": "source/register_signal_bloom.cpp",
+      "sourceRegistrationRequired": false,
+      "manifestInspectionOnly": false,
       "parameterCount": 18,
       "defaultKeys": [
         "alpha",
@@ -89,13 +89,17 @@
         {
           "id": "visible",
           "kind": "bool",
-          "label": "Visibility: Visible",
+          "groupId": "example",
+          "groupLabel": "Example",
+          "label": "Visible",
           "default": true
         },
         {
           "id": "speed",
           "kind": "float",
-          "label": "Motion: Speed",
+          "groupId": "exampleMotion",
+          "groupLabel": "Example Motion",
+          "label": "Speed",
           "default": 0.65,
           "range": {
             "min": 0.0,
@@ -107,13 +111,17 @@
         {
           "id": "bpmSync",
           "kind": "bool",
-          "label": "Time: BPM Sync",
+          "groupId": "exampleMotion",
+          "groupLabel": "Example Motion",
+          "label": "BPM Sync",
           "default": true
         },
         {
           "id": "bpmMultiplier",
           "kind": "float",
-          "label": "Time: BPM Multiplier",
+          "groupId": "exampleMotion",
+          "groupLabel": "Example Motion",
+          "label": "BPM Multiplier",
           "default": 1.0,
           "range": {
             "min": 0.25,
@@ -130,7 +138,9 @@
         {
           "id": "scale",
           "kind": "float",
-          "label": "Scale: Size",
+          "groupId": "exampleTransform",
+          "groupLabel": "Example Transform",
+          "label": "Size",
           "default": 0.82,
           "range": {
             "min": 0.1,
@@ -159,7 +169,9 @@
         {
           "id": "rotationDeg",
           "kind": "float",
-          "label": "Motion: Rotation",
+          "groupId": "exampleTransform",
+          "groupLabel": "Example Transform",
+          "label": "Rotation",
           "default": 0.0,
           "range": {
             "min": -180.0,
@@ -171,7 +183,9 @@
         {
           "id": "alpha",
           "kind": "float",
-          "label": "Visibility: Alpha",
+          "groupId": "exampleColor",
+          "groupLabel": "Example Color",
+          "label": "Alpha",
           "default": 0.86,
           "range": {
             "min": 0.0,
@@ -186,7 +200,9 @@
         {
           "id": "gain",
           "kind": "float",
-          "label": "Force: Sensor Gain",
+          "groupId": "exampleModulation",
+          "groupLabel": "Example Modulation",
+          "label": "Sensor Gain",
           "default": 0.62,
           "range": {
             "min": 0.0,
@@ -198,7 +214,9 @@
         {
           "id": "lineOpacity",
           "kind": "float",
-          "label": "Visibility: Line Opacity",
+          "groupId": "exampleColor",
+          "groupLabel": "Example Color",
+          "label": "Line Opacity",
           "default": 0.72,
           "range": {
             "min": 0.0,
@@ -209,7 +227,9 @@
         {
           "id": "colorR",
           "kind": "float",
-          "label": "Color: Red",
+          "groupId": "exampleColor",
+          "groupLabel": "Example Color",
+          "label": "Red",
           "default": 0.12,
           "range": {
             "min": 0.0,
@@ -220,7 +240,9 @@
         {
           "id": "colorG",
           "kind": "float",
-          "label": "Color: Green",
+          "groupId": "exampleColor",
+          "groupLabel": "Example Color",
+          "label": "Green",
           "default": 0.78,
           "range": {
             "min": 0.0,
@@ -231,7 +253,9 @@
         {
           "id": "colorB",
           "kind": "float",
-          "label": "Color: Blue",
+          "groupId": "exampleColor",
+          "groupLabel": "Example Color",
+          "label": "Blue",
           "default": 1.0,
           "range": {
             "min": 0.0,
@@ -242,7 +266,9 @@
         {
           "id": "bgColorR",
           "kind": "float",
-          "label": "Color: Background Red",
+          "groupId": "exampleColor",
+          "groupLabel": "Example Color",
+          "label": "Background Red",
           "default": 0.02,
           "range": {
             "min": 0.0,
@@ -253,7 +279,9 @@
         {
           "id": "bgColorG",
           "kind": "float",
-          "label": "Color: Background Green",
+          "groupId": "exampleColor",
+          "groupLabel": "Example Color",
+          "label": "Background Green",
           "default": 0.04,
           "range": {
             "min": 0.0,
@@ -264,7 +292,9 @@
         {
           "id": "bgColorB",
           "kind": "float",
-          "label": "Color: Background Blue",
+          "groupId": "exampleColor",
+          "groupLabel": "Example Color",
+          "label": "Background Blue",
           "default": 0.08,
           "range": {
             "min": 0.0,
@@ -275,7 +305,9 @@
         {
           "id": "xInput",
           "kind": "float",
-          "label": "Input: X",
+          "groupId": "exampleModulation",
+          "groupLabel": "Example Modulation",
+          "label": "X",
           "default": 0.5,
           "range": {
             "min": 0.0,
@@ -286,7 +318,9 @@
         {
           "id": "yInput",
           "kind": "float",
-          "label": "Input: Y",
+          "groupId": "exampleModulation",
+          "groupLabel": "Example Modulation",
+          "label": "Y",
           "default": 0.5,
           "range": {
             "min": 0.0,
@@ -297,7 +331,9 @@
         {
           "id": "speedInput",
           "kind": "float",
-          "label": "Input: Speed",
+          "groupId": "exampleModulation",
+          "groupLabel": "Example Modulation",
+          "label": "Speed",
           "default": 0.0,
           "range": {
             "min": 0.0,
@@ -348,7 +384,7 @@
           ]
         }
       ],
-      "bench": "tests/layer_test.json"
+      "bench": ""
     }
   ]
 }

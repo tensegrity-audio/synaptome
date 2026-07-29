@@ -45,7 +45,9 @@ Use `python tools\validate_configs.py --public-app` as the public repo gate.
 - Prefer existing openFrameworks and Synaptome patterns over new abstractions.
 - Keep parameter IDs stable once they are exposed in scenes, MIDI maps, OSC maps, or docs.
 - Route user-facing controls through the existing Browser/Console/HUD contracts.
-- Keep layer authoring examples honest: first public Synaptome uses source registration. No-source-edit plugin loading is future work.
+- Keep layer authoring examples honest: reviewed source packages use
+  controlled generated registration. Runtime discovery and native plug-in
+  loading remain separate future work.
 - Make invalid public registrations fail loudly. Empty or duplicate layer type IDs should not silently replace implementations.
 
 ## Documentation Guidelines

@@ -5,7 +5,8 @@
     "synaptome/bin/data/layers",
     "synaptome/src/visuals/LayerLibrary.cpp",
     "synaptome/src/runtime/BuiltinElements.cpp",
-    "synaptome/src/runtime/SignalBloomRegistration.cpp"
+    "docs/contracts/element_package_registration_set_v1.json",
+    "synaptome/src/runtime/GeneratedElementPackageRegistrations.cpp"
   ],
   "counts": {
     "entries": 65,

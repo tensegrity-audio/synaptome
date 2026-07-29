@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 1,
+  "packages": [
+    "docs/examples/layer_packages/signal_bloom/layer.package.json"
+  ]
+}

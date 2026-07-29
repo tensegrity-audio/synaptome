@@ -2,6 +2,33 @@
 
 This changelog records Project Ops and administrative workflow changes. Product release versioning remains governed by `docs/release_policy.md`.
 
+## 2026-07-29 - architecture - seac_8_generated_registration
+
+- Added an explicit controlled package-registration set and deterministic
+  stale-checked generator for complete Runtime registration records and
+  MSBuild source items.
+- Reduced Signal Bloom's contained shipping leaf to one stable creator,
+  generated its declaration from normalized Element Package v1 metadata, and
+  made the host and reference benches consume one generic aggregate.
+- Removed the handwritten Signal Bloom Runtime mirror/registrar, dedicated
+  element project, solution entry, and package-specific host/test project
+  lists. Adding the reference package no longer requires `ofApp.cpp`, a
+  handwritten aggregate, or a per-package project edit.
+- Added strict failures for duplicate identities, unsafe paths, unresolved
+  required package dependencies, creator-symbol drift, and stale generated
+  output. The confidence report now carries registration-set and generated
+  record evidence, and validator failures block native lifecycle execution.
+- Validation: all 39 pytest checks plus two subtests pass; Grid and Signal
+  Bloom complete CI confidence profiles pass; all 24 public-app contracts,
+  app independence, BrowserFlow 49/49, the Layer Package Bench, and physical
+  and junction Release host builds pass. Both Release builds have zero errors;
+  existing third-party openFrameworks/add-on warnings remain outside the
+  architecture change.
+- Advanced the architecture milestone to 8 of 12. SEAC-9 transactional
+  suggestion preview/apply/edit/disable/remove with provenance, conflict
+  comparison, persistence, and rollback is now the active gate; suggestions
+  still never mutate mappings automatically.
+
 ## 2026-07-29 - architecture - seac_7_element_package_v1
 
 - Completed SEAC-7 with one exact Element Package v1 schema and one pure,

@@ -8,6 +8,7 @@
     <ProjectGuid>{9DC551C3-A552-48EB-933E-20278018E955}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>ElementConfidenceSignalBloomContract</RootNamespace>
+    <SynaptomeEnableGeneratedElementPackages>true</SynaptomeEnableGeneratedElementPackages>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -49,15 +50,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="$(SynaptomeTestRoot)\element_confidence_contract_main.cpp" />
-    <ClCompile Include="$(SynaptomeAppRoot)\src\runtime\SignalBloomRegistration.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(SynaptomeOpenFrameworksRoot)\libs\openFrameworksCompiled\project\vs\openframeworksLib.vcxproj">
       <Project>{5837595D-ACA9-485C-8E76-729040CE4B0B}</Project>
-      <LinkLibraryDependencies>true</LinkLibraryDependencies>
-    </ProjectReference>
-    <ProjectReference Include="$(SynaptomeAppRoot)\elements\signal_bloom\Element_SignalBloom.vcxproj">
-      <Project>{D9F5486B-17A6-4EBE-8B51-443948E223C4}</Project>
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
     </ProjectReference>
     <ProjectReference Include="$(SynaptomeAppRoot)\runtime\SynaptomeRuntimeCore.vcxproj">

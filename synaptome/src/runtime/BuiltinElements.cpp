@@ -1,6 +1,6 @@
 #include "BuiltinElements.h"
 #include "BuiltinElementParameterContracts.h"
-#include "SignalBloomRegistration.h"
+#include "GeneratedElementPackageRegistrations.h"
 
 #include "../visuals/AgentFieldLayer.h"
 #include "../visuals/ArcticAuroraSceneLayer.h"
@@ -147,7 +147,7 @@ void registerBuiltinElements(LayerFactory& elementTypes) {
     registerBuiltin(
         ElementDescriptor{"text", ElementKind::Visual, {}},
         []() { return std::make_unique<TextLayer>(); });
-    registerSignalBloomElement(elementTypes);
+    registerGeneratedElementPackages(elementTypes);
 }
 
 } // namespace synaptome::runtime
