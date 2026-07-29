@@ -1721,7 +1721,6 @@ def main() -> int:
                     )
     deferred_mapping_surface = midi_router + osc_parameter_router
     deferred_schema_paths = (
-        ROOT / "docs/schemas/layer_package.schema.json",
         ROOT / "docs/schemas/layer_browser_inspection_payload.schema.json",
         ROOT / "docs/schemas/scene.schema.json",
         ROOT / "docs/schemas/midi_bank.schema.json",

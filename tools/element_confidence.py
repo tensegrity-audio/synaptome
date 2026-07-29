@@ -13,6 +13,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+import element_package_v1
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 PROFILE_ROOT = REPO_ROOT / "tools" / "element_confidence_profiles"
 REPORT_SCHEMA_VERSION = 1
@@ -54,6 +56,7 @@ class ConfidenceReport:
     binding_mode: str
     deterministic_inputs: dict[str, Any]
     resolved_dependencies: list[dict[str, Any]] = field(default_factory=list)
+    package: dict[str, Any] | None = None
     declaration_live_comparison: dict[str, Any] = field(
         default_factory=lambda: {"status": "not-run", "diagnostic": ""}
     )
@@ -107,6 +110,7 @@ class ConfidenceReport:
             "packageProfileId": self.package_profile_id,
             "bindingMode": self.binding_mode,
             "resolvedDependencies": self.resolved_dependencies,
+            "package": self.package,
             "declarationLiveComparison": self.declaration_live_comparison,
             "deterministicInputs": self.deterministic_inputs,
             "stateSignatures": self.state_signatures,
@@ -292,10 +296,25 @@ def package_dependencies(
                 }
             )
     tests = package.get("tests", {})
-    if isinstance(tests, dict) and isinstance(tests.get("bench"), str):
-        dependencies.append(
-            {"kind": "test-profile", "id": "package-bench", "path": tests["bench"]}
-        )
+    if isinstance(tests, dict):
+        confidence_profile = tests.get("confidenceProfile")
+        if isinstance(confidence_profile, str):
+            dependencies.append(
+                {
+                    "kind": "test-profile",
+                    "id": "package-confidence-profile",
+                    "path": confidence_profile,
+                }
+            )
+        for index, fixture in enumerate(tests.get("fixtures", [])):
+            if isinstance(fixture, str):
+                dependencies.append(
+                    {
+                        "kind": "test-fixture",
+                        "id": f"package-test-fixture-{index}",
+                        "path": fixture,
+                    }
+                )
     return dependencies
 
 
@@ -423,6 +442,7 @@ def _last_output_line(completed: subprocess.CompletedProcess[str]) -> str:
 
 def run_contract_harness(
     profile: dict[str, Any],
+    package_result: element_package_v1.ValidationResult | None = None,
 ) -> tuple[list[CheckResult], dict[str, Any] | None]:
     from validate_layer_authoring import find_msbuild
 
@@ -509,6 +529,108 @@ def run_contract_harness(
             None,
         )
 
+    parity_check: CheckResult | None = None
+    if package_result is not None:
+        parity_started = time.perf_counter()
+        with tempfile.TemporaryDirectory(
+            prefix="synaptome-element-descriptor-"
+        ) as raw:
+            descriptor_path = Path(raw) / "runtime-descriptor.json"
+            descriptor_run = subprocess.run(
+                [
+                    str(executable),
+                    "--descriptor-only",
+                    "--output",
+                    str(descriptor_path),
+                ],
+                cwd=REPO_ROOT,
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            parity_diagnostics: list[element_package_v1.Diagnostic] = []
+            runtime_descriptor: dict[str, Any] | None = None
+            if descriptor_run.returncode == 0:
+                try:
+                    runtime_descriptor = load_json_object(
+                        descriptor_path, "Runtime descriptor evidence"
+                    )
+                    parity_diagnostics = element_package_v1.compare_descriptors(
+                        str(package_result.document.get("packageId", ""))
+                        if package_result.document
+                        else "",
+                        package_result.normalized or {},
+                        runtime_descriptor,
+                    )
+                except ConfidenceError as exc:
+                    parity_diagnostics = [
+                        element_package_v1.Diagnostic(
+                            "package.runtime-descriptor",
+                            str(package_result.document.get("packageId", ""))
+                            if package_result.document
+                            else "",
+                            "$",
+                            str(exc),
+                        )
+                    ]
+            else:
+                parity_diagnostics = [
+                    element_package_v1.Diagnostic(
+                        "package.runtime-descriptor",
+                        str(package_result.document.get("packageId", ""))
+                        if package_result.document
+                        else "",
+                        "$",
+                        _last_output_line(descriptor_run),
+                    )
+                ]
+            if package_result.document is not None:
+                package_result.inventory["runtimeDescriptor"] = [
+                    {
+                        "status": "resolved"
+                        if not parity_diagnostics
+                        else "mismatch",
+                        "signature": (
+                            element_package_v1.descriptor_signature(
+                                runtime_descriptor
+                            )
+                            if runtime_descriptor is not None
+                            else None
+                        ),
+                    }
+                ]
+            parity_check = CheckResult(
+                check_id="package-runtime-descriptor-parity",
+                tier=1,
+                status="fail" if parity_diagnostics else "pass",
+                required=True,
+                duration_ms=(time.perf_counter() - parity_started) * 1000.0,
+                diagnostic=(
+                    "; ".join(item.render() for item in parity_diagnostics)
+                    if parity_diagnostics
+                    else "package and copied construction-free Runtime descriptors match exactly"
+                ),
+            )
+        if parity_check.status != "pass":
+            return (
+                [
+                    build_check,
+                    parity_check,
+                    CheckResult(
+                        check_id="native-contract-and-lifecycle",
+                        tier=1,
+                        status="skip",
+                        required=True,
+                        duration_ms=0.0,
+                        diagnostic=(
+                            "creator invocation blocked by package/runtime "
+                            "descriptor parity failure"
+                        ),
+                    ),
+                ],
+                None,
+            )
+
     run_started = time.perf_counter()
     with tempfile.TemporaryDirectory(prefix="synaptome-element-confidence-") as raw:
         native_report = Path(raw) / "native-evidence.json"
@@ -563,7 +685,11 @@ def run_contract_harness(
         duration_ms=(time.perf_counter() - run_started) * 1000.0,
         diagnostic=diagnostic,
     )
-    return [build_check, run_check], evidence
+    checks = [build_check]
+    if parity_check is not None:
+        checks.append(parity_check)
+    checks.append(run_check)
+    return checks, evidence
 
 
 def run_graphics_harness(

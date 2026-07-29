@@ -61,6 +61,7 @@ struct ParameterDeclaration {
     std::optional<int> quickAccessOrder;
     std::vector<std::string> aliases;
     std::optional<ParameterDeprecation> deprecation;
+    bool visible = true;
 };
 
 struct ParameterDeclarationSet {

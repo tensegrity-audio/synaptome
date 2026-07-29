@@ -9,6 +9,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+import element_package_v1
 from element_confidence import (
     ConfidenceError,
     CheckResult,
@@ -87,6 +88,7 @@ def main(argv: list[str]) -> int:
     args = parse_args(argv)
     package_path: Path | None = None
     package: dict[str, object] | None = None
+    package_result: element_package_v1.ValidationResult | None = None
     try:
         if args.package is not None:
             package_path = (
@@ -95,13 +97,14 @@ def main(argv: list[str]) -> int:
                 else (REPO_ROOT / args.package).resolve()
             )
             package = load_json_object(package_path, "package")
+            package_result = element_package_v1.validate_package(package_path)
             selected_path, profile = find_profile_for_package(package)
-            asset = package.get("asset")
-            if not isinstance(asset, dict):
-                raise ConfidenceError("package.asset must be an object")
-            if asset.get("type") != profile["elementType"]:
+            element = package.get("element")
+            if not isinstance(element, dict):
+                raise ConfidenceError("package.element must be an object")
+            if element.get("id") != profile["elementType"]:
                 raise ConfidenceError(
-                    "package asset.type does not match the selected confidence profile"
+                    "package element.id does not match the selected confidence profile"
                 )
         else:
             selected_path = profile_path(args.profile)
@@ -117,10 +120,62 @@ def main(argv: list[str]) -> int:
     )
     print(f"[element-confidence] profile: {repo_path(selected_path)}")
 
+    package_errors: list[str] = []
+    if package_result is not None:
+        package_errors = [
+            diagnostic.render() for diagnostic in package_result.diagnostics
+        ]
+        document = package_result.document or {}
+        asset = document.get("asset", {})
+        element = document.get("element", {})
+        report.package = {
+            "schemaVersion": document.get("schemaVersion"),
+            "packageVersion": document.get("packageVersion"),
+            "implementationVersion": document.get("implementationVersion"),
+            "identity": {
+                "packageId": document.get("packageId"),
+                "typeId": element.get("id") if isinstance(element, dict) else None,
+                "definitionId": asset.get("id") if isinstance(asset, dict) else None,
+                "registryPrefix": (
+                    asset.get("registryPrefix")
+                    if isinstance(asset, dict)
+                    else None
+                ),
+            },
+            "resolvedCompatibility": package_result.resolved_compatibility,
+            "declaredDependencies": package_result.resolved_dependencies,
+            "serializedDescriptorSignature": (
+                element_package_v1.descriptor_signature(
+                    package_result.normalized
+                )
+                if package_result.normalized is not None
+                else None
+            ),
+            "runtimeDescriptorSignature": None,
+            "parity": {"status": "not-run", "diagnostics": []},
+            "migrationPath": package_result.migration_path,
+            "inventory": package_result.inventory,
+        }
+        report.checks.append(
+            CheckResult(
+                check_id="element-package-v1-preflight",
+                tier=0,
+                status="fail" if package_errors else "pass",
+                required=True,
+                duration_ms=0.0,
+                diagnostic=(
+                    "; ".join(package_errors)
+                    if package_errors
+                    else "Element Package v1 preflight passed"
+                ),
+            )
+        )
+
     started = __import__("time").perf_counter()
     dependencies, errors = preflight_dependencies(
         profile, package_path=package_path, package=package
     )
+    errors = package_errors + errors
     report.resolved_dependencies = dependencies
     report.checks.append(
         CheckResult(
@@ -147,7 +202,9 @@ def main(argv: list[str]) -> int:
     selected_tiers = TIER_NUMBERS[args.tier]
     contract_ok = False
     if 1 in selected_tiers and not errors:
-        contract_checks, evidence = run_contract_harness(profile)
+        contract_checks, evidence = run_contract_harness(
+            profile, package_result
+        )
         report.checks.extend(contract_checks)
         contract_ok = all(
             check.status == "pass"
@@ -159,6 +216,31 @@ def main(argv: list[str]) -> int:
                 f"[element-confidence] {check.status.upper()} {check.check_id}: "
                 f"{check.diagnostic}"
             )
+        if report.package is not None:
+            parity = next(
+                (
+                    check
+                    for check in contract_checks
+                    if check.check_id == "package-runtime-descriptor-parity"
+                ),
+                None,
+            )
+            if parity is not None:
+                report.package["parity"] = {
+                    "status": parity.status,
+                    "diagnostics": (
+                        [] if parity.status == "pass" else [parity.diagnostic]
+                    ),
+                }
+            runtime_inventory = (
+                package_result.inventory.get("runtimeDescriptor", [])
+                if package_result is not None
+                else []
+            )
+            if runtime_inventory:
+                report.package["runtimeDescriptorSignature"] = (
+                    runtime_inventory[0].get("signature")
+                )
         if evidence is not None:
             report.declaration_live_comparison = evidence[
                 "declarationLiveComparison"
@@ -294,6 +376,8 @@ def main(argv: list[str]) -> int:
             )
 
     destination = report_path(profile["id"], args.report)
+    if report.package is not None and package_result is not None:
+        report.package["inventory"] = package_result.inventory
     write_report(destination, report)
     passed = sum(check.status == "pass" for check in report.checks)
     failed = sum(check.status == "fail" for check in report.checks)

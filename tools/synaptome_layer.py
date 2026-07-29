@@ -40,19 +40,12 @@ def check_package(path: Path) -> tuple[dict[str, Any], list[str]]:
             package = validate_layer_packages.load_json(resolved)
         except (OSError, json.JSONDecodeError):
             package = {}
-        compatibility = package.get("compatibility", {}) if isinstance(package, dict) else {}
         source = package.get("source", {}) if isinstance(package, dict) else {}
-        report["inspectionSafe"] = bool(
-            not errors
-            and isinstance(compatibility, dict)
-            and compatibility.get("manifestInspectionOnly") is True
-            and compatibility.get("noHeavySetupSideEffects") is True
-        )
+        report["inspectionSafe"] = not errors
         report["activationReady"] = bool(
             not errors
             and isinstance(source, dict)
             and source.get("strategy") == "source-registration"
-            and compatibility.get("sourceRegistrationRequired") is True
         )
     report["errors"] = errors
     return report, errors

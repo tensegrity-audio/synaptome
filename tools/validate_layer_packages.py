@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 import layer_package_discovery
+import element_package_v1
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_ROOTS = layer_package_discovery.fixture_roots()
@@ -241,92 +242,20 @@ def validate_mapping_presets(
 
 
 def validate_package(package_path: Path) -> tuple[PackageSummary | None, list[str]]:
-    errors: list[str] = []
-    try:
-        package = load_json(package_path)
-    except json.JSONDecodeError as exc:
-        return None, [f"{rel(package_path)}: JSON parse error: {exc}"]
-    errors.extend(schema_errors(package, PACKAGE_SCHEMA, package_path))
-    if not isinstance(package, dict):
-        return None, [f"{rel(package_path)}: package must be a JSON object"]
-
+    result = element_package_v1.validate_package(package_path)
+    errors = [diagnostic.render() for diagnostic in result.diagnostics]
+    package = result.document
+    if package is None:
+        return None, errors
     asset = as_dict(package.get("asset"))
-    package_id = package.get("packageId")
-    asset_id = asset.get("id")
-    layer_type = asset.get("type")
-    registry_prefix = asset.get("registryPrefix")
-
-    for field_name, value in (
-        ("packageId", package_id),
-        ("asset.id", asset_id),
-        ("asset.type", layer_type),
-        ("asset.registryPrefix", registry_prefix),
-    ):
-        if not isinstance(value, str) or not value:
-            errors.append(f"{rel(package_path)}: {field_name} must be a non-empty string")
-    if isinstance(package_id, str) and isinstance(asset_id, str) and package_id != asset_id:
-        errors.append(f"{rel(package_path)}: packageId and asset.id should match for the first package slice")
-
-    params, param_errors = collect_parameter_errors(as_list(package.get("parameters")), package_path)
-    errors.extend(param_errors)
-    if not params:
-        errors.append(f"{rel(package_path)}: package must declare at least one parameter")
-
-    source = as_dict(package.get("source"))
-    strategy = source.get("strategy")
-    compatibility = as_dict(package.get("compatibility"))
-    if compatibility.get("sourceRegistrationRequired") is True and strategy != "source-registration":
-        errors.append(f"{rel(package_path)}: sourceRegistrationRequired packages must use source-registration strategy")
-    registration = source.get("registration")
-    if strategy == "source-registration":
-        if not isinstance(registration, str) or not registration:
-            errors.append(f"{rel(package_path)}: source-registration packages must declare source.registration")
-        elif not resolve_package_path(package_path, registration).exists():
-            errors.append(f"{rel(package_path)}: source.registration is missing: {registration}")
-    for raw_file in as_list(source.get("files")):
-        if not isinstance(raw_file, str) or not raw_file:
-            errors.append(f"{rel(package_path)}: source.files entries must be strings")
-            continue
-        if not resolve_package_path(package_path, raw_file).exists():
-            errors.append(f"{rel(package_path)}: source file is missing: {raw_file}")
-
-    preset_ids: set[str] = set()
-    for raw_ref in as_list(package.get("presets")):
-        if not isinstance(raw_ref, dict):
-            errors.append(f"{rel(package_path)}: preset references must be objects")
-            continue
-        preset_id, preset_errors = validate_preset(package_path, package, raw_ref, params)
-        if preset_id in preset_ids:
-            errors.append(f"{rel(package_path)}: duplicate preset id '{preset_id}'")
-        preset_ids.add(preset_id)
-        errors.extend(preset_errors)
-
-    for bank_index, raw_bank in enumerate(as_list(package.get("presetBanks"))):
-        bank_ctx = f"{rel(package_path)}.presetBanks[{bank_index}]"
-        if not isinstance(raw_bank, dict):
-            errors.append(f"{bank_ctx}: preset bank must be an object")
-            continue
-        for preset_id in as_list(raw_bank.get("presets")):
-            if preset_id not in preset_ids:
-                errors.append(f"{bank_ctx}: preset '{preset_id}' is not declared by package.presets")
-
-    errors.extend(validate_mapping_presets(package_path, as_list(package.get("mappingPresets")), params))
-
-    tests = as_dict(package.get("tests"))
-    bench = tests.get("bench")
-    if bench is not None:
-        if not isinstance(bench, str) or not bench:
-            errors.append(f"{rel(package_path)}: tests.bench must be a string")
-        elif not resolve_package_path(package_path, bench).exists():
-            errors.append(f"{rel(package_path)}: tests.bench is missing: {bench}")
-
+    element = as_dict(package.get("element"))
     summary = PackageSummary(
         path=package_path,
-        package_id=str(package_id or ""),
-        asset_id=str(asset_id or ""),
-        layer_type=str(layer_type or ""),
-        parameter_count=len(params),
-        preset_count=len(preset_ids),
+        package_id=str(package.get("packageId", "")),
+        asset_id=str(asset.get("id", "")),
+        layer_type=str(element.get("id", "")),
+        parameter_count=len(as_list(package.get("parameters"))),
+        preset_count=len(as_list(package.get("presets"))),
         mapping_preset_count=len(as_list(package.get("mappingPresets"))),
     )
     return summary, errors

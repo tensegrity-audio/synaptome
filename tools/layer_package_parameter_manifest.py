@@ -45,13 +45,19 @@ def as_list(value: Any) -> list[Any]:
 
 def normalize_parameter(package_path: Path, package: dict[str, Any], raw: dict[str, Any]) -> dict[str, Any]:
     asset = as_dict(package.get("asset"))
+    groups = {
+        str(group.get("id", "")): group
+        for group in as_list(package.get("parameterGroups"))
+        if isinstance(group, dict)
+    }
+    group = as_dict(groups.get(str(raw.get("groupId", ""))))
     prefix = str(asset.get("registryPrefix", ""))
     suffix = str(raw.get("id", ""))
     entry: dict[str, Any] = {
         "id": f"{prefix}.{suffix}",
         "kind": str(raw.get("kind", "")),
         "scope": "layer-package",
-        "family": str(raw.get("label", "").split(":", 1)[0] if ":" in str(raw.get("label", "")) else ""),
+        "family": str(group.get("label", "")),
         "units": str(raw.get("units", "")),
         "packageId": str(package.get("packageId", "")),
         "assetId": str(asset.get("id", "")),
@@ -59,6 +65,8 @@ def normalize_parameter(package_path: Path, package: dict[str, Any], raw: dict[s
         "registryPrefix": prefix,
         "suffix": suffix,
         "label": str(raw.get("label", "")),
+        "groupId": str(raw.get("groupId", "")),
+        "visible": bool(raw.get("visible", True)),
         "default": raw.get("default"),
         "source": {
             "path": rel(package_path),

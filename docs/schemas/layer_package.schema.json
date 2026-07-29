@@ -1,28 +1,52 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Synaptome Layer Package",
-  "description": "Draft schema for package-declared Synaptome layer extensions.",
+  "$id": "https://synaptome.local/schemas/element-package-v1.json",
+  "title": "Synaptome Element Package v1",
+  "description": "Portable, construction-free package contract for one element type and one or more package-owned definitions.",
   "type": "object",
-  "required": ["schemaVersion", "packageId", "asset", "parameters"],
+  "required": [
+    "schemaVersion",
+    "packageId",
+    "packageVersion",
+    "implementationVersion",
+    "element",
+    "asset",
+    "parameterGroups",
+    "parameters",
+    "source",
+    "capabilities",
+    "dependencies",
+    "compatibility"
+  ],
   "additionalProperties": false,
   "properties": {
-    "schemaVersion": { "type": "integer", "minimum": 1 },
-    "packageId": {
-      "type": "string",
-      "minLength": 1,
-      "pattern": "^[a-z][A-Za-z0-9_.-]*$"
-    },
-    "packageVersion": { "type": "string" },
+    "schemaVersion": { "const": 1 },
+    "packageId": { "$ref": "#/definitions/qualifiedId" },
+    "packageVersion": { "$ref": "#/definitions/semver" },
+    "implementationVersion": { "$ref": "#/definitions/semver" },
     "description": { "type": "string" },
+    "element": { "$ref": "#/definitions/element" },
     "asset": { "$ref": "#/definitions/asset" },
-    "source": { "$ref": "#/definitions/source" },
+    "parameterGroups": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/parameterGroup" }
+    },
     "parameters": {
       "type": "array",
+      "minItems": 1,
       "items": { "$ref": "#/definitions/parameter" }
     },
-    "modes": {
+    "source": { "$ref": "#/definitions/source" },
+    "capabilities": {
       "type": "array",
-      "items": { "$ref": "#/definitions/mode" }
+      "uniqueItems": true,
+      "items": {
+        "enum": ["graphics.opengl", "transport.read", "parameters.dynamic-options"]
+      }
+    },
+    "dependencies": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/dependency" }
     },
     "presets": {
       "type": "array",
@@ -41,43 +65,148 @@
       "items": { "$ref": "#/definitions/mediaRef" }
     },
     "tests": { "$ref": "#/definitions/tests" },
+    "aliases": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/alias" }
+    },
+    "deprecations": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/deprecation" }
+    },
+    "migrations": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/migration" }
+    },
     "compatibility": { "$ref": "#/definitions/compatibility" }
   },
   "definitions": {
-    "asset": {
+    "localId": {
+      "type": "string",
+      "pattern": "^[a-z][A-Za-z0-9]*(?:[._-][A-Za-z0-9]+)*$"
+    },
+    "qualifiedId": {
+      "type": "string",
+      "pattern": "^[a-z][A-Za-z0-9]*(?:[._-][A-Za-z0-9]+)+$"
+    },
+    "semver": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"
+    },
+    "versionRange": {
+      "type": "string",
+      "pattern": "^(?:>=|>|<=|<|=)?[0-9]+\\.[0-9]+\\.[0-9]+(?:\\s+(?:>=|>|<=|<|=)?[0-9]+\\.[0-9]+\\.[0-9]+)*$"
+    },
+    "path": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?![A-Za-z]:)(?![/\\\\])(?!.*(?:^|[/\\\\])\\.\\.(?:[/\\\\]|$))(?!.*\\\\).+$"
+    },
+    "action": {
       "type": "object",
-      "required": ["id", "label", "category", "type", "registryPrefix"],
+      "required": ["id", "label", "groupId"],
       "additionalProperties": false,
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
+        "id": { "$ref": "#/definitions/localId" },
+        "label": { "type": "string", "minLength": 1 },
+        "groupId": { "$ref": "#/definitions/localId" }
+      }
+    },
+    "element": {
+      "type": "object",
+      "required": ["id", "kind", "bindingMode", "actions"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/definitions/qualifiedId" },
+        "kind": { "enum": ["visual", "effect", "overlay"] },
+        "bindingMode": { "enum": ["bind-only", "legacy-setup-adapter"] },
+        "actions": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/action" }
+        }
+      }
+    },
+    "asset": {
+      "type": "object",
+      "required": ["id", "label", "category", "type", "registryPrefix", "defaults"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/definitions/qualifiedId" },
         "label": { "type": "string", "minLength": 1 },
         "category": { "type": "string", "minLength": 1 },
         "layerGroup": { "type": "string" },
         "model": { "type": "string" },
         "stateModel": { "type": "string" },
-        "type": { "type": "string", "minLength": 1 },
-        "registryPrefix": { "type": "string", "minLength": 1 },
+        "type": { "$ref": "#/definitions/qualifiedId" },
+        "registryPrefix": { "$ref": "#/definitions/qualifiedId" },
         "description": { "type": "string" },
         "tags": {
           "type": "array",
-          "items": { "type": "string" }
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "defaults": {
+          "type": "object",
+          "additionalProperties": {
+            "oneOf": [
+              { "type": "number" },
+              { "type": "string" },
+              { "type": "boolean" }
+            ]
+          }
         }
+      }
+    },
+    "parameterGroup": {
+      "type": "object",
+      "required": ["id", "label", "description"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/definitions/localId" },
+        "label": { "type": "string", "minLength": 1 },
+        "description": { "type": "string" }
       }
     },
     "source": {
       "type": "object",
+      "required": ["strategy", "registration", "files"],
       "additionalProperties": false,
       "properties": {
         "strategy": {
-          "type": "string",
-          "enum": ["source-registration", "generated-registration", "module-loader", "template-generated"]
+          "enum": ["source-registration", "generated-registration", "template-generated"]
         },
-        "registration": { "type": "string" },
+        "registration": { "$ref": "#/definitions/path" },
         "files": {
           "type": "array",
-          "items": { "type": "string" }
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/definitions/path" }
         }
       }
+    },
+    "dependency": {
+      "type": "object",
+      "required": ["id", "kind", "required", "versionRange", "resolvedVersion"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/definitions/qualifiedId" },
+        "kind": {
+          "enum": ["package", "source", "static-library", "asset", "runtime-service"]
+        },
+        "required": { "type": "boolean" },
+        "versionRange": { "$ref": "#/definitions/versionRange" },
+        "resolvedVersion": { "$ref": "#/definitions/semver" },
+        "path": { "$ref": "#/definitions/path" },
+        "provider": { "$ref": "#/definitions/qualifiedId" },
+        "dependsOn": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/definitions/qualifiedId" }
+        }
+      },
+      "oneOf": [
+        { "required": ["path"], "not": { "required": ["provider"] } },
+        { "required": ["provider"], "not": { "required": ["path"] } }
+      ]
     },
     "range": {
       "type": "object",
@@ -86,12 +215,12 @@
       "properties": {
         "min": { "type": "number" },
         "max": { "type": "number" },
-        "step": { "type": "number" }
+        "step": { "type": "number", "exclusiveMinimum": 0 }
       }
     },
     "option": {
       "type": "object",
-      "required": ["value", "label"],
+      "required": ["value", "label", "description"],
       "additionalProperties": false,
       "properties": {
         "value": {
@@ -110,61 +239,65 @@
       "required": ["id", "value", "label"],
       "additionalProperties": false,
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "value": { "type": "string", "minLength": 1 },
-        "label": { "type": "string", "minLength": 1 }
+        "id": { "$ref": "#/definitions/qualifiedId" },
+        "value": { "$ref": "#/definitions/localId" },
+        "label": { "$ref": "#/definitions/localId" }
       }
     },
     "parameter": {
       "type": "object",
-      "required": ["id", "kind", "label", "default"],
+      "required": [
+        "id", "kind", "groupId", "label", "default",
+        "description", "visible"
+      ],
       "additionalProperties": false,
       "properties": {
-        "id": {
-          "type": "string",
-          "minLength": 1,
-          "pattern": "^[a-z][A-Za-z0-9]*$"
-        },
-        "kind": { "type": "string", "enum": ["float", "bool", "string"] },
+        "id": { "$ref": "#/definitions/localId" },
+        "kind": { "enum": ["float", "bool", "string"] },
+        "groupId": { "$ref": "#/definitions/localId" },
         "label": { "type": "string", "minLength": 1 },
         "default": {},
         "range": { "$ref": "#/definitions/range" },
         "units": { "type": "string" },
         "description": { "type": "string" },
+        "visible": { "type": "boolean" },
         "options": {
           "type": "array",
           "items": { "$ref": "#/definitions/option" }
         },
         "optionsSource": { "$ref": "#/definitions/optionsSource" },
+        "quickAccessOrder": { "type": "integer", "minimum": 0 },
+        "aliases": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/definitions/localId" }
+        },
         "deprecated": {
           "type": "object",
+          "required": ["replacement", "reason"],
           "additionalProperties": false,
           "properties": {
-            "replacement": { "type": "string" },
-            "reason": { "type": "string" }
+            "replacement": { "$ref": "#/definitions/localId" },
+            "reason": { "type": "string", "minLength": 1 }
           }
         }
-      }
-    },
-    "mode": {
-      "type": "object",
-      "required": ["id", "label"],
-      "additionalProperties": false,
-      "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "label": { "type": "string", "minLength": 1 },
-        "kind": { "type": "string" },
-        "description": { "type": "string" }
-      }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "kind": { "const": "float" } } },
+          "then": { "required": ["range"] },
+          "else": { "not": { "required": ["range"] } }
+        }
+      ]
     },
     "presetRef": {
       "type": "object",
       "required": ["presetId", "label", "path"],
       "additionalProperties": false,
       "properties": {
-        "presetId": { "type": "string", "minLength": 1 },
+        "presetId": { "$ref": "#/definitions/localId" },
         "label": { "type": "string", "minLength": 1 },
-        "path": { "type": "string", "minLength": 1 },
+        "path": { "$ref": "#/definitions/path" },
         "description": { "type": "string" }
       }
     },
@@ -173,11 +306,12 @@
       "required": ["id", "label", "presets"],
       "additionalProperties": false,
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
+        "id": { "$ref": "#/definitions/localId" },
         "label": { "type": "string", "minLength": 1 },
         "presets": {
           "type": "array",
-          "items": { "type": "string" }
+          "uniqueItems": true,
+          "items": { "$ref": "#/definitions/localId" }
         }
       }
     },
@@ -186,23 +320,19 @@
       "required": ["kind", "pattern"],
       "additionalProperties": false,
       "properties": {
-        "kind": { "type": "string", "enum": ["osc"] },
-        "pattern": { "type": "string", "minLength": 1 },
+        "kind": { "const": "osc" },
+        "pattern": { "type": "string", "pattern": "^/" },
         "in": {
-          "type": "array",
-          "minItems": 2,
-          "maxItems": 2,
+          "type": "array", "minItems": 2, "maxItems": 2,
           "items": { "type": "number" }
         },
         "out": {
-          "type": "array",
-          "minItems": 2,
-          "maxItems": 2,
+          "type": "array", "minItems": 2, "maxItems": 2,
           "items": { "type": "number" }
         },
         "smooth": { "type": "number", "minimum": 0 },
         "deadband": { "type": "number", "minimum": 0 },
-        "blend": { "type": "string", "enum": ["set", "scale", "add"] },
+        "blend": { "enum": ["set", "scale", "add"] },
         "relative": { "type": "boolean" }
       }
     },
@@ -211,23 +341,20 @@
       "required": ["target", "source"],
       "additionalProperties": false,
       "properties": {
-        "target": {
-          "type": "string",
-          "minLength": 1,
-          "pattern": "^[a-z][A-Za-z0-9]*$"
-        },
+        "target": { "$ref": "#/definitions/localId" },
         "source": { "$ref": "#/definitions/mappingSource" },
         "description": { "type": "string" }
       }
     },
     "mappingPreset": {
       "type": "object",
-      "required": ["id", "label", "mappings"],
+      "required": ["id", "label", "description", "applyMode", "mappings"],
       "additionalProperties": false,
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
+        "id": { "$ref": "#/definitions/localId" },
         "label": { "type": "string", "minLength": 1 },
         "description": { "type": "string" },
+        "applyMode": { "const": "suggestion-only" },
         "mappings": {
           "type": "array",
           "items": { "$ref": "#/definitions/mapping" }
@@ -236,28 +363,82 @@
     },
     "mediaRef": {
       "type": "object",
-      "required": ["id", "path"],
+      "required": ["id", "path", "kind"],
       "additionalProperties": false,
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "path": { "type": "string", "minLength": 1 },
-        "kind": { "type": "string" }
+        "id": { "$ref": "#/definitions/localId" },
+        "path": { "$ref": "#/definitions/path" },
+        "kind": { "enum": ["image", "video", "shader", "data"] }
       }
     },
     "tests": {
       "type": "object",
+      "required": ["confidenceProfile", "fixtures"],
       "additionalProperties": false,
       "properties": {
-        "bench": { "type": "string" }
+        "confidenceProfile": { "$ref": "#/definitions/path" },
+        "fixtures": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/definitions/path" }
+        }
+      }
+    },
+    "alias": {
+      "type": "object",
+      "required": ["kind", "from", "to"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "enum": ["package", "type", "definition", "parameter", "preset"] },
+        "from": { "$ref": "#/definitions/qualifiedId" },
+        "to": { "$ref": "#/definitions/qualifiedId" }
+      }
+    },
+    "deprecation": {
+      "type": "object",
+      "required": ["kind", "id", "replacement", "reason"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "enum": ["package", "type", "definition", "parameter", "preset"] },
+        "id": { "$ref": "#/definitions/qualifiedId" },
+        "replacement": { "$ref": "#/definitions/qualifiedId" },
+        "reason": { "type": "string", "minLength": 1 }
+      }
+    },
+    "migration": {
+      "type": "object",
+      "required": ["id", "fromVersion", "toVersion", "path"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/definitions/localId" },
+        "fromVersion": { "$ref": "#/definitions/semver" },
+        "toVersion": { "$ref": "#/definitions/semver" },
+        "path": { "$ref": "#/definitions/path" }
       }
     },
     "compatibility": {
       "type": "object",
+      "required": ["sdk", "runtime"],
       "additionalProperties": false,
       "properties": {
-        "noHeavySetupSideEffects": { "type": "boolean" },
-        "sourceRegistrationRequired": { "type": "boolean" },
-        "manifestInspectionOnly": { "type": "boolean" }
+        "sdk": {
+          "type": "object",
+          "required": ["versionRange", "resolvedVersion"],
+          "additionalProperties": false,
+          "properties": {
+            "versionRange": { "$ref": "#/definitions/versionRange" },
+            "resolvedVersion": { "$ref": "#/definitions/semver" }
+          }
+        },
+        "runtime": {
+          "type": "object",
+          "required": ["versionRange", "resolvedVersion"],
+          "additionalProperties": false,
+          "properties": {
+            "versionRange": { "$ref": "#/definitions/versionRange" },
+            "resolvedVersion": { "$ref": "#/definitions/semver" }
+          }
+        }
       }
     }
   }

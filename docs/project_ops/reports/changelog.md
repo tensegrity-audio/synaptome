@@ -2,6 +2,51 @@
 
 This changelog records Project Ops and administrative workflow changes. Product release versioning remains governed by `docs/release_policy.md`.
 
+## 2026-07-29 - architecture - seac_7_element_package_v1
+
+- Completed SEAC-7 with one exact Element Package v1 schema and one pure,
+  source-immutable normalized model covering identity, versions, the Runtime
+  descriptor/parameter surface, definitions/defaults, contained source and
+  referenced files, presets, suggestion-only mappings, tests, dependencies,
+  capabilities, aliases, deprecations, and migrations.
+- Upgraded Signal Bloom without changing its stable package/type/definition/
+  prefix/parameter/preset/mapping IDs or package version. Grid remains the
+  passing built-in comparison.
+- Added construction-free native descriptor export and exact package/Runtime
+  parity before creator invocation, including stable package/JSON-path/
+  Runtime-field/expected/observed diagnostics and exact binary32 vocabulary
+  normalization.
+- Extended the SEAC-6 report with package identity/version, compatibility,
+  dependency, descriptor-signature, parity, migration, and referenced-file
+  inventories.
+- Added negative coverage for future/unsupported versions, duplicate IDs,
+  unsafe and missing paths, unknown capabilities, incompatible/optional/
+  unresolved/cyclic dependencies, ambiguous/non-forward migrations,
+  activation conflicts, and ordered field drift.
+- Validation: 25 pytest checks plus two subtests pass; both Grid and Signal
+  Bloom CI confidence runs pass; all 23 public-app contracts, app independence,
+  BrowserFlow 49/49, physical and junction Release host builds, and a
+  junction-opened repository native test build pass. Existing third-party/app
+  Release warnings remain unchanged.
+- Advanced the architecture milestone to 7 of 12. SEAC-8 controlled/generated
+  registration is now the active gate; mapping mutation and automatic
+  discovery remain SEAC-9 and SEAC-10.
+
+## 2026-07-29 - architecture - seac_7_execution_handoff
+
+- Documented the MSVC duplicate-definition incident caused by mixing the
+  openFrameworks junction and physical-checkout include namespaces in one
+  translation unit.
+- Preserved project-opening roots for app/runtime builds and physical
+  repository roots for repo-backed tests; physical and junction Release builds
+  pass, along with all 49 BrowserFlow scenarios and app-independence checks.
+- Froze the SEAC-7 Element Package v1 execution handoff: schema/version rules,
+  stable identities, package-relative paths, dependency/capability boundaries,
+  construction-free package/runtime descriptor parity, confidence-report
+  integration, negative fixtures, promotion gates, and stop conditions.
+- Kept generated registration, mapping mutation, automatic discovery, native
+  modules, and catalog-wide migration in SEAC-8 through SEAC-12.
+
 ## 2026-07-28 - architecture - seac_6_confidence_suite
 
 - Completed SEAC-6 with a canonical profile/package CLI and stable JSON

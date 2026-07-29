@@ -390,6 +390,124 @@ bool hasArgument(int argc, char** argv, const std::string& expected) {
     return false;
 }
 
+ofJson parameterValueJson(
+    const synaptome::element::ParameterValue& value) {
+    return std::visit(
+        [](const auto& selected) -> ofJson {
+            return selected;
+        },
+        value);
+}
+
+ofJson constructionFreeDescriptor(const Fixture& selected) {
+    LayerFactory factory;
+    registerFixture(factory);
+    require(
+        factory.descriptors().size() == 1,
+        "descriptor fixture registered unrelated elements");
+    const auto* record = factory.typeContract(selected.typeId);
+    require(
+        record != nullptr &&
+            record->state ==
+                LayerFactory::ParameterDeclarationState::Declared,
+        "construction-free ElementTypeContract is unavailable");
+    const auto& contract = record->contract;
+    ofJson output;
+    output["typeId"] = contract.element.typeId;
+    output["kind"] =
+        contract.element.kind == ElementKind::Visual
+        ? "visual"
+        : "effect";
+    output["bindingMode"] =
+        record->bindingMode == LayerFactory::ParameterBindingMode::Explicit
+        ? "bind-only"
+        : "legacy-setup-adapter";
+    output["actions"] = ofJson::array();
+    for (const auto& action : contract.element.actions) {
+        output["actions"].push_back({
+            {"id", action.id},
+            {"label", action.label},
+            {"groupId", action.groupId},
+        });
+    }
+    output["parameterGroups"] = ofJson::array();
+    for (const auto& group : contract.parameters.groups) {
+        output["parameterGroups"].push_back({
+            {"id", group.id},
+            {"label", group.label},
+            {"description", group.description},
+        });
+    }
+    output["parameters"] = ofJson::array();
+    for (const auto& parameter : contract.parameters.parameters) {
+        ofJson range = nullptr;
+        if (parameter.range) {
+            range = {
+                {"min", parameter.range->min},
+                {"max", parameter.range->max},
+                {
+                    "step",
+                    parameter.range->step
+                        ? ofJson(*parameter.range->step)
+                        : ofJson(nullptr),
+                },
+            };
+        }
+        ofJson options = ofJson::array();
+        for (const auto& option : parameter.options) {
+            options.push_back({
+                {"value", parameterValueJson(option.value)},
+                {"label", option.label},
+                {"description", option.description},
+            });
+        }
+        ofJson optionSource = nullptr;
+        if (parameter.optionSource) {
+            optionSource = {
+                {"id", parameter.optionSource->id},
+                {"valueField", parameter.optionSource->valueField},
+                {"labelField", parameter.optionSource->labelField},
+            };
+        }
+        ofJson deprecation = nullptr;
+        if (parameter.deprecation) {
+            deprecation = {
+                {"replacementId", parameter.deprecation->replacementId},
+                {"reason", parameter.deprecation->reason},
+            };
+        }
+        output["parameters"].push_back({
+            {"id", parameter.id},
+            {
+                "kind",
+                parameter.kind == ParameterKind::Float
+                    ? "float"
+                    : parameter.kind == ParameterKind::Bool
+                        ? "bool"
+                        : "string",
+            },
+            {"groupId", parameter.groupId},
+            {"label", parameter.label},
+            {"default", parameterValueJson(parameter.defaultValue)},
+            {"range", range},
+            {"units", parameter.units},
+            {"description", parameter.description},
+            {"visible", parameter.visible},
+            {"options", options},
+            {"optionSource", optionSource},
+            {
+                "quickAccessOrder",
+                parameter.quickAccessOrder
+                    ? ofJson(*parameter.quickAccessOrder)
+                    : ofJson(nullptr),
+            },
+            {"aliases", parameter.aliases},
+            {"deprecation", deprecation},
+        });
+    }
+    return output;
+}
+
 ofJson runGraphics(
     const Fixture& selected,
     const std::filesystem::path& destination) {
@@ -842,6 +960,19 @@ int main(int argc, char** argv) {
     try {
         const auto selected = fixture();
         const auto destination = outputPath(argc, argv);
+        if (hasArgument(argc, argv, "--descriptor-only")) {
+            const auto output = constructionFreeDescriptor(selected);
+            std::filesystem::create_directories(
+                destination.parent_path());
+            std::ofstream stream(destination);
+            require(
+                static_cast<bool>(stream),
+                "could not open descriptor evidence output");
+            stream << output.dump(2) << "\n";
+            std::cout << "[element_confidence_descriptor] PASS "
+                      << selected.profileId << "\n";
+            return 0;
+        }
         if (hasArgument(argc, argv, "--reload")) {
             const auto output = runReload(selected);
             std::filesystem::create_directories(
