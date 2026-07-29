@@ -228,3 +228,25 @@ fixture requires live machine state, the bench and host declarations differ,
 or teardown requires host-owned singleton cleanup. Hardware-specific pixel and
 performance baselines may be scoped by renderer class; correctness,
 nonblank-output, GL containment, and lifecycle cleanup may not be waived.
+
+## Post-Completion Build Incident
+
+On 2026-07-29, the Release host failed with a cascade of MSVC `C2011` and
+`C2084` duplicate-definition errors when Visual Studio opened the app through
+the supported openFrameworks junction. App sources used the junction namespace
+while `SynaptomeAppRoot` still supplied physical-checkout include paths. MSVC
+therefore saw the same headers under two names and did not consistently unify
+their `#pragma once` identity.
+
+`synaptome/Directory.Build.props` now keeps app/runtime includes in the project
+opening namespace and keeps repository-backed tests in the physical namespace
+matching their `tests/` sources. The exact junction app build, the physical
+Release app build, a junction-path BrowserFlow test build, all 49 BrowserFlow
+scenarios, the app-independence audit, and the diff check pass. Existing
+openFrameworks/addon conversion and deprecation warnings remain outside this
+incident; the duplicate-definition errors are gone.
+
+The durable diagnosis and reproduction command live in
+[`../build_env.md`](../build_env.md#troubleshooting-mixed-junction-and-physical-paths).
+SEAC-7 must preserve this root-selection behavior when adding validators,
+generated files, or new native package test targets.

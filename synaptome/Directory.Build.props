@@ -13,7 +13,17 @@
     <OF_ROOT Condition="'$(OF_ROOT)'=='' and '$(OPENFRAMEWORKS_ROOT)'!=''">$(OPENFRAMEWORKS_ROOT)</OF_ROOT>
     <OF_ROOT Condition="'$(OF_ROOT)'=='' and Exists('$(MSBuildThisFileDirectory)..\..\..\libs\glm\include\glm\vec3.hpp')">$(MSBuildThisFileDirectory)..\..\..</OF_ROOT>
     <OF_ROOT Condition="'$(OF_ROOT)'=='' and Exists('$(USERPROFILE)\Documents\openFrameworks\libs\glm\include\glm\vec3.hpp')">$(USERPROFILE)\Documents\openFrameworks</OF_ROOT>
-    <SynaptomeAppRoot Condition="'$(SynaptomeAppRoot)'==''">$(SynaptomeRepoRoot)\synaptome</SynaptomeAppRoot>
+    <!-- App/runtime projects compile sources below this directory, so keep
+         their includes in the namespace used to open the project. Repo-backed
+         test projects compile sources from SynaptomeTestRoot and therefore
+         keep the physical repo namespace. Mixing either pair defeats
+         #pragma once when MSVC builds through the supported junction. -->
+    <SynaptomeUsesRepoTestSources
+      Condition="$([System.String]::Copy('$(MSBuildProjectDirectory)').Contains('\tests\'))">true</SynaptomeUsesRepoTestSources>
+    <SynaptomeAppRoot
+      Condition="'$(SynaptomeAppRoot)'=='' and '$(SynaptomeUsesRepoTestSources)'=='true'">$(SynaptomeRepoRoot)\synaptome</SynaptomeAppRoot>
+    <SynaptomeAppRoot
+      Condition="'$(SynaptomeAppRoot)'==''">$(MSBuildThisFileDirectory)</SynaptomeAppRoot>
     <OpenFrameworksAppRoot Condition="'$(OpenFrameworksAppRoot)'==''">$(SynaptomeAppRoot)</OpenFrameworksAppRoot>
     <SynaptomeOpenFrameworksRoot Condition="'$(SynaptomeOpenFrameworksRoot)'==''">$(OF_ROOT)</SynaptomeOpenFrameworksRoot>
     <SynaptomeThirdPartyRoot Condition="'$(SynaptomeThirdPartyRoot)'==''">$(SynaptomeRepoRoot)\thirdparty</SynaptomeThirdPartyRoot>

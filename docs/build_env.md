@@ -46,6 +46,9 @@ C:\Users\<YOU>\Documents\openFrameworks\apps\myApps\synaptome -> C:\Users\<YOU>\
 
 - `SYNAPTOME_REPO_ROOT`, when set
 - the repo root relative to `synaptome/Directory.Build.props`
+- the app root from the path used to open app/runtime projects; repository
+  test projects retain the physical root because their sources live under
+  `tests/`, keeping junction and physical include paths from being mixed
 - `OPENFRAMEWORKS_ROOT`, when set
 - the default `C:\Users\<YOU>\Documents\openFrameworks`
 
@@ -57,6 +60,51 @@ $env:OPENFRAMEWORKS_ROOT = "C:\Users\<YOU>\Documents\openFrameworks"
 ```
 
 Reload Visual Studio after changing environment variables or build-root props.
+
+## Troubleshooting Mixed Junction And Physical Paths
+
+The supported openFrameworks junction and the physical checkout are two names
+for the same files, but MSVC does not always treat them as one include
+namespace. If one translation unit reaches a header through both names,
+`#pragma once` may not suppress the second copy. The resulting failure appears
+as a large burst of duplicate declarations or definitions, commonly:
+
+- `C2011`: type redefinition
+- `C2084`: function already has a body
+- errors in otherwise unrelated shared headers such as
+  `ParameterValueOrigin.h` or `modifier.h`
+
+This was encountered on 2026-07-29 after opening the app through:
+
+```text
+C:\Users\<YOU>\Documents\openFrameworks\apps\myApps\synaptome
+```
+
+while generated include roots still pointed at the physical checkout.
+
+`Directory.Build.props` prevents that split as follows:
+
+- app and runtime projects use the path namespace through which their project
+  was opened;
+- repository-backed test projects use the physical repository namespace,
+  matching the sources they compile from `tests/`.
+
+Do not replace those roots with one unconditional physical or junction path.
+Doing so fixes one project class while recreating the collision in the other.
+After changing checkout or junction layout, close Visual Studio, remove only
+the affected project's normal intermediate output if necessary, reopen the
+project, and rebuild.
+
+To reproduce the junction-sensitive app check directly:
+
+```powershell
+& 'C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\amd64\MSBuild.exe' `
+  'C:\Users\<YOU>\Documents\openFrameworks\apps\myApps\synaptome\Synaptome.vcxproj' `
+  /t:Build /p:Configuration=Release /p:Platform=x64 /m:1 /v:minimal /clp:Summary
+```
+
+The expected result is a linked `Synaptome.exe` with no `C2011` or `C2084`
+errors. The repository test projects must also build after this check.
 
 ## Build
 
