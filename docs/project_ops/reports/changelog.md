@@ -2,6 +2,37 @@
 
 This changelog records Project Ops and administrative workflow changes. Product release versioning remains governed by `docs/release_policy.md`.
 
+## 2026-07-28 - architecture - seac_6_execution_handoff
+
+- Made SEAC-6 execution-ready with a canonical isolated runner/report contract,
+  Grid and Signal Bloom reference fixtures, deterministic inputs, test-tier
+  boundaries, and an explicit implementation order.
+- Separated existing stub-backed renderer-policy evidence from the required
+  hidden real-context offscreen/GL-containment tier.
+- Froze nonblank output, repeated reload, memory-growth, timing, CI, promotion,
+  and stop gates without pulling Package v1, generated registration, discovery,
+  or operator mapping work forward.
+- Corrected the fresh-context checkpoint to pushed commit `f639987` and warned
+  future executors to exclude operator-local maps, scenes, and backups.
+- Validation: Project Ops repository/request audits, all 23 public-app
+  contracts, handoff link/path checks, scoped whitespace checks, and semantic
+  stale-status searches pass.
+
+## 2026-07-28 - documentation - seac_5_status_reconciliation
+
+- Reconciled the canonical spine/element model with the completed SEAC-5
+  promotion gate and current preferences, bank-definition, mapping-bank, and
+  machine-profile owners.
+- Replaced the final mapping-bank-v1 “target” wording with its implemented
+  current/legacy classification.
+- Updated the public runtime roadmap to record the completed Aurora Veil
+  catalog/default-layer slice instead of requesting the already delivered
+  first reviewed media asset.
+- Historical milestone entries below remain unchanged as dated progress
+  records.
+- Validation: Project Ops repository/request audits, all 23 public-app
+  contracts, semantic stale-status search, and diff checks pass.
+
 ## 2026-07-28 - architecture - seac_5_versioned_state_closeout
 
 - Request ID: `spine_element_architecture_convergence`

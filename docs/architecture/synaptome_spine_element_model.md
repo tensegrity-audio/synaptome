@@ -472,17 +472,19 @@ In particular, omitted owned sections preserve their current external owner,
 present empty sections are authoritative, missing scene versions are legacy
 Scene v1 rather than implicit v2, unsupported future versions fail before
 mutation, and compatibility migration never rewrites a source merely because
-it was loaded. Persistence code must follow that contract as the remaining
-SEAC-5 slices land. The Runtime now retains the current base winner as a
+it was loaded. SEAC-5 now implements that contract and passes its promotion
+gate. The Runtime retains the current base winner as a
 nonserialized origin and exposes copied base/live values plus ordered active
 modifier owners. Definition, package-preset, activation, Scene, and Browser
 write paths stamp that origin without changing value precedence.
 The applied-route portion of mapping ownership now uses mapping-bank v1 over
 the actual flat `MidiRouter` snapshot. Missing `schemaVersion` remains legacy
 input; canonical writers emit v1, and invalid/future versions reject before
-route mutation. Scene `activeBank`, bank definitions, device profiles, and
-machine-local endpoint selection remain independent owners rather than being
-folded into the route document.
+route mutation. Preferences v1 owns the active-bank choice, bank-definitions
+v1 owns custom global banks, and machine-profile v1 owns OSC endpoints, one
+exact physical MIDI input, and logical control-slot assignments. Legacy Scene
+fields remain compatibility input only; none of these owners is folded into
+the route document.
 
 ## Package Contract
 
@@ -541,6 +543,9 @@ Confidence levels:
 8. Host integration, scene round-trip, and live projection acceptance.
 
 No single level substitutes for the levels above or below it.
+The frozen first implementation of these levels, including its two reference
+fixtures and promotion thresholds, is
+[`element_confidence_suite_v1_handoff.md`](element_confidence_suite_v1_handoff.md).
 
 ## Roadmap Alignment
 

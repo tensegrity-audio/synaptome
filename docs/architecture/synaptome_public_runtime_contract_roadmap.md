@@ -51,15 +51,15 @@ indexes them, but this document owns their meaning and next actions.
 | CG-04 | Device-map logical slot fixture | Device-map regression covers current MIDI Mix logical slots plus a synthetic controller fixture, role families, sensitivity range, MIDI binding shape, and duplicate physical bindings. | Extend it when target/action binding semantics become public. |
 | CG-05 | HUD layout/feed schema | HUD fixture coverage snapshots widget identity, declared feed IDs, Browser HUD preferences, and Console overlay placements while dynamic feed payloads remain runtime-local. | Extend only when feed payload schemas become public; use `--live` for operator-state smoke checks. |
 | CG-06 | Console layout and secondary display persistence | Console/display validation checks eight composition-slot inventory, layer references, overlay flags, display preference shape, and HUD placement shape. Logical hardware control slots are validated by machine-profile v1. | Add app-native composition-slot/display transaction fixtures when the runtime test seam is ready. |
-| CG-08 | Media catalog intake and discovery policy | Manifest-only intake is now locked through `config/videos.json`; the empty baseline, schema, provenance/hash/replacement rules, public/local roots, and negative fixtures are validated. Folder scanning is deferred. | Add one reviewed redistributable media asset and prove Browser visibility plus slot loading without adding folder scanning. |
+| CG-08 | Media catalog intake and discovery policy | Manifest-only intake is locked through `config/videos.json`; the empty baseline, schema, provenance/hash/replacement rules, public/local roots, and negative fixtures are validated. The reviewed `aurora-veil-r1` asset is cataloged and assigned to the Browser-visible default clip layer. Folder scanning remains deferred. | Keep the manifest-only gate passing; onboard any additional asset through a bounded provenance/hash review without adding folder scanning. |
 | CG-09 | External device/display contract map | MIDI, OSC, audio, webcam, media, display, hotkey, and helper input boundaries exist, but not all are schemas/fixtures with one consistent ownership model. | Promote remaining boundaries from `synaptome_external_contracts.md` into schemas/fixtures. |
 | CG-10 | Host audio input contract | Local mic capture behaves like a sensor source and emits `/sensor/host/localmic/*`, but `config/audio.json` is not schema-backed or contract-indexed. | Add audio config schema/fixture and define local mic persistence policy. |
 
 ## Roadmap
 
 1. Keep the strict public-app validator passing while layer package work evolves.
-2. Keep CG-08 manifest-only intake passing; add one reviewed asset before
-   promoting Browser visibility or runtime slot-load fixtures.
+2. Keep CG-08 manifest-only intake and the reviewed Aurora Veil default
+   passing; add future assets only through bounded provenance/hash review.
 3. Add app-native scene staged-load/rollback fixtures when the runtime test seam
    is ready.
 4. Extend device-map fixtures when target/action binding semantics become
@@ -69,8 +69,9 @@ indexes them, but this document owns their meaning and next actions.
 7. Add runtime fixtures only when they can run deterministically enough to be
    useful in CI or explicit local smoke mode.
 
-The first CG-08 slice is complete: explicit manifests are canonical, folder
-scanning is deferred, roots and provenance/replacement rules are defined, and
-the dangling `default-loop` entry has been removed rather than silently
-replaced. Folder scanning can be proposed later with its own conflict, refresh,
+The first two CG-08 slices are complete: explicit manifests are canonical,
+folder scanning is deferred, roots and provenance/replacement rules are
+defined, the dangling `default-loop` entry was removed rather than silently
+replaced, and the reviewed `aurora-veil-r1` asset now backs the default media
+layer. Folder scanning can be proposed later with its own conflict, refresh,
 and Browser-visibility fixtures.
