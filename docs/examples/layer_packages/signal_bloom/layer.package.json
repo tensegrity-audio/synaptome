@@ -295,7 +295,10 @@
       "applyMode": "suggestion-only",
       "mappings": [
         {
-          "target": "gain",
+          "target": {
+            "kind": "parameter",
+            "id": "gain"
+          },
           "source": {
             "kind": "osc",
             "pattern": "/sensor/host/localmic/mic-level",
@@ -308,7 +311,10 @@
           }
         },
         {
-          "target": "speedInput",
+          "target": {
+            "kind": "parameter",
+            "id": "speedInput"
+          },
           "source": {
             "kind": "osc",
             "pattern": "/sensor/host/localmic/mic-bass",

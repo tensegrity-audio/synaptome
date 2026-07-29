@@ -111,20 +111,45 @@ def normalize_package(package_path: Path) -> tuple[dict[str, Any] | None, list[s
     for mapping_preset in as_list(package.get("mappingPresets")):
         if not isinstance(mapping_preset, dict):
             continue
+        mappings = []
+        for mapping in as_list(mapping_preset.get("mappings")):
+            if not isinstance(mapping, dict):
+                continue
+            raw_target = mapping.get("target")
+            target = (
+                {
+                    "kind": str(raw_target.get("kind", "")),
+                    "id": str(raw_target.get("id", "")),
+                }
+                if isinstance(raw_target, dict)
+                else {"kind": "parameter", "id": str(raw_target or "")}
+            )
+            mappings.append(
+                {
+                    "target": target,
+                    "source": as_dict(mapping.get("source")),
+                    **(
+                        {"description": str(mapping.get("description", ""))}
+                        if "description" in mapping
+                        else {}
+                    ),
+                }
+            )
         mapping_presets.append(
             {
                 "id": str(mapping_preset.get("id", "")),
                 "label": str(mapping_preset.get("label", "")),
+                "description": str(mapping_preset.get("description", "")),
+                "applyMode": str(mapping_preset.get("applyMode", "")),
                 "targets": [
-                    str(mapping.get("target", ""))
-                    for mapping in as_list(mapping_preset.get("mappings"))
-                    if isinstance(mapping, dict)
+                    str(mapping["target"]["id"])
+                    for mapping in mappings
                 ],
                 "patterns": [
-                    str(as_dict(mapping.get("source")).get("pattern", ""))
-                    for mapping in as_list(mapping_preset.get("mappings"))
-                    if isinstance(mapping, dict)
+                    str(mapping["source"].get("pattern", ""))
+                    for mapping in mappings
                 ],
+                "mappings": mappings,
             }
         )
 
@@ -148,6 +173,15 @@ def normalize_package(package_path: Path) -> tuple[dict[str, Any] | None, list[s
         "parameterCount": len(parameters),
         "defaultKeys": sorted(parameter_ids),
         "parameters": parameters,
+        "actions": [
+            {
+                "id": str(action.get("id", "")),
+                "label": str(action.get("label", "")),
+                "groupId": str(action.get("groupId", "")),
+            }
+            for action in as_list(as_dict(package.get("element")).get("actions"))
+            if isinstance(action, dict)
+        ],
         "presets": presets,
         "presetBanks": [
             {

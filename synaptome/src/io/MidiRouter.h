@@ -50,8 +50,14 @@ public:
     struct OscMap {
         std::string pattern;
         std::string target;
+        std::string targetKind = "parameter";
         std::string bankId;
         std::string controlId;
+        bool enabled = true;
+        std::string triggerEdge;
+        float triggerThreshold = 0.5f;
+        bool triggerHigh = false;
+        ofJson provenance = ofJson::object();
         float inMin = 0.0f;
         float inMax = 1.0f;
         float outMin = 0.0f;
@@ -118,6 +124,13 @@ public:
         std::string error;
     };
 
+    struct MappingSnapshotPublicationResult {
+        bool ok = false;
+        bool rollbackSucceeded = true;
+        ofJson document;
+        std::string error;
+    };
+
     struct BindingMetadata {
         BindingMetadata();
         int channel;
@@ -140,10 +153,15 @@ public:
     bool save(const std::string& jsonPath = "");
     ofJson exportMappingSnapshot() const;
     bool importMappingSnapshot(const ofJson& snapshot, bool replaceExisting = true);
+    MappingSnapshotPublicationResult publishMappingSnapshot(
+        const ofJson& snapshot,
+        const std::function<bool(const ofJson&)>& persistence);
     void update();
     void close();
     modifier::BindingList snapshotModifierBindings() const;
     void setFloatTargetTouchedCallback(std::function<void(const std::string&)> cb);
+    void setActionTargetCallback(
+        std::function<bool(int, const std::string&)> cb);
 
     bool isConnected() const { return isOpen; }
     std::string connectedPortName() const { return currentPortLabel; }
@@ -311,6 +329,8 @@ private:
     std::unordered_map<std::string, FloatTarget> floatTargets;
     std::unordered_map<std::string, BoolTarget> boolTargets;
     std::function<void(const std::string&)> floatTargetTouchedCallback_;
+    std::function<bool(int, const std::string&)>
+        actionTargetCallback_;
 
     std::function<void(const CapturedMidiControl&)> pendingMidiCapture_;
     ofxMidiIn midiIn;

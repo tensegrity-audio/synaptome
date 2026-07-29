@@ -1733,11 +1733,10 @@ def main() -> int:
         path.read_text(encoding="utf-8")
         for path in deferred_schema_paths
     )
+    # SEAC-9 intentionally permits package-declared action targets to flow
+    # through the mapping bank and Browser inspection payload. Telemetry is
+    # still live-only and must not enter these persisted surfaces.
     for token in (
-        "invokeCompositionAction",
-        "ActionDescriptor",
-        "ActionHandler",
-        ".actions.",
         "compositionElementTelemetry",
         "TelemetryEntry",
         "media.sourceLabel",
@@ -1745,15 +1744,10 @@ def main() -> int:
     ):
         if token in deferred_mapping_surface:
             errors.append(
-                "MIDI/OSC mapping router must not persist or invoke live "
-                f"actions/telemetry in this checkpoint: {token}"
+                "MIDI/OSC mapping router must not persist live telemetry: "
+                f"{token}"
             )
     for token in (
-        '"actions"',
-        '"action"',
-        '"actionId"',
-        '"targetKind"',
-        ".actions.",
         '"telemetry"',
         '"telemetryId"',
         "media.sourceLabel",
@@ -1762,7 +1756,7 @@ def main() -> int:
         if token in deferred_schema_surface:
             errors.append(
                 "persisted package/scene/mapping schemas must not declare "
-                f"live action/telemetry surfaces in this checkpoint: {token}"
+                f"live telemetry surfaces: {token}"
             )
 
     direct_metadata_write = re.compile(

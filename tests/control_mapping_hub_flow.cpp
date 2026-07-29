@@ -18,6 +18,7 @@
 #include <vector>
 
 #include "../synaptome/src/core/ParameterRegistry.h"
+#include "../synaptome/src/core/PackageControlTransactions.h"
 #include "../synaptome/src/runtime/BuiltinElementHostBindings.h"
 #include "../synaptome/src/visuals/TextLayerState.h"
 #include "../synaptome/src/ui/MenuController.h"
@@ -6167,6 +6168,9 @@ bool RunLayerPackagePresetBankSelectionScenario() {
     hub.setLayerLibrary(&library);
     std::string selectedPreset = "default";
     int applyCalls = 0;
+    int previewCalls = 0;
+    int cancelCalls = 0;
+    std::string previewedPreset;
     std::string appliedAsset;
     std::string appliedBank;
     std::string appliedPreset;
@@ -6187,6 +6191,20 @@ bool RunLayerPackagePresetBankSelectionScenario() {
             selectedPreset = presetId;
             return true;
         });
+    hub.setPackagePresetPreviewCallback(
+        [&](const std::string& assetId,
+            const std::string& bankId,
+            const std::string& presetId) {
+            require(
+                assetId == "examples.signal_bloom" &&
+                    bankId == "performance",
+                "preset preview lost stable package/bank identity");
+            ++previewCalls;
+            previewedPreset = presetId;
+            return true;
+        });
+    hub.setPackagePresetCancelCallback(
+        [&]() { ++cancelCalls; });
     const auto payloadPath =
         (synaptome_test_paths::dataRoot() / "config" /
          "layer-package-inspection.json").string();
@@ -6202,8 +6220,8 @@ bool RunLayerPackagePresetBankSelectionScenario() {
     require(bankRow->inspectionValue.find("Selected: Default") != std::string::npos &&
                 bankRow->inspectionValue.find("Choices: Default, Bright, Calm") !=
                     std::string::npos &&
-                bankRow->inspectionValue.find("next layer load") != std::string::npos,
-            "preset-bank row did not render ordered labels and next-load ownership");
+                bankRow->inspectionValue.find("live preview") != std::string::npos,
+            "preset-bank row did not render ordered labels and transactional controls");
 
     require(hub.debugSelectPackagePreset(rowId, "calm"),
             "explicit Calm preset selection failed");
@@ -6212,6 +6230,11 @@ bool RunLayerPackagePresetBankSelectionScenario() {
                 appliedBank == "performance" &&
                 appliedPreset == "calm",
             "preset picker did not commit exact stable IDs once");
+    require(previewCalls >= 2 &&
+                previewedPreset == "calm",
+            "preset picker did not live-preview the selected stable preset "
+            "(calls=" + std::to_string(previewCalls) +
+            ", last=" + previewedPreset + ")");
     hub.rebuildModel();
     bankRow = hub.rowForId(rowId);
     require(bankRow &&
@@ -6228,6 +6251,8 @@ bool RunLayerPackagePresetBankSelectionScenario() {
     require(selectedPreset == "calm" && applyCalls == 2,
             "failed preset commit changed the committed selection");
     hub.cancelPackagePresetPicker();
+    require(cancelCalls >= 1,
+            "canceling a failed preset apply did not restore the preview");
 
     require(hub.layerPackageInspection_.dump() == payloadBefore,
             "preset selection rewrote the inspection payload");
@@ -6240,6 +6265,418 @@ bool RunLayerPackagePresetBankSelectionScenario() {
                 midi.getOscMaps().empty(),
             "preset selection implicitly changed mappings");
 
+    std::error_code cleanupError;
+    std::filesystem::remove(activationPath, cleanupError);
+    return true;
+}
+
+bool RunPackageControlTransactionScenario() {
+    auto require = [](bool condition, const std::string& message) {
+        if (!condition) {
+            throw std::runtime_error(message);
+        }
+    };
+    using namespace synaptome::controls;
+
+    const auto inspectionPath =
+        synaptome_test_paths::dataRoot() / "config" /
+        "layer-package-inspection.json";
+    const ofJson inspection = ofLoadJson(inspectionPath.string());
+    require(inspection.contains("entries") &&
+                inspection["entries"].is_array() &&
+                !inspection["entries"].empty(),
+            "package transaction fixture has no inspection entries");
+    const ofJson& packageEntry = inspection["entries"][0];
+    require(
+        packageEntry.value("assetId", std::string()) ==
+            "examples.signal_bloom",
+        "package transaction fixture identity drifted");
+
+    ofJson current = {
+        {"schemaVersion", 1},
+        {"cc", ofJson::array()},
+        {"buttons", ofJson::array()},
+        {"oscSources", ofJson::array({{
+            {"pattern", "/operator/level"},
+            {"in", {0.0, 1.0}},
+            {"out", {0.0, 1.0}},
+            {"blend", "absolute"},
+            {"relative", false}
+        }})},
+        {"osc", ofJson::array({{
+            {"pattern", "/operator/level"},
+            {"target", "console.layer2.gain"},
+            {"provenance", {{"owner", "operator"}}}
+        }})}
+    };
+    const std::vector<PackageLayerTarget> layers = {{
+        2,
+        "examples.signal_bloom",
+        "console.layer2",
+        true,
+    }};
+    auto preview = previewMappingSuggestion(
+        packageEntry,
+        "hostMicMotion",
+        layers,
+        current);
+    require(preview.ok && preview.routes.size() == 2,
+            "package mapping preview did not expand both routes to the assigned layer");
+    require(preview.routes[0].expandedTargetId ==
+                "console.layer2.gain" &&
+                preview.routes[1].expandedTargetId ==
+                "console.layer2.speedInput",
+            "package mapping preview expanded unstable target IDs");
+    require(preview.conflictCount() == 1 &&
+                preview.routes[0].conflicts[0].kind == "target",
+            "package mapping preview did not compare the operator target conflict");
+
+    auto rejected = buildMappingCandidate(current, preview, false);
+    require(!rejected.ok && rejected.document == current,
+            "target conflict applied without explicit replacement");
+    auto candidate = buildMappingCandidate(current, preview, true);
+    require(candidate.ok && candidate.document["osc"].size() == 2,
+            "explicit conflict replacement did not build a complete candidate");
+    require(
+        candidate.document["osc"][0]["provenance"].value(
+            "owner", std::string()) == "package-suggestion",
+        "package mapping candidate lost route provenance");
+
+    ofJson sharedSourceBank = current;
+    sharedSourceBank["osc"] = ofJson::array({{
+        {"pattern", "/sensor/host/localmic/mic-level"},
+        {"target", "console.layer1.opacity"},
+        {"provenance", {{"owner", "operator"}}}
+    }});
+    auto sharedSourcePreview = previewMappingSuggestion(
+        packageEntry,
+        "hostMicMotion",
+        layers,
+        sharedSourceBank);
+    require(
+        sharedSourcePreview.ok &&
+            sharedSourcePreview.routes[0].conflicts[0].kind ==
+                "shared-source" &&
+            !buildMappingCandidate(
+                 sharedSourceBank,
+                 sharedSourcePreview,
+                 false)
+                 .ok,
+        "shared operator source was not protected by explicit approval");
+
+    ofJson exactOperatorBank = current;
+    exactOperatorBank["osc"][0]["pattern"] =
+        "/sensor/host/localmic/mic-level";
+    auto exactOperatorPreview = previewMappingSuggestion(
+        packageEntry,
+        "hostMicMotion",
+        layers,
+        exactOperatorBank);
+    require(
+        exactOperatorPreview.ok &&
+            exactOperatorPreview.routes[0].conflicts[0].kind ==
+                "exact-route" &&
+            !buildMappingCandidate(
+                 exactOperatorBank,
+                 exactOperatorPreview,
+                 false)
+                 .ok,
+        "exact operator route was silently claimed by the package");
+
+    MidiRouter router;
+    require(router.importMappingSnapshot(current, true),
+            "operator mapping baseline did not import");
+    const ofJson baseline = router.exportMappingSnapshot();
+    auto failedPublish = router.publishMappingSnapshot(
+        candidate.document,
+        [](const ofJson&) { return false; });
+    require(!failedPublish.ok &&
+                failedPublish.rollbackSucceeded &&
+                router.exportMappingSnapshot() == baseline,
+            "failed mapping write did not restore the prior live routes");
+    auto threwPublish = router.publishMappingSnapshot(
+        candidate.document,
+        [](const ofJson&) -> bool {
+            throw std::runtime_error("injected mapping write exception");
+        });
+    require(!threwPublish.ok &&
+                threwPublish.rollbackSucceeded &&
+                router.exportMappingSnapshot() == baseline,
+            "throwing mapping write did not restore the prior live routes");
+    ofJson persisted;
+    auto published = router.publishMappingSnapshot(
+        candidate.document,
+        [&](const ofJson& document) {
+            persisted = document;
+            return true;
+        });
+    require(published.ok && persisted == router.exportMappingSnapshot(),
+            "mapping publication did not persist the canonical live candidate");
+    require(
+        persisted["osc"][0]["provenance"].value(
+            "routeId", std::string()) ==
+            "examples.signal_bloom/hostMicMotion/0/layer2",
+        "mapping-bank round trip lost stable package route identity");
+
+    const std::string routeId =
+        "examples.signal_bloom/hostMicMotion/0/layer2";
+    auto disabled =
+        setPackageRouteEnabled(persisted, routeId, false);
+    require(disabled.ok &&
+                !disabled.document["osc"][0].value("enabled", true),
+            "explicit package route disable did not retain the route");
+    ofJson editedSource = {
+        {"kind", "osc"},
+        {"pattern", "/operator/edited"},
+        {"in", {0.0, 1.0}},
+        {"out", {0.0, 1.0}},
+        {"smooth", 0.1},
+        {"deadband", 0.0},
+        {"blend", "set"},
+        {"relative", false},
+    };
+    auto edited =
+        editPackageRoute(disabled.document, routeId, editedSource);
+    require(edited.ok &&
+                edited.document["osc"][0].value(
+                    "pattern", std::string()) ==
+                    "/operator/edited" &&
+                edited.document["osc"][0].value("enabled", false),
+            "package route edit did not update source and re-enable");
+    auto removed = removePackageRoute(edited.document, routeId);
+    require(removed.ok && removed.document["osc"].size() == 1,
+            "explicit package route removal affected the wrong routes");
+
+    ofJson liveDocument = current;
+    MappingSuggestionTransaction transaction;
+    auto committed = transaction.publish(
+        current,
+        candidate.document,
+        [&](const ofJson& document) {
+            liveDocument = document;
+            return true;
+        });
+    require(committed.ok && transaction.rollbackAvailable() &&
+                liveDocument == candidate.document,
+            "mapping transaction did not expose rollback after commit");
+    auto rolledBack = transaction.rollback();
+    require(rolledBack.ok && liveDocument == current,
+            "mapping rollback did not restore the prior working document");
+
+    ofJson actionPackage = packageEntry;
+    actionPackage["controls"]["actions"] = ofJson::array({{
+        {"id", "pulse"},
+        {"label", "Pulse"},
+        {"groupId", "performance"}
+    }});
+    actionPackage["mappingPresets"].push_back({
+        {"id", "hostMicPulse"},
+        {"label", "Host Mic Pulse"},
+        {"description", "Trigger pulse on a rising mic edge."},
+        {"applyMode", "suggestion-only"},
+        {"mappings", ofJson::array({{
+            {"target", {{"kind", "action"}, {"id", "pulse"}}},
+            {"source", {
+                {"kind", "osc"},
+                {"pattern", "/sensor/host/localmic/mic-peak"},
+                {"trigger", {
+                    {"edge", "rising"},
+                    {"threshold", 0.6}
+                }}
+            }}
+        }})}
+    });
+    const ofJson emptyBank = {
+        {"schemaVersion", 1},
+        {"cc", ofJson::array()},
+        {"buttons", ofJson::array()},
+        {"oscSources", ofJson::array()},
+        {"osc", ofJson::array()},
+    };
+    auto actionPreview = previewMappingSuggestion(
+        actionPackage, "hostMicPulse", layers, emptyBank);
+    require(actionPreview.ok &&
+                actionPreview.routes[0].expandedTargetId ==
+                    "console.layer2.actions.pulse",
+            "action suggestion did not expand a stable layer action target");
+    auto actionCandidate =
+        buildMappingCandidate(emptyBank, actionPreview, false);
+    require(actionCandidate.ok &&
+                actionCandidate.document["osc"][0]["trigger"].value(
+                    "edge", std::string()) == "rising",
+            "action suggestion lost trigger edge semantics");
+    MidiRouter actionRouter;
+    int actionCalls = 0;
+    actionRouter.setActionTargetCallback(
+        [&](int layerIndex, const std::string& actionId) {
+            if (layerIndex == 2 && actionId == "pulse") {
+                ++actionCalls;
+                return true;
+            }
+            return false;
+        });
+    require(actionRouter.importMappingSnapshot(
+                actionCandidate.document, true),
+            "action mapping candidate did not import");
+    actionRouter.onOscMessage(
+        "/sensor/host/localmic/mic-peak", 0.2f);
+    actionRouter.onOscMessage(
+        "/sensor/host/localmic/mic-peak", 0.8f);
+    actionRouter.onOscMessage(
+        "/sensor/host/localmic/mic-peak", 0.9f);
+    require(actionCalls == 1,
+            "rising-edge action mapping did not fire exactly once");
+
+    float gain = 0.25f;
+    float speed = 0.5f;
+    ParameterRegistry registry;
+    ParameterRegistry::Descriptor gainMeta;
+    gainMeta.range = {0.0f, 2.0f, 0.01f};
+    registry.addFloat(
+        "console.layer2.gain", &gain, gain, gainMeta);
+    ParameterRegistry::Descriptor speedMeta;
+    speedMeta.range = {0.0f, 4.0f, 0.01f};
+    registry.addFloat(
+        "console.layer2.speed", &speed, speed, speedMeta);
+    PackagePresetTransaction presetTransaction;
+    auto presetPreview = presetTransaction.preview(
+        registry,
+        "examples.signal_bloom",
+        "bright",
+        "console.layer2",
+        {{"gain", 1.05}, {"speed", 1.15}});
+    require(presetPreview.ok && gain == 1.05f && speed == 1.15f &&
+                registry.getFloatBase("console.layer2.gain") == 0.25f,
+            "live preset preview changed base ownership or missed live values");
+    require(!presetTransaction.apply(
+                []() { return false; }, 1, "0.1.0") &&
+                gain == 0.25f && speed == 0.5f,
+            "failed preset publication did not restore live/base values");
+    presetPreview = presetTransaction.preview(
+        registry,
+        "examples.signal_bloom",
+        "bright",
+        "console.layer2",
+        {{"gain", 1.05}, {"speed", 1.15}});
+    require(presetTransaction.apply(
+                []() { return true; }, 1, "0.1.0") &&
+                registry.getFloatBase("console.layer2.gain") == 1.05f &&
+                registry.findFloat("console.layer2.gain")
+                        ->baseOrigin.originId ==
+                    "examples.signal_bloom/bright",
+            "preset apply did not publish values with package provenance");
+    require(!presetTransaction.rollback(
+                []() { return false; }) &&
+                gain == 1.05f && speed == 1.15f &&
+                presetTransaction.rollbackAvailable(),
+            "failed preset rollback did not preserve the applied state");
+    require(presetTransaction.rollback(
+                []() { return true; }) &&
+                gain == 0.25f && speed == 0.5f &&
+                registry.getFloatBase("console.layer2.gain") == 0.25f,
+            "preset rollback did not restore prior values and provenance");
+
+    const auto appRoot = synaptome_test_paths::appRoot();
+    LayerLibrary library;
+    require(library.reload(
+                (appRoot / "bin" / "data" / "layers").string()),
+            "package transaction Browser fixture catalog did not load");
+    const auto activationPath =
+        std::filesystem::temp_directory_path() /
+        "synaptome-package-control-transaction-activation.json";
+    const ofJson activation = {
+        {"schemaVersion", 1},
+        {"enabled", true},
+        {"packages", ofJson::array({{
+            {"id", "examples.signal_bloom"},
+            {"enabled", true},
+            {"catalogPath",
+             (appRoot / "bin" / "data" / "layers-optional" /
+              "examples.signal_bloom.json").string()},
+            {"presetBank", "performance"},
+            {"preset", "default"},
+            {"mappingPreset", ""}
+        }})}
+    };
+    {
+        std::ofstream out(activationPath, std::ios::trunc);
+        out << std::setw(2) << activation << "\n";
+    }
+    require(library.loadOptInPackages(activationPath.string()),
+            "package transaction Browser fixture did not activate");
+
+    MidiRouter uiRouter;
+    ParameterRegistry uiRegistry;
+    ControlMappingHubState hub;
+    hub.setParameterRegistry(&uiRegistry);
+    hub.setMidiRouter(&uiRouter);
+    hub.setLayerLibrary(&library);
+    hub.setLayerPackageInspectionPath(
+        inspectionPath.string());
+    hub.setConsoleSlotInventoryCallback([]() {
+        ConsoleLayerInfo info;
+        info.index = 2;
+        info.assetId = "examples.signal_bloom";
+        info.label = "Signal Bloom";
+        info.active = true;
+        return std::vector<ConsoleLayerInfo>{info};
+    });
+    ofJson uiPersisted;
+    int uiWrites = 0;
+    hub.setMappingSnapshotPersistenceCallback(
+        [&](const ofJson& document) {
+            uiPersisted = document;
+            ++uiWrites;
+            return true;
+        });
+    hub.rebuildModel();
+    const std::string mappingRowId =
+        "inspection.examples.signal_bloom.mappingPreset.hostMicMotion";
+    const auto* mappingRow = hub.rowForId(mappingRowId);
+    require(mappingRow &&
+                mappingRow->isPackageMappingPresetRow &&
+                mappingRow->inspectionValue.find(
+                    "Enter=preview/apply") != std::string::npos,
+            "Browser did not expose the package mapping transaction controls");
+    const std::string inspectionBefore =
+        hub.layerPackageInspection_.dump();
+    require(hub.debugPreviewPackageMapping(mappingRowId) &&
+                uiRouter.getOscMaps().empty() &&
+                uiWrites == 0,
+            "Browser preview mutated live or persisted mappings");
+    require(hub.debugApplyPackageMapping(mappingRowId) &&
+                uiRouter.getOscMaps().size() == 2 &&
+                uiWrites == 1,
+            "Browser explicit apply did not publish both expanded routes");
+    require(hub.debugDisablePackageMapping(mappingRowId) &&
+                uiWrites == 2 &&
+                std::all_of(
+                    uiRouter.getOscMaps().begin(),
+                    uiRouter.getOscMaps().end(),
+                    [](const MidiRouter::OscMap& map) {
+                        return !map.enabled;
+                    }),
+            "Browser explicit disable did not retain disabled routes");
+    require(hub.debugRollbackPackageMapping() &&
+                uiWrites == 3 &&
+                std::all_of(
+                    uiRouter.getOscMaps().begin(),
+                    uiRouter.getOscMaps().end(),
+                    [](const MidiRouter::OscMap& map) {
+                        return map.enabled;
+                    }),
+            "Browser mapping rollback did not restore enabled routes");
+    require(hub.debugRemovePackageMapping(mappingRowId) &&
+                uiRouter.getOscMaps().empty() &&
+                uiWrites == 4,
+            "Browser explicit remove did not publish the route deletion");
+    require(hub.debugRollbackPackageMapping() &&
+                uiRouter.getOscMaps().size() == 2 &&
+                uiWrites == 5,
+            "Browser remove rollback did not restore package routes");
+    require(hub.layerPackageInspection_.dump() ==
+                inspectionBefore,
+            "Browser package controls rewrote inspection metadata");
     std::error_code cleanupError;
     std::filesystem::remove(activationPath, cleanupError);
     return true;

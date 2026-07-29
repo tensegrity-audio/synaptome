@@ -102,6 +102,7 @@ int main() {
         { "layer_package_read_only_inspection", browser_flow::RunLayerPackageReadOnlyInspectionScenario },
         { "labeled_parameter_selection", browser_flow::RunLabeledParameterSelectionScenario },
         { "layer_package_preset_bank_selection", browser_flow::RunLayerPackagePresetBankSelectionScenario },
+        { "package_control_transactions", browser_flow::RunPackageControlTransactionScenario },
         { "opt_in_layer_package_activation", browser_flow::RunOptInLayerPackageActivationScenario },
         { "collapsed_asset_browser_startup", browser_flow::RunCollapsedAssetBrowserStartupScenario },
         { "asset_browser_search", browser_flow::RunAssetBrowserSearchScenario },

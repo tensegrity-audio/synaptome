@@ -700,6 +700,7 @@
 
 		<ClInclude Include="src\ofApp.h" />
 		<ClInclude Include="src\core\OptionProviderRegistry.h" />
+		<ClInclude Include="src\core\PackageControlTransactions.h" />
 		<ClInclude Include="src\core\ParameterValueOrigin.h" />
 		<ClInclude Include="src\host\HostCompositionEffects.h" />
 		<ClInclude Include="src\host\HostCompositionRenderer.h" />

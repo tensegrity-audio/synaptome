@@ -796,17 +796,32 @@ def _validate_cross_references(
         if not isinstance(preset, dict):
             continue
         for mapping_index, mapping in enumerate(preset.get("mappings", [])):
-            if (
-                isinstance(mapping, dict)
-                and mapping.get("target") not in parameters
-            ):
+            if not isinstance(mapping, dict):
+                continue
+            target = mapping.get("target")
+            target_kind = "parameter"
+            target_id = target
+            if isinstance(target, dict):
+                target_kind = target.get("kind")
+                target_id = target.get("id")
+            declared = (
+                target_id in parameters
+                if target_kind == "parameter"
+                else target_id
+                in {
+                    action.get("id")
+                    for action in document.get("element", {}).get("actions", [])
+                    if isinstance(action, dict)
+                }
+            )
+            if not declared:
                 diagnostics.append(
                     Diagnostic(
                         "package.mapping-target-unresolved",
                         package_id,
                         f"$.mappingPresets[{preset_index}].mappings"
                         f"[{mapping_index}].target",
-                        f"target '{mapping.get('target')}' is not declared",
+                        f"{target_kind} target '{target_id}' is not declared",
                     )
                 )
     return diagnostics

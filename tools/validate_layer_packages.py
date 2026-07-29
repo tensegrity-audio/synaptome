@@ -200,6 +200,7 @@ def validate_mapping_presets(
     package_path: Path,
     mapping_presets: list[Any],
     params: dict[str, dict[str, Any]],
+    actions: set[str],
 ) -> list[str]:
     errors: list[str] = []
     seen: set[str] = set()
@@ -220,8 +221,15 @@ def validate_mapping_presets(
                 errors.append(f"{map_ctx}: mapping must be an object")
                 continue
             target = mapping.get("target")
-            if target not in params:
-                errors.append(f"{map_ctx}: target '{target}' is not a declared parameter suffix")
+            target_kind = "parameter"
+            target_id = target
+            if isinstance(target, dict):
+                target_kind = target.get("kind")
+                target_id = target.get("id")
+            if target_kind == "parameter" and target_id not in params:
+                errors.append(f"{map_ctx}: target '{target_id}' is not a declared parameter suffix")
+            elif target_kind == "action" and target_id not in actions:
+                errors.append(f"{map_ctx}: target '{target_id}' is not a declared action")
             source = as_dict(mapping.get("source"))
             pattern = source.get("pattern")
             if not isinstance(pattern, str) or not pattern.startswith("/"):
@@ -238,6 +246,17 @@ def validate_mapping_presets(
                 value = source.get(key)
                 if value is not None and (not is_number(value) or value < 0):
                     errors.append(f"{map_ctx}: source.{key} must be non-negative")
+            trigger = source.get("trigger")
+            if target_kind == "action":
+                if not isinstance(trigger, dict):
+                    errors.append(f"{map_ctx}: action target requires source.trigger")
+                else:
+                    if trigger.get("edge") not in {"rising", "falling", "both"}:
+                        errors.append(f"{map_ctx}: trigger.edge must be rising, falling, or both")
+                    if not is_number(trigger.get("threshold")):
+                        errors.append(f"{map_ctx}: trigger.threshold must be numeric")
+            elif trigger is not None:
+                errors.append(f"{map_ctx}: parameter target must not declare source.trigger")
     return errors
 
 

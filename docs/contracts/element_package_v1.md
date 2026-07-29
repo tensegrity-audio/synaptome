@@ -145,7 +145,8 @@ inventories explicitly.
 
 Every mapping preset must declare `applyMode: "suggestion-only"`. Validation
 and confidence reporting inventory those suggestions but never publish a live
-route. Preview/apply remains SEAC-9.
+route. The Browser expands targets only after assignment and publishes routes
+only through the explicit SEAC-9 conflict-aware transaction.
 
 ## Dependencies And Capabilities
 

@@ -11,6 +11,7 @@
 #include "ofUtils.h"
 
 #include "../core/ParameterRegistry.h"
+#include "../core/PackageControlTransactions.h"
 #include "../core/OptionProviderRegistry.h"
 #include "../io/MidiRouter.h"
 #include "../visuals/Layer.h"
@@ -122,6 +123,12 @@ public:
         std::function<std::string(const std::string&, const std::string&)> provider);
     void setPackagePresetApplyCallback(
         std::function<bool(const std::string&, const std::string&, const std::string&)> cb);
+    void setPackagePresetPreviewCallback(
+        std::function<bool(const std::string&, const std::string&, const std::string&)> cb);
+    void setPackagePresetCancelCallback(std::function<void()> cb);
+    void setPackagePresetRollbackCallback(std::function<bool()> cb);
+    void setMappingSnapshotPersistenceCallback(
+        std::function<bool(const ofJson&)> cb);
     void setConsoleAssetResolver(std::function<const LayerLibrary::Entry*(const std::string& prefix)> resolver);
     bool focusAssetById(const std::string& assetId) const;
     void setDeviceMapsDirectory(const std::string& path);
@@ -221,6 +228,13 @@ public:
     bool debugSetGridSelection(int rowIndex, int columnIndex);
     bool debugSlotPickerVisible() const;
     bool debugSelectPackagePreset(const std::string& rowId, const std::string& presetId);
+    bool debugPreviewPackageMapping(const std::string& rowId);
+    bool debugApplyPackageMapping(
+        const std::string& rowId,
+        bool replaceTargetConflicts = false);
+    bool debugDisablePackageMapping(const std::string& rowId);
+    bool debugRemovePackageMapping(const std::string& rowId);
+    bool debugRollbackPackageMapping();
     bool debugSelectLabeledValue(const std::string& rowId, const ofJson& value);
     bool packagePresetPickerVisible() const { return packagePresetPickerVisible_; }
     bool labeledValuePickerVisible() const { return labeledValuePickerVisible_; }
@@ -297,9 +311,12 @@ private:
         bool isOscInputRow = false;
         bool isInspectionRow = false;
         bool isPackagePresetBankRow = false;
+        bool isPackageMappingPresetRow = false;
         bool hasLabeledValueOptions = false;
         std::string inspectionValue;
         std::string packagePresetBankId;
+        std::string packageMappingPackageId;
+        std::string packageMappingPresetId;
         std::vector<PackagePresetOption> packagePresetOptions;
         std::vector<LabeledValueOption> labeledValueOptions;
         std::string savedSceneId;
@@ -390,7 +407,6 @@ private:
 
         Preferences() {
             columnVisibility.fill(true);
-            columnVisibility[static_cast<int>(Column::kOscDeadband)] = false;
         }
     };
 
@@ -614,6 +630,17 @@ private:
         packagePresetSelectionProvider_;
     std::function<bool(const std::string&, const std::string&, const std::string&)>
         packagePresetApplyCallback_;
+    std::function<bool(const std::string&, const std::string&, const std::string&)>
+        packagePresetPreviewCallback_;
+    std::function<void()> packagePresetCancelCallback_;
+    std::function<bool()> packagePresetRollbackCallback_;
+    std::function<bool(const ofJson&)>
+        mappingSnapshotPersistenceCallback_;
+    mutable synaptome::controls::MappingSuggestionTransaction
+        packageMappingTransaction_;
+    mutable synaptome::controls::MappingSuggestionPreview
+        packageMappingPreview_;
+    mutable std::string packageMappingPreviewRowId_;
     HudFeedRegistry* hudFeedRegistry_ = nullptr;
     bool hudFeedListenerAttached_ = false;
     bool active_ = false;
@@ -763,6 +790,8 @@ private:
                                      float panelHeight,
                                      const ParameterRow* row) const;
     std::string formatSlotSummary(const ParameterRow& row) const;
+    std::string formatParameterOwnership(
+        const ParameterRow& row) const;
     std::string currentSlotControlId(const ParameterRow& row) const;
     const MidiRouter::BtnMap* firstBtnMapForRow(const ParameterRow& row) const;
     bool beginSlotPicker(const ParameterRow& row);
@@ -805,6 +834,20 @@ private:
     void appendSceneBrowserRows() const;
     void appendOscInputRows() const;
     void appendLayerPackageInspectionRows() const;
+    const ofJson* layerPackageInspectionEntry(
+        const std::string& assetId) const;
+    bool previewPackageMapping(const ParameterRow& row) const;
+    bool applyPackageMapping(
+        const ParameterRow& row,
+        bool replaceTargetConflicts);
+    bool editPackageMapping(const ParameterRow& row);
+    bool setPackageMappingEnabled(
+        const ParameterRow& row,
+        bool enabled);
+    bool removePackageMapping(const ParameterRow& row);
+    bool rollbackPackageMapping();
+    bool publishPackageMappingDocument(
+        const ofJson& document) const;
     std::string sceneCurrentAssetLabel(const ConsoleLayerInfo& slot) const;
     bool isSavedSceneBrowserRow(const ParameterRow& row) const;
     bool handleSavedSceneRowActivation(const ParameterRow& row) const;
@@ -1153,6 +1196,27 @@ inline void ControlMappingHubState::setPackagePresetApplyCallback(
     std::function<bool(const std::string&, const std::string&, const std::string&)> cb) {
     packagePresetApplyCallback_ = std::move(cb);
     tableModel_.dirty = true;
+}
+
+inline void ControlMappingHubState::setPackagePresetPreviewCallback(
+    std::function<bool(const std::string&, const std::string&, const std::string&)> cb) {
+    packagePresetPreviewCallback_ = std::move(cb);
+    tableModel_.dirty = true;
+}
+
+inline void ControlMappingHubState::setPackagePresetCancelCallback(
+    std::function<void()> cb) {
+    packagePresetCancelCallback_ = std::move(cb);
+}
+
+inline void ControlMappingHubState::setPackagePresetRollbackCallback(
+    std::function<bool()> cb) {
+    packagePresetRollbackCallback_ = std::move(cb);
+}
+
+inline void ControlMappingHubState::setMappingSnapshotPersistenceCallback(
+    std::function<bool(const ofJson&)> cb) {
+    mappingSnapshotPersistenceCallback_ = std::move(cb);
 }
 
 inline void ControlMappingHubState::setDeviceMapsDirectory(const std::string& path) {
@@ -1759,6 +1823,9 @@ inline void ControlMappingHubState::draw() const {
                 case Column::kMidiMin: cell = formatMidiMin(row); break;
                 case Column::kMidiMax: cell = formatMidiMax(row); break;
                 case Column::kOsc: cell = formatOscSummary(row); break;
+                case Column::kOscDeadband:
+                    cell = formatParameterOwnership(row);
+                    break;
                 default: break;
                 }
                 bool cellSelected = rowSelected && (static_cast<int>(selectedColumn_) == idx);
@@ -2044,6 +2111,22 @@ inline bool ControlMappingHubState::handleInput(MenuController& controller, int 
         auto adjustSelection = [&](int delta) {
             packagePresetPickerSelection_ =
                 (packagePresetPickerSelection_ + delta + optionCount) % optionCount;
+            const auto& option =
+                pickerRow->packagePresetOptions[
+                    static_cast<std::size_t>(packagePresetPickerSelection_)];
+            if (packagePresetPreviewCallback_ &&
+                !packagePresetPreviewCallback_(
+                    pickerRow->assetKey,
+                    pickerRow->packagePresetBankId,
+                    option.id)) {
+                setBannerMessage(
+                    "Live preset preview is unavailable for this package",
+                    2600);
+            } else if (packagePresetPreviewCallback_) {
+                setBannerMessage(
+                    option.label + " live preview (Enter=apply, Esc=cancel)",
+                    2200);
+            }
         };
         switch (baseKey) {
         case OF_KEY_ESC:
@@ -2659,6 +2742,18 @@ inline bool ControlMappingHubState::handleInput(MenuController& controller, int 
                 return true;
             }
             if (selectedColumn_ == Column::kValue) {
+                if (selectedRow->isPackageMappingPresetRow) {
+                    if (packageMappingPreviewRowId_ ==
+                            selectedRow->id &&
+                        packageMappingPreview_.ok) {
+                        applyPackageMapping(
+                            *selectedRow, false);
+                    } else {
+                        previewPackageMapping(*selectedRow);
+                    }
+                    controller.requestViewModelRefresh();
+                    return true;
+                }
                 if (selectedRow->hasLabeledValueOptions) {
                     beginLabeledValuePicker(*selectedRow);
                     controller.requestViewModelRefresh();
@@ -2767,10 +2862,39 @@ inline bool ControlMappingHubState::handleInput(MenuController& controller, int 
 
         return true;
 
+    case 'x':
+    case 'X':
+        if (focusPane_ == FocusPane::kGrid &&
+            selectedRow &&
+            selectedRow->isPackageMappingPresetRow) {
+            applyPackageMapping(*selectedRow, true);
+            controller.requestViewModelRefresh();
+            return true;
+        }
+        break;
+
+    case 'd':
+    case 'D':
+        if (focusPane_ == FocusPane::kGrid &&
+            selectedRow &&
+            selectedRow->isPackageMappingPresetRow) {
+            setPackageMappingEnabled(*selectedRow, false);
+            controller.requestViewModelRefresh();
+            return true;
+        }
+        break;
+
     case 'e':
 
     case 'E':
 
+        if (focusPane_ == FocusPane::kGrid &&
+            selectedRow &&
+            selectedRow->isPackageMappingPresetRow) {
+            editPackageMapping(*selectedRow);
+            controller.requestViewModelRefresh();
+            return true;
+        }
         if (focusPane_ == FocusPane::kGrid && selectedColumn_ == Column::kValue && selectedRow && selectedRow->isFloat) {
             if (!rowSupportsValueEdit(*selectedRow)) {
                 setBannerMessage("No editable value for this row", 2400);
@@ -2787,6 +2911,11 @@ inline bool ControlMappingHubState::handleInput(MenuController& controller, int 
     case 'U':
 
         if (focusPane_ == FocusPane::kGrid && selectedRow) {
+            if (selectedRow->isPackageMappingPresetRow) {
+                removePackageMapping(*selectedRow);
+                controller.requestViewModelRefresh();
+                return true;
+            }
             if (!rowHasLiveParameter(*selectedRow)) {
                 setBannerMessage("Select an asset parameter before unmapping", 2200);
                 return true;
@@ -2874,6 +3003,21 @@ inline bool ControlMappingHubState::handleInput(MenuController& controller, int 
 
     case 'R':
 
+        if (rollbackPackageMapping()) {
+            controller.requestViewModelRefresh();
+            return true;
+        }
+        if (packagePresetRollbackCallback_ &&
+            packagePresetRollbackCallback_()) {
+            tableModel_.dirty = true;
+            invalidateRowCache();
+            setBannerMessage("Package preset reverted", 2600);
+            emitTelemetryEvent(
+                "package.preset.rollback",
+                selectedRow);
+            controller.requestViewModelRefresh();
+            return true;
+        }
         if (rollbackOffered_) {
             if (routingRollbackAction_) {
                 routingRollbackAction_();
@@ -3535,7 +3679,7 @@ inline std::vector<std::string> ControlMappingHubState::columnHeaders() const {
         "MIDI Min",
         "MIDI Max",
         "OSC",
-        ""
+        "Ownership"
     };
 }
 
@@ -4621,6 +4765,67 @@ inline std::string ControlMappingHubState::formatSlotSummary(const ParameterRow&
     return controlId;
 }
 
+inline std::string ControlMappingHubState::formatParameterOwnership(
+    const ParameterRow& row) const {
+    std::string base;
+    std::string live;
+    std::size_t modifierCount = 0;
+    std::size_t activeModifierCount = 0;
+    const synaptome::state::ParameterBaseOrigin* origin =
+        nullptr;
+    if (row.isFloat && row.floatParam) {
+        base = ofToString(row.floatParam->baseValue, 3);
+        live = row.floatParam->value
+            ? ofToString(*row.floatParam->value, 3)
+            : "-";
+        modifierCount = row.floatParam->modifiers.size();
+        activeModifierCount = static_cast<std::size_t>(
+            std::count_if(
+                row.floatParam->modifiers.begin(),
+                row.floatParam->modifiers.end(),
+                [](const ParameterRegistry::RuntimeModifier& modifier) {
+                    return modifier.active && modifier.applied;
+                }));
+        origin = &row.floatParam->baseOrigin;
+    } else if (!row.isString && row.boolParam) {
+        base = row.boolParam->baseValue ? "On" : "Off";
+        live = row.boolParam->value
+            ? (*row.boolParam->value ? "On" : "Off")
+            : "-";
+        modifierCount = row.boolParam->modifiers.size();
+        activeModifierCount = static_cast<std::size_t>(
+            std::count_if(
+                row.boolParam->modifiers.begin(),
+                row.boolParam->modifiers.end(),
+                [](const ParameterRegistry::RuntimeModifier& modifier) {
+                    return modifier.active && modifier.applied;
+                }));
+        origin = &row.boolParam->baseOrigin;
+    } else if (row.isString && row.stringParam) {
+        base = row.stringParam->baseValue;
+        live = row.stringParam->value
+            ? *row.stringParam->value
+            : "-";
+        origin = &row.stringParam->baseOrigin;
+    } else {
+        return "-";
+    }
+    std::string summary =
+        "B:" + base + " L:" + live +
+        " M:" + ofToString(activeModifierCount) +
+        "/" + ofToString(modifierCount);
+    if (origin) {
+        summary += " O:";
+        summary +=
+            synaptome::state::parameterBaseOriginKindName(
+                origin->kind);
+        if (!origin->originId.empty()) {
+            summary += ":" + origin->originId;
+        }
+    }
+    return summary;
+}
+
 inline std::string ControlMappingHubState::currentSlotControlId(const ParameterRow& row) const {
     if (!midiRouter_) {
         return std::string();
@@ -4862,6 +5067,16 @@ inline bool ControlMappingHubState::beginPackagePresetPicker(
     }
     pickingOsc_ = false;
     routingPopoverVisible_ = false;
+    if (packagePresetPreviewCallback_) {
+        const auto& option =
+            row.packagePresetOptions[
+                static_cast<std::size_t>(
+                    packagePresetPickerSelection_)];
+        packagePresetPreviewCallback_(
+            row.assetKey,
+            row.packagePresetBankId,
+            option.id);
+    }
     return true;
 }
 
@@ -4888,15 +5103,20 @@ inline bool ControlMappingHubState::applyPackagePresetSelection() {
     emitTelemetryEvent(
         "package.preset.select",
         row,
-        "bank=" + bankId + " preset=" + option.id + " apply=next-load");
-    setBannerMessage(option.label + " saved for next layer load", 3000);
-    cancelPackagePresetPicker();
+        "bank=" + bankId + " preset=" + option.id + " apply=transaction");
+    setBannerMessage(option.label + " applied and saved", 3000);
+    packagePresetPickerVisible_ = false;
+    packagePresetPickerRowId_.clear();
+    packagePresetPickerSelection_ = -1;
     tableModel_.dirty = true;
     invalidateRowCache();
     return true;
 }
 
 inline void ControlMappingHubState::cancelPackagePresetPicker() const {
+    if (packagePresetCancelCallback_) {
+        packagePresetCancelCallback_();
+    }
     packagePresetPickerVisible_ = false;
     packagePresetPickerRowId_.clear();
     packagePresetPickerSelection_ = -1;
@@ -5976,6 +6196,372 @@ inline void ControlMappingHubState::appendAssetPlaceholders(const std::unordered
     }
 }
 
+inline const ofJson*
+ControlMappingHubState::layerPackageInspectionEntry(
+    const std::string& assetId) const {
+    if (!layerPackageInspection_.contains("entries") ||
+        !layerPackageInspection_["entries"].is_array()) {
+        return nullptr;
+    }
+    for (const auto& entry :
+         layerPackageInspection_["entries"]) {
+        if (entry.is_object() &&
+            entry.value("assetId", std::string()) ==
+                assetId) {
+            return &entry;
+        }
+    }
+    return nullptr;
+}
+
+inline bool ControlMappingHubState::previewPackageMapping(
+    const ParameterRow& row) const {
+    if (!row.isPackageMappingPresetRow || !midiRouter_) {
+        setBannerMessage(
+            "Activate and assign the package before mapping preview",
+            3000);
+        return false;
+    }
+    const ofJson* entry =
+        layerPackageInspectionEntry(row.assetKey);
+    if (!entry) {
+        setBannerMessage(
+            "Package mapping metadata is unavailable",
+            3000);
+        return false;
+    }
+    std::vector<synaptome::controls::PackageLayerTarget>
+        layers;
+    const auto inventory =
+        consoleSlotInventoryCallback_
+            ? consoleSlotInventoryCallback_()
+            : consoleSlotInventory_;
+    for (const auto& slot : inventory) {
+        if (slot.index <= 0 || slot.assetId != row.assetKey) {
+            continue;
+        }
+        layers.push_back({
+            slot.index,
+            slot.assetId,
+            "console.layer" + std::to_string(slot.index),
+            slot.active,
+        });
+    }
+    packageMappingPreview_ =
+        synaptome::controls::previewMappingSuggestion(
+            *entry,
+            row.packageMappingPresetId,
+            layers,
+            midiRouter_->exportMappingSnapshot());
+    packageMappingPreviewRowId_ = row.id;
+    if (!packageMappingPreview_.ok) {
+        setBannerMessage(
+            "Mapping preview failed: " +
+                packageMappingPreview_.error,
+            4200);
+        return false;
+    }
+    setBannerMessage(
+        "Preview: " +
+            ofToString(packageMappingPreview_.routes.size()) +
+            " routes, " +
+            ofToString(packageMappingPreview_.conflictCount()) +
+            " conflicts. Enter=apply, X=approve conflict override",
+        4800);
+    emitTelemetryEvent(
+        "package.mapping.preview",
+        &row,
+        "routes=" +
+            ofToString(packageMappingPreview_.routes.size()) +
+            ",conflicts=" +
+            ofToString(packageMappingPreview_.conflictCount()));
+    return true;
+}
+
+inline bool ControlMappingHubState::publishPackageMappingDocument(
+    const ofJson& document) const {
+    if (!midiRouter_) {
+        return false;
+    }
+    const auto result =
+        midiRouter_->publishMappingSnapshot(
+            document,
+            [this](const ofJson& canonical) {
+                if (mappingSnapshotPersistenceCallback_) {
+                    return mappingSnapshotPersistenceCallback_(
+                        canonical);
+                }
+                return midiRouter_ && midiRouter_->save("");
+            });
+    if (!result.ok) {
+        setBannerMessage(
+            result.error +
+                (result.rollbackSucceeded
+                     ? std::string()
+                     : " (rollback failed)"),
+            4800);
+    }
+    return result.ok;
+}
+
+inline bool ControlMappingHubState::applyPackageMapping(
+    const ParameterRow& row,
+    bool replaceTargetConflicts) {
+    if (packageMappingPreviewRowId_ != row.id ||
+        !packageMappingPreview_.ok) {
+        if (!previewPackageMapping(row)) {
+            return false;
+        }
+    }
+    const ofJson current =
+        midiRouter_->exportMappingSnapshot();
+    const auto candidate =
+        synaptome::controls::buildMappingCandidate(
+            current,
+            packageMappingPreview_,
+            replaceTargetConflicts);
+    if (!candidate.ok) {
+        setBannerMessage(
+            candidate.error +
+                "; review conflicts or press X to approve override",
+            4200);
+        return false;
+    }
+    const auto published =
+        packageMappingTransaction_.publish(
+            current,
+            candidate.document,
+            [this](const ofJson& document) {
+                return publishPackageMappingDocument(document);
+            });
+    if (!published.ok) {
+        setBannerMessage(published.error, 4200);
+        return false;
+    }
+    packageMappingPreviewRowId_.clear();
+    packageMappingPreview_ = {};
+    tableModel_.dirty = true;
+    invalidateRowCache();
+    rollbackOffered_ = true;
+    setBannerMessage(
+        "Package mapping applied transactionally; R=rollback",
+        4200);
+    emitTelemetryEvent(
+        "package.mapping.apply",
+        &row,
+        replaceTargetConflicts
+            ? "replace-conflicts"
+            : "no-conflicts");
+    return true;
+}
+
+inline bool ControlMappingHubState::editPackageMapping(
+    const ParameterRow& row) {
+    if (!midiRouter_) {
+        return false;
+    }
+    const std::string address =
+        midiRouter_->lastOscAddress();
+    if (address.empty()) {
+        setBannerMessage(
+            "No observed OSC source to use for edit",
+            3000);
+        return false;
+    }
+    if (packageMappingPreviewRowId_ != row.id ||
+        !packageMappingPreview_.ok) {
+        if (!previewPackageMapping(row)) {
+            return false;
+        }
+    }
+    if (packageMappingPreview_.routes.empty()) {
+        return false;
+    }
+    const auto& route = packageMappingPreview_.routes.front();
+    ofJson source = route.source;
+    source["pattern"] = address;
+    const ofJson current =
+        midiRouter_->exportMappingSnapshot();
+    auto candidate =
+        synaptome::controls::editPackageRoute(
+            current, route.routeId, source);
+    if (!candidate.ok) {
+        setBannerMessage(
+            "Apply the suggestion before editing its source",
+            3200);
+        return false;
+    }
+    const auto published =
+        packageMappingTransaction_.publish(
+            current,
+            candidate.document,
+            [this](const ofJson& document) {
+                return publishPackageMappingDocument(document);
+            });
+    if (!published.ok) {
+        return false;
+    }
+    tableModel_.dirty = true;
+    invalidateRowCache();
+    rollbackOffered_ = true;
+    setBannerMessage(
+        "Edited first package route from observed OSC; R=rollback",
+        3800);
+    emitTelemetryEvent(
+        "package.mapping.edit", &row, address);
+    return true;
+}
+
+inline bool ControlMappingHubState::setPackageMappingEnabled(
+    const ParameterRow& row,
+    bool enabled) {
+    if (!midiRouter_) {
+        return false;
+    }
+    const ofJson current =
+        midiRouter_->exportMappingSnapshot();
+    ofJson candidate = current;
+    bool changed = false;
+    if (candidate.contains("osc") &&
+        candidate["osc"].is_array()) {
+        for (auto& route : candidate["osc"]) {
+            if (!route.is_object() ||
+                !route.contains("provenance") ||
+                !route["provenance"].is_object()) {
+                continue;
+            }
+            const auto& provenance = route["provenance"];
+            if (provenance.value(
+                    "owner", std::string()) ==
+                    "package-suggestion" &&
+                provenance.value(
+                    "packageId", std::string()) ==
+                    row.packageMappingPackageId &&
+                provenance.value(
+                    "presetId", std::string()) ==
+                    row.packageMappingPresetId &&
+                route.value("enabled", true) != enabled) {
+                route["enabled"] = enabled;
+                changed = true;
+            }
+        }
+    }
+    if (!changed) {
+        setBannerMessage(
+            enabled
+                ? "No disabled package routes to enable"
+                : "No enabled package routes to disable",
+            2600);
+        return false;
+    }
+    const auto published =
+        packageMappingTransaction_.publish(
+            current,
+            candidate,
+            [this](const ofJson& document) {
+                return publishPackageMappingDocument(document);
+            });
+    if (!published.ok) {
+        return false;
+    }
+    tableModel_.dirty = true;
+    invalidateRowCache();
+    rollbackOffered_ = true;
+    setBannerMessage(
+        enabled ? "Package routes enabled"
+                : "Package routes disabled; R=rollback",
+        3200);
+    emitTelemetryEvent(
+        enabled ? "package.mapping.enable"
+                : "package.mapping.disable",
+        &row);
+    return true;
+}
+
+inline bool ControlMappingHubState::removePackageMapping(
+    const ParameterRow& row) {
+    if (!midiRouter_) {
+        return false;
+    }
+    const ofJson current =
+        midiRouter_->exportMappingSnapshot();
+    ofJson candidate = current;
+    bool changed = false;
+    if (candidate.contains("osc") &&
+        candidate["osc"].is_array()) {
+        auto& routes = candidate["osc"];
+        const auto oldSize = routes.size();
+        routes.erase(
+            std::remove_if(
+                routes.begin(),
+                routes.end(),
+                [&](const ofJson& route) {
+                    if (!route.is_object() ||
+                        !route.contains("provenance") ||
+                        !route["provenance"].is_object()) {
+                        return false;
+                    }
+                    const auto& provenance =
+                        route["provenance"];
+                    return provenance.value(
+                               "owner", std::string()) ==
+                               "package-suggestion" &&
+                        provenance.value(
+                            "packageId", std::string()) ==
+                            row.packageMappingPackageId &&
+                        provenance.value(
+                            "presetId", std::string()) ==
+                            row.packageMappingPresetId;
+                }),
+            routes.end());
+        changed = routes.size() != oldSize;
+    }
+    if (!changed) {
+        setBannerMessage(
+            "No applied package routes to remove",
+            2600);
+        return false;
+    }
+    synaptome::controls::pruneUnusedOscSources(
+        candidate);
+    const auto published =
+        packageMappingTransaction_.publish(
+            current,
+            candidate,
+            [this](const ofJson& document) {
+                return publishPackageMappingDocument(document);
+            });
+    if (!published.ok) {
+        return false;
+    }
+    tableModel_.dirty = true;
+    invalidateRowCache();
+    rollbackOffered_ = true;
+    setBannerMessage(
+        "Package routes removed; R=rollback", 3400);
+    emitTelemetryEvent(
+        "package.mapping.remove", &row);
+    return true;
+}
+
+inline bool ControlMappingHubState::rollbackPackageMapping() {
+    if (!packageMappingTransaction_.rollbackAvailable()) {
+        return false;
+    }
+    const auto result =
+        packageMappingTransaction_.rollback();
+    if (!result.ok) {
+        setBannerMessage(result.error, 4200);
+        return false;
+    }
+    rollbackOffered_ = false;
+    tableModel_.dirty = true;
+    invalidateRowCache();
+    setBannerMessage(
+        "Package mapping transaction rolled back", 3400);
+    return true;
+}
+
 inline void ControlMappingHubState::appendLayerPackageInspectionRows() const {
     if (!layerPackageInspection_.contains("entries") || !layerPackageInspection_["entries"].is_array()) {
         return;
@@ -6073,7 +6659,8 @@ inline void ControlMappingHubState::appendLayerPackageInspectionRows() const {
                 bankRow.label = bank.value("label", bankId);
                 bankRow.section = "Package";
                 bankRow.isPackagePresetBankRow =
-                    activated && static_cast<bool>(packagePresetApplyCallback_);
+                    activated &&
+                    static_cast<bool>(packagePresetApplyCallback_);
                 bankRow.category = bankRow.isPackagePresetBankRow
                     ? "SDK Package Controls"
                     : "SDK Inspection (Read-only)";
@@ -6116,9 +6703,120 @@ inline void ControlMappingHubState::appendLayerPackageInspectionRows() const {
                     bankRow.inspectionValue += bankRow.packagePresetOptions[i].label;
                 }
                 bankRow.inspectionValue += bankRow.isPackagePresetBankRow
-                    ? "  |  Enter to choose for next layer load"
+                    ? "  |  Enter to choose; Up/Down live preview, Enter apply, Esc cancel, R rollback"
                     : "  |  Activate package to choose";
                 tableModel_.rows.push_back(std::move(bankRow));
+            }
+        }
+
+        if (mappingPresets.is_array()) {
+            const ofJson mappingSnapshot =
+                midiRouter_
+                    ? midiRouter_->exportMappingSnapshot()
+                    : ofJson::object();
+            const auto appliedRoutes =
+                mappingSnapshot.value("osc", ofJson::array());
+            int assignedInstances = 0;
+            for (const auto& slot : consoleSlotInventory_) {
+                if (slot.index > 0 && slot.assetId == assetId) {
+                    ++assignedInstances;
+                }
+            }
+            for (const auto& preset : mappingPresets) {
+                if (!preset.is_object()) {
+                    continue;
+                }
+                const std::string presetId =
+                    preset.value("id", std::string());
+                if (presetId.empty()) {
+                    continue;
+                }
+                int applied = 0;
+                int disabled = 0;
+                if (appliedRoutes.is_array()) {
+                    for (const auto& route : appliedRoutes) {
+                        if (!route.is_object() ||
+                            !route.contains("provenance") ||
+                            !route["provenance"].is_object()) {
+                            continue;
+                        }
+                        const auto& provenance =
+                            route["provenance"];
+                        if (provenance.value(
+                                "owner",
+                                std::string()) !=
+                                "package-suggestion" ||
+                            provenance.value(
+                                "packageId",
+                                std::string()) !=
+                                entry.value(
+                                    "packageId",
+                                    assetId) ||
+                            provenance.value(
+                                "presetId",
+                                std::string()) != presetId) {
+                            continue;
+                        }
+                        ++applied;
+                        if (!route.value("enabled", true)) {
+                            ++disabled;
+                        }
+                    }
+                }
+                ParameterRow mappingRow;
+                mappingRow.id =
+                    "inspection." + assetId +
+                    ".mappingPreset." + presetId;
+                mappingRow.label =
+                    preset.value("label", presetId);
+                mappingRow.section = "Package";
+                mappingRow.category =
+                    activated && midiRouter_ &&
+                            assignedInstances > 0
+                        ? "SDK Package Controls"
+                        : "SDK Inspection (Read-only)";
+                mappingRow.subcategory =
+                    category +
+                    (layerGroup.empty()
+                         ? std::string()
+                         : " / " + layerGroup);
+                mappingRow.assetKey = assetId;
+                mappingRow.assetLabel = assetLabel;
+                mappingRow.isInspectionRow = true;
+                mappingRow.isPackageMappingPresetRow =
+                    activated && midiRouter_ &&
+                    assignedInstances > 0;
+                mappingRow.packageMappingPresetId = presetId;
+                mappingRow.packageMappingPackageId =
+                    entry.value("packageId", assetId);
+                mappingRow.offline = true;
+                const auto mappings =
+                    preset.value("mappings", ofJson::array());
+                mappingRow.inspectionValue =
+                    "Suggestion only  |  " +
+                    ofToString(mappings.size()) +
+                    " declared routes  |  " +
+                    ofToString(assignedInstances) +
+                    " assigned layer";
+                if (assignedInstances != 1) {
+                    mappingRow.inspectionValue += "s";
+                }
+                if (applied > 0) {
+                    mappingRow.inspectionValue +=
+                        "  |  Applied: " +
+                        ofToString(applied);
+                    if (disabled > 0) {
+                        mappingRow.inspectionValue +=
+                            " (" + ofToString(disabled) +
+                            " disabled)";
+                    }
+                }
+                mappingRow.inspectionValue +=
+                    mappingRow.isPackageMappingPresetRow
+                        ? "  |  Enter=preview/apply, X=approve conflicts, E=edit source, D=disable, U=remove, R=rollback"
+                        : "  |  Assign the active package to a layer before preview";
+                tableModel_.rows.push_back(
+                    std::move(mappingRow));
             }
         }
 
@@ -8823,11 +9521,54 @@ inline bool ControlMappingHubState::debugSelectPackagePreset(
     for (std::size_t i = 0; i < row->packagePresetOptions.size(); ++i) {
         if (row->packagePresetOptions[i].id == presetId) {
             packagePresetPickerSelection_ = static_cast<int>(i);
+            if (packagePresetPreviewCallback_ &&
+                !packagePresetPreviewCallback_(
+                    row->assetKey,
+                    row->packagePresetBankId,
+                    presetId)) {
+                cancelPackagePresetPicker();
+                return false;
+            }
             return applyPackagePresetSelection();
         }
     }
     cancelPackagePresetPicker();
     return false;
+}
+
+inline bool ControlMappingHubState::debugPreviewPackageMapping(
+    const std::string& rowId) {
+    rebuildView();
+    const auto* row = rowForId(rowId);
+    return row && previewPackageMapping(*row);
+}
+
+inline bool ControlMappingHubState::debugApplyPackageMapping(
+    const std::string& rowId,
+    bool replaceTargetConflicts) {
+    rebuildView();
+    const auto* row = rowForId(rowId);
+    return row &&
+        applyPackageMapping(*row, replaceTargetConflicts);
+}
+
+inline bool ControlMappingHubState::debugDisablePackageMapping(
+    const std::string& rowId) {
+    rebuildView();
+    const auto* row = rowForId(rowId);
+    return row &&
+        setPackageMappingEnabled(*row, false);
+}
+
+inline bool ControlMappingHubState::debugRemovePackageMapping(
+    const std::string& rowId) {
+    rebuildView();
+    const auto* row = rowForId(rowId);
+    return row && removePackageMapping(*row);
+}
+
+inline bool ControlMappingHubState::debugRollbackPackageMapping() {
+    return rollbackPackageMapping();
 }
 
 inline bool ControlMappingHubState::debugSelectLabeledValue(
@@ -9987,7 +10728,7 @@ inline void ControlMappingHubState::loadPreferences() {
             const auto& visible = json["visibleColumns"];
             for (int i = 0; i < static_cast<int>(Column::kCount); ++i) {
                 const char* key = columnKey(static_cast<Column>(i));
-                bool defaultVisible = static_cast<Column>(i) != Column::kOscDeadband;
+                bool defaultVisible = true;
                 preferences_.columnVisibility[i] = visible.value(key, defaultVisible);
             }
         }

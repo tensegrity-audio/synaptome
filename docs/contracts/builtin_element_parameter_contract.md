@@ -118,13 +118,12 @@ persistence fixtures agree.
 ## Scope Boundary
 
 This contract makes built-in element parameters authoritative and
-construction-free. It does not yet provide:
+construction-free. The broader architecture now provides versioned state
+ownership through SEAC-5, package serialization through SEAC-7, generated
+registration through SEAC-8, and package control transactions through SEAC-9.
+It does not yet provide:
 
-- versioned value provenance or migration across defaults, presets, scenes,
-  mapping banks, machine profiles, and operator preferences (SEAC-5);
-- serialized package ownership/version/capability descriptors (SEAC-7);
-- generated registration or automatic package discovery (SEAC-8);
-- transactional mapping-edit UI (SEAC-9);
+- automatic package discovery (SEAC-10);
 - a stable binary plugin ABI or support for dropping in an arbitrary raw
   openFrameworks `ofApp` folder.
 

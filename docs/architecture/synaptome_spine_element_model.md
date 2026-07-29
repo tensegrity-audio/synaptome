@@ -177,16 +177,17 @@ Grid, Geodesic, Perlin, or Game of Life pointers. It selects instances from
 immutable composition snapshots and uses each copied registry prefix for live
 parameter reads, MIDI/OSC binding, Grid density cycling, and Game of Life pause.
 
-This first action slice is intentionally not a persistence or mapping contract.
-Actions do not become parameter state, receive an expanded
-`console.layerN.actions.*` address, appear in scenes or presets, or enter
-MIDI/OSC mapping snapshots. Discovery is limited to a currently adopted live
-instance. SEAC-4 static type/kind/action/parameter declarations and live
+Actions do not become parameter state or appear in scenes or presets. SEAC-9
+mapping suggestions may explicitly target a declared action, expand it to a
+`console.layerN.actions.*` route, and persist edge/threshold semantics plus
+provenance; live handlers remain Runtime-owned and nonserialized. Discovery is
+limited to a currently adopted live instance. SEAC-4 static
+type/kind/action/parameter declarations and live
 binding parity are complete. All 23 built-in types expose 786
 construction-free parameters, and generated Browser/catalog/manifest/
-documentation views share that authority. Package serialization remains
-SEAC-7, and persisted action
-mappings remain SEAC-9. Geodesic subdivisions are durable parameter state, while video
+documentation views share that authority. Package serialization and
+transactional action mapping are complete through SEAC-9. Geodesic
+subdivisions are durable parameter state, while video
 source and capture observations use the typed on-demand telemetry query. The
 read-only `compositionElementForHost` compatibility seam is removed.
 

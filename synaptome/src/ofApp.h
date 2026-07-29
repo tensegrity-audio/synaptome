@@ -150,6 +150,13 @@ public:
         std::string presetId;
     };
     std::unordered_map<std::string, PackagePresetSelection> packagePresetSelections_;
+    synaptome::controls::PackagePresetTransaction packagePresetTransaction_;
+    std::string packagePresetTransactionAssetId_;
+    std::optional<PackagePresetSelection> packagePresetRollbackSelection_;
+    bool persistPackagePresetSelection(
+        const std::string& assetId,
+        const std::string& bankId,
+        const std::string& presetId);
     std::string activeMidiBank = "home";
 
     // Event bridge (connects control hub events -> HUD)

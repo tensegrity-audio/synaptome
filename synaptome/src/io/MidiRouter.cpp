@@ -7,6 +7,7 @@
 #include <cctype>
 #include <filesystem>
 #include <map>
+#include <regex>
 #include <stdexcept>
 #include <unordered_map>
 #include <utility>
@@ -45,6 +46,34 @@ namespace {
         case modifier::BlendMode::kToggle: return "toggle";
         }
         return "scale";
+    }
+
+    bool oscPatternMatches(const std::string& pattern,
+                           const std::string& address) {
+        std::string expression = "^";
+        expression.reserve(pattern.size() * 2 + 2);
+        for (const char c : pattern) {
+            if (c == '*') {
+                expression += ".*";
+            } else if (c == '?') {
+                expression += '.';
+            } else {
+                if (std::isalnum(static_cast<unsigned char>(c)) ||
+                    c == '/' || c == '_' || c == '-') {
+                    expression += c;
+                } else {
+                    expression += '\\';
+                    expression += c;
+                }
+            }
+        }
+        expression += '$';
+        try {
+            return std::regex_match(
+                address, std::regex(expression));
+        } catch (...) {
+            return false;
+        }
     }
 
     const std::map<std::string, std::vector<std::string>> kDeviceMetricOrder = {
@@ -207,6 +236,21 @@ namespace {
                 ofJson entry;
                 entry["pattern"] = map.pattern;
                 entry["target"] = map.target;
+                if (map.targetKind != "parameter") {
+                    entry["targetKind"] = map.targetKind;
+                }
+                if (!map.enabled) {
+                    entry["enabled"] = false;
+                }
+                if (map.targetKind == "action") {
+                    entry["trigger"] = {
+                        {"edge", map.triggerEdge},
+                        {"threshold", map.triggerThreshold}
+                    };
+                }
+                if (!map.provenance.empty()) {
+                    entry["provenance"] = map.provenance;
+                }
                 if (!map.bankId.empty()) entry["bank"] = map.bankId;
                 if (!map.controlId.empty() && map.controlId != map.target) entry["control"] = map.controlId;
                 doc["osc"].push_back(entry);
@@ -423,8 +467,60 @@ namespace {
                     mappingSchemaError(path + ".pattern", "an OSC address beginning with '/'");
                 }
                 map.target = requiredString(entry, "target", path);
+                optionalString(
+                    entry,
+                    "targetKind",
+                    path,
+                    map.targetKind);
+                if (map.targetKind != "parameter" &&
+                    map.targetKind != "action") {
+                    mappingSchemaError(
+                        path + ".targetKind",
+                        "\"parameter\" or \"action\"");
+                }
+                optionalBool(
+                    entry, "enabled", path, map.enabled);
                 optionalString(entry, "bank", path, map.bankId);
                 optionalString(entry, "control", path, map.controlId);
+                if (entry.contains("provenance")) {
+                    if (!entry["provenance"].is_object()) {
+                        mappingSchemaError(
+                            path + ".provenance", "an object");
+                    }
+                    map.provenance = entry["provenance"];
+                }
+                if (map.targetKind == "action") {
+                    if (!entry.contains("trigger") ||
+                        !entry["trigger"].is_object()) {
+                        mappingSchemaError(
+                            path + ".trigger",
+                            "an action trigger object");
+                    }
+                    const auto& trigger = entry["trigger"];
+                    map.triggerEdge = requiredString(
+                        trigger, "edge", path + ".trigger");
+                    if (map.triggerEdge != "rising" &&
+                        map.triggerEdge != "falling" &&
+                        map.triggerEdge != "both") {
+                        mappingSchemaError(
+                            path + ".trigger.edge",
+                            "\"rising\", \"falling\", or \"both\"");
+                    }
+                    optionalNumber(
+                        trigger,
+                        "threshold",
+                        path + ".trigger",
+                        map.triggerThreshold);
+                    if (!trigger.contains("threshold")) {
+                        mappingSchemaError(
+                            path + ".trigger.threshold",
+                            "a finite number");
+                    }
+                } else if (entry.contains("trigger")) {
+                    mappingSchemaError(
+                        path + ".trigger",
+                        "absent for parameter routes");
+                }
 
                 auto profileIt = std::find_if(initial.oscSourceProfiles.begin(),
                                               initial.oscSourceProfiles.end(),
@@ -878,6 +974,49 @@ bool MidiRouter::importMappingSnapshot(const ofJson& snapshot, bool replaceExist
     return true;
 }
 
+MidiRouter::MappingSnapshotPublicationResult
+MidiRouter::publishMappingSnapshot(
+    const ofJson& snapshot,
+    const std::function<bool(const ofJson&)>& persistence) {
+    MappingSnapshotPublicationResult result;
+    if (!persistence) {
+        result.error = "mapping persistence callback is unavailable";
+        return result;
+    }
+    const ofJson prior = exportMappingSnapshot();
+    if (!importMappingSnapshot(snapshot, true)) {
+        result.error =
+            "mapping candidate failed validation; prior state preserved";
+        result.document = prior;
+        return result;
+    }
+    const ofJson canonical = exportMappingSnapshot();
+    bool persisted = false;
+    try {
+        persisted = persistence(canonical);
+    } catch (const std::exception& exception) {
+        result.error =
+            "mapping persistence failed: " +
+            std::string(exception.what());
+    } catch (...) {
+        result.error = "mapping persistence failed";
+    }
+    if (!persisted) {
+        result.rollbackSucceeded =
+            importMappingSnapshot(prior, true);
+        if (result.error.empty()) {
+            result.error = "mapping persistence failed";
+        }
+        result.error += "; prior live state restored";
+        result.document =
+            result.rollbackSucceeded ? prior : canonical;
+        return result;
+    }
+    result.ok = true;
+    result.document = canonical;
+    return result;
+}
+
 void MidiRouter::close() {
     markClosed();
 }
@@ -929,6 +1068,9 @@ modifier::BindingList MidiRouter::snapshotModifierBindings() const {
     }
 
     for (const auto& map : oscMaps) {
+        if (!map.enabled || map.targetKind != "parameter") {
+            continue;
+        }
         const auto* profile = findOscSourceProfile(map.pattern);
         if (!profile) {
             continue;
@@ -973,6 +1115,11 @@ modifier::BindingList MidiRouter::snapshotModifierBindings() const {
 
 void MidiRouter::setFloatTargetTouchedCallback(std::function<void(const std::string&)> cb) {
     floatTargetTouchedCallback_ = std::move(cb);
+}
+
+void MidiRouter::setActionTargetCallback(
+    std::function<bool(int, const std::string&)> cb) {
+    actionTargetCallback_ = std::move(cb);
 }
 void MidiRouter::update() {
     const uint64_t now = ofGetElapsedTimeMillis();
@@ -1623,6 +1770,48 @@ void MidiRouter::onOscMessage(const std::string& address, float value) {
     info->lastValue = value;
     info->lastSeenMs = nowMs;
     info->seen = true;
+
+    for (auto& map : oscMaps) {
+        if (!map.enabled || map.targetKind != "action" ||
+            !isMapActive(map.bankId) ||
+            !oscPatternMatches(map.pattern, address)) {
+            continue;
+        }
+        const bool high = value >= map.triggerThreshold;
+        const bool rising = high && !map.triggerHigh;
+        const bool falling = !high && map.triggerHigh;
+        map.triggerHigh = high;
+        const bool fire =
+            (map.triggerEdge == "rising" && rising) ||
+            (map.triggerEdge == "falling" && falling) ||
+            (map.triggerEdge == "both" && (rising || falling));
+        if (!fire || !actionTargetCallback_) {
+            continue;
+        }
+        const std::string marker = ".actions.";
+        const auto markerAt = map.target.find(marker);
+        const std::string prefix =
+            markerAt == std::string::npos
+                ? std::string()
+                : map.target.substr(0, markerAt);
+        const std::string actionId =
+            markerAt == std::string::npos
+                ? map.target
+                : map.target.substr(markerAt + marker.size());
+        int layerIndex = 0;
+        const std::string layerPrefix = "console.layer";
+        if (prefix.rfind(layerPrefix, 0) == 0) {
+            try {
+                layerIndex =
+                    std::stoi(prefix.substr(layerPrefix.size()));
+            } catch (...) {
+                layerIndex = 0;
+            }
+        }
+        if (layerIndex > 0 && !actionId.empty()) {
+            actionTargetCallback_(layerIndex, actionId);
+        }
+    }
 
     if (!learningTarget.empty() && learningIsOsc) {
         OscMap m;

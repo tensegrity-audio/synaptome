@@ -333,7 +333,26 @@
         "smooth": { "type": "number", "minimum": 0 },
         "deadband": { "type": "number", "minimum": 0 },
         "blend": { "enum": ["set", "scale", "add"] },
-        "relative": { "type": "boolean" }
+        "relative": { "type": "boolean" },
+        "trigger": { "$ref": "#/definitions/mappingTrigger" }
+      }
+    },
+    "mappingTrigger": {
+      "type": "object",
+      "required": ["edge", "threshold"],
+      "additionalProperties": false,
+      "properties": {
+        "edge": { "enum": ["rising", "falling", "both"] },
+        "threshold": { "type": "number" }
+      }
+    },
+    "mappingTarget": {
+      "type": "object",
+      "required": ["kind", "id"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "enum": ["parameter", "action"] },
+        "id": { "$ref": "#/definitions/localId" }
       }
     },
     "mapping": {
@@ -341,10 +360,38 @@
       "required": ["target", "source"],
       "additionalProperties": false,
       "properties": {
-        "target": { "$ref": "#/definitions/localId" },
+        "target": {
+          "oneOf": [
+            { "$ref": "#/definitions/localId" },
+            { "$ref": "#/definitions/mappingTarget" }
+          ]
+        },
         "source": { "$ref": "#/definitions/mappingSource" },
         "description": { "type": "string" }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "target": {
+                "type": "object",
+                "properties": { "kind": { "const": "action" } },
+                "required": ["kind"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "source": { "required": ["trigger"] }
+            }
+          },
+          "else": {
+            "properties": {
+              "source": { "not": { "required": ["trigger"] } }
+            }
+          }
+        }
+      ]
     },
     "mappingPreset": {
       "type": "object",

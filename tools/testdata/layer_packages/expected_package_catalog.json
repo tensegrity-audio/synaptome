@@ -342,6 +342,7 @@
           }
         }
       ],
+      "actions": [],
       "presets": [
         {
           "presetId": "default",
@@ -374,6 +375,8 @@
         {
           "id": "hostMicMotion",
           "label": "Host Mic Motion",
+          "description": "Visible OSC defaults that map host mic level into generic Signal Bloom controls.",
+          "applyMode": "suggestion-only",
           "targets": [
             "gain",
             "speedInput"
@@ -381,6 +384,52 @@
           "patterns": [
             "/sensor/host/localmic/mic-level",
             "/sensor/host/localmic/mic-bass"
+          ],
+          "mappings": [
+            {
+              "target": {
+                "kind": "parameter",
+                "id": "gain"
+              },
+              "source": {
+                "kind": "osc",
+                "pattern": "/sensor/host/localmic/mic-level",
+                "in": [
+                  0.0,
+                  0.12
+                ],
+                "out": [
+                  0.0,
+                  1.6
+                ],
+                "smooth": 0.25,
+                "deadband": 0.01,
+                "blend": "scale",
+                "relative": true
+              }
+            },
+            {
+              "target": {
+                "kind": "parameter",
+                "id": "speedInput"
+              },
+              "source": {
+                "kind": "osc",
+                "pattern": "/sensor/host/localmic/mic-bass",
+                "in": [
+                  0.0,
+                  0.18
+                ],
+                "out": [
+                  0.0,
+                  1.0
+                ],
+                "smooth": 0.18,
+                "deadband": 0.01,
+                "blend": "set",
+                "relative": false
+              }
+            }
           ]
         }
       ],

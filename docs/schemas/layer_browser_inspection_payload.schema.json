@@ -86,6 +86,8 @@
       "type": "object",
       "required": [
         "assetId",
+        "packageId",
+        "packageVersion",
         "label",
         "category",
         "layerGroup",
@@ -102,6 +104,8 @@
       "additionalProperties": false,
       "properties": {
         "assetId": { "type": "string", "minLength": 1 },
+        "packageId": { "type": "string" },
+        "packageVersion": { "type": "string" },
         "label": { "type": "string", "minLength": 1 },
         "category": { "type": "string", "minLength": 1 },
         "layerGroup": { "type": "string" },
@@ -177,7 +181,7 @@
     },
     "controls": {
       "type": "object",
-      "required": ["count", "sections", "parameters"],
+      "required": ["count", "sections", "parameters", "actions"],
       "additionalProperties": false,
       "properties": {
         "count": { "type": "integer", "minimum": 0 },
@@ -185,7 +189,21 @@
         "parameters": {
           "type": "array",
           "items": { "$ref": "#/definitions/parameter" }
+        },
+        "actions": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/action" }
         }
+      }
+    },
+    "action": {
+      "type": "object",
+      "required": ["id", "label", "groupId"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 },
+        "groupId": { "type": "string", "minLength": 1 }
       }
     },
     "parameter": {
@@ -291,11 +309,24 @@
     },
     "mappingPreset": {
       "type": "object",
-      "required": ["id", "label", "targets", "patterns"],
+      "required": [
+        "id",
+        "label",
+        "description",
+        "applyMode",
+        "targets",
+        "patterns",
+        "mappings"
+      ],
       "additionalProperties": false,
       "properties": {
         "id": { "type": "string", "minLength": 1 },
         "label": { "type": "string", "minLength": 1 },
+        "description": { "type": "string" },
+        "applyMode": {
+          "type": "string",
+          "enum": ["suggestion-only"]
+        },
         "targets": {
           "type": "array",
           "items": { "type": "string", "minLength": 1 }
@@ -303,6 +334,10 @@
         "patterns": {
           "type": "array",
           "items": { "type": "string", "minLength": 1 }
+        },
+        "mappings": {
+          "type": "array",
+          "items": { "$ref": "layer_package.schema.json#/definitions/mapping" }
         }
       }
     }

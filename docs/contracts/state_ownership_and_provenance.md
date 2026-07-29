@@ -175,8 +175,10 @@ For Scene v2 specifically:
   available as runtime provenance after merging.
 - Unknown IDs, wrong kinds, invalid values, unresolved aliases, or descriptor
   drift reject the whole preset application.
-- Selecting a package preset in the current Browser remains operator-local and
-  next-load-only. Live transactional preview/apply belongs to SEAC-9.
+- Selecting an active package preset in the Browser previews live values while
+  preserving base ownership. Explicit apply publishes preset provenance and
+  the operator-local package preference; cancel, failed writes, and rollback
+  restore the prior working state.
 - A scene's explicit value wins over a preset and is sufficient for playback.
   A preset reference may explain provenance but must not make scene recovery
   depend on an unavailable optional package without an explicit dependency

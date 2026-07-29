@@ -68,7 +68,11 @@ def normalize_parameter(raw: dict[str, Any]) -> dict[str, Any]:
     return entry
 
 
-def controls_summary(parameters: list[dict[str, Any]]) -> dict[str, Any]:
+def controls_summary(
+    parameters: list[dict[str, Any]],
+    actions: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    actions = actions or []
     sections: dict[str, int] = {}
     for param in parameters:
         section = str(param.get("section", "Other"))
@@ -77,6 +81,7 @@ def controls_summary(parameters: list[dict[str, Any]]) -> dict[str, Any]:
         "count": len(parameters),
         "sections": dict(sorted(sections.items())),
         "parameters": sorted(parameters, key=lambda item: (item["section"], item["label"], item["id"])),
+        "actions": sorted(actions, key=lambda item: (item["label"], item["id"])),
     }
 
 
@@ -86,8 +91,19 @@ def normalize_package_entry(raw: dict[str, Any]) -> dict[str, Any]:
         for param in as_list(raw.get("parameters"))
         if isinstance(param, dict)
     ]
+    actions = [
+        {
+            "id": str(action.get("id", "")),
+            "label": str(action.get("label", "")),
+            "groupId": str(action.get("groupId", "")),
+        }
+        for action in as_list(raw.get("actions"))
+        if isinstance(action, dict)
+    ]
     return {
         "assetId": str(raw.get("id", "")),
+        "packageId": str(raw.get("packageId", "")),
+        "packageVersion": str(raw.get("packageVersion", "")),
         "label": str(raw.get("label", "")),
         "category": str(raw.get("category", "")),
         "layerGroup": str(raw.get("layerGroup", "")),
@@ -106,7 +122,7 @@ def normalize_package_entry(raw: dict[str, Any]) -> dict[str, Any]:
             "requiresInstantiation": False,
             "mutatesScene": False,
         },
-        "controls": controls_summary(parameters),
+        "controls": controls_summary(parameters, actions),
         "presets": [
             {
                 "presetId": str(preset.get("presetId", "")),
@@ -129,8 +145,11 @@ def normalize_package_entry(raw: dict[str, Any]) -> dict[str, Any]:
             {
                 "id": str(preset.get("id", "")),
                 "label": str(preset.get("label", "")),
+                "description": str(preset.get("description", "")),
+                "applyMode": str(preset.get("applyMode", "")),
                 "targets": [str(item) for item in as_list(preset.get("targets"))],
                 "patterns": [str(item) for item in as_list(preset.get("patterns"))],
+                "mappings": as_list(preset.get("mappings")),
             }
             for preset in as_list(raw.get("mappingPresets"))
             if isinstance(preset, dict)
@@ -147,6 +166,8 @@ def normalize_generated_entry(raw: dict[str, Any]) -> dict[str, Any]:
     content = as_dict(raw.get("content"))
     return {
         "assetId": str(raw.get("id", "")),
+        "packageId": "",
+        "packageVersion": "",
         "label": str(raw.get("label", "")),
         "category": str(raw.get("category", "")),
         "layerGroup": str(raw.get("layerGroup", "")),

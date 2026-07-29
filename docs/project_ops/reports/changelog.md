@@ -2,6 +2,27 @@
 
 This changelog records Project Ops and administrative workflow changes. Product release versioning remains governed by `docs/release_policy.md`.
 
+## 2026-07-29 - architecture - seac_9_package_control_transactions
+
+- Added live package-preset preview with explicit apply, cancel, persisted
+  preference publication, base/live provenance, and recoverable rollback.
+- Added complete suggestion-only mapping inspection, assigned-layer target
+  expansion, operator target/exact/shared-source conflict comparison, stable
+  package route provenance, and explicit apply/edit/disable/remove/rollback
+  Browser controls.
+- Extended mapping-bank v1 with disabled routes, parameter/action target kinds,
+  package provenance, and action edge/threshold dispatch through Runtime's
+  existing slot-addressed action plane. Package loading and inspection still
+  never auto-apply routes.
+- Added whole-snapshot mapping publication and preference-backed preset
+  publication that restore the prior live state when persistence fails.
+- Validation: all 39 pytest checks plus two subtests pass; BrowserFlow passes
+  50/50; package/catalog/inspection/mapping-bank validators pass; physical and
+  junction Release host builds pass with zero errors. Existing third-party
+  openFrameworks/add-on warnings remain outside the architecture change.
+- Advanced the architecture milestone to 9 of 12. SEAC-10 default-off,
+  inspect-before-activate discovery is now the active gate.
+
 ## 2026-07-29 - architecture - seac_8_generated_registration
 
 - Added an explicit controlled package-registration set and deterministic

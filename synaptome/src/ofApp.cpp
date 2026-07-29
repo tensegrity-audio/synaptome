@@ -2570,6 +2570,91 @@ bool ofApp::publishPreferenceSection(
     return result.ok;
 }
 
+bool ofApp::persistPackagePresetSelection(
+    const std::string& assetId,
+    const std::string& bankId,
+    const std::string& presetId) {
+    ofJson packagePreferences = ofJson::object();
+    packagePreferences["activations"] = ofJson::array();
+    if (const ofJson* canonical =
+            canonicalPreferenceSection("packages")) {
+        packagePreferences = *canonical;
+    } else {
+        const ofJson activation =
+            loadJsonSnapshotIfExists(packageActivationPath_);
+        if (activation.is_object() &&
+            activation.contains("packages") &&
+            activation["packages"].is_array()) {
+            for (const auto& package : activation["packages"]) {
+                if (!package.is_object()) {
+                    continue;
+                }
+                ofJson choice = {
+                    {"packageId",
+                     package.value("id", std::string())},
+                    {"enabled",
+                     package.value("enabled", false)}
+                };
+                const std::string legacyPreset =
+                    package.value("preset", std::string());
+                if (!legacyPreset.empty()) {
+                    std::string legacyBank =
+                        package.value(
+                            "presetBank",
+                            std::string());
+                    if (legacyBank.empty()) {
+                        legacyBank = bankId;
+                    }
+                    choice["selectedPreset"] = {
+                        {"bankId", legacyBank},
+                        {"presetId", legacyPreset}
+                    };
+                }
+                packagePreferences["activations"].push_back(
+                    std::move(choice));
+            }
+        }
+    }
+    bool found = false;
+    for (auto& package : packagePreferences["activations"]) {
+        if (package.value("packageId", std::string()) !=
+                assetId ||
+            !package.value("enabled", false)) {
+            continue;
+        }
+        if (presetId.empty()) {
+            package.erase("selectedPreset");
+        } else {
+            package["selectedPreset"] = {
+                {"bankId", bankId},
+                {"presetId", presetId}
+            };
+        }
+        found = true;
+        break;
+    }
+    if (!found) {
+        ofLogWarning("LayerLibrary")
+            << "cannot persist preset for inactive package "
+            << assetId;
+        return false;
+    }
+    if (!publishPreferenceSection(
+            "packages",
+            packagePreferences)) {
+        return false;
+    }
+    if (presetId.empty()) {
+        packagePresetSelections_.erase(assetId);
+    } else {
+        packagePresetSelections_[assetId] = {
+            bankId,
+            presetId
+        };
+    }
+    return true;
+}
+
 void ofApp::setup() {
     loadOperatorPreferences();
     loadOperatorBankDefinitions();
@@ -3346,6 +3431,64 @@ void ofApp::setup() {
                 }
                 return it->second.presetId;
             });
+        controlMappingHub->setPackagePresetPreviewCallback(
+            [this](const std::string& assetId,
+                   const std::string& bankId,
+                   const std::string& presetId) {
+                ofJson resolvedConfig;
+                std::string resolveError;
+                if (!layerLibrary.configForPackagePreset(
+                        assetId,
+                        bankId,
+                        presetId,
+                        resolvedConfig,
+                        &resolveError)) {
+                    ofLogWarning("LayerLibrary")
+                        << "package preset preview rejected: "
+                        << resolveError;
+                    return false;
+                }
+                const auto composition =
+                    runtime_.compositionSnapshot();
+                for (const auto& slot : composition.layers) {
+                    if (!slot.occupied ||
+                        slot.definitionId != assetId ||
+                        slot.registryPrefix.empty()) {
+                        continue;
+                    }
+                    const auto prior =
+                        packagePresetSelections_.find(assetId);
+                    packagePresetRollbackSelection_ =
+                        prior == packagePresetSelections_.end()
+                            ? std::optional<PackagePresetSelection>()
+                            : std::optional<PackagePresetSelection>(
+                                  prior->second);
+                    const auto preview =
+                        packagePresetTransaction_.preview(
+                            paramRegistry,
+                            assetId,
+                            presetId,
+                            slot.registryPrefix,
+                            resolvedConfig.value(
+                                "defaults",
+                                ofJson::object()));
+                    if (preview.ok) {
+                        packagePresetTransactionAssetId_ =
+                            assetId;
+                    }
+                    return preview.ok;
+                }
+                ofLogWarning("LayerLibrary")
+                    << "package preset preview requires an active "
+                       "console instance for "
+                    << assetId;
+                return false;
+            });
+        controlMappingHub->setPackagePresetCancelCallback(
+            [this]() {
+                packagePresetTransaction_.cancel();
+                packagePresetTransactionAssetId_.clear();
+            });
         controlMappingHub->setPackagePresetApplyCallback(
             [this](const std::string& assetId,
                    const std::string& bankId,
@@ -3359,89 +3502,69 @@ void ofApp::setup() {
                         resolvedConfig,
                         &resolveError)) {
                     ofLogWarning("LayerLibrary")
-                        << "package preset selection rejected: " << resolveError;
+                        << "package preset selection rejected: "
+                        << resolveError;
                     return false;
                 }
-
-                ofJson packagePreferences = ofJson::object();
-                packagePreferences["activations"] =
-                    ofJson::array();
-                if (const ofJson* canonical =
-                        canonicalPreferenceSection("packages")) {
-                    packagePreferences = *canonical;
-                } else {
-                    const ofJson activation =
-                        loadJsonSnapshotIfExists(
-                            packageActivationPath_);
-                    if (activation.is_object() &&
-                        activation.contains("packages") &&
-                        activation["packages"].is_array()) {
-                        for (const auto& package :
-                             activation["packages"]) {
-                            if (!package.is_object()) {
-                                continue;
-                            }
-                            ofJson choice = {
-                                {"packageId",
-                                 package.value(
-                                     "id",
-                                     std::string())},
-                                {"enabled",
-                                 package.value(
-                                     "enabled",
-                                     false)}
-                            };
-                            const std::string legacyPreset =
-                                package.value(
-                                    "preset",
-                                    std::string());
-                            if (!legacyPreset.empty()) {
-                                std::string legacyBank =
-                                    package.value(
-                                        "presetBank",
-                                        std::string());
-                                if (legacyBank.empty()) {
-                                    legacyBank = bankId;
-                                }
-                                choice["selectedPreset"] = {
-                                    {"bankId", legacyBank},
-                                    {"presetId", legacyPreset}
-                                };
-                            }
-                            packagePreferences[
-                                "activations"].push_back(
-                                    std::move(choice));
-                        }
-                    }
+                if (!packagePresetTransaction_.previewActive()) {
+                    return persistPackagePresetSelection(
+                        assetId,
+                        bankId,
+                        presetId);
                 }
-                bool found = false;
-                for (auto& package :
-                     packagePreferences["activations"]) {
-                    if (package.value(
-                            "packageId",
-                            std::string()) != assetId ||
-                        !package.value("enabled", false)) {
-                        continue;
-                    }
-                    package["selectedPreset"] = {
-                        {"bankId", bankId},
-                        {"presetId", presetId}
-                    };
-                    found = true;
-                    break;
+                const bool applied =
+                    packagePresetTransaction_.apply(
+                        [this, assetId, bankId, presetId]() {
+                            return persistPackagePresetSelection(
+                                assetId,
+                                bankId,
+                                presetId);
+                        },
+                        resolvedConfig.value(
+                            "schemaVersion",
+                            1),
+                        resolvedConfig.value(
+                            "packageVersion",
+                            std::string()));
+                if (applied) {
+                    packagePresetTransactionAssetId_ =
+                        assetId;
                 }
-                if (!found) {
-                    ofLogWarning("LayerLibrary")
-                        << "cannot persist preset for inactive package " << assetId;
+                return applied;
+            });
+        controlMappingHub->setPackagePresetRollbackCallback(
+            [this]() {
+                if (!packagePresetTransaction_
+                         .rollbackAvailable() ||
+                    packagePresetTransactionAssetId_.empty()) {
                     return false;
                 }
-                if (!publishPreferenceSection(
-                        "packages",
-                        packagePreferences)) {
-                    return false;
+                const std::string assetId =
+                    packagePresetTransactionAssetId_;
+                const auto prior =
+                    packagePresetRollbackSelection_;
+                const bool rolledBack =
+                    packagePresetTransaction_.rollback(
+                        [this, assetId, prior]() {
+                            return prior
+                                ? persistPackagePresetSelection(
+                                      assetId,
+                                      prior->bankId,
+                                      prior->presetId)
+                                : persistPackagePresetSelection(
+                                      assetId,
+                                      std::string(),
+                                      std::string());
+                        });
+                if (rolledBack) {
+                    packagePresetTransactionAssetId_.clear();
+                    packagePresetRollbackSelection_.reset();
                 }
-                packagePresetSelections_[assetId] = {bankId, presetId};
-                return true;
+                return rolledBack;
+            });
+        controlMappingHub->setMappingSnapshotPersistenceCallback(
+            [this](const ofJson&) {
+                return midi.save("");
             });
         controlMappingHub->setDeviceMapsDirectory(deviceMapsDir);
         if (machineProfileLoadBlocked_) {
@@ -3704,6 +3827,21 @@ void ofApp::setup() {
     midi.setFloatTargetTouchedCallback([this](const std::string& paramId) {
         suspendOscRoute(paramId, 500);
     });
+    midi.setActionTargetCallback(
+        [this](int oneBasedLayerIndex,
+               const std::string& actionId) {
+            if (oneBasedLayerIndex < 1 ||
+                oneBasedLayerIndex >
+                    static_cast<int>(
+                        runtime_.compositionLayerCount())) {
+                return false;
+            }
+            return static_cast<bool>(
+                runtime_.invokeCompositionAction(
+                    static_cast<std::size_t>(
+                        oneBasedLayerIndex - 1),
+                    actionId));
+        });
 
     midi.onOscMapAdded = nullptr;
     midi.onOscRoutesChanged = [this]() {

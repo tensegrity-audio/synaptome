@@ -189,9 +189,13 @@ What is only draft tooling:
 What is not implemented yet:
 
 - Runtime or Browser scanning of STL/model/media folders.
-- Browser apply/edit controls for package mapping presets.
 - Runtime activation controls for fixture-only generated layers.
 - Default-off runtime package discovery and activation.
+
+Active source-registered packages now expose transactional preset preview and
+apply plus conflict-aware mapping preview/apply/edit/disable/remove/rollback.
+Those controls do not make fixture-only generated content activatable and do
+not scan package roots.
 
 Current breakage risk is low because the new work is mostly schemas, fixtures,
 and opt-in checks. Risk rises when package outputs start changing Browser or
