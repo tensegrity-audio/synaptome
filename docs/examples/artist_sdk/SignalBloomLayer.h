@@ -40,4 +40,6 @@ private:
 
     float phase_ = 0.0f;
     std::vector<glm::vec2> points_;
+    ofMesh lineMesh_;
+    ofMesh dotMesh_;
 };

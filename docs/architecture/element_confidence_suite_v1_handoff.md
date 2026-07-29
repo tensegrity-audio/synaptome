@@ -1,9 +1,12 @@
 # Element Confidence Suite v1: SEAC-6 Execution Handoff
 
-Status: Ready for implementation
+Status: Implemented; retained as the frozen execution contract
 Owner task: SEAC-6
 Canonical request:
 [`../project_ops/in_progress/spine_element_architecture_convergence.md`](../project_ops/in_progress/spine_element_architecture_convergence.md)
+
+Implementation and operating guide:
+[`element_confidence_suite_v1.md`](element_confidence_suite_v1.md)
 
 ## Outcome
 
@@ -21,7 +24,8 @@ This phase generalizes existing evidence; it does not replace it:
 - BrowserFlow and the Release host remain the separate integration tier.
 
 Stub-backed draw dispatch is not pixel or real-graphics-context evidence.
-SEAC-6 must add a real hidden/offscreen graphics-context tier before promotion.
+The implemented suite adds a real hidden/offscreen graphics-context tier for
+promotion.
 
 ## Frozen Scope
 

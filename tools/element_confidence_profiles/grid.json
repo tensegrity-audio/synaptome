@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "id": "grid",
+  "elementType": "grid",
+  "bindingMode": "legacy-setup-adapter",
+  "inputs": {
+    "viewportWidth": 640,
+    "viewportHeight": 360,
+    "updateFrames": 60,
+    "fixedStepSeconds": 0.016666666666666666,
+    "bpm": 120,
+    "transportSpeed": 1.0,
+    "seed": 1001,
+    "determinismRepetitions": 2,
+    "genericInputs": {}
+  },
+  "dependencies": [
+    {
+      "kind": "source",
+      "id": "grid-header",
+      "path": "synaptome/src/visuals/GridLayer.h"
+    },
+    {
+      "kind": "source",
+      "id": "grid-implementation",
+      "path": "synaptome/src/visuals/GridLayer.cpp"
+    },
+    {
+      "kind": "registry-entry",
+      "id": "grid-registry-entry",
+      "path": "synaptome/src/runtime/BuiltinElements.cpp",
+      "contains": "ElementDescriptor{\"grid\", ElementKind::Visual, {}}",
+      "expectedCount": 1
+    },
+    {
+      "kind": "project",
+      "id": "runtime-core-project",
+      "path": "synaptome/runtime/SynaptomeRuntimeCore.vcxproj"
+    },
+    {
+      "kind": "project",
+      "id": "grid-confidence-contract-project",
+      "path": "synaptome/tests/ElementConfidenceGridContract/ElementConfidenceGridContract.vcxproj"
+    },
+    {
+      "kind": "authoring-profile",
+      "id": "runtime-core-authoring-profile",
+      "path": "tools/layer_authoring_profiles/runtime-core.json"
+    }
+  ],
+  "contractHarness": {
+    "project": "synaptome/tests/ElementConfidenceGridContract/ElementConfidenceGridContract.vcxproj",
+    "executable": "synaptome/tests/ElementConfidenceGridContract/x64/Release/ElementConfidenceGridContract.exe"
+  },
+  "validators": [
+    {
+      "id": "runtime-core-boundary",
+      "command": ["{python}", "tools/validate_runtime_core_boundary.py"]
+    },
+    {
+      "id": "element-sdk-boundary",
+      "command": ["{python}", "tools/validate_element_sdk_boundary.py"]
+    }
+  ]
+}

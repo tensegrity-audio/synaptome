@@ -80,3 +80,33 @@ jobs:
             tests/artifacts/osc_ingest_flow.json
             tests/artifacts/webcam_replay_flow.json
             tests/artifacts/dual_screen_phase2.json
+
+  element-confidence:
+    runs-on: [self-hosted, Windows, X64, element-confidence]
+    needs: public-contracts
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Set up MSBuild
+        uses: microsoft/setup-msbuild@v2
+      - name: Run Grid isolated confidence suite
+        shell: pwsh
+        run: python tools\run_element_confidence.py --profile grid --tier ci
+      - name: Run Signal Bloom isolated confidence suite
+        shell: pwsh
+        run: |
+          python tools\run_element_confidence.py `
+            --package docs\examples\layer_packages\signal_bloom\layer.package.json `
+            --tier ci
+      - name: Upload element confidence reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: element-confidence-reports
+          path: artifacts/element-confidence/*.json

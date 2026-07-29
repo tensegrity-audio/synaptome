@@ -47,6 +47,8 @@ RenderStatus HostCompositionRenderer::render(
     if (viewport.x <= 0 || viewport.y <= 0) {
         return RenderStatus::InvalidViewport;
     }
+    const float viewportWidth = static_cast<float>(viewport.x);
+    const float viewportHeight = static_cast<float>(viewport.y);
 
     if (!ensureViewport(viewport)) {
         return RenderStatus::CompositeAllocationFailed;
@@ -103,8 +105,8 @@ RenderStatus HostCompositionRenderer::render(
                 upstreamTarget.draw(
                     0,
                     0,
-                    viewport.x,
-                    viewport.y);
+                    viewportWidth,
+                    viewportHeight);
                 processedSlots.push_back(upstreamIndex);
                 haveInput = true;
             }
@@ -134,8 +136,8 @@ RenderStatus HostCompositionRenderer::render(
                 targets.effect.draw(
                     0,
                     0,
-                    viewport.x,
-                    viewport.y);
+                    viewportWidth,
+                    viewportHeight);
                 ofDisableBlendMode();
                 targets.layer.end();
             }
@@ -159,8 +161,8 @@ RenderStatus HostCompositionRenderer::render(
                 upstreamTarget.draw(
                     0,
                     0,
-                    viewport.x,
-                    viewport.y);
+                    viewportWidth,
+                    viewportHeight);
                 passthroughSlots.push_back(upstreamIndex);
             }
             ofDisableBlendMode();
@@ -215,8 +217,8 @@ RenderStatus HostCompositionRenderer::render(
         if (!layer.isAllocated()) {
             continue;
         }
-        ofSetColor(255);
-        layer.draw(0, 0, viewport.x, viewport.y);
+        ofSetColor(255, 255, 255, 255);
+        layer.draw(0.0f, 0.0f, viewportWidth, viewportHeight);
     }
     ofDisableBlendMode();
     ofPopStyle();
@@ -231,7 +233,7 @@ bool HostCompositionRenderer::drawLatest(float x, float y) const {
     if (!hasFrame()) {
         return false;
     }
-    ofSetColor(255);
+    ofSetColor(255, 255, 255, 255);
     composite_.draw(x, y);
     return true;
 }
@@ -244,7 +246,7 @@ bool HostCompositionRenderer::drawPreview(
         return false;
     }
     ofPushStyle();
-    ofSetColor(255);
+    ofSetColor(255, 255, 255, 255);
     composite_.draw(
         bounds.x,
         bounds.y,

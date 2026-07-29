@@ -11,5 +11,6 @@
 #include "ofEvents.h"
 #include "ofLog.h"
 #include "ofCamera.h"
+#include "ofMesh.h"
 
 #endif

@@ -52,3 +52,4 @@ synaptome/tests/**/Release/
 synaptome/tests/**/x64/
 tests/artifacts/*.json
 synaptome/tests/artifacts/*.json
+artifacts/element-confidence/

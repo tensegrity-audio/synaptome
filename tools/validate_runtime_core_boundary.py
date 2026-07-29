@@ -270,6 +270,9 @@ def main() -> int:
     package_bench = (
         ROOT / "tests/layer_package_bench_main.cpp"
     ).read_text(encoding="utf-8")
+    declared_surface_checks = (
+        ROOT / "tests/element_confidence/DeclaredSurfaceChecks.h"
+    ).read_text(encoding="utf-8")
 
     for token in ("ofApp", "../ui/", "../io/", "PostEffectChain"):
         if token in runtime_header or token in runtime_source:
@@ -2089,20 +2092,28 @@ def main() -> int:
             errors.append(f"RuntimeCore test is missing control-plane coverage: {token}")
 
     for token in (
-        "factory.typeContract(\"example.signalBloom\")",
-        "LayerFactory::ParameterDeclarationState::Declared",
-        "typeContract->contract.parameters.groups.size() == 5",
-        "typeContract->contract.parameters.parameters.size() == 18",
-        "simplePackageLabel(",
-        "option-source selectors drifted",
-        "static option metadata drifted",
-        "deprecation metadata drifted",
+        "verifyDeclaredPackageSurface(",
         "legacy discovery and declared-empty parameter states collapsed",
         "mutating copied Signal Bloom contracts changed factory state",
     ):
         if token not in package_bench:
             errors.append(
-                "package bench is missing static parameter declaration "
+                "package bench is missing reusable static parameter "
+                "declaration coverage: " + token
+            )
+    for token in (
+        "factory.typeContract(typeId)",
+        "LayerFactory::ParameterDeclarationState::Declared",
+        "expectedGroups.size()",
+        "expectedParameterGroups.size()",
+        "simplePackageLabel(",
+        "option-source selectors drifted",
+        "static option metadata drifted",
+        "deprecation metadata drifted",
+    ):
+        if token not in declared_surface_checks:
+            errors.append(
+                "reusable package surface checks are missing static parameter "
                 "coverage: " + token
             )
 

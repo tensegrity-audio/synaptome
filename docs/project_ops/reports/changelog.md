@@ -2,6 +2,21 @@
 
 This changelog records Project Ops and administrative workflow changes. Product release versioning remains governed by `docs/release_policy.md`.
 
+## 2026-07-28 - architecture - seac_6_confidence_suite
+
+- Completed SEAC-6 with a canonical profile/package CLI and stable JSON
+  evidence for dependency preflight, real-SDK compilation, declaration and
+  lifecycle determinism, real offscreen rendering, GL containment, teardown,
+  reload, memory growth, and frame timing.
+- Added Grid and Signal Bloom native contract/graphics projects, reusable
+  lifecycle and graphics-state helpers, reviewed renderer-class
+  pixel/performance baseline support, and a labeled Windows graphics CI lane.
+- Preserved BrowserFlow and the Release host as the separate integration tier;
+  both canonical element CI runs pass, BrowserFlow passes all 49 scenarios,
+  and the Release app builds with zero warnings and zero errors.
+- Advanced the architecture milestone to 6 of 12; SEAC-7 package serialization
+  and package/runtime descriptor parity are now the active gate.
+
 ## 2026-07-28 - architecture - seac_6_execution_handoff
 
 - Made SEAC-6 execution-ready with a canonical isolated runner/report contract,

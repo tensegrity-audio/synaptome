@@ -76,6 +76,22 @@ void SignalBloomLayer::bindParameters(
 void SignalBloomLayer::setup(ParameterRegistry& registry) {
     (void)registry;
     points_.assign(96, glm::vec2{ 0.0f, 0.0f });
+    lineMesh_.clear();
+    lineMesh_.setMode(OF_PRIMITIVE_LINE_STRIP);
+    dotMesh_.clear();
+    dotMesh_.setMode(OF_PRIMITIVE_TRIANGLES);
+    for (std::size_t i = 0; i < points_.size(); ++i) {
+        lineMesh_.addVertex(glm::vec3(0.0f));
+        const auto base = static_cast<ofIndexType>(i * 9);
+        for (int vertex = 0; vertex < 9; ++vertex) {
+            dotMesh_.addVertex(glm::vec3(0.0f));
+        }
+        for (ofIndexType triangle = 0; triangle < 8; ++triangle) {
+            dotMesh_.addIndex(base);
+            dotMesh_.addIndex(base + 1 + triangle);
+            dotMesh_.addIndex(base + 1 + ((triangle + 1) % 8));
+        }
+    }
 }
 
 void SignalBloomLayer::update(const LayerUpdateParams& params) {
@@ -101,6 +117,24 @@ void SignalBloomLayer::update(const LayerUpdateParams& params) {
             std::cos(angle) * radius + xDrift,
             std::sin(angle * 1.7f) * radius + yDrift
         };
+        lineMesh_.setVertex(
+            static_cast<ofIndexType>(i),
+            glm::vec3(points_[i].x, points_[i].y, 0.0f));
+        const float dotRadius = 0.008f + gain_ * 0.006f;
+        const auto base = static_cast<ofIndexType>(i * 9);
+        dotMesh_.setVertex(
+            base,
+            glm::vec3(points_[i].x, points_[i].y, 0.0f));
+        for (ofIndexType vertex = 0; vertex < 8; ++vertex) {
+            const float vertexAngle =
+                static_cast<float>(vertex) * kTwoPi / 8.0f;
+            dotMesh_.setVertex(
+                base + 1 + vertex,
+                glm::vec3(
+                    points_[i].x + std::cos(vertexAngle) * dotRadius,
+                    points_[i].y + std::sin(vertexAngle) * dotRadius,
+                    0.0f));
+        }
     }
 }
 
@@ -108,20 +142,24 @@ void SignalBloomLayer::draw(const LayerDrawParams& params) {
     if (!visible_ || params.slotOpacity <= 0.0f) {
         return;
     }
+    const float viewportWidth =
+        static_cast<float>(params.viewport.x);
+    const float viewportHeight =
+        static_cast<float>(params.viewport.y);
 
     ofPushStyle();
     ofPushView();
-    ofViewport(0, 0, params.viewport.x, params.viewport.y);
-    ofSetupScreenOrtho(params.viewport.x, params.viewport.y, -1, 1);
+    ofViewport(0.0f, 0.0f, viewportWidth, viewportHeight);
+    ofSetupScreenOrtho(viewportWidth, viewportHeight, -1.0f, 1.0f);
 
     ofSetColor(
         static_cast<int>(bgColorR_ * 255.0f),
         static_cast<int>(bgColorG_ * 255.0f),
         static_cast<int>(bgColorB_ * 255.0f),
         static_cast<int>(alpha_ * params.slotOpacity * 255.0f));
-    ofDrawRectangle(0, 0, params.viewport.x, params.viewport.y);
+    ofDrawRectangle(0.0f, 0.0f, viewportWidth, viewportHeight);
 
-    ofTranslate(params.viewport.x * 0.5f, params.viewport.y * 0.5f);
+    ofTranslate(viewportWidth * 0.5f, viewportHeight * 0.5f);
     float radius = std::min(params.viewport.x, params.viewport.y) * 0.44f;
     ofScale(radius, radius);
 
@@ -133,16 +171,10 @@ void SignalBloomLayer::draw(const LayerDrawParams& params) {
         static_cast<int>(colorB_ * 255.0f),
         static_cast<int>(lineOpacity_ * alpha_ * params.slotOpacity * 255.0f));
 
-    ofBeginShape();
-    for (const auto& point : points_) {
-        ofVertex(point.x, point.y);
-    }
-    ofEndShape(false);
+    lineMesh_.draw();
 
     ofFill();
-    for (const auto& point : points_) {
-        ofDrawCircle(point.x, point.y, 0.008f + gain_ * 0.006f);
-    }
+    dotMesh_.draw();
 
     ofPopView();
     ofPopStyle();

@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "id": "examples.signal_bloom",
+  "packageId": "examples.signal_bloom",
+  "elementType": "example.signalBloom",
+  "bindingMode": "bind-only",
+  "inputs": {
+    "viewportWidth": 1280,
+    "viewportHeight": 720,
+    "updateFrames": 120,
+    "fixedStepSeconds": 0.016666666666666666,
+    "bpm": 120,
+    "transportSpeed": 1.0,
+    "seed": 1001,
+    "determinismRepetitions": 2,
+    "genericInputs": {
+      "xInput": 0.5,
+      "yInput": 0.5,
+      "speedInput": 0.0
+    }
+  },
+  "dependencies": [
+    {
+      "kind": "source",
+      "id": "shipping-signal-bloom-header",
+      "path": "synaptome/src/visuals/SignalBloomLayer.h"
+    },
+    {
+      "kind": "source",
+      "id": "shipping-signal-bloom-implementation",
+      "path": "synaptome/src/visuals/SignalBloomLayer.cpp"
+    },
+    {
+      "kind": "registry-entry",
+      "id": "signal-bloom-registry-entry",
+      "path": "synaptome/src/runtime/SignalBloomRegistration.cpp",
+      "contains": "\"example.signalBloom\"",
+      "expectedCount": 1
+    },
+    {
+      "kind": "project",
+      "id": "signal-bloom-static-library-project",
+      "path": "synaptome/elements/signal_bloom/Element_SignalBloom.vcxproj"
+    },
+    {
+      "kind": "project",
+      "id": "layer-package-bench-project",
+      "path": "synaptome/tests/LayerPackageBench/LayerPackageBench.vcxproj"
+    },
+    {
+      "kind": "project",
+      "id": "signal-bloom-confidence-contract-project",
+      "path": "synaptome/tests/ElementConfidenceSignalBloomContract/ElementConfidenceSignalBloomContract.vcxproj"
+    },
+    {
+      "kind": "authoring-profile",
+      "id": "signal-bloom-authoring-profile",
+      "path": "tools/layer_authoring_profiles/signal-bloom-sdk.json"
+    }
+  ],
+  "contractHarness": {
+    "project": "synaptome/tests/ElementConfidenceSignalBloomContract/ElementConfidenceSignalBloomContract.vcxproj",
+    "executable": "synaptome/tests/ElementConfidenceSignalBloomContract/x64/Release/ElementConfidenceSignalBloomContract.exe"
+  },
+  "validators": [
+    {
+      "id": "artist-sdk-example",
+      "command": ["{python}", "tools/validate_artist_sdk_example.py"]
+    },
+    {
+      "id": "element-sdk-boundary",
+      "command": ["{python}", "tools/validate_element_sdk_boundary.py"]
+    },
+    {
+      "id": "runtime-core-boundary",
+      "command": ["{python}", "tools/validate_runtime_core_boundary.py"]
+    },
+    {
+      "id": "selected-package-contract",
+      "command": ["{python}", "tools/validate_layer_packages.py", "{package}"]
+    }
+  ]
+}
