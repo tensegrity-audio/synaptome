@@ -556,6 +556,8 @@ BROWSER_CONFIG_TARGETS = [
     Path("synaptome/bin/data/config/osc-map.json"),
     Path("synaptome/bin/data/config/osc-input.json"),
     Path("synaptome/bin/data/config/hotkeys.json"),
+    Path("synaptome/bin/data/config/package-discovery.json"),
+    Path("synaptome/bin/data/config/package-discovery.snapshot.json"),
 ]
 
 BROWSER_EXAMPLE_SCHEMAS = {
@@ -1000,28 +1002,39 @@ CONTRACT_ENTRIES: tuple[ContractEntry, ...] = (
         public_app=True,
     ),
     ContractEntry(
-        name="Layer package activation",
+        name="Layer package activation and controlled discovery",
         status="validated",
         sources=(
             Path("synaptome/bin/data/config/layer-packages.json"),
             Path("synaptome/bin/data/layers-optional/examples.signal_bloom.json"),
             Path("synaptome/bin/data/config/layer-package-inspection.json"),
+            Path("synaptome/bin/data/config/package-discovery.json"),
+            Path("synaptome/bin/data/config/package-discovery.snapshot.json"),
             Path("synaptome/src/visuals/LayerLibrary.cpp"),
             Path("synaptome/src/ui/ControlMappingHubState.h"),
             Path("docs/schemas/layer_package_activation.schema.json"),
             Path("docs/contracts/layer_package_activation.md"),
+            Path("docs/contracts/controlled_package_discovery_v1.md"),
+            Path("docs/contracts/data_content_type_registration_set_v1.json"),
+            Path("docs/schemas/controlled_package_discovery.schema.json"),
+            Path("docs/schemas/controlled_package_discovery_snapshot.schema.json"),
             Path("tools/synaptome_layer.py"),
             Path("tools/signal_bloom_runtime_contract.py"),
+            Path("tools/controlled_package_discovery_v1.py"),
         ),
-        validator_command="python tools\\validate_configs.py synaptome/bin/data/config/layer-packages.json synaptome/bin/data/layers-optional/examples.signal_bloom.json; python tools\\signal_bloom_runtime_contract.py",
+        validator_command="python -m pytest -q tests\\test_controlled_package_discovery_v1.py",
         fixtures=(
             Path("docs/examples/layer_packages/signal_bloom"),
             Path("synaptome/bin/data/config/layer-package-inspection.json"),
+            Path("docs/examples/generated_layers/stl_models"),
         ),
-        notes="Separates generated compile-time source registration from disabled-by-default runtime catalog activation; package mapping presets remain suggestion-only and discovery remains off.",
+        notes="Separates generated compile-time source registration from strict default-off, construction-free package/STL discovery and explicit recoverable activation; package mapping presets remain suggestion-only.",
         check_command=(
             sys.executable,
-            "tools/signal_bloom_runtime_contract.py",
+            "-m",
+            "pytest",
+            "-q",
+            "tests/test_controlled_package_discovery_v1.py",
         ),
         public_app=True,
     ),
@@ -1350,6 +1363,12 @@ def _append_browser_targets(targets: Dict[Path, ValidationFn]) -> None:
         validator = CONFIG_VALIDATORS.get(rel_path)
         if validator is not None:
             targets[rel_path] = validator
+            continue
+        schema_path = _contract_schema_for_resolved_path(
+            (BasePath / rel_path).resolve()
+        )
+        if schema_path is not None:
+            targets[rel_path] = _make_schema_validator(schema_path)
     schemas_root = BasePath
     for rel_path, schema_rel in BROWSER_EXAMPLE_SCHEMAS.items():
         schema_path = (BasePath / schema_rel).resolve()
@@ -1376,6 +1395,12 @@ def _contract_schema_for_resolved_path(resolved: Path):
 
     if rel_path == Path("synaptome/bin/data/config/layer-package-inspection.json"):
         return BasePath / "docs" / "schemas" / "layer_browser_inspection_payload.schema.json"
+
+    if rel_path == Path("synaptome/bin/data/config/package-discovery.json"):
+        return BasePath / "docs" / "schemas" / "controlled_package_discovery.schema.json"
+
+    if rel_path == Path("synaptome/bin/data/config/package-discovery.snapshot.json"):
+        return BasePath / "docs" / "schemas" / "controlled_package_discovery_snapshot.schema.json"
 
     if (
         "layer_packages" in rel_path.parts

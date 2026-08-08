@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "enabled": false,
+  "roots": [
+    {
+      "id": "runtime-packages",
+      "kind": "packages",
+      "path": "../../layer_packages",
+      "enabled": true
+    }
+  ]
+}

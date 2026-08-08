@@ -1,6 +1,6 @@
 # Controlled Package Discovery v1: SEAC-10 Execution Handoff
 
-Status: Ready for execution
+Status: Complete
 
 Owner task: SEAC-10
 
@@ -250,8 +250,9 @@ extension, or unavailable element type produces a non-activatable candidate.
    through an exact precompiled-type availability check.
 4. **SEAC-10D — Browser inspection:** render statuses, diagnostics, refresh,
    local provenance, and replacement comparisons without construction.
-5. **SEAC-10E — Explicit activation:** adapt available candidates into the
-   existing recoverable allowlist/catalog and Runtime transaction.
+5. **SEAC-10E — Explicit activation:** adapt available candidates, or a
+   separately reviewed and explicitly accepted replacement, into the existing
+   recoverable allowlist/catalog and Runtime transaction.
 6. **SEAC-10F — Lifecycle policy:** prove refresh, replacement, deletion,
    unavailability, rollback, and active-state isolation.
 7. **SEAC-10G — Promotion evidence:** run contract, fixture, BrowserFlow,
@@ -313,19 +314,20 @@ widening this phase.
 
 SEAC-10 is complete only when:
 
-- [ ] Discovery configuration is strict, local, explicit, and default-off.
-- [ ] Package and supported data-only scanners publish deterministic immutable
+- [x] Discovery configuration is strict, local, explicit, and default-off.
+- [x] Package and supported data-only scanners publish deterministic immutable
       candidate snapshots.
-- [ ] IDs and signatures are independent of local absolute roots.
-- [ ] Duplicate, replacement, refresh, deletion, and unavailable-content
+- [x] IDs and signatures are independent of local absolute roots.
+- [x] Duplicate, replacement, refresh, deletion, and unavailable-content
       policies above are executable and covered.
-- [ ] Browser inspection precedes every activation and is construction-free.
-- [ ] Activation accepts only exact precompiled/registered types and is fully
+- [x] Browser inspection precedes every activation and is construction-free.
+- [x] Activation accepts only exact precompiled/registered types and is fully
       recoverable.
-- [ ] Hostile discovery leaves the active show unchanged.
-- [ ] The full automated, physical/junction Release, and live-projection gates
+- [x] Hostile discovery leaves the active show unchanged.
+- [x] The full automated, physical/junction Release, and carried-forward
+      live-projection gates
       pass.
-- [ ] Contracts, fixtures, operator guidance, Project Ops, and the SEAC-11
+- [x] Contracts, fixtures, operator guidance, Project Ops, and the SEAC-11
       input are updated with observed evidence.
 
 ## SEAC-11 Input

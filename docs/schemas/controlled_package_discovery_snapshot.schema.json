@@ -1,0 +1,104 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Synaptome Controlled Package Discovery Snapshot v1",
+  "type": "object",
+  "required": [
+    "schemaVersion", "generation", "enabled", "stale",
+    "constructionFree", "activationRequired", "counts",
+    "diagnostics", "candidates"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "type": "integer", "const": 1 },
+    "generation": { "type": "integer", "minimum": 1 },
+    "enabled": { "type": "boolean" },
+    "stale": { "type": "boolean" },
+    "constructionFree": { "type": "boolean", "const": true },
+    "activationRequired": { "type": "boolean", "const": true },
+    "counts": {
+      "type": "object",
+      "required": ["candidates", "activatable", "statuses"],
+      "additionalProperties": false,
+      "properties": {
+        "candidates": { "type": "integer", "minimum": 0 },
+        "activatable": { "type": "integer", "minimum": 0 },
+        "statuses": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "available", "inspection-only", "invalid", "incompatible",
+            "duplicate", "unavailable", "pending-replacement"
+          ],
+          "properties": {
+            "available": { "type": "integer", "minimum": 0 },
+            "inspection-only": { "type": "integer", "minimum": 0 },
+            "invalid": { "type": "integer", "minimum": 0 },
+            "incompatible": { "type": "integer", "minimum": 0 },
+            "duplicate": { "type": "integer", "minimum": 0 },
+            "unavailable": { "type": "integer", "minimum": 0 },
+            "pending-replacement": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/diagnostic" }
+    },
+    "candidates": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/candidate" }
+    }
+  },
+  "definitions": {
+    "diagnostic": {
+      "type": "object",
+      "required": ["code", "message"],
+      "properties": {
+        "code": { "type": "string", "minLength": 1 },
+        "message": { "type": "string", "minLength": 1 }
+      }
+    },
+    "candidate": {
+      "type": "object",
+      "required": [
+        "candidateId", "kind", "status", "activatable", "identity",
+        "signature", "registeredTypeAvailable", "provenance",
+        "diagnostics", "previous", "metadata", "catalog"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "candidateId": { "type": "string", "minLength": 1 },
+        "kind": { "type": "string", "enum": ["package", "generated-stl"] },
+        "status": {
+          "type": "string",
+          "enum": [
+            "available", "inspection-only", "invalid", "incompatible",
+            "duplicate", "unavailable", "pending-replacement"
+          ]
+        },
+        "activatable": { "type": "boolean" },
+        "identity": { "type": "object" },
+        "signature": { "type": "string" },
+        "registeredTypeAvailable": { "type": "boolean" },
+        "provenance": {
+          "type": "object",
+          "required": ["rootIds", "relativePath", "localPath", "localOnly"],
+          "properties": {
+            "rootIds": { "type": "array", "items": { "type": "string" } },
+            "relativePath": { "type": "string" },
+            "localPath": { "type": "string" },
+            "localOnly": { "type": "boolean", "const": true }
+          }
+        },
+        "diagnostics": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/diagnostic" }
+        },
+        "previous": { "type": "object" },
+        "metadata": { "type": "object" },
+        "catalog": { "type": "object" }
+      }
+    }
+  }
+}

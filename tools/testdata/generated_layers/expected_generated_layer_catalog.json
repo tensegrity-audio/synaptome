@@ -15,7 +15,7 @@
   "counts": {
     "templates": 1,
     "generatedEntries": 1,
-    "parameters": 19,
+    "parameters": 15,
     "categories": 1,
     "layerGroups": 1,
     "legacyConflicts": 0
@@ -37,7 +37,7 @@
       "layerGroup": "Models",
       "model": "stl-file",
       "stateModel": "static mesh content rendered by a reusable model viewer layer",
-      "type": "model.stlViewer",
+      "type": "stlModel",
       "kind": "generated-content-layer",
       "registryPrefix": "examples.generated_models.tetrahedron",
       "templateId": "templates.model.stl",
@@ -49,9 +49,9 @@
         "physicalScale": 1.0
       },
       "sourceStrategy": "template-generated",
-      "implementationType": "model.stlViewer",
-      "manifestInspectionOnly": true,
-      "runtimeLoadingImplemented": false,
+      "implementationType": "stlModel",
+      "manifestInspectionOnly": false,
+      "runtimeLoadingImplemented": true,
       "description": "Tiny ASCII STL fixture used to prove generated model-layer catalog output without runtime loading.",
       "tags": [
         "fixture",
@@ -60,109 +60,98 @@
         "model",
         "stl"
       ],
-      "parameterCount": 19,
+      "parameterCount": 15,
       "defaultKeys": [
-        "autoCenter",
+        "baseHeight",
         "colorB",
         "colorG",
         "colorR",
-        "lighting",
-        "materialMode",
-        "materialPreset",
-        "opacity",
-        "positionX",
-        "positionY",
-        "positionZ",
-        "rotationXDeg",
-        "rotationYDeg",
-        "rotationZDeg",
+        "faceOpacity",
+        "hover",
+        "lineOpacity",
+        "orbitRadius",
+        "orbitSpeed",
+        "rotateX",
+        "rotateY",
+        "rotateZ",
         "scale",
-        "showNormals",
-        "spinSpeedDeg",
-        "visible",
-        "wireframe"
+        "spin",
+        "visible"
       ],
       "parameters": [
         {
-          "id": "autoCenter",
-          "kind": "bool",
-          "label": "Transform: Auto Center",
-          "default": true
+          "id": "baseHeight",
+          "kind": "float",
+          "label": "Model: Base Height",
+          "default": 140.0,
+          "range": {
+            "min": -400.0,
+            "max": 400.0,
+            "step": 1.0
+          },
+          "units": "world"
         },
         {
           "id": "colorB",
           "kind": "float",
           "label": "Material: Blue",
-          "default": 1.0,
+          "default": 255.0,
           "range": {
             "min": 0.0,
-            "max": 1.0,
-            "step": 0.01
+            "max": 255.0,
+            "step": 1.0
           }
         },
         {
           "id": "colorG",
           "kind": "float",
           "label": "Material: Green",
-          "default": 0.9,
+          "default": 230.0,
           "range": {
             "min": 0.0,
-            "max": 1.0,
-            "step": 0.01
+            "max": 255.0,
+            "step": 1.0
           }
         },
         {
           "id": "colorR",
           "kind": "float",
           "label": "Material: Red",
-          "default": 0.72,
+          "default": 184.0,
+          "range": {
+            "min": 0.0,
+            "max": 255.0,
+            "step": 1.0
+          }
+        },
+        {
+          "id": "faceOpacity",
+          "kind": "float",
+          "label": "Model: Face Opacity",
+          "default": 0.18,
           "range": {
             "min": 0.0,
             "max": 1.0,
             "step": 0.01
-          }
+          },
+          "units": "normalized"
         },
         {
-          "id": "lighting",
-          "kind": "bool",
-          "label": "Material: Lighting",
-          "default": true
-        },
-        {
-          "id": "materialMode",
-          "kind": "string",
-          "label": "Material: Mode",
-          "default": "solid",
-          "options": [
-            {
-              "value": "solid",
-              "label": "Solid"
-            },
-            {
-              "value": "wire",
-              "label": "Wireframe"
-            },
-            {
-              "value": "points",
-              "label": "Points"
-            }
-          ]
-        },
-        {
-          "id": "materialPreset",
-          "kind": "string",
-          "label": "Material: Preset",
-          "default": "neutral",
-          "optionsSource": {
-            "id": "runtime.modelMaterialPresets",
-            "value": "id",
-            "label": "label"
-          }
-        },
-        {
-          "id": "opacity",
+          "id": "hover",
           "kind": "float",
-          "label": "Visibility: Opacity",
+          "label": "Model: Hover",
+          "default": 16.0,
+          "range": {
+            "min": 0.0,
+            "max": 200.0,
+            "step": 1.0
+          },
+          "units": "world"
+        },
+        {
+          "id": "lineOpacity",
+          "kind": "float",
+          "label": "Model: Line Opacity",
           "default": 1.0,
           "range": {
             "min": 0.0,
@@ -172,45 +161,33 @@
           "units": "normalized"
         },
         {
-          "id": "positionX",
+          "id": "orbitRadius",
           "kind": "float",
-          "label": "Transform: Position X",
+          "label": "Model: Orbit Radius",
           "default": 0.0,
           "range": {
-            "min": -10000.0,
-            "max": 10000.0,
+            "min": 0.0,
+            "max": 600.0,
             "step": 1.0
           },
           "units": "world"
         },
         {
-          "id": "positionY",
+          "id": "orbitSpeed",
           "kind": "float",
-          "label": "Transform: Position Y",
+          "label": "Model: Orbit Speed",
           "default": 0.0,
           "range": {
-            "min": -10000.0,
-            "max": 10000.0,
+            "min": -360.0,
+            "max": 360.0,
             "step": 1.0
           },
-          "units": "world"
+          "units": "deg/s"
         },
         {
-          "id": "positionZ",
+          "id": "rotateX",
           "kind": "float",
-          "label": "Transform: Position Z",
-          "default": 0.0,
-          "range": {
-            "min": -10000.0,
-            "max": 10000.0,
-            "step": 1.0
-          },
-          "units": "world"
-        },
-        {
-          "id": "rotationXDeg",
-          "kind": "float",
-          "label": "Transform: Rotation X",
+          "label": "Model: Rotate X",
           "default": 0.0,
           "range": {
             "min": -180.0,
@@ -220,9 +197,9 @@
           "units": "deg"
         },
         {
-          "id": "rotationYDeg",
+          "id": "rotateY",
           "kind": "float",
-          "label": "Transform: Rotation Y",
+          "label": "Model: Rotate Y",
           "default": 30.0,
           "range": {
             "min": -180.0,
@@ -232,9 +209,9 @@
           "units": "deg"
         },
         {
-          "id": "rotationZDeg",
+          "id": "rotateZ",
           "kind": "float",
-          "label": "Transform: Rotation Z",
+          "label": "Model: Rotate Z",
           "default": 0.0,
           "range": {
             "min": -180.0,
@@ -246,25 +223,19 @@
         {
           "id": "scale",
           "kind": "float",
-          "label": "Transform: Scale",
-          "default": 1.25,
+          "label": "Model: Scale",
+          "default": 180.0,
           "range": {
-            "min": 0.001,
-            "max": 100.0,
-            "step": 0.001
+            "min": 20.0,
+            "max": 500.0,
+            "step": 1.0
           },
-          "units": "multiplier"
+          "units": "world"
         },
         {
-          "id": "showNormals",
-          "kind": "bool",
-          "label": "Material: Show Normals",
-          "default": false
-        },
-        {
-          "id": "spinSpeedDeg",
+          "id": "spin",
           "kind": "float",
-          "label": "Motion: Spin Speed",
+          "label": "Model: Spin",
           "default": 12.0,
           "range": {
             "min": -360.0,
@@ -278,12 +249,6 @@
           "kind": "bool",
           "label": "Visibility: Visible",
           "default": true
-        },
-        {
-          "id": "wireframe",
-          "kind": "bool",
-          "label": "Material: Wireframe",
-          "default": false
         }
       ]
     }

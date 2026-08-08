@@ -16,6 +16,7 @@ __pycache__/
 
 # Visual Studio cache
 .vs/
+.vs.before-*/
 *.vcxproj.user
 
 # OS cruft
@@ -33,7 +34,10 @@ synaptome/bin/data/config/control_hub_prefs.json
 synaptome/bin/data/config/console.json
 synaptome/bin/data/config/scene-last.json
 synaptome/bin/data/config/**/*.bak
+synaptome/bin/data/layers/scenes/*.bak
 synaptome/bin/data/config/layer-packages.local.json
+synaptome/bin/data/config/package-discovery-activations.json
+synaptome/bin/data/config/package-discovery-activations.json.tmp
 synaptome/bin/data/config/machine-profile.json
 synaptome/bin/data/config/machine-profile.json.tmp
 synaptome/bin/data/config/preferences.json

@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Synaptome Controlled Package Discovery Configuration v1",
+  "description": "Machine-local, explicit, default-off roots for construction-free package and supported data-only discovery.",
+  "type": "object",
+  "required": ["schemaVersion", "enabled", "roots"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "type": "integer", "const": 1 },
+    "enabled": { "type": "boolean", "default": false },
+    "roots": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "kind", "path"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "kind": { "type": "string", "enum": ["packages", "generated-stl"] },
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Operator-local path; never copied into portable show state."
+          },
+          "enabled": { "type": "boolean", "default": true }
+        }
+      }
+    }
+  }
+}

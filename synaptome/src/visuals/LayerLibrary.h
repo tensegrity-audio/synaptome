@@ -56,6 +56,12 @@ public:
         const ofJson& activation,
         const std::string& activationDirectory,
         const std::string& sourceLabel);
+    // Publishes one already-inspected controlled-discovery catalog descriptor.
+    // This never creates an element; the caller must first verify the exact
+    // type against the host registration set and persist activation intent.
+    bool publishDiscoveredCandidate(
+        const ofJson& candidate,
+        std::string* error = nullptr);
     void applyElementParameterDeclarations(
         const std::vector<
             synaptome::element::ElementTypeContract>& contracts);

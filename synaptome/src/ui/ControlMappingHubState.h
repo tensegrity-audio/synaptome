@@ -119,6 +119,17 @@ public:
     void setOfflineElementCreator(
         std::function<std::unique_ptr<Layer>(const std::string&)> creator);
     void setLayerPackageInspectionPath(const std::string& path);
+    // Controlled discovery snapshot inspection is separate from the legacy
+    // construction-free package metadata payload above. Refresh replaces only
+    // this snapshot; activation is an explicit host transaction callback.
+    void setControlledDiscoverySnapshotPath(const std::string& path);
+    void setControlledDiscoveryRefreshCallback(
+        std::function<bool(ofJson&)> cb);
+    void setControlledDiscoveryActivationCallback(
+        std::function<bool(const std::string&)> cb);
+    bool debugRefreshControlledDiscovery();
+    bool debugActivateControlledDiscoveryCandidate(
+        const std::string& candidateId);
     void setPackagePresetSelectionProvider(
         std::function<std::string(const std::string&, const std::string&)> provider);
     void setPackagePresetApplyCallback(
@@ -310,6 +321,9 @@ private:
         bool isSavedSceneOverwriteRow = false;
         bool isOscInputRow = false;
         bool isInspectionRow = false;
+        bool isDiscoveryRefreshRow = false;
+        bool isDiscoveryActivationRow = false;
+        std::string discoveryCandidateId;
         bool isPackagePresetBankRow = false;
         bool isPackageMappingPresetRow = false;
         bool hasLabeledValueOptions = false;
@@ -534,6 +548,12 @@ private:
     std::string slotAssignmentsPath_;
     std::string layerPackageInspectionPath_;
     ofJson layerPackageInspection_;
+    std::string controlledDiscoverySnapshotPath_;
+    ofJson controlledDiscoverySnapshot_;
+    std::function<bool(ofJson&)>
+        controlledDiscoveryRefreshCallback_;
+    std::function<bool(const std::string&)>
+        controlledDiscoveryActivationCallback_;
     mutable std::unordered_map<std::string, AssetMetadata> assetCatalog_;
     mutable std::unordered_map<std::string, std::string> assetKeyById_;
     mutable bool offlineHydrationDirty_ = true;
@@ -834,6 +854,7 @@ private:
     void appendSceneBrowserRows() const;
     void appendOscInputRows() const;
     void appendLayerPackageInspectionRows() const;
+    void appendControlledDiscoveryRows() const;
     const ofJson* layerPackageInspectionEntry(
         const std::string& assetId) const;
     bool previewPackageMapping(const ParameterRow& row) const;
@@ -1184,6 +1205,118 @@ inline void ControlMappingHubState::setLayerPackageInspectionPath(const std::str
     }
     tableModel_.dirty = true;
     invalidateRowCache();
+}
+
+inline void ControlMappingHubState::setControlledDiscoverySnapshotPath(
+    const std::string& path) {
+    controlledDiscoverySnapshotPath_ = path;
+    controlledDiscoverySnapshot_ = ofJson::object();
+    if (!path.empty() && ofFile::doesFileExist(path)) {
+        try {
+            ofJson snapshot = ofLoadJson(path);
+            if (snapshot.value("schemaVersion", 0) != 1 ||
+                !snapshot.contains("candidates") ||
+                !snapshot["candidates"].is_array() ||
+                !snapshot.value("constructionFree", false) ||
+                !snapshot.value("activationRequired", false)) {
+                ofLogWarning("ControlMappingHubState")
+                    << "ignoring invalid controlled discovery snapshot: "
+                    << path;
+            } else {
+                controlledDiscoverySnapshot_ = std::move(snapshot);
+            }
+        } catch (const std::exception& e) {
+            ofLogWarning("ControlMappingHubState")
+                << "failed to parse controlled discovery snapshot "
+                << path << ": " << e.what();
+        }
+    }
+    tableModel_.dirty = true;
+    invalidateRowCache();
+}
+
+inline void ControlMappingHubState::setControlledDiscoveryRefreshCallback(
+    std::function<bool(ofJson&)> cb) {
+    controlledDiscoveryRefreshCallback_ = std::move(cb);
+    tableModel_.dirty = true;
+}
+
+inline void ControlMappingHubState::setControlledDiscoveryActivationCallback(
+    std::function<bool(const std::string&)> cb) {
+    controlledDiscoveryActivationCallback_ = std::move(cb);
+    tableModel_.dirty = true;
+}
+
+inline bool ControlMappingHubState::debugRefreshControlledDiscovery() {
+    if (!controlledDiscoveryRefreshCallback_) {
+        return false;
+    }
+    ofJson candidate;
+    if (!controlledDiscoveryRefreshCallback_(candidate) ||
+        !candidate.is_object() ||
+        candidate.value("schemaVersion", 0) != 1 ||
+        !candidate.contains("candidates") ||
+        !candidate["candidates"].is_array() ||
+        !candidate.value("constructionFree", false) ||
+        !candidate.value("activationRequired", false)) {
+        setBannerMessage(
+            "Discovery refresh failed; prior inspection retained", 4200);
+        return false;
+    }
+    controlledDiscoverySnapshot_ = std::move(candidate);
+    tableModel_.dirty = true;
+    invalidateRowCache();
+    setBannerMessage("Controlled discovery refreshed", 2600);
+    return true;
+}
+
+inline bool
+ControlMappingHubState::debugActivateControlledDiscoveryCandidate(
+    const std::string& candidateId) {
+    if (candidateId.empty() ||
+        controlledDiscoverySnapshot_.value("stale", true) ||
+        !controlledDiscoverySnapshot_.value("enabled", false) ||
+        !controlledDiscoverySnapshot_.contains("candidates") ||
+        !controlledDiscoverySnapshot_["candidates"].is_array() ||
+        !controlledDiscoveryActivationCallback_) {
+        return false;
+    }
+    for (const auto& candidate :
+         controlledDiscoverySnapshot_["candidates"]) {
+        if (!candidate.is_object() ||
+            candidate.value("candidateId", std::string()) !=
+                candidateId) {
+            continue;
+        }
+        const std::string status =
+            candidate.value("status", std::string());
+        const bool explicitReplacementAcceptance =
+            status == "pending-replacement";
+        if ((status != "available" &&
+             !explicitReplacementAcceptance) ||
+            (status == "available" &&
+             !candidate.value("activatable", false)) ||
+            !candidate.value(
+                "registeredTypeAvailable", false)) {
+            setBannerMessage(
+                "Candidate is inspection-only and cannot be activated",
+                3200);
+            return false;
+        }
+        const bool applied =
+            controlledDiscoveryActivationCallback_(candidateId);
+        setBannerMessage(
+            applied
+                ? "Discovery candidate activated"
+                : "Activation failed; prior show state retained",
+            applied ? 2800 : 4200);
+        if (applied) {
+            tableModel_.dirty = true;
+            invalidateRowCache();
+        }
+        return applied;
+    }
+    return false;
 }
 
 inline void ControlMappingHubState::setPackagePresetSelectionProvider(
@@ -2742,6 +2875,17 @@ inline bool ControlMappingHubState::handleInput(MenuController& controller, int 
                 return true;
             }
             if (selectedColumn_ == Column::kValue) {
+                if (selectedRow->isDiscoveryRefreshRow) {
+                    debugRefreshControlledDiscovery();
+                    controller.requestViewModelRefresh();
+                    return true;
+                }
+                if (selectedRow->isDiscoveryActivationRow) {
+                    debugActivateControlledDiscoveryCandidate(
+                        selectedRow->discoveryCandidateId);
+                    controller.requestViewModelRefresh();
+                    return true;
+                }
                 if (selectedRow->isPackageMappingPresetRow) {
                     if (packageMappingPreviewRowId_ ==
                             selectedRow->id &&
@@ -3302,6 +3446,7 @@ inline void ControlMappingHubState::rebuildModel() const {
     appendBioAmpRows();
     appendAssetPlaceholders(assetKeysPresent);
     appendLayerPackageInspectionRows();
+    appendControlledDiscoveryRows();
 
     std::sort(tableModel_.rows.begin(), tableModel_.rows.end(), [](const ParameterRow& a, const ParameterRow& b) {
         if (a.category != b.category) return a.category < b.category;
@@ -7000,6 +7145,232 @@ inline void ControlMappingHubState::appendLayerPackageInspectionRows() const {
             }
             tableModel_.rows.push_back(std::move(row));
         }
+    }
+}
+
+inline void ControlMappingHubState::appendControlledDiscoveryRows() const {
+    if (!controlledDiscoverySnapshot_.is_object()) {
+        return;
+    }
+    const bool enabled =
+        controlledDiscoverySnapshot_.value("enabled", false);
+    const bool stale =
+        controlledDiscoverySnapshot_.value("stale", false);
+    const auto candidates =
+        controlledDiscoverySnapshot_.value(
+            "candidates", ofJson::array());
+
+    auto appendRow = [this](
+        const std::string& id,
+        const std::string& label,
+        const std::string& section,
+        const std::string& subcategory,
+        const std::string& assetKey,
+        const std::string& assetLabel,
+        const std::string& value) -> ParameterRow& {
+        ParameterRow row;
+        row.id = id;
+        row.label = label;
+        row.section = section;
+        row.category = "Controlled Discovery";
+        row.subcategory = subcategory;
+        row.assetKey = assetKey;
+        row.assetLabel = assetLabel;
+        row.isInspectionRow = true;
+        row.offline = true;
+        row.inspectionValue = value;
+        tableModel_.rows.push_back(std::move(row));
+        return tableModel_.rows.back();
+    };
+
+    auto& refresh = appendRow(
+        "discovery.refresh",
+        "Refresh configured roots",
+        "Discovery",
+        "Operator-local",
+        "controlled-discovery",
+        "Discovery",
+        std::string(enabled ? "Enabled" : "Disabled (default)") +
+            (stale
+                 ? "  |  STALE: prior snapshot retained"
+                 : "") +
+            "  |  " +
+            ofToString(
+                candidates.is_array()
+                    ? candidates.size()
+                    : 0) +
+            " candidates");
+    refresh.isDiscoveryRefreshRow =
+        static_cast<bool>(
+            controlledDiscoveryRefreshCallback_);
+    if (refresh.isDiscoveryRefreshRow) {
+        refresh.inspectionValue +=
+            "  |  Enter to refresh";
+    }
+    if (!candidates.is_array()) {
+        return;
+    }
+
+    for (const auto& candidate : candidates) {
+        if (!candidate.is_object()) {
+            continue;
+        }
+        const std::string candidateId =
+            candidate.value(
+                "candidateId", std::string());
+        const auto identity =
+            candidate.value(
+                "identity", ofJson::object());
+        const auto metadata =
+            candidate.value(
+                "metadata", ofJson::object());
+        const auto provenance =
+            candidate.value(
+                "provenance", ofJson::object());
+        const std::string definitionId =
+            identity.value(
+                "definitionId", candidateId);
+        const std::string label =
+            metadata.value("label", definitionId);
+        const std::string category =
+            metadata.value(
+                "category",
+                std::string("Unsorted"));
+        const std::string group =
+            metadata.value(
+                "layerGroup", std::string());
+        const std::string subcategory =
+            category +
+            (group.empty()
+                 ? std::string()
+                 : " / " + group);
+        const std::string status =
+            candidate.value(
+                "status",
+                std::string("invalid"));
+        std::string statusValue = status;
+        const std::string typeId =
+            identity.value(
+                "typeId", std::string());
+        if (!typeId.empty()) {
+            statusValue += "  |  type " + typeId;
+        }
+        const std::string packageVersion =
+            identity.value(
+                "packageVersion", std::string());
+        const std::string contentVersion =
+            identity.value(
+                "contentVersion", std::string());
+        const std::string version =
+            packageVersion.empty()
+                ? contentVersion
+                : packageVersion;
+        if (!version.empty()) {
+            statusValue += "  |  v" + version;
+        }
+        const std::string signature =
+            candidate.value(
+                "signature", std::string());
+        if (!signature.empty()) {
+            statusValue +=
+                "  |  sha256 " +
+                signature.substr(
+                    0,
+                    std::min<std::size_t>(
+                        12, signature.size()));
+        }
+        appendRow(
+            "discovery." + candidateId + ".status",
+            "Candidate status",
+            "Discovery",
+            subcategory,
+            definitionId,
+            label,
+            statusValue);
+
+        std::string provenanceValue =
+            provenance.value(
+                "relativePath", std::string());
+        const auto rootIds =
+            provenance.value(
+                "rootIds", ofJson::array());
+        if (rootIds.is_array() &&
+            !rootIds.empty()) {
+            provenanceValue +=
+                "  |  roots " + rootIds.dump();
+        }
+        appendRow(
+            "discovery." + candidateId +
+                ".provenance",
+            "Local provenance",
+            "Discovery",
+            subcategory,
+            definitionId,
+            label,
+            provenanceValue);
+
+        const auto diagnostics =
+            candidate.value(
+                "diagnostics", ofJson::array());
+        int diagnosticIndex = 0;
+        if (diagnostics.is_array()) {
+            for (const auto& diagnostic :
+                 diagnostics) {
+                if (!diagnostic.is_object()) {
+                    continue;
+                }
+                appendRow(
+                    "discovery." + candidateId +
+                        ".diagnostic." +
+                        std::to_string(
+                            diagnosticIndex++),
+                    diagnostic.value(
+                        "code",
+                        std::string(
+                            "Discovery diagnostic")),
+                    "Diagnostics",
+                    subcategory,
+                    definitionId,
+                    label,
+                    diagnostic.value(
+                        "message",
+                        diagnostic.dump()));
+            }
+        }
+
+        const bool replacementAcceptance =
+            enabled && !stale &&
+            status == "pending-replacement" &&
+            candidate.value(
+                "registeredTypeAvailable", false);
+        const bool activatable =
+            enabled && !stale &&
+            status == "available" &&
+            candidate.value("activatable", false) &&
+            candidate.value(
+                "registeredTypeAvailable", false);
+        auto& activation = appendRow(
+            "discovery." + candidateId +
+                ".activate",
+            status == "pending-replacement"
+                ? "Accept replacement"
+                : "Activate candidate",
+            "Activation",
+            subcategory,
+            definitionId,
+            label,
+            replacementAcceptance
+                ? "Reviewed replacement  |  Enter to accept"
+                : activatable
+                ? "Available  |  Enter to activate"
+                : "Unavailable while status is '" +
+                      status + "'");
+        activation.isDiscoveryActivationRow =
+            (activatable || replacementAcceptance) &&
+            static_cast<bool>(
+                controlledDiscoveryActivationCallback_);
+        activation.discoveryCandidateId =
+            candidateId;
     }
 }
 

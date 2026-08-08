@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "generation": 1,
+  "enabled": false,
+  "stale": false,
+  "constructionFree": true,
+  "activationRequired": true,
+  "counts": {
+    "candidates": 0,
+    "activatable": 0,
+    "statuses": {
+      "available": 0,
+      "duplicate": 0,
+      "incompatible": 0,
+      "inspection-only": 0,
+      "invalid": 0,
+      "pending-replacement": 0,
+      "unavailable": 0
+    }
+  },
+  "diagnostics": [],
+  "candidates": []
+}

@@ -280,6 +280,11 @@
       "required": true
     },
     {
+      "pattern": "tools/controlled_package_discovery_v1.py",
+      "reason": "Construction-free controlled package and generated STL discovery contract.",
+      "required": true
+    },
+    {
       "pattern": "tools/device_map_regression.py",
       "reason": "Device-map logical-slot regression.",
       "required": true

@@ -2,6 +2,35 @@
 
 This changelog records Project Ops and administrative workflow changes. Product release versioning remains governed by `docs/release_policy.md`.
 
+## 2026-07-29 - architecture - seac_10_controlled_discovery
+
+- Added strict machine-local, default-off package and generated-STL root
+  configuration plus deterministic immutable candidate snapshots.
+- Reused Package v1 and generated registration for exact source-package
+  availability; bound the STL slice only to the existing precompiled
+  `stlModel` type through an explicit data-content registration record.
+- Added path-independent identities/signatures, overlapping-root coalescing,
+  whole-snapshot conflicts, same-version drift rejection, explicit replacement
+  review, removal/unavailability retention, and stale snapshot recovery.
+- Added construction-free Browser status/signature/provenance/diagnostic rows,
+  atomic refresh, exact-type activation gating, recoverable local activation
+  intent, and catalog publication without layer creation or assignment.
+- Validation: 55 pytest checks plus two subtests pass (the Windows symlink
+  case skips when link creation is unavailable); BrowserFlow passes all 51
+  scenarios, including controlled discovery and explicit replacement
+  acceptance; Package/Browser
+  snapshots, public-app, extraction, app-independence, mapping, catalog,
+  registration, Layer Package Bench, and Grid/Signal Bloom confidence gates
+  pass. Physical and junction Release host and BrowserFlow builds pass with
+  zero errors; existing openFrameworks/add-on warnings remain outside this
+  change.
+- Advanced the architecture milestone to 10 of 12. SEAC-11 now starts from
+  evidence that neither implemented package/content fixture needs a native
+  module loader.
+- Added a remote-diagnostics ledger that separates known discovery evidence
+  gaps from operator-local state, log noise, skipped symlink coverage, and
+  unrelated shutdown warnings, with a same-run capture bundle for diagnosis.
+
 ## 2026-07-29 - architecture - seac_9_package_control_transactions
 
 - Added live package-preset preview with explicit apply, cancel, persisted

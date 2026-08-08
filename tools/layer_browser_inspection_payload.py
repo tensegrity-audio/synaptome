@@ -231,8 +231,13 @@ def build_payload() -> tuple[dict[str, Any], list[str]]:
             errors.append(f"{asset_id}: read-only inspection payload must not require instantiation")
         if inspection.get("mutatesScene"):
             errors.append(f"{asset_id}: read-only inspection payload must not mutate scenes")
-        if inspection.get("runtimeLoadable"):
-            errors.append(f"{asset_id}: draft inspection payload must not claim runtime loading")
+        if (
+            inspection.get("runtimeLoadable")
+            and entry.get("kind") != "generated-content-layer"
+        ):
+            errors.append(
+                f"{asset_id}: source package inspection must not claim runtime loading"
+            )
     if duplicates:
         errors.append(f"duplicate inspection asset IDs: {', '.join(sorted(duplicates))}")
 

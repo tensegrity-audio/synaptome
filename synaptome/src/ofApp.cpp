@@ -3420,6 +3420,212 @@ void ofApp::setup() {
             });
         controlMappingHub->setLayerPackageInspectionPath(
             ofToDataPath("config/layer-package-inspection.json", true));
+        const std::string discoverySnapshotPath =
+            ofToDataPath(
+                "config/package-discovery.snapshot.json",
+                true);
+        const std::string discoveryActivationPath =
+            ofToDataPath(
+                "config/package-discovery-activations.json",
+                true);
+        controlMappingHub->
+            setControlledDiscoverySnapshotPath(
+                discoverySnapshotPath);
+        controlMappingHub->
+            setControlledDiscoveryRefreshCallback(
+                [discoverySnapshotPath](ofJson& snapshot) {
+                    if (!ofFile::doesFileExist(
+                            discoverySnapshotPath)) {
+                        return false;
+                    }
+                    try {
+                        snapshot =
+                            ofLoadJson(
+                                discoverySnapshotPath);
+                        return true;
+                    } catch (const std::exception& e) {
+                        ofLogWarning(
+                            "ControlledDiscovery")
+                            << "refresh failed: "
+                            << e.what();
+                        return false;
+                    }
+                });
+        controlMappingHub->
+            setControlledDiscoveryActivationCallback(
+                [this,
+                 discoverySnapshotPath,
+                 discoveryActivationPath](
+                    const std::string& candidateId) {
+                    ofJson snapshot;
+                    try {
+                        snapshot =
+                            ofLoadJson(
+                                discoverySnapshotPath);
+                    } catch (const std::exception& e) {
+                        ofLogWarning(
+                            "ControlledDiscovery")
+                            << "activation snapshot read "
+                               "failed: "
+                            << e.what();
+                        return false;
+                    }
+                    if (snapshot.value("stale", true) ||
+                        !snapshot.value("enabled", false) ||
+                        !snapshot.contains("candidates") ||
+                        !snapshot["candidates"].is_array()) {
+                        return false;
+                    }
+                    const ofJson* selected = nullptr;
+                    for (const auto& candidate :
+                         snapshot["candidates"]) {
+                        if (candidate.is_object() &&
+                            candidate.value(
+                                "candidateId",
+                                std::string()) ==
+                                candidateId) {
+                            selected = &candidate;
+                            break;
+                        }
+                    }
+                    const std::string selectedStatus =
+                        selected
+                            ? selected->value(
+                                  "status",
+                                  std::string())
+                            : std::string();
+                    const bool replacementAcceptance =
+                        selectedStatus ==
+                        "pending-replacement";
+                    if (!selected ||
+                        (selectedStatus != "available" &&
+                         !replacementAcceptance) ||
+                        (selectedStatus == "available" &&
+                         !selected->value(
+                             "activatable", false)) ||
+                        !selected->value(
+                            "registeredTypeAvailable",
+                            false)) {
+                        return false;
+                    }
+                    const auto identity =
+                        selected->value(
+                            "identity",
+                            ofJson::object());
+                    const std::string typeId =
+                        identity.value(
+                            "typeId", std::string());
+                    if (typeId.empty() ||
+                        !elementTypes_.contains(typeId)) {
+                        ofLogWarning(
+                            "ControlledDiscovery")
+                            << "candidate type is not in "
+                               "the live controlled factory: "
+                            << typeId;
+                        return false;
+                    }
+
+                    ofJson previous = {
+                        {"schemaVersion", 1},
+                        {"candidates", ofJson::array()}
+                    };
+                    const bool hadPrevious =
+                        ofFile::doesFileExist(
+                            discoveryActivationPath);
+                    if (hadPrevious) {
+                        try {
+                            previous =
+                                ofLoadJson(
+                                    discoveryActivationPath);
+                        } catch (...) {
+                            return false;
+                        }
+                    }
+                    ofJson pending = previous;
+                    if (!pending.is_object() ||
+                        pending.value(
+                            "schemaVersion", 0) != 1) {
+                        return false;
+                    }
+                    if (!pending.contains("candidates") ||
+                        !pending["candidates"].is_array()) {
+                        pending["candidates"] =
+                            ofJson::array();
+                    }
+                    ofJson retained = ofJson::array();
+                    for (const auto& record :
+                         pending["candidates"]) {
+                        if (!record.is_object() ||
+                            record.value(
+                                "candidateId",
+                                std::string()) !=
+                                candidateId) {
+                            retained.push_back(record);
+                        }
+                    }
+                    retained.push_back({
+                        {"candidateId", candidateId},
+                        {"signature",
+                         selected->value(
+                             "signature",
+                             std::string())},
+                        {"typeId", typeId},
+                        {"definitionId",
+                         identity.value(
+                             "definitionId",
+                             std::string())},
+                        {"enabled", true}
+                    });
+                    pending["candidates"] =
+                        std::move(retained);
+
+                    auto publish = [](
+                        const std::string& path,
+                        const ofJson& document) {
+                        return writeJsonRecoverably(
+                            path,
+                            document,
+                            "ControlledDiscovery");
+                    };
+                    if (!publish(
+                            discoveryActivationPath,
+                            pending)) {
+                        return false;
+                    }
+                    std::string publicationError;
+                    if (!layerLibrary.
+                            publishDiscoveredCandidate(
+                                *selected,
+                                &publicationError)) {
+                        if (hadPrevious) {
+                            publish(
+                                discoveryActivationPath,
+                                previous);
+                        } else {
+                            std::error_code ec;
+                            std::filesystem::remove(
+                                discoveryActivationPath,
+                                ec);
+                        }
+                        ofLogWarning(
+                            "ControlledDiscovery")
+                            << publicationError;
+                        return false;
+                    }
+                    std::vector<
+                        synaptome::element::
+                            ElementTypeContract>
+                        elementContracts;
+                    for (const auto& record :
+                         elementTypes_.typeContracts()) {
+                        elementContracts.push_back(
+                            record.contract);
+                    }
+                    layerLibrary.
+                        applyElementParameterDeclarations(
+                            elementContracts);
+                    return true;
+                });
         controlMappingHub->setPackagePresetSelectionProvider(
             [this](const std::string& assetId, const std::string& bankId) {
                 const auto it = packagePresetSelections_.find(assetId);

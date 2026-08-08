@@ -393,6 +393,90 @@ bool LayerLibrary::loadOptInPackages(
     return valid;
 }
 
+bool LayerLibrary::publishDiscoveredCandidate(
+    const ofJson& candidate,
+    std::string* error) {
+    auto fail = [&](const std::string& message) {
+        if (error) {
+            *error = message;
+        }
+        return false;
+    };
+    if (!candidate.is_object()) {
+        return fail(
+            "discovery candidate is not currently available");
+    }
+    const std::string status =
+        candidate.value("status", std::string());
+    const bool replacement =
+        status == "pending-replacement";
+    if ((status != "available" && !replacement) ||
+        (status == "available" &&
+         !candidate.value("activatable", false)) ||
+        !candidate.value(
+            "registeredTypeAvailable", false)) {
+        return fail(
+            "discovery candidate is not currently available");
+    }
+    const auto identity =
+        candidate.value("identity", ofJson::object());
+    const auto catalog =
+        candidate.value("catalog", ofJson::object());
+    const std::string definitionId =
+        identity.value(
+            "definitionId", std::string());
+    const std::string typeId =
+        identity.value("typeId", std::string());
+    const std::string prefix =
+        identity.value(
+            "registryPrefix", std::string());
+    if (definitionId.empty() || typeId.empty() ||
+        !catalog.is_object() ||
+        catalog.value("id", std::string()) !=
+            definitionId ||
+        catalog.value("type", std::string()) != typeId ||
+        catalog.value(
+            "registryPrefix", std::string()) != prefix) {
+        return fail(
+            "discovery catalog descriptor does not match "
+            "the inspected stable identity");
+    }
+    const auto existing = std::find_if(
+        entries_.begin(),
+        entries_.end(),
+        [&](const Entry& entry) {
+            return entry.id == definitionId;
+        });
+    if (!replacement && existing != entries_.end()) {
+        return fail(
+            "discovery definition is already present in "
+            "the active catalog");
+    }
+    const std::string source =
+        candidate.value(
+            "candidateId", definitionId);
+    const std::string configPath =
+        "controlled-discovery:" + source;
+    if (replacement) {
+        if (existing == entries_.end()) {
+            return fail(
+                "replacement target is absent from the active catalog");
+        }
+        LayerLibrary parsed;
+        if (!parsed.appendConfig(catalog, configPath) ||
+            parsed.entries_.size() != 1) {
+            return fail(
+                "active catalog rejected the replacement descriptor");
+        }
+        *existing = std::move(parsed.entries_.front());
+    } else if (!appendConfig(catalog, configPath)) {
+        return fail(
+            "active catalog rejected the discovery descriptor");
+    }
+    sortEntries();
+    return true;
+}
+
 const LayerLibrary::Entry* LayerLibrary::find(const std::string& id) const {
     auto it = std::find_if(entries_.begin(), entries_.end(), [&](const Entry& entry) {
         return entry.id == id;

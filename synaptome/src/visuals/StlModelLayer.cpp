@@ -75,6 +75,9 @@ void StlModelLayer::configure(const ofJson& config) {
             paramColorG_ = defaults["color"][1].get<float>();
             paramColorB_ = defaults["color"][2].get<float>();
         }
+        paramColorR_ = defaults.value("colorR", paramColorR_);
+        paramColorG_ = defaults.value("colorG", paramColorG_);
+        paramColorB_ = defaults.value("colorB", paramColorB_);
         paramScale_ = defaults.value("scale", paramScale_);
         paramLineOpacity_ = defaults.value("lineOpacity", paramLineOpacity_);
         paramFaceOpacity_ = defaults.value("faceOpacity", paramFaceOpacity_);

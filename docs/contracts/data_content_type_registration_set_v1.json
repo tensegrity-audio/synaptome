@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "types": [
+    {
+      "typeId": "stlModel",
+      "implementationVersion": "1.0.0",
+      "templateIds": ["templates.model.stl"],
+      "contentKinds": ["stl"],
+      "extensions": [".stl"],
+      "bindingMode": "precompiled-builtin"
+    }
+  ]
+}

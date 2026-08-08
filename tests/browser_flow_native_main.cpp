@@ -100,6 +100,7 @@ int main() {
         { "dual_screen_phase2", browser_flow::RunDualScreenPhase2Scenario },
         { "window_monitor_placement", browser_flow::RunWindowMonitorPlacementScenario },
         { "layer_package_read_only_inspection", browser_flow::RunLayerPackageReadOnlyInspectionScenario },
+        { "controlled_package_discovery", browser_flow::RunControlledPackageDiscoveryScenario },
         { "labeled_parameter_selection", browser_flow::RunLabeledParameterSelectionScenario },
         { "layer_package_preset_bank_selection", browser_flow::RunLayerPackagePresetBankSelectionScenario },
         { "package_control_transactions", browser_flow::RunPackageControlTransactionScenario },

@@ -514,14 +514,22 @@ validated Element Package v1
   -> LayerFactory::registerType(...)
 ```
 
-This is controlled compile-time generated registration. It is not runtime
-package discovery or native binary loading.
+Controlled compile-time generated registration remains the implementation
+authority. SEAC-10 now adds default-off, construction-free runtime discovery
+around it: source packages must exactly match that compiled record, while the
+first data-only STL slice must exactly match the precompiled `stlModel` type.
+Discovery does not load native code.
 
-Future options:
+Implemented:
 
-- default-off discovery feeding a separately explicit activation flow,
-- a plugin/package loader with explicit dependency and binary compatibility
-  rules.
+- strict local package/STL roots, disabled by default;
+- immutable candidate snapshots with complete collision and lifecycle policy;
+- Browser inspect/refresh plus separately explicit recoverable catalog
+  activation for exact registered types.
+
+The remaining optional future mechanism is a native loader with explicit ABI,
+dependency, signing, restart, and distribution policy. SEAC-10 produced no
+fixture that requires it.
 
 Success means layer installation eventually avoids hand-editing `ofApp.cpp`
 without pretending Synaptome has hot-loaded plugins before it does.
@@ -554,10 +562,7 @@ remains untested. Preferences v1, transactional Text adoption, and the
 portable/local-state gate close SEAC-5. Audio, webcam, display, and path
 selection remain named compatibility adapters for a future independently
 transactional machine-profile version.
-Next generalize the isolated confidence suite in SEAC-6, serialize the broader package descriptor in SEAC-7, generate controlled
-registration in SEAC-8, and add transactional parameter/action mapping
-controls in SEAC-9.
-
-Keep package scanning and generated/plugin registration disabled until their
-ordered gates cover duplicate handling, dependency policy, rollback, and ABI
-claims. Package mappings remain suggestions and must never auto-apply.
+SEAC-6 through SEAC-10 are complete. Next make the evidence-based SEAC-11
+native-module decision without weakening the implemented discovery,
+registration, activation, rollback, or active-state boundaries. Package
+mappings remain suggestions and never auto-apply.

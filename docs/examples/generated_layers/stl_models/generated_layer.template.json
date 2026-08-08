@@ -14,14 +14,14 @@
     "layerGroup": "Models",
     "model": "stl-file",
     "stateModel": "static mesh content rendered by a reusable model viewer layer",
-    "type": "model.stlViewer",
+    "type": "stlModel",
     "registryPrefixPattern": "examples.generated_models.{contentSlug}",
     "descriptionPattern": "Generated model layer for {contentFile}.",
     "tags": ["generated", "stl", "model"]
   },
   "source": {
     "strategy": "template-generated",
-    "implementationType": "model.stlViewer"
+    "implementationType": "stlModel"
   },
   "parameters": [
     {
@@ -32,72 +32,72 @@
       "description": "Whether the generated model layer draws."
     },
     {
-      "id": "opacity",
+      "id": "spin",
       "kind": "float",
-      "label": "Visibility: Opacity",
-      "default": 1.0,
-      "range": { "min": 0.0, "max": 1.0, "step": 0.01 },
-      "units": "normalized",
-      "description": "Overall model opacity."
+      "label": "Model: Spin",
+      "default": 18.0,
+      "range": { "min": -360.0, "max": 360.0, "step": 1.0 },
+      "units": "deg/s",
+      "description": "Automatic rotation speed around the vertical axis."
     },
     {
-      "id": "scale",
+      "id": "hover",
       "kind": "float",
-      "label": "Transform: Scale",
-      "default": 1.0,
-      "range": { "min": 0.001, "max": 100.0, "step": 0.001 },
-      "units": "multiplier",
-      "description": "Uniform mesh scale."
-    },
-    {
-      "id": "positionX",
-      "kind": "float",
-      "label": "Transform: Position X",
-      "default": 0.0,
-      "range": { "min": -10000.0, "max": 10000.0, "step": 1.0 },
+      "label": "Model: Hover",
+      "default": 16.0,
+      "range": { "min": 0.0, "max": 200.0, "step": 1.0 },
       "units": "world",
-      "description": "Model offset on the X axis."
+      "description": "Vertical hover amplitude."
     },
     {
-      "id": "positionY",
+      "id": "baseHeight",
       "kind": "float",
-      "label": "Transform: Position Y",
-      "default": 0.0,
-      "range": { "min": -10000.0, "max": 10000.0, "step": 1.0 },
+      "label": "Model: Base Height",
+      "default": 140.0,
+      "range": { "min": -400.0, "max": 400.0, "step": 1.0 },
       "units": "world",
-      "description": "Model offset on the Y axis."
+      "description": "Base vertical placement."
     },
     {
-      "id": "positionZ",
+      "id": "orbitRadius",
       "kind": "float",
-      "label": "Transform: Position Z",
+      "label": "Model: Orbit Radius",
       "default": 0.0,
-      "range": { "min": -10000.0, "max": 10000.0, "step": 1.0 },
+      "range": { "min": 0.0, "max": 600.0, "step": 1.0 },
       "units": "world",
-      "description": "Model offset on the Z axis."
+      "description": "Horizontal orbit radius."
     },
     {
-      "id": "rotationXDeg",
+      "id": "orbitSpeed",
       "kind": "float",
-      "label": "Transform: Rotation X",
+      "label": "Model: Orbit Speed",
+      "default": 0.0,
+      "range": { "min": -360.0, "max": 360.0, "step": 1.0 },
+      "units": "deg/s",
+      "description": "Horizontal orbit speed."
+    },
+    {
+      "id": "rotateX",
+      "kind": "float",
+      "label": "Model: Rotate X",
       "default": 0.0,
       "range": { "min": -180.0, "max": 180.0, "step": 1.0 },
       "units": "deg",
       "description": "Model rotation around the X axis."
     },
     {
-      "id": "rotationYDeg",
+      "id": "rotateY",
       "kind": "float",
-      "label": "Transform: Rotation Y",
+      "label": "Model: Rotate Y",
       "default": 0.0,
       "range": { "min": -180.0, "max": 180.0, "step": 1.0 },
       "units": "deg",
       "description": "Model rotation around the Y axis."
     },
     {
-      "id": "rotationZDeg",
+      "id": "rotateZ",
       "kind": "float",
-      "label": "Transform: Rotation Z",
+      "label": "Model: Rotate Z",
       "default": 0.0,
       "range": { "min": -180.0, "max": 180.0, "step": 1.0 },
       "units": "deg",
@@ -107,90 +107,56 @@
       "id": "colorR",
       "kind": "float",
       "label": "Material: Red",
-      "default": 0.82,
-      "range": { "min": 0.0, "max": 1.0, "step": 0.01 },
+      "default": 255.0,
+      "range": { "min": 0.0, "max": 255.0, "step": 1.0 },
       "description": "Material red channel."
     },
     {
       "id": "colorG",
       "kind": "float",
       "label": "Material: Green",
-      "default": 0.86,
-      "range": { "min": 0.0, "max": 1.0, "step": 0.01 },
+      "default": 140.0,
+      "range": { "min": 0.0, "max": 255.0, "step": 1.0 },
       "description": "Material green channel."
     },
     {
       "id": "colorB",
       "kind": "float",
       "label": "Material: Blue",
-      "default": 1.0,
-      "range": { "min": 0.0, "max": 1.0, "step": 0.01 },
+      "default": 0.0,
+      "range": { "min": 0.0, "max": 255.0, "step": 1.0 },
       "description": "Material blue channel."
     },
     {
-      "id": "materialMode",
-      "kind": "string",
-      "label": "Material: Mode",
-      "default": "solid",
-      "options": [
-        { "value": "solid", "label": "Solid" },
-        { "value": "wire", "label": "Wireframe" },
-        { "value": "points", "label": "Points" }
-      ],
-      "description": "Named render mode for Browser option metadata validation."
-    },
-    {
-      "id": "materialPreset",
-      "kind": "string",
-      "label": "Material: Preset",
-      "default": "neutral",
-      "optionsSource": {
-        "id": "runtime.modelMaterialPresets",
-        "value": "id",
-        "label": "label"
-      },
-      "description": "Draft runtime-owned material preset provider metadata; this fixture does not resolve provider values yet."
-    },
-    {
-      "id": "wireframe",
-      "kind": "bool",
-      "label": "Material: Wireframe",
-      "default": false,
-      "description": "Render the model as wireframe."
-    },
-    {
-      "id": "lighting",
-      "kind": "bool",
-      "label": "Material: Lighting",
-      "default": true,
-      "description": "Apply scene lighting to the model."
-    },
-    {
-      "id": "showNormals",
-      "kind": "bool",
-      "label": "Material: Show Normals",
-      "default": false,
-      "description": "Show normal debug lines when supported."
-    },
-    {
-      "id": "autoCenter",
-      "kind": "bool",
-      "label": "Transform: Auto Center",
-      "default": true,
-      "description": "Center the imported mesh bounds around the layer origin."
-    },
-    {
-      "id": "spinSpeedDeg",
+      "id": "scale",
       "kind": "float",
-      "label": "Motion: Spin Speed",
-      "default": 0.0,
-      "range": { "min": -360.0, "max": 360.0, "step": 1.0 },
-      "units": "deg/s",
-      "description": "Automatic rotation speed around the vertical axis."
+      "label": "Model: Scale",
+      "default": 180.0,
+      "range": { "min": 20.0, "max": 500.0, "step": 1.0 },
+      "units": "world",
+      "description": "Uniform mesh scale."
+    },
+    {
+      "id": "lineOpacity",
+      "kind": "float",
+      "label": "Model: Line Opacity",
+      "default": 1.0,
+      "range": { "min": 0.0, "max": 1.0, "step": 0.01 },
+      "units": "normalized",
+      "description": "Wireframe line opacity."
+    },
+    {
+      "id": "faceOpacity",
+      "kind": "float",
+      "label": "Model: Face Opacity",
+      "default": 0.18,
+      "range": { "min": 0.0, "max": 1.0, "step": 0.01 },
+      "units": "normalized",
+      "description": "Filled-face opacity."
     }
   ],
   "compatibility": {
-    "manifestInspectionOnly": true,
-    "runtimeLoadingImplemented": false
+    "manifestInspectionOnly": false,
+    "runtimeLoadingImplemented": true
   }
 }

@@ -5950,6 +5950,200 @@ bool RunLayerPackageReadOnlyInspectionScenario() {
     return true;
 }
 
+bool RunControlledPackageDiscoveryScenario() {
+    auto require = [](bool condition, const std::string& message) {
+        if (!condition) {
+            throw std::runtime_error(message);
+        }
+    };
+    ControlMappingHubState hub;
+    ParameterRegistry registry;
+    hub.setParameterRegistry(&registry);
+    int refreshCalls = 0;
+    int activationCalls = 0;
+    ofJson snapshot = {
+        {"schemaVersion", 1},
+        {"generation", 7},
+        {"enabled", true},
+        {"stale", false},
+        {"constructionFree", true},
+        {"activationRequired", true},
+        {"candidates", ofJson::array({
+            {
+                {"candidateId", "package:examples.signal_bloom"},
+                {"kind", "package"},
+                {"status", "available"},
+                {"activatable", true},
+                {"registeredTypeAvailable", true},
+                {"signature", "0123456789abcdef"},
+                {"identity", {
+                    {"packageId", "examples.signal_bloom"},
+                    {"packageVersion", "0.1.0"},
+                    {"typeId", "example.signalBloom"},
+                    {"definitionId", "examples.signal_bloom"}
+                }},
+                {"provenance", {
+                    {"rootIds", ofJson::array({"fixture-packages"})},
+                    {"relativePath", "signal_bloom/layer.package.json"},
+                    {"localOnly", true}
+                }},
+                {"diagnostics", ofJson::array()},
+                {"metadata", {
+                    {"label", "Signal Bloom"},
+                    {"category", "Examples"},
+                    {"layerGroup", "Artist SDK"}
+                }}
+            },
+            {
+                {"candidateId", "content:replacement"},
+                {"kind", "generated-stl"},
+                {"status", "pending-replacement"},
+                {"activatable", false},
+                {"registeredTypeAvailable", true},
+                {"signature", "fedcba9876543210"},
+                {"identity", {
+                    {"contentId", "replacement.content"},
+                    {"contentVersion", "1.1.0"},
+                    {"typeId", "stlModel"},
+                    {"definitionId", "replacement.definition"}
+                }},
+                {"provenance", {
+                    {"rootIds", ofJson::array({"generated-models"})},
+                    {"relativePath", "replacement.stl"},
+                    {"localOnly", true}
+                }},
+                {"diagnostics", ofJson::array()},
+                {"metadata", {
+                    {"label", "Replacement Fixture"},
+                    {"category", "Generated"}
+                }}
+            },
+            {
+                {"candidateId", "package:unavailable"},
+                {"kind", "package"},
+                {"status", "unavailable"},
+                {"activatable", false},
+                {"registeredTypeAvailable", false},
+                {"signature", ""},
+                {"identity", {
+                    {"typeId", "missing.type"},
+                    {"definitionId", "missing.definition"}
+                }},
+                {"provenance", {
+                    {"rootIds", ofJson::array({"runtime-packages"})},
+                    {"relativePath", "missing/layer.package.json"},
+                    {"localOnly", true}
+                }},
+                {"diagnostics", ofJson::array({{
+                    {"code", "discovery.type-not-registered"},
+                    {"message", "type is unavailable"}
+                }})},
+                {"metadata", {
+                    {"label", "Unavailable Fixture"},
+                    {"category", "Examples"}
+                }}
+            }
+        })}
+    };
+    hub.controlledDiscoverySnapshot_ = snapshot;
+    hub.setControlledDiscoveryRefreshCallback(
+        [&](ofJson& output) {
+            ++refreshCalls;
+            output = snapshot;
+            output["generation"] = 8;
+            return true;
+        });
+    hub.setControlledDiscoveryActivationCallback(
+        [&](const std::string& candidateId) {
+            ++activationCalls;
+            return candidateId ==
+                       "package:examples.signal_bloom" ||
+                   candidateId ==
+                       "content:replacement";
+        });
+    hub.rebuildModel();
+    bool foundRefresh = false;
+    bool foundAvailableActivation = false;
+    bool foundReplacementAcceptance = false;
+    bool foundUnavailableDiagnostic = false;
+    for (const auto& row : hub.tableModel_.rows) {
+        if (row.id == "discovery.refresh") {
+            foundRefresh =
+                row.isInspectionRow &&
+                row.isDiscoveryRefreshRow;
+        }
+        if (row.id ==
+            "discovery.package:examples.signal_bloom.activate") {
+            foundAvailableActivation =
+                row.isDiscoveryActivationRow &&
+                row.inspectionValue.find("Available") !=
+                    std::string::npos;
+        }
+        if (row.id ==
+            "discovery.content:replacement.activate") {
+            foundReplacementAcceptance =
+                row.isDiscoveryActivationRow &&
+                row.label == "Accept replacement" &&
+                row.inspectionValue.find("Enter to accept") !=
+                    std::string::npos;
+        }
+        if (row.label ==
+            "discovery.type-not-registered") {
+            foundUnavailableDiagnostic =
+                row.isInspectionRow &&
+                !row.isDiscoveryActivationRow;
+        }
+        require(
+            !row.isInspectionRow ||
+                (!row.floatParam && !row.boolParam &&
+                 !row.stringParam),
+            "discovery inspection acquired a live parameter binding");
+    }
+    require(foundRefresh, "Browser omitted controlled refresh action");
+    require(foundAvailableActivation,
+            "available candidate did not expose explicit activation");
+    require(foundReplacementAcceptance,
+            "reviewed replacement did not expose explicit acceptance");
+    require(foundUnavailableDiagnostic,
+            "unavailable candidate diagnostic was not inspectable");
+    require(
+        hub.debugActivateControlledDiscoveryCandidate(
+            "package:examples.signal_bloom"),
+        "available inspected candidate activation was rejected");
+    require(
+        hub.debugActivateControlledDiscoveryCandidate(
+            "content:replacement"),
+        "explicit replacement acceptance was rejected");
+    require(
+        !hub.debugActivateControlledDiscoveryCandidate(
+            "package:unavailable"),
+        "unavailable candidate reached activation");
+    require(activationCalls == 2,
+            "blocked candidate invoked activation callback");
+    require(hub.debugRefreshControlledDiscovery(),
+            "valid controlled refresh failed");
+    require(refreshCalls == 1 &&
+                hub.controlledDiscoverySnapshot_.value(
+                    "generation", 0) == 8,
+            "controlled refresh did not atomically publish snapshot");
+
+    const std::string prior =
+        hub.controlledDiscoverySnapshot_.dump();
+    hub.setControlledDiscoveryRefreshCallback(
+        [&](ofJson& output) {
+            ++refreshCalls;
+            output = ofJson::object();
+            return false;
+        });
+    require(!hub.debugRefreshControlledDiscovery(),
+            "failed refresh reported success");
+    require(hub.controlledDiscoverySnapshot_.dump() == prior,
+            "failed refresh replaced the prior snapshot");
+    require(hub.offlineLayers_.empty(),
+            "discovery inspection constructed an element");
+    return true;
+}
+
 bool RunLabeledParameterSelectionScenario() {
     auto require = [](bool condition, const std::string& message) {
         if (!condition) {

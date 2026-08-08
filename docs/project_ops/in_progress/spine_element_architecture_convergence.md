@@ -4,20 +4,20 @@ State Summary
 - Request ID: spine_element_architecture_convergence
 - Phase: EXECUTION
 - Status: In Progress
-- Steps Complete: 9 / 12
-- Progress: SEAC-9 is complete. Active package presets now support live preview, transactional apply/cancel/rollback, and visible base/live/modifier/origin state. Mapping suggestions expand against assigned layers and require explicit conflict-aware publication.
-- Last Step Outcome: 2026-07-29 - Added recoverable package preset and mapping transactions, explicit parameter/action targets and edge triggers, stable route provenance, operator conflict protection, Browser apply/edit/disable/remove/rollback controls, and failed-write restoration.
-- Next Step: Execute SEAC-10 from the frozen [`Controlled Package Discovery v1`](../../architecture/controlled_package_discovery_v1_handoff.md) handoff: default-off, inspect-before-activate package/content discovery without changing active show state on malformed, duplicate, incompatible, refreshed, removed, or unavailable content.
+- Steps Complete: 10 / 12
+- Progress: SEAC-10 is complete. Controlled package and generated-STL discovery is default-off, construction-free, collision-aware, inspect-before-activate, and isolated from active show state.
+- Last Step Outcome: 2026-07-29 - Added strict local discovery configuration, immutable candidate snapshots, Browser diagnostics and refresh, explicit recoverable activation/replacement acceptance, and hostile-state isolation.
+- Next Step: Execute SEAC-11 from completed controlled-discovery evidence; retain no native loader unless a concrete valid inspection-only workflow justifies one.
 - Dependencies / Overlap: `show_readiness_operator_stability`, `layer_package_compatibility_bench_scaffolding`, `docs/architecture/synaptome_spine_element_model.md`, `docs/architecture/synaptome_layer_system_roadmap.md`, `docs/architecture/synaptome_artist_sdk.md`, parameter/scene/mapping contracts, and layer-authoring tests.
 - Primary Scope: runtime
 - Secondary Scopes: contracts, artist-sdk, tests, docs, release
-- Blocking Issues / Unknowns: Native binary modules remain an optional architecture decision rather than a promised deliverable. SEAC-10 must implement and prove the frozen duplicate/replacement/refresh/deletion and unavailable-content policy before scanning package roots can be promoted. Twenty-two built-ins still use a declared compatibility adapter during `setup()`; direct bind-only migration is cleanup. Audio input, webcam selection, display geometry, and content roots remain named legacy/local adapter lanes; adding any to the strict machine document requires a transactional machine-profile v2 normalizer rather than widening v1. Device-map `portHints` remain non-authoritative compatibility metadata. Live physical-MIDI hardware remains untested.
+- Blocking Issues / Unknowns: Native binary modules remain optional and no SEAC-10 fixture requires one. Twenty-two built-ins still use a declared compatibility adapter during `setup()`; direct bind-only migration is cleanup. Audio input, webcam selection, display geometry, and additional content roots remain named legacy/local adapter lanes; adding any to the strict machine document requires a transactional machine-profile v2 normalizer rather than widening v1. Device-map `portHints` remain non-authoritative compatibility metadata. Live physical-MIDI hardware remains untested.
 - Impact / Priority Notes: This is the active architecture lane and precedes automatic discovery, broader package activation, or new content-family expansion.
 - Priority Score: N/A
 - Priority Lane: Fast-Track
 - Ready State: Ready
 - Ready Gate: The architecture direction, compatibility policy, ordered tasks, and stop conditions are explicit; the operator accepted residual show-validation risk and authorized execution.
-- Resume From: Phase EXECUTION, State In Progress, Next Action implement the frozen [`Controlled Package Discovery v1`](../../architecture/controlled_package_discovery_v1_handoff.md) contract from the validated generated package inventory; preserve default-off inspection, stable identities, and active-state isolation.
+- Resume From: Phase EXECUTION, State In Progress, Next Action use the [`SEAC-10 remote diagnostics ledger`](../reports/seac_10_remote_diagnostics.md) to close remaining operator-evidence gaps, then execute SEAC-11's evidence-based native-module decision.
 - Project Ops / Roadmap Updates (timestamped): 2026-07-26 - Added the canonical model and subordinated package/discovery work to its contract and build gates. 2026-07-26 - Promoted SEAC to execution after dual-screen validation was deferred. 2026-07-26 - Completed the dependency inventory and froze the Element SDK v1 source/static-link boundary. 2026-07-26 - Landed the first SEAC-3 build and registration slice. 2026-07-26 - Moved generic element preparation/release and exact registration ownership behind the first Runtime facade seam. 2026-07-26 - Linked the first runtime-core library and moved fixed composition storage plus generic update/draw/resize ownership behind it. 2026-07-26 - Added isolated parameter staging and transactional same-address visual-element replacement. 2026-07-26 - Hardened reserved opacity ownership, prepared-result lifetime, FX/UI-to-visual adoption, bool modifier migration, and registry-consumer invalidation. 2026-07-26 - Removed the global element factory and proved per-Runtime type-registry isolation. 2026-07-26 - Moved zero-based effect coverage-window policy into Runtime and removed the duplicate `PostEffectChain` resolver without expanding the Element SDK. 2026-07-26 - Added the Runtime composition mutation control plane, Runtime-owned layer opacity, a const-only host view, and narrow render/legacy-element seams. 2026-07-27 - Replaced the const live host view with pointer-free by-value snapshots and removed public live composition access. 2026-07-27 - Replaced pointer-addressed generic element replacement with a zero-based composition-layer transaction and narrowed mutable legacy access to two compatibility areas. 2026-07-27 - Removed the derived element cache and moved ordinary built-in views, bindings, and parameter actions to snapshot-addressed registry access. 2026-07-27 - Added live-instance action registration, pointer-free snapshot discovery, and generic slot-addressed invocation without adding persisted action mappings. 2026-07-27 - Replaced read-only concrete element inspection with separate on-demand typed telemetry and made Geodesic subdivision durable parameter state. 2026-07-27 - Consolidated host creator bindings in the controlled aggregate and shared Signal Bloom's package leaf registrar with its bench without claiming generated registration. 2026-07-27 - Isolated legacy Text host parameters and font synchronization behind `BuiltinElementHostBindings` without claiming singleton retirement or authoritative declarations. 2026-07-27 - Closed SEAC-3R by extracting host-only composition rendering/GPU-target ownership, retiring the raw mutable target seam, and adding a dedicated stub-backed renderer policy harness. 2026-07-27 - Closed SEAC-4A with minimal static type/kind/action descriptor authority, atomic descriptor-plus-creator registration, construction-free inspection, exact live handler binding, and shipping registration migration. 2026-07-27 - Completed SEAC-4B1 with the pointer-free parameter DTO, explicit declared-versus-legacy registry state, and a construction-free five-group/18-parameter Signal Bloom declaration with exact package/static parity plus compatible live ID/kind/range registration. 2026-07-27 - Completed SEAC-4B2 for Signal Bloom with bind-only live storage and declaration-owned runtime metadata/defaults. 2026-07-27 - Froze SEAC-5A state ownership, provenance, version-reader, portability, and migration rules after three parallel audits.
   2026-07-27 - Implemented the side-effect-free Scene v1/v2 compatibility reader and non-destructive future-version gate.
   2026-07-27 - Implemented nonserialized parameter value origins and pointer-free base/live/modifier inspection without changing value precedence or public persistence.
@@ -34,16 +34,20 @@ State Summary
   2026-07-29 - Completed SEAC-8 with an explicit validated registration set, deterministic generated Runtime/build records, creator-only package leaves, stale/duplicate/dependency/symbol failure gates, generic host/bench integration, and removal of Signal Bloom's handwritten mirror, registrar, dedicated project, and solution wiring.
   2026-07-29 - Completed SEAC-9 with recoverable preset and mapping transactions, visible provenance and conflicts, explicit parameter/action targeting, and Browser preview/apply/edit/disable/remove/rollback controls.
   2026-07-29 - Froze the SEAC-10 controlled-discovery execution handoff: default-off local roots, construction-free candidate snapshots, path-independent identities, collision/replacement/refresh/deletion policy, an STL data-only slice, inspect-before-activate flow, promotion evidence, and stop conditions are explicit.
+  2026-07-29 - Completed SEAC-10 with strict local configuration, pure package/STL scanning, exact generated/built-in type availability, immutable lifecycle snapshots, Browser diagnostics/refresh/activation gating, recoverable catalog publication, hostile-state isolation, and physical/junction Release evidence.
 
 ## Fresh-Context Handoff
 
-- Last pushed checkpoint: commit `f1a4ee2`, through SEAC-8 and the junction
-  build-root fix. Local SEAC-9 implementation is not yet published; verify
-  branch divergence and `git status` before publishing, and do not include
-  operator-local maps, scenes, or backups.
-- Verified baseline: 23 built-in types, 786 declared parameters, exact live
-  parity across 55 catalog assets, 50 passing BrowserFlow scenarios, passing
-  RuntimeCore and LayerPackageBench suites, and a clean Release app build.
+- Remote handoff: PR #1 carries the architecture lane. Verify branch divergence
+  and `git status` before publishing, and do not include operator-local maps,
+  scenes, backups, IDE state, or runtime logs.
+- Verified baseline: 23 built-in types, 786 declared parameters, 16 focused
+  discovery tests passing with one Windows symlink skip, all 24 public-app
+  contracts passing, 51 passing BrowserFlow scenarios, and clean physical and
+  junction Release app builds.
+- Remote diagnosis: current symptoms, evidence gaps, capture commands, and
+  triage ownership are maintained in
+  [`../reports/seac_10_remote_diagnostics.md`](../reports/seac_10_remote_diagnostics.md).
 - Manual evidence: the Release app and dual-screen mode work. Live physical
   MIDI hardware and the complete show-machine recovery rehearsal have not been
   tested.
@@ -180,7 +184,7 @@ State Summary
 | SEAC-7 | Serialize the frozen type descriptors, parameter declarations, compatibility requirements, capabilities, definitions, assets, presets, mapping suggestions, tests, and migrations into Element Package v1; validate package/runtime descriptor parity before activation. | Complete |
 | SEAC-8 | Generate the controlled registration records from validated package/type metadata so a reference source element requires no `ofApp.cpp`, handwritten aggregate, or project-list edit. | Complete |
 | SEAC-9 | Implement transactional preset and mapping preview/apply/edit/remove flows, including explicit parameter and action targets, trigger/edge semantics, layer-instance expansion, provenance, conflicts, and rollback. | Complete |
-| SEAC-10 | Enable default-off package and supported data-only content discovery with stable IDs, duplicate policy, activation boundaries, and recovery. | Planned |
+| SEAC-10 | Enable default-off package and supported data-only content discovery with stable IDs, duplicate policy, activation boundaries, and recovery. | Complete |
 | SEAC-11 | Make and document the evidence-based native-module decision; implement a versioned module spike only if it adds value beyond generated registration. | Planned |
 | SEAC-12 | Migrate representative visual, media/content-backed, and complex stateful elements; publish the authoring guide and close the architecture gate. | Planned |
 
