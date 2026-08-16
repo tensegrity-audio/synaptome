@@ -2,7 +2,6 @@
 
 #include "ofFileUtils.h"
 #include "ofGraphics.h"
-#include "ofLog.h"
 #include "ofMath.h"
 #include "ofUtils.h"
 
@@ -11,6 +10,7 @@
 #include <cctype>
 #include <cmath>
 #include <cstdint>
+#include <filesystem>
 #include <fstream>
 #include <limits>
 #include <sstream>
@@ -53,6 +53,8 @@ namespace {
 
 void StlModelLayer::configure(const ofJson& config) {
     assetPath_ = config.value("assetPath", assetPath_);
+    meshLoaded_ = false;
+    meshLoadAttempted_ = false;
     if (config.contains("color")) {
         const ofColor parsed = parseColorNode(config["color"], liveColor_);
         paramColorR_ = static_cast<float>(parsed.r);
@@ -85,103 +87,27 @@ void StlModelLayer::configure(const ofJson& config) {
     }
 }
 
+void StlModelLayer::bindParameters(
+    synaptome::element::ParameterBinder& binder) {
+    binder.bind("spin", paramSpinDeg_);
+    binder.bind("hover", paramHoverAmp_);
+    binder.bind("baseHeight", paramBaseHeight_);
+    binder.bind("orbitRadius", paramOrbitRadius_);
+    binder.bind("orbitSpeed", paramOrbitSpeedDeg_);
+    binder.bind("rotateX", paramRotateXDeg_);
+    binder.bind("rotateY", paramRotateYDeg_);
+    binder.bind("rotateZ", paramRotateZDeg_);
+    binder.bind("colorR", paramColorR_);
+    binder.bind("colorG", paramColorG_);
+    binder.bind("colorB", paramColorB_);
+    binder.bind("scale", paramScale_);
+    binder.bind("lineOpacity", paramLineOpacity_);
+    binder.bind("faceOpacity", paramFaceOpacity_);
+    binder.bind("visible", paramEnabled_);
+}
+
 void StlModelLayer::setup(ParameterRegistry& registry) {
-    const std::string prefix = registryPrefix().empty() ? "layer.stlModel" : registryPrefix();
-
-    ParameterRegistry::Descriptor visMeta;
-    visMeta.label = "Model Visible";
-    visMeta.group = "Visibility";
-    registry.addBool(prefix + ".visible", &paramEnabled_, paramEnabled_, visMeta);
-
-    ParameterRegistry::Descriptor spinMeta;
-    spinMeta.label = "Model Spin";
-    spinMeta.group = "Model";
-    spinMeta.range.min = -360.0f;
-    spinMeta.range.max = 360.0f;
-    spinMeta.range.step = 1.0f;
-    registry.addFloat(prefix + ".spin", &paramSpinDeg_, paramSpinDeg_, spinMeta);
-
-    ParameterRegistry::Descriptor hoverMeta;
-    hoverMeta.label = "Model Hover";
-    hoverMeta.group = "Model";
-    hoverMeta.range.min = 0.0f;
-    hoverMeta.range.max = 200.0f;
-    hoverMeta.range.step = 1.0f;
-    registry.addFloat(prefix + ".hover", &paramHoverAmp_, paramHoverAmp_, hoverMeta);
-
-    ParameterRegistry::Descriptor heightMeta;
-    heightMeta.label = "Model Base Height";
-    heightMeta.group = "Model";
-    heightMeta.range.min = -400.0f;
-    heightMeta.range.max = 400.0f;
-    heightMeta.range.step = 1.0f;
-    registry.addFloat(prefix + ".baseHeight", &paramBaseHeight_, paramBaseHeight_, heightMeta);
-
-    ParameterRegistry::Descriptor orbitRadiusMeta;
-    orbitRadiusMeta.label = "Model Orbit Radius";
-    orbitRadiusMeta.group = "Model";
-    orbitRadiusMeta.range.min = 0.0f;
-    orbitRadiusMeta.range.max = 600.0f;
-    orbitRadiusMeta.range.step = 1.0f;
-    registry.addFloat(prefix + ".orbitRadius", &paramOrbitRadius_, paramOrbitRadius_, orbitRadiusMeta);
-
-    ParameterRegistry::Descriptor orbitSpeedMeta;
-    orbitSpeedMeta.label = "Model Orbit Speed";
-    orbitSpeedMeta.group = "Model";
-    orbitSpeedMeta.range.min = -360.0f;
-    orbitSpeedMeta.range.max = 360.0f;
-    orbitSpeedMeta.range.step = 1.0f;
-    registry.addFloat(prefix + ".orbitSpeed", &paramOrbitSpeedDeg_, paramOrbitSpeedDeg_, orbitSpeedMeta);
-
-    ParameterRegistry::Descriptor rotateMeta;
-    rotateMeta.group = "Model";
-    rotateMeta.range.min = -180.0f;
-    rotateMeta.range.max = 180.0f;
-    rotateMeta.range.step = 1.0f;
-    rotateMeta.label = "Model Rotate X";
-    registry.addFloat(prefix + ".rotateX", &paramRotateXDeg_, paramRotateXDeg_, rotateMeta);
-    rotateMeta.label = "Model Rotate Y";
-    registry.addFloat(prefix + ".rotateY", &paramRotateYDeg_, paramRotateYDeg_, rotateMeta);
-    rotateMeta.label = "Model Rotate Z";
-    registry.addFloat(prefix + ".rotateZ", &paramRotateZDeg_, paramRotateZDeg_, rotateMeta);
-
-    ParameterRegistry::Descriptor colorMeta;
-    colorMeta.group = "Model";
-    colorMeta.range.min = 0.0f;
-    colorMeta.range.max = 255.0f;
-    colorMeta.range.step = 1.0f;
-    colorMeta.label = "Model Red";
-    registry.addFloat(prefix + ".colorR", &paramColorR_, paramColorR_, colorMeta);
-    colorMeta.label = "Model Green";
-    registry.addFloat(prefix + ".colorG", &paramColorG_, paramColorG_, colorMeta);
-    colorMeta.label = "Model Blue";
-    registry.addFloat(prefix + ".colorB", &paramColorB_, paramColorB_, colorMeta);
-
-    ParameterRegistry::Descriptor scaleMeta;
-    scaleMeta.label = "Model Scale";
-    scaleMeta.group = "Model";
-    scaleMeta.range.min = 20.0f;
-    scaleMeta.range.max = 500.0f;
-    scaleMeta.range.step = 1.0f;
-    registry.addFloat(prefix + ".scale", &paramScale_, paramScale_, scaleMeta);
-
-    ParameterRegistry::Descriptor lineMeta;
-    lineMeta.label = "Model Line Opacity";
-    lineMeta.group = "Model";
-    lineMeta.range.min = 0.0f;
-    lineMeta.range.max = 1.0f;
-    lineMeta.range.step = 0.01f;
-    registry.addFloat(prefix + ".lineOpacity", &paramLineOpacity_, paramLineOpacity_, lineMeta);
-
-    ParameterRegistry::Descriptor faceMeta;
-    faceMeta.label = "Model Face Opacity";
-    faceMeta.group = "Model";
-    faceMeta.range.min = 0.0f;
-    faceMeta.range.max = 1.0f;
-    faceMeta.range.step = 0.01f;
-    registry.addFloat(prefix + ".faceOpacity", &paramFaceOpacity_, paramFaceOpacity_, faceMeta);
-
-    meshLoaded_ = loadMesh();
+    (void)registry;
 }
 
 void StlModelLayer::update(const LayerUpdateParams& params) {
@@ -242,6 +168,10 @@ void StlModelLayer::update(const LayerUpdateParams& params) {
 }
 
 void StlModelLayer::draw(const LayerDrawParams& params) {
+    if (!meshLoadAttempted_) {
+        meshLoadAttempted_ = true;
+        meshLoaded_ = loadMesh();
+    }
     if (!enabled_ || !meshLoaded_ || params.slotOpacity <= 0.0f) return;
 
     params.camera.begin();
@@ -291,25 +221,22 @@ void StlModelLayer::setExternalEnabled(bool enabled) {
 }
 
 bool StlModelLayer::loadMesh() {
-    const std::string resolvedPath = ofToDataPath(assetPath_, true);
+    const std::filesystem::path requestedPath(assetPath_);
+    const std::string resolvedPath = requestedPath.is_absolute()
+        ? requestedPath.lexically_normal().string()
+        : ofToDataPath(assetPath_, true);
     auto& cache = stlMeshCache();
     auto cached = cache.find(resolvedPath);
     if (cached != cache.end()) {
         mesh_ = cached->second;
         mesh_.setMode(OF_PRIMITIVE_TRIANGLES);
         const bool ok = mesh_.getNumVertices() > 0;
-        if (ok) {
-            ofLogNotice("StlModelLayer") << "Loaded cached STL mesh " << assetPath_
-                                         << " (" << mesh_.getNumVertices() << " vertices)";
-        }
         return ok;
     }
 
-    const uint64_t startedMs = static_cast<uint64_t>(ofGetElapsedTimeMillis());
     ofMesh loaded;
     const bool ok = loadBinaryStl(resolvedPath, loaded) || loadAsciiStl(resolvedPath, loaded);
     if (!ok) {
-        ofLogWarning("StlModelLayer") << "Failed to load STL mesh from " << assetPath_;
         mesh_.clear();
         return false;
     }
@@ -320,12 +247,6 @@ bool StlModelLayer::loadMesh() {
     mesh_ = loaded;
     mesh_.setMode(OF_PRIMITIVE_TRIANGLES);
     const bool loadedOk = mesh_.getNumVertices() > 0;
-    if (loadedOk) {
-        const uint64_t elapsedMs = static_cast<uint64_t>(ofGetElapsedTimeMillis()) - startedMs;
-        ofLogNotice("StlModelLayer") << "Parsed STL mesh " << assetPath_
-                                     << " (" << mesh_.getNumVertices()
-                                     << " vertices) in " << elapsedMs << " ms";
-    }
     return loadedOk;
 }
 

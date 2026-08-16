@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "grid",
   "elementType": "grid",
-  "bindingMode": "legacy-setup-adapter",
+  "bindingMode": "bind-only",
   "inputs": {
     "viewportWidth": 640,
     "viewportHeight": 360,

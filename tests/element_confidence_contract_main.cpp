@@ -27,6 +27,10 @@
 #define private public
 #if defined(SYNAPTOME_CONFIDENCE_GRID)
 #include "../synaptome/src/visuals/GridLayer.h"
+#elif defined(SYNAPTOME_CONFIDENCE_STL)
+#include "../synaptome/src/visuals/StlModelLayer.h"
+#elif defined(SYNAPTOME_CONFIDENCE_LENIA)
+#include "../synaptome/src/visuals/LeniaLayer.h"
 #elif defined(SYNAPTOME_CONFIDENCE_SIGNAL_BLOOM)
 #include "../docs/examples/layer_packages/signal_bloom/source/SignalBloomLayer.h"
 #include "../synaptome/src/runtime/GeneratedElementPackageRegistrations.h"
@@ -63,7 +67,11 @@ struct Fixture {
 
 Fixture fixture() {
 #if defined(SYNAPTOME_CONFIDENCE_GRID)
-    return {"grid", "grid", "legacy-setup-adapter", 60, 640, 360};
+    return {"grid", "grid", "bind-only", 60, 640, 360};
+#elif defined(SYNAPTOME_CONFIDENCE_STL)
+    return {"stlModel", "stl-model", "bind-only", 60, 640, 360};
+#elif defined(SYNAPTOME_CONFIDENCE_LENIA)
+    return {"lenia", "lenia", "bind-only", 60, 640, 360};
 #else
     return {
         "example.signalBloom",
@@ -76,17 +84,51 @@ Fixture fixture() {
 #endif
 }
 
+void configureRequest(Runtime::ElementRequest& request) {
+#if defined(SYNAPTOME_CONFIDENCE_STL)
+    request.config["assetPath"] = std::filesystem::absolute(
+        "docs/examples/generated_layers/stl_models/tetrahedron.stl").string();
+#elif defined(SYNAPTOME_CONFIDENCE_LENIA)
+    // Exercise the exact lifecycle and renderer with the supported minimum
+    // field size so 200 allocator cycles measure retention rather than the
+    // Windows heap's caching of the production 160x90 working buffers. The
+    // production Circuit Lenia dimensions are locked separately by its
+    // catalog validator and real-host visual gate.
+    request.config["textureSize"] = {32, 32};
+    if (request.definitionId.find(".graphics") != std::string::npos) {
+        request.config["presentation"] = "circuit";
+    }
+#else
+    (void)request;
+#endif
+}
+
 void registerFixture(LayerFactory& factory) {
-#if defined(SYNAPTOME_CONFIDENCE_GRID)
+#if defined(SYNAPTOME_CONFIDENCE_GRID) || \
+    defined(SYNAPTOME_CONFIDENCE_STL) || \
+    defined(SYNAPTOME_CONFIDENCE_LENIA)
     ElementTypeContract contract;
+#if defined(SYNAPTOME_CONFIDENCE_GRID)
+    constexpr const char* typeId = "grid";
+#elif defined(SYNAPTOME_CONFIDENCE_STL)
+    constexpr const char* typeId = "stlModel";
+#else
+    constexpr const char* typeId = "lenia";
+#endif
     contract.element =
-        ElementDescriptor{"grid", ElementKind::Visual, {}};
+        ElementDescriptor{typeId, ElementKind::Visual, {}};
     contract.parameters =
-        synaptome::runtime::builtinElementParameterDeclarations("grid");
+        synaptome::runtime::builtinElementParameterDeclarations(typeId);
     factory.registerType(
         std::move(contract),
+#if defined(SYNAPTOME_CONFIDENCE_GRID)
         [] { return std::make_unique<GridLayer>(); },
-        LayerFactory::ParameterBindingMode::LegacySetupAdapter);
+#elif defined(SYNAPTOME_CONFIDENCE_STL)
+        [] { return std::make_unique<StlModelLayer>(); },
+#else
+        [] { return std::make_unique<LeniaLayer>(); },
+#endif
+        LayerFactory::ParameterBindingMode::Explicit);
 #else
     synaptome::runtime::registerGeneratedElementPackages(factory);
 #endif
@@ -249,6 +291,15 @@ std::string statePayload(
         << ";twist=" << grid.twist_
         << ";bulge=" << grid.bulge_
         << ";summary=" << grid.deformationSummary();
+#elif defined(SYNAPTOME_CONFIDENCE_STL)
+    const auto& model = dynamic_cast<const StlModelLayer&>(layer);
+    out << "meshLoaded=" << model.meshLoaded_
+        << ";vertices=" << model.mesh_.getNumVertices()
+        << ";asset=" << model.assetPath_;
+#elif defined(SYNAPTOME_CONFIDENCE_LENIA)
+    const auto& lenia = dynamic_cast<const LeniaLayer&>(layer);
+    out << "signature=" << lenia.debugStateSignature()
+        << ";circuit=" << lenia.debugUsesCircuitPresentation();
 #else
     const auto& bloom = dynamic_cast<const SignalBloomLayer&>(layer);
     out << "phase=" << bloom.phase_
@@ -302,6 +353,7 @@ RepetitionEvidence runRepetition(const Fixture& selected, int repetition) {
         std::to_string(repetition);
     request.registryPrefix = "console.layer1";
     request.enabled = true;
+    configureRequest(request);
 
     auto prepared = runtime.prepareElement(request);
     require(
@@ -530,10 +582,12 @@ ofJson runGraphics(
         "confidence." + selected.profileId + ".graphics";
     request.registryPrefix = "console.layer1";
     request.enabled = true;
+    configureRequest(request);
     auto prepared = runtime.prepareElement(request);
     require(
         static_cast<bool>(prepared),
         "graphics element preparation failed: " + prepared.error);
+    Layer* graphicsElement = prepared.element();
     const auto adoption = runtime.adoptPreparedElement(
         0,
         std::move(prepared),
@@ -578,6 +632,12 @@ ofJson runGraphics(
     ofClear(0, 0, 0, 255);
     GraphicsStateGuard stateGuard;
     runtime.drawCompositionElement(0, draw);
+#if defined(SYNAPTOME_CONFIDENCE_STL)
+    const auto* model = dynamic_cast<const StlModelLayer*>(graphicsElement);
+    require(
+        model && model->meshLoaded_ && model->mesh_.getNumVertices() > 0,
+        "valid ASCII tetrahedron did not load in the graphics context");
+#endif
     const auto leakedState = stateGuard.restoreAndVerify();
     fbo.end();
     require(
@@ -747,6 +807,7 @@ CycleTiming runReloadCycle(
         std::to_string(cycle);
     request.registryPrefix = "console.layer1";
     request.enabled = true;
+    configureRequest(request);
     auto prepared = runtime.prepareElement(request);
     require(
         static_cast<bool>(prepared),

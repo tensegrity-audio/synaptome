@@ -20,11 +20,15 @@ surface, not private source-workspace details or helper implementations.
 - [Subsystem anatomy](architecture/synaptome_subsystem_anatomy.md)
 - [External contracts](architecture/synaptome_external_contracts.md)
 - [Artist SDK](architecture/synaptome_artist_sdk.md)
+- [Element authoring guide](element_authoring_guide.md)
+- [Native Module Policy v1](architecture/native_module_policy_v1.md)
+- [SEAC-11 native-module decision handoff](architecture/native_module_decision_v1_handoff.md)
+- [SEAC-12 representative migration handoff](architecture/representative_element_migration_v1_handoff.md)
 
 ## Roadmaps
 
-- [Current priority and pre-media safety gate](project_ops/roadmap.md)
-- [Spine and element architecture convergence](project_ops/in_progress/spine_element_architecture_convergence.md)
+- [Current Project Ops roadmap](project_ops/roadmap.md)
+- [Spine and element architecture convergence](project_ops/completed/spine_element_architecture_convergence.md)
 - [Element-system sequence](architecture/synaptome_layer_system_roadmap.md)
 - [Public runtime contract sequence](architecture/synaptome_public_runtime_contract_roadmap.md)
 - [Transport and reactivity dependency](architecture/synaptome_transport_reactivity.md)

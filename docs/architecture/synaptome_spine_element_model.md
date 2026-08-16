@@ -18,7 +18,7 @@ Read with:
   the transitional package and SDK implementation sequence.
 - [`../project_ops/roadmap.md`](../project_ops/roadmap.md) for active priority
   and promotion state.
-- [`../project_ops/in_progress/spine_element_architecture_convergence.md`](../project_ops/in_progress/spine_element_architecture_convergence.md)
+- [`../project_ops/completed/spine_element_architecture_convergence.md`](../project_ops/completed/spine_element_architecture_convergence.md)
   for the ordered implementation milestones and promotion gates.
 - [`../contracts/state_ownership_and_provenance.md`](../contracts/state_ownership_and_provenance.md)
   for the frozen SEAC-5 ownership matrix, value-origin vocabulary, and
@@ -321,8 +321,8 @@ Synaptome should publish an honest compatibility ladder:
 | 2: Parametric element | Wrapped element plus declared parameters | Browser control, scene persistence, MIDI/OSC targetability, presets, and modifiers become possible. |
 | 3: Cataloged definition | Parametric element plus stable manifest/catalog identity | Browser discovery, layer assignment, and scene references become stable. |
 | 4: Performance instrument | Cataloged definition plus tested presets, mappings, and lifecycle | The element is ready for controlled live use. |
-| 5: Element package | Complete bundle plus compatibility and bench evidence | It can be inspected and built independently of the full app. Installation still depends on its source/module strategy. |
-| 6: Installable module | Versioned native module or generated registration | No hand-edit to the host composition root. Native loading still requires compatible compiler, openFrameworks, dependencies, and ABI. |
+| 5: Element package | Complete bundle plus compatibility and bench evidence | It can be inspected independently and enter the controlled source build. |
+| 6: Controlled source extension | Validated package plus generated registration | No package-specific edit to the host composition root or project source list; a normal rebuild is required. |
 
 Data-only content follows a safer path:
 
@@ -493,9 +493,9 @@ An element package should eventually declare:
 
 - package identity and version,
 - one or more element types and definitions,
-- source, generated-registration, module, or template strategy,
+- source, generated-registration, or supported data-only template strategy,
 - runtime and SDK compatibility range,
-- compiler/ABI requirements for native modules,
+- compiler and SDK requirements for source packages,
 - openFrameworks and add-on dependencies,
 - platform, renderer, GPU, network, device, and permission capabilities,
 - public parameters and defaults,
@@ -560,7 +560,10 @@ The master roadmap should sequence architecture work in this order:
 5. Define strict scene, preset, mapping-bank, and machine-profile contracts.
 6. Make the single-element confidence suite reusable across real elements.
 7. Enable controlled package and data-only content discovery.
-8. Consider native module loading only after dependency and ABI policy.
+8. Retain the v1 no-native-loader policy unless a future proposal passes the
+   complete evidence, ABI, trust, containment, rollback, and distribution
+   reversal gate in
+   [`Native Module Policy v1`](native_module_policy_v1.md).
 9. Resume biological, aurora, cosmic, and other content tracks as consumers of
    the stable spine.
 

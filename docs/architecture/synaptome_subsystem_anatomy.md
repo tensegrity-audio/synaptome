@@ -286,15 +286,19 @@ Relationships:
 - ParameterRegistry exposes layer controls.
 - Scenes persist the resulting slot and parameter state.
 
-Current gaps:
-- No public layer authoring guide yet.
-- Golden static layer-library ingestion and minimal public SDK example fixtures now exist (`tools/layer_catalog_regression.py`, `tools/validate_artist_sdk_example.py`); package/no-source-edit extension loading remains follow-up (`CG-16`).
+Current state and remaining gaps:
+- The public [`element authoring guide`](../element_authoring_guide.md) covers
+  built-ins, generated source packages, bounded data-only content, external
+  bridges, bind-only storage, confidence, persistence, and release validation.
+- Golden static layer-library ingestion and public Signal Bloom, Grid, STL,
+  and Lenia fixtures prove the supported authoring paths. Runtime native
+  loading is deliberately unsupported by Native Module Policy v1.
 - Some content-specific layers and assets need to be separated from core examples.
 - Browser offline hydration can instantiate assets to inspect metadata, so layer setup must avoid heavy side effects where possible.
 - `LayerFactory::registerType()` rejects invalid descriptors, missing creators,
   and duplicate type IDs before registration can partially activate. Public
-  package serialization, generated registration, discovery, and
-  operator-facing package diagnostics remain later work.
+  Package serialization, generated registration, controlled discovery, and
+  operator-facing package diagnostics are implemented.
 - FX and UI/HUD assets are not yet authored through one completely uniform layer extension path.
 - Default scenes contain some legacy/stale IDs that should be migrated before public examples are published.
 
@@ -752,7 +756,7 @@ Target:
 | Parameters | Real registry, implicit vocabulary, raw pointer ownership. | Manifested, versioned public vocabulary with explicit range and lifetime rules. | Draft parameter vocabulary and generator. |
 | Modifiers | Real float/bool modifier stacks, mixed route semantics. | Clear distinction between modifiers, mappings, bindings, and snapshots. | Document modifier ownership and persistence. |
 | Banks | Global/scene/layer bank registry exists. | Public bank authoring and scoping contract. | Add bank fixture and naming rules. |
-| Layers | Real SDK and fixture-backed catalog. | Public authoring guide and minimal SDK example. | Polish layer authoring guide and package/no-source-edit seam. |
+| Layers | Real SDK, bind-only representative types, controlled packages/discovery, fixture-backed catalog, and public authoring guide. | Keep the supported authoring and validation path stable. | Migrate the remaining 19 compatibility adapters as cleanup without reopening the architecture gate. |
 | Scenes | Real staged save/load, permissive schema, partly hard-coded load rules. | Transaction-safe, round-trip tested scene contract. | Expand round-trip/live-window fixtures and tighten scene schema policy. |
 | Slots | Eight-slot live deck works with static layout/window fixtures. | Stable slot contract with live-window fixture coverage. | Keep console/window snapshot validator current; add live-window fixture coverage. |
 | ConsoleStore | Broad persistence for slots, overlays, windows, sensors. | Explicit split between scene state, local state, and presentation state. | Add console state schema and migration policy. |

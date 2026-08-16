@@ -128,3 +128,7 @@ STL slice by an existing precompiled built-in. No implemented fixture requires
 native loading, unloading, ABI policy, or hot reload. SEAC-11 therefore starts
 with no native loader and requires a concrete unsatisfied workflow to justify
 one.
+
+SEAC-11 completed that review without finding an unsatisfied workflow. The
+current decision and future reversal gate are published in
+[`Native Module Policy v1`](../architecture/native_module_policy_v1.md).

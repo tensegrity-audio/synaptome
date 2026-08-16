@@ -48,7 +48,7 @@ As of the current public app contract snapshot,
 `python tools\validate_configs.py --public-app` reports:
 
 ```text
-validated=12
+validated=24
 ```
 
 Strict public contract mode reads committed fixtures under `tools/testdata/**`

@@ -1,20 +1,19 @@
 # SEAC-10 Remote Diagnostics Ledger
 
-Status: active handoff record for diagnosing the final controlled-discovery
-operator path from another machine. Update this file with a timestamp, commit,
-machine context, exact action, observed result, and attached artifact whenever
-a symptom is reproduced or resolved.
+Status: closed evidence record. The final controlled-discovery operator path
+passed on 2026-08-15 at commit `0511bf9` in an isolated detached Windows 11
+25H2 worktree. Retain this ledger as SEAC-10 promotion evidence.
 
 ## Current Finish-Line Issues
 
 | ID | State | Symptom / evidence | SEAC-10 relevance | Next remote diagnostic |
 | --- | --- | --- | --- | --- |
-| SEAC10-DIAG-01 | Open evidence gap | Automated discovery and BrowserFlow gates pass, but the current runtime log contains no `ControlledDiscovery` refresh or activation record. Success and no-op paths are therefore not reconstructable remotely. | Direct: the final operator path is not represented in durable evidence. | Run the Release app at the commit under test, enable configured roots, refresh, inspect, activate one package and one STL candidate, and preserve the snapshot, activation file, and complete run log. Record the visible candidate IDs/statuses and whether active composition changed. |
-| SEAC10-DIAG-02 | Open isolation risk | Manual runs rewrote tracked operator-facing state (`config/midi-map.json` and named scenes) and created `.bak` files. These files are deliberately excluded from the SEAC-10 commit because they are machine/session state, not discovery evidence. | Indirect but high diagnostic risk: committing or comparing this state can obscure the discovery-only diff and make remote reproduction non-deterministic. | Reproduce from a clean checkout or copied data directory. Capture dirty-state output before and after the run. Do not promote maps, scenes, backups, logs, or `.vs` state without a separate reviewed fixture change. |
-| SEAC10-DIAG-03 | Open observability issue | The available runtime log is dominated by per-update `hud.feed.updated` notices, making warnings and discovery events difficult to find in a remote log review. | Indirect: relevant refresh/publication failures can be buried in high-volume unrelated output. | Preserve the full log, then attach a filtered extract for `ControlledDiscovery`, `warning`, and `error`; include surrounding lines and timestamps rather than only the final tail. Consider rate-limiting the feed notice in a separate observability change. |
-| SEAC10-DIAG-04 | Open environment gap | The focused suite passes 16 tests and skips the directory-symlink case when Windows link creation is unavailable. Physical and junction Release builds pass, but this skipped containment case is not positive evidence on the current machine. | Direct to root-containment policy. | Run the focused test from an elevated or Developer Mode machine that can create symlinks and record the full 17-test result plus Windows version and privilege context. |
-| SEAC10-DIAG-05 | Deferred operator evidence | Live physical MIDI and the complete show-machine recovery rehearsal remain untested. The existing log also reports zero MIDI ports. | Not a discovery implementation failure, but it limits confidence that activation/refresh work remains isolated during a representative live session. | Repeat refresh/activation/removal and failed-refresh cases on the show machine with the normal MIDI/audio/display setup; record that mappings, active layers, and output survive unchanged. |
-| SEAC10-DIAG-06 | Needs classification | The available shutdown log ends with `ofFile: remove(): file does not exist` and `Failed to publish canonical preferences`. The log predates a captured SEAC-10 operator run, so causality is unproven. | Unknown; track separately unless it reproduces during controlled discovery. | Record the source commit and clean-data baseline, reproduce shutdown once without discovery and once after refresh/activation, then compare paths and warnings. Do not attribute this to SEAC-10 without that comparison. |
+| SEAC10-DIAG-01 | Resolved | The isolated Release app refreshed an enabled, non-stale, construction-free generation-2 snapshot with two available candidates. Operator screenshots show the Browser rows and both Tetrahedron Fixture and Signal Bloom running in slots 1 and 2. The local activation document records both exact candidate IDs, type/definition IDs, and signatures. | Direct promotion evidence complete. | None for SEAC-10. Success-path log notices remain optional observability cleanup; the snapshot, activation document, and operator capture are authoritative evidence. |
+| SEAC10-DIAG-02 | Resolved | The run used detached worktree `synaptome-phase10-validation`. Only its intentional discovery config/snapshot edits were tracked; runtime activation, log, console, scene-last, and backup outputs remained ignored. The primary worktree's pre-existing operator files were unchanged. | Isolation procedure proved effective. | Reuse an isolated worktree or copied data directory for future operator captures. |
+| SEAC10-DIAG-03 | Reclassified cleanup | The captured run could be filtered successfully, but refresh/activation success is represented primarily by the snapshot, activation document, and UI rather than dedicated runtime notices. | Observability quality, not a discovery correctness or promotion blocker. | Track success notices or HUD-feed rate limiting only in a separate observability change. |
+| SEAC10-DIAG-04 | Resolved | After enabling Windows Developer Mode on Windows 11 25H2 build 26200.9168, the focused suite completed `17 passed` with the directory-symlink containment case exercised. | Direct containment evidence complete. | None. |
+| SEAC10-DIAG-05 | Moved to show readiness | Live physical MIDI and the complete show-machine recovery rehearsal remain untested. | Explicitly outside SEAC-10 implementation and promotion. | Continue under `show_readiness_operator_stability`; do not reopen controlled discovery for this evidence. |
+| SEAC10-DIAG-06 | Classified non-discovery | The isolated run reproduced `ofFile: remove(): file does not exist` during missing `scene-last.json` recovery, not controlled discovery. It did not reproduce `Failed to publish canonical preferences`. Both discovered candidates activated and ran successfully. | Not caused by SEAC-10. | Route any repeated missing-scene recovery message to persistence/observability cleanup. |
 
 ## Required Capture Bundle
 
@@ -46,13 +45,21 @@ into a separately reviewed diagnostic artifact and explain why it is needed.
 
 ## Known-Good Gates
 
-As of 2026-08-08 on the local Phase 10 worktree:
+As of 2026-08-15 on the isolated Phase 10 worktree:
 
-- focused discovery: `16 passed, 1 skipped` (Windows symlink capability);
+- focused discovery: `17 passed` with Windows directory-symlink containment;
 - public app contracts: `validated=24`;
-- `git diff --check`: passes, with line-ending conversion warnings only;
-- previously recorded Phase 10 evidence: BrowserFlow 51 scenarios plus physical
-  and junction Release host/BrowserFlow builds with zero errors.
+- `git diff --check`: passes, with a line-ending conversion warning only;
+- BrowserFlow: all 51 scenarios pass, including controlled discovery;
+- isolated physical Release host and BrowserFlow builds complete with zero
+  errors; the existing junction Release build also remains green;
+- the generation-2 operator snapshot contains two available/activatable
+  candidates, and the activation document records both
+  `package:examples.signal_bloom` and
+  `content:examples.generated_models.tetrahedron.content`;
+- operator capture shows both activated definitions running concurrently in
+  slots 1 and 2 without unexpected composition mutation.
 
-These gates prove the contract and automated lifecycle behavior. They do not
-replace the capture bundle for an operator-only or machine-specific symptom.
+These gates and the same-run operator capture close the SEAC-10 promotion
+evidence. Future machine-specific symptoms begin as new diagnostics rather
+than reopening this completed phase.

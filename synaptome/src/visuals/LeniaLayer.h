@@ -1,14 +1,19 @@
 #pragma once
 
 #include "Layer.h"
+#include <synaptome/element/ParameterBinding.h>
 
 #include <cstdint>
 #include <random>
 #include <vector>
 
-class LeniaLayer : public Layer {
+class LeniaLayer final
+    : public Layer,
+      public synaptome::element::ParameterBindable {
 public:
     void configure(const ofJson& config) override;
+    void bindParameters(
+        synaptome::element::ParameterBinder& binder) override;
     void setup(ParameterRegistry& registry) override;
     void update(const LayerUpdateParams& params) override;
     void draw(const LayerDrawParams& params) override;
@@ -46,19 +51,6 @@ private:
     float randomRange(float minValue, float maxValue);
     int randomInt(int minValue, int maxValue);
     int indexFor(int x, int y) const;
-    void registerFloat(ParameterRegistry& registry,
-                       const std::string& id,
-                       float* target,
-                       float initial,
-                       const char* label,
-                       float minValue,
-                       float maxValue,
-                       float step,
-                       const char* description = "",
-                       const char* group = "Generative",
-                       bool quickAccess = false,
-                       int quickAccessOrder = 0);
-
     Presentation presentation_ = Presentation::Organic;
     bool paramEnabled_ = true;
     float paramSpeed_ = 18.0f;

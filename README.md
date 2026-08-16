@@ -136,11 +136,11 @@ Expected current signals:
 
 - Public extraction manifest reports no review-gated or unclassified files.
 - Built-in OSC route globs match mesh-style sample addresses.
-- Public app contracts report `validated=18` against committed fixtures.
+- Public app contracts report `validated=24` against committed fixtures.
 - Built-in parameter generation reports 23 types and 786 parameters.
 - App independence audit reports no firmware implementation references.
 - BrowserFlowTest builds with warnings tracked as cleanup, but 0 errors.
-- BrowserFlow reports all 36 scenarios passed.
+- BrowserFlow reports all 51 scenarios passed.
 - Generated test outputs and runtime logs remain ignored by Git.
 
 ## Docs
@@ -155,7 +155,8 @@ Expected current signals:
 - [Built-In Element Parameter Contract](docs/contracts/builtin_element_parameter_contract.md)
 - [Generated Element Parameter Reference](docs/element_parameter_reference.md)
 - [Artist SDK](docs/architecture/synaptome_artist_sdk.md)
-- [Current roadmap and pre-media safety gate](docs/project_ops/roadmap.md)
+- [Element Authoring Guide](docs/element_authoring_guide.md)
+- [Current Project Ops Roadmap](docs/project_ops/roadmap.md)
 - [External Contracts](docs/architecture/synaptome_external_contracts.md)
 - [Signal Control Integration](docs/contracts/signal_control_integration.md)
 - [MIDI Mapping](docs/midi_mapping.md)

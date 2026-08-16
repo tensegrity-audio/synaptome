@@ -1,11 +1,16 @@
 #pragma once
 
 #include "Layer.h"
+#include <synaptome/element/ParameterBinding.h>
 #include <string>
 #include <vector>
 
-class GridLayer : public Layer {
+class GridLayer final
+    : public Layer,
+      public synaptome::element::ParameterBindable {
 public:
+    void bindParameters(
+        synaptome::element::ParameterBinder& binder) override;
     void setup(ParameterRegistry& registry) override;
     void update(const LayerUpdateParams& params) override;
     void draw(const LayerDrawParams& params) override;

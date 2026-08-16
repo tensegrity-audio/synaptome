@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "id": "lenia",
+  "elementType": "lenia",
+  "bindingMode": "bind-only",
+  "inputs": {
+    "viewportWidth": 640,
+    "viewportHeight": 360,
+    "updateFrames": 60,
+    "fixedStepSeconds": 0.016666666666666666,
+    "bpm": 120,
+    "transportSpeed": 1.0,
+    "seed": 2112,
+    "determinismRepetitions": 2,
+    "genericInputs": {}
+  },
+  "dependencies": [
+    {"kind": "source", "id": "lenia-header", "path": "synaptome/src/visuals/LeniaLayer.h"},
+    {"kind": "source", "id": "lenia-implementation", "path": "synaptome/src/visuals/LeniaLayer.cpp"},
+    {"kind": "fixture", "id": "organic-lenia", "path": "synaptome/bin/data/layers/generative/lenia.json"},
+    {"kind": "fixture", "id": "circuit-lenia", "path": "synaptome/bin/data/layers/generative/circuit_lenia.json"},
+    {"kind": "project", "id": "lenia-confidence-contract-project", "path": "synaptome/tests/ElementConfidenceLeniaContract/ElementConfidenceLeniaContract.vcxproj"}
+  ],
+  "contractHarness": {
+    "project": "synaptome/tests/ElementConfidenceLeniaContract/ElementConfidenceLeniaContract.vcxproj",
+    "executable": "synaptome/tests/ElementConfidenceLeniaContract/x64/Release/ElementConfidenceLeniaContract.exe"
+  },
+  "validators": [
+    {"id": "runtime-core-boundary", "command": ["{python}", "tools/validate_runtime_core_boundary.py"]},
+    {"id": "element-sdk-boundary", "command": ["{python}", "tools/validate_element_sdk_boundary.py"]},
+    {"id": "circuit-lenia", "command": ["{python}", "tools/validate_circuit_lenia.py"]}
+  ]
+}

@@ -43,6 +43,11 @@ CIRCUIT_LENIA_OSC_DEFAULTS = {
 
 
 def registered_parameters(source: str) -> set[str]:
+    bound = set(re.findall(
+        r'binder\.bind\(\s*"([^"]+)"', source
+    ))
+    if bound:
+        return bound
     result = set(re.findall(
         r'registry\.addBool\(\s*prefix\s*\+\s*"\.([^"]+)"', source
     ))

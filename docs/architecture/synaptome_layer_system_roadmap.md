@@ -527,9 +527,12 @@ Implemented:
 - Browser inspect/refresh plus separately explicit recoverable catalog
   activation for exact registered types.
 
-The remaining optional future mechanism is a native loader with explicit ABI,
-dependency, signing, restart, and distribution policy. SEAC-10 produced no
-fixture that requires it.
+SEAC-11 reviewed the remaining optional native-loader mechanism and retained
+no native runtime loader for v1. SEAC-10 produced no blocked fixture, and no
+frozen boundary avoids the compiler, CRT, openFrameworks, allocator,
+exception, add-on, and GPU-context ABI hazards. The complete future reversal
+gate is published in
+[`Native Module Policy v1`](native_module_policy_v1.md).
 
 Success means layer installation eventually avoids hand-editing `ofApp.cpp`
 without pretending Synaptome has hot-loaded plugins before it does.
@@ -562,7 +565,9 @@ remains untested. Preferences v1, transactional Text adoption, and the
 portable/local-state gate close SEAC-5. Audio, webcam, display, and path
 selection remain named compatibility adapters for a future independently
 transactional machine-profile version.
-SEAC-6 through SEAC-10 are complete. Next make the evidence-based SEAC-11
-native-module decision without weakening the implemented discovery,
-registration, activation, rollback, or active-state boundaries. Package
-mappings remain suggestions and never auto-apply.
+SEAC-6 through SEAC-12 are complete. Grid, STL Model, and Lenia are bind-only
+references, the public authoring guide is published, automated gates pass,
+and the operator completed the real-host Grid/STL Tetra/Lenia/Circuit Lenia
+review recorded in the
+[`SEAC-12 migration handoff`](representative_element_migration_v1_handoff.md).
+Package mappings remain suggestions and never auto-apply.

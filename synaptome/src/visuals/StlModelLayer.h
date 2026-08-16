@@ -1,10 +1,15 @@
 #pragma once
 
 #include "Layer.h"
+#include <synaptome/element/ParameterBinding.h>
 
-class StlModelLayer : public Layer {
+class StlModelLayer final
+    : public Layer,
+      public synaptome::element::ParameterBindable {
 public:
     void configure(const ofJson& config) override;
+    void bindParameters(
+        synaptome::element::ParameterBinder& binder) override;
     void setup(ParameterRegistry& registry) override;
     void update(const LayerUpdateParams& params) override;
     void draw(const LayerDrawParams& params) override;
@@ -55,5 +60,9 @@ private:
     float faceOpacity_ = 0.18f;
 
     bool meshLoaded_ = false;
-    ofVboMesh mesh_;
+    bool meshLoadAttempted_ = false;
+    // CPU-owned mesh data keeps parsing, caching, and lifecycle validation
+    // construction-safe; openFrameworks uploads it only when drawn in a live
+    // graphics context.
+    ofMesh mesh_;
 };

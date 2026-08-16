@@ -462,14 +462,16 @@ Target public flow:
 Write a Layer subclass
   -> register its factory type
   -> define a JSON catalog entry
-  -> register parameters in setup()
+  -> bind owned storage to authoritative static declarations
   -> appear in the Browser
   -> load into a Console slot
   -> control via Browser/MIDI/OSC/sensors
   -> save in scenes
 ```
 
-Current status: mostly implemented, but the authoring guide and parameter vocabulary are not explicit enough.
+Current status: the complete public workflow and representative bind-only
+Grid, STL, Lenia, and Signal Bloom references are documented in
+[`element_authoring_guide.md`](../element_authoring_guide.md).
 
 ### Loading Media
 
@@ -550,7 +552,7 @@ Current status: strong. Scene load now has staged scene/display transaction hand
 
 | Need | Why |
 | --- | --- |
-| Public layer authoring guide | Artists need to know how to make a visual appear in Synaptome. |
+| Parameter vocabulary expansion | The authoring guide and generated manifest establish the workflow; broader cross-family naming guidance can continue independently. |
 | Parameter vocabulary | Reusable scene parameters should feel consistent across layers. |
 | Parameter manifest validator | Public parameter IDs need deprecation/version discipline. |
 | Media auto-discovery or clear catalog policy | The public workflow should make adding clips easy. |
@@ -586,7 +588,8 @@ Near-term architecture-to-implementation children:
 
 1. Parameter manifest and vocabulary.
 2. Live-window transaction fixtures and display resilience polish.
-3. Layer SDK golden fixture and authoring guide.
+3. Keep the validated Layer SDK golden fixtures and public authoring guide
+   synchronized with package/runtime contract changes.
 4. External contract schemas/fixtures for MIDI, OSC, audio, video, media, and displays.
 5. Device-map logical slot fixture.
 6. HUD/Console operator-surface validators.

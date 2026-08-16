@@ -36,7 +36,7 @@ keeps compatibility manifests synchronized.
   duplicate, extra, or wrong-kind bindings fail preparation transactionally.
 - New elements should use explicit bind-only storage through
   `ParameterBinder`.
-- Twenty-two legacy built-ins currently use `LegacySetupAdapter`. Their
+- Nineteen legacy built-ins currently use `LegacySetupAdapter`. Their
   `setup()` methods are permitted to initialize storage and resources, but
   metadata emitted during setup is discarded and checked against the static
   declaration.

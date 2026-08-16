@@ -73,87 +73,50 @@ void LeniaLayer::configure(const ofJson& config) {
     }
 }
 
+void LeniaLayer::bindParameters(
+    synaptome::element::ParameterBinder& binder) {
+    binder.bind("speed", paramSpeed_);
+    binder.bind("bpmMultiplier", paramBpmMultiplier_);
+    binder.bind("alpha", paramAlpha_);
+    binder.bind("autoReseedEveryBeats", paramAutoReseedEveryBeats_);
+    binder.bind("seed", paramSeed_);
+    binder.bind("seedDensity", paramSeedDensity_);
+    binder.bind("kernelRadius", paramKernelRadius_);
+    binder.bind("growthCenter", paramGrowthCenter_);
+    binder.bind("growthWidth", paramGrowthWidth_);
+    binder.bind("growthAmplitude", paramGrowthAmplitude_);
+    binder.bind("mutationAmount", paramMutationAmount_);
+    binder.bind("injectionRate", paramInjectionRate_);
+    binder.bind("injectionAmount", paramInjectionAmount_);
+    binder.bind("injectionRadius", paramInjectionRadius_);
+    binder.bind("decayRate", paramDecayRate_);
+    binder.bind("fieldScale", paramFieldScale_);
+    binder.bind("edgeGlow", paramEdgeGlow_);
+    binder.bind("backgroundAlpha", paramBackgroundAlpha_);
+    binder.bind("fieldAlpha", paramFieldAlpha_);
+    binder.bind("edgeOpacity", paramEdgeOpacity_);
+    binder.bind("bgR", paramBgR_);
+    binder.bind("bgG", paramBgG_);
+    binder.bind("bgB", paramBgB_);
+    binder.bind("fieldR", paramFieldR_);
+    binder.bind("fieldG", paramFieldG_);
+    binder.bind("fieldB", paramFieldB_);
+    binder.bind("edgeR", paramEdgeR_);
+    binder.bind("edgeG", paramEdgeG_);
+    binder.bind("edgeB", paramEdgeB_);
+    binder.bind("circuitThreshold", paramCircuitThreshold_);
+    binder.bind("circuitLevels", paramCircuitLevels_);
+    binder.bind("circuitTraceWidth", paramCircuitTraceWidth_);
+    binder.bind("visible", paramEnabled_);
+    binder.bind("bpmSync", paramBpmSync_);
+    binder.bind("paused", paramPaused_);
+    binder.bind("reseed", paramReseedRequested_);
+    binder.bind("autoReseed", paramAutoReseed_);
+}
+
 void LeniaLayer::setup(ParameterRegistry& registry) {
-    const std::string prefix = registryPrefix().empty() ? "layer.lenia" : registryPrefix();
+    (void)registry;
     clampParams();
-
-    ParameterRegistry::Descriptor meta;
-    meta.group = "Generative";
-    meta.label = "Action: Visible";
-    registry.addBool(prefix + ".visible", &paramEnabled_, paramEnabled_, meta);
-
-    registerFloat(registry, prefix + ".speed", &paramSpeed_, paramSpeed_, "Time: Simulation Speed", 0.0f, 80.0f, 0.1f);
-
-    meta = {};
-    meta.group = "Generative";
-    meta.label = "Action: BPM Sync";
-    meta.description = "Use transport BPM instead of free-running Lenia updates.";
-    registry.addBool(prefix + ".bpmSync", &paramBpmSync_, paramBpmSync_, meta);
-
-    registerFloat(registry, prefix + ".bpmMultiplier", &paramBpmMultiplier_, paramBpmMultiplier_, "Time: BPM Mult", 0.25f, 16.0f, 0.25f);
-    registerFloat(registry, prefix + ".alpha", &paramAlpha_, paramAlpha_, "Visibility: Layer Opacity", 0.0f, 1.0f, 0.01f);
-
-    meta = {};
-    meta.group = "Generative";
-    meta.label = "Action: Paused";
-    registry.addBool(prefix + ".paused", &paramPaused_, paramPaused_, meta);
-
-    meta.label = "Action: Reseed";
-    meta.description = "Reset the continuous automata field from the deterministic seed.";
-    registry.addBool(prefix + ".reseed", &paramReseedRequested_, paramReseedRequested_, meta);
-
-    meta.label = "Action: Auto Reseed";
-    meta.description = "Reset on a transport-quantized cadence.";
-    registry.addBool(prefix + ".autoReseed", &paramAutoReseed_, paramAutoReseed_, meta);
-
-    registerFloat(registry, prefix + ".autoReseedEveryBeats", &paramAutoReseedEveryBeats_, paramAutoReseedEveryBeats_, "Time: Auto Reseed Beats", 1.0f, 128.0f, 1.0f);
-    registerFloat(registry, prefix + ".seed", &paramSeed_, paramSeed_, "Seed: Pattern Seed", 0.0f, 999999.0f, 1.0f);
-    registerFloat(registry, prefix + ".seedDensity", &paramSeedDensity_, paramSeedDensity_, "Seed: Patch Density", 0.0f, 0.5f, 0.01f);
-    registerFloat(registry, prefix + ".kernelRadius", &paramKernelRadius_, paramKernelRadius_, "Scale: Kernel Radius", 2.0f, 18.0f, 1.0f);
-    registerFloat(registry, prefix + ".growthCenter", &paramGrowthCenter_, paramGrowthCenter_, "Growth: Center", 0.0f, 1.0f, 0.001f);
-    registerFloat(registry, prefix + ".growthWidth", &paramGrowthWidth_, paramGrowthWidth_, "Growth: Width", 0.005f, 0.25f, 0.001f);
-    registerFloat(registry, prefix + ".growthAmplitude", &paramGrowthAmplitude_, paramGrowthAmplitude_, "Growth: Amplitude", 0.0f, 0.35f, 0.001f);
-    registerFloat(registry, prefix + ".mutationAmount", &paramMutationAmount_, paramMutationAmount_, "Growth: Mutation", 0.0f, 0.05f, 0.001f);
-    registerFloat(registry, prefix + ".injectionRate", &paramInjectionRate_, paramInjectionRate_, "Growth: Injection Rate", 0.0f, 0.2f, 0.001f);
-    registerFloat(registry, prefix + ".injectionAmount", &paramInjectionAmount_, paramInjectionAmount_, "Growth: Injection Amount", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".injectionRadius", &paramInjectionRadius_, paramInjectionRadius_, "Scale: Injection Radius", 1.0f, 28.0f, 1.0f);
-    registerFloat(registry, prefix + ".decayRate", &paramDecayRate_, paramDecayRate_, "Time: Field Decay", 0.0f, 0.05f, 0.001f);
-    registerFloat(registry, prefix + ".fieldScale", &paramFieldScale_, paramFieldScale_, "Scale: Field Gain", 0.1f, 4.0f, 0.01f);
-    registerFloat(registry, prefix + ".edgeGlow", &paramEdgeGlow_, paramEdgeGlow_, "Glow: Edge Glow", 0.0f, 5.0f, 0.01f);
-    registerFloat(registry, prefix + ".backgroundAlpha", &paramBackgroundAlpha_, paramBackgroundAlpha_, "Visibility: Background Opacity", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".fieldAlpha", &paramFieldAlpha_, paramFieldAlpha_, "Visibility: Field Opacity", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".edgeOpacity", &paramEdgeOpacity_, paramEdgeOpacity_, "Visibility: Edge Opacity", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".bgR", &paramBgR_, paramBgR_, "Color: Background R", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".bgG", &paramBgG_, paramBgG_, "Color: Background G", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".bgB", &paramBgB_, paramBgB_, "Color: Background B", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".fieldR", &paramFieldR_, paramFieldR_, "Color: Field R", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".fieldG", &paramFieldG_, paramFieldG_, "Color: Field G", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".fieldB", &paramFieldB_, paramFieldB_, "Color: Field B", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".edgeR", &paramEdgeR_, paramEdgeR_, "Color: Edge R", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".edgeG", &paramEdgeG_, paramEdgeG_, "Color: Edge G", 0.0f, 1.0f, 0.01f);
-    registerFloat(registry, prefix + ".edgeB", &paramEdgeB_, paramEdgeB_, "Color: Edge B", 0.0f, 1.0f, 0.01f);
-
-    // The type-level parameter surface is stable across presentation variants.
-    // Organic assets retain these values for preset/mapping compatibility even
-    // though only the circuit renderer consumes them.
-    registerFloat(
-        registry, prefix + ".circuitThreshold",
-        &paramCircuitThreshold_, paramCircuitThreshold_,
-        "Level: Circuit Threshold", 0.0f, 0.95f, 0.01f,
-        "Field values below this level do not produce circuit contours.",
-        "Circuit Appearance", true, 20);
-    registerFloat(
-        registry, prefix + ".circuitLevels",
-        &paramCircuitLevels_, paramCircuitLevels_,
-        "Count: Circuit Contour Levels", 2.0f, 8.0f, 1.0f,
-        "Number of hard isocontour bands extracted from the Lenia field.",
-        "Circuit Appearance");
-    registerFloat(
-        registry, prefix + ".circuitTraceWidth",
-        &paramCircuitTraceWidth_, paramCircuitTraceWidth_,
-        "Scale: Circuit Trace Width", 1.0f, 4.0f, 1.0f,
-        "Hard-edged contour width in simulation pixels.",
-        "Circuit Appearance", true, 30);
 
     allocateField();
     resetField();
@@ -536,28 +499,4 @@ std::uint64_t LeniaLayer::debugStateSignature() const {
             std::round(ofClamp(field_[i], 0.0f, 1.0f) * 65535.0f)));
     }
     return hash;
-}
-
-void LeniaLayer::registerFloat(ParameterRegistry& registry,
-                               const std::string& id,
-                               float* target,
-                               float initial,
-                               const char* label,
-                               float minValue,
-                               float maxValue,
-                               float step,
-                               const char* description,
-                               const char* group,
-                               bool quickAccess,
-                               int quickAccessOrder) {
-    ParameterRegistry::Descriptor meta;
-    meta.group = group;
-    meta.label = label;
-    meta.range.min = minValue;
-    meta.range.max = maxValue;
-    meta.range.step = step;
-    meta.description = description;
-    meta.quickAccess = quickAccess;
-    meta.quickAccessOrder = quickAccessOrder;
-    registry.addFloat(id, target, initial, meta);
 }

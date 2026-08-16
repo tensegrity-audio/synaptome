@@ -659,7 +659,7 @@ def main() -> int:
     )
     registered_types.update(
         re.findall(
-            r'registerBuiltin\(\s*ElementDescriptor\s*\{\s*"([^"]+)"',
+            r'register(?:Explicit)?Builtin\(\s*ElementDescriptor\s*\{\s*"([^"]+)"',
             builtin_source,
         )
     )

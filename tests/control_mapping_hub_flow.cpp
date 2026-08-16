@@ -7261,6 +7261,15 @@ bool RunCircuitLeniaLifecycleScenario() {
         }
     };
 
+    class BindingCounter final
+        : public synaptome::element::ParameterBinder {
+    public:
+        void bind(std::string, float&) override { ++count; }
+        void bind(std::string, bool&) override { ++count; }
+        void bind(std::string, std::string&) override { ++count; }
+        std::size_t count = 0;
+    };
+
     ofJson config;
     config["presentation"] = "circuit";
     config["textureSize"] = { 64, 36 };
@@ -7278,24 +7287,18 @@ bool RunCircuitLeniaLifecycleScenario() {
     second.setRegistryPrefix("generative.circuitLenia.second");
     first.configure(config);
     second.configure(config);
+    BindingCounter firstBindings;
+    BindingCounter secondBindings;
+    first.bindParameters(firstBindings);
+    second.bindParameters(secondBindings);
     first.setup(firstRegistry);
     second.setup(secondRegistry);
+    require(firstBindings.count == 37 && secondBindings.count == 37,
+            "Circuit Lenia did not expose the complete bind-only surface");
 
     require(first.debugUsesCircuitPresentation() &&
                 second.debugUsesCircuitPresentation(),
             "Circuit Lenia did not retain its catalog-selected presentation");
-    const auto* threshold = firstRegistry.findFloat(
-        "generative.circuitLenia.first.circuitThreshold");
-    const auto* traceWidth = firstRegistry.findFloat(
-        "generative.circuitLenia.first.circuitTraceWidth");
-    require(threshold && threshold->meta.group == "Circuit Appearance" &&
-                threshold->meta.quickAccess &&
-                threshold->meta.quickAccessOrder == 20,
-            "Circuit Lenia threshold is not a labeled quick-access control");
-    require(traceWidth && traceWidth->meta.quickAccess &&
-                traceWidth->meta.quickAccessOrder == 30,
-            "Circuit Lenia trace width is not a quick-access control");
-
     LayerUpdateParams params;
     params.dt = 1.0f / 30.0f;
     params.bpm = 120.0f;
@@ -7311,14 +7314,13 @@ bool RunCircuitLeniaLifecycleScenario() {
     LeniaLayer organic;
     ParameterRegistry organicRegistry;
     organic.setRegistryPrefix("generative.lenia.test");
+    BindingCounter organicBindings;
+    organic.bindParameters(organicBindings);
     organic.setup(organicRegistry);
     require(!organic.debugUsesCircuitPresentation(),
             "established Lenia unexpectedly switched to circuit presentation");
-    const auto* organicThreshold = organicRegistry.findFloat(
-        "generative.lenia.test.circuitThreshold");
     require(
-        organicThreshold &&
-            organicThreshold->meta.group == "Circuit Appearance",
+        organicBindings.count == firstBindings.count,
         "Lenia variants no longer expose one stable parameter surface");
     return true;
 }

@@ -2,6 +2,78 @@
 
 This changelog records Project Ops and administrative workflow changes. Product release versioning remains governed by `docs/release_policy.md`.
 
+## 2026-08-15 - architecture - seac_12_representative_migration
+
+- Migrated Grid, STL Model, and Lenia from compatibility setup discovery to
+  exact declaration-backed `ParameterBinder` storage, reducing the remaining
+  compatibility adapter count from 22 to 19 without changing public IDs.
+- Added complete STL Model and Lenia confidence profiles and retained Grid and
+  Signal Bloom as controls. All four profiles pass; the new profiles exercise
+  at least 200 lifecycle cycles with bounded memory, timing, and graphics
+  state.
+- Published the public Element authoring guide and updated the SDK, system,
+  subsystem, layer roadmap, parameter contract, and contract index.
+- Passed all public/static/discovery/package gates, 51 BrowserFlow scenarios,
+  focused native targets, real-context visual captures, and physical plus
+  junction `Release|x64` builds with zero errors.
+- On 2026-08-16 the operator built and launched from Visual Studio and
+  confirmed Grid, STL Tetra, organic Lenia, and Circuit Lenia load in the real
+  host. The generated Tetrahedron Fixture remains the separately tested
+  default-off discovery example.
+- Promoted SEAC-12 and the complete 12-step spine/element architecture
+  convergence milestone.
+
+## 2026-08-15 - architecture - seac_11_native_module_decision
+
+- Completed SEAC-11 with the evidence-based decision that Synaptome v1 does
+  not load native element modules at runtime.
+- Recorded that Signal Bloom and generated tetrahedron cover every reviewed
+  source-package and data-only workflow; no valid candidate is blocked solely
+  by unavailable native code and no restart-free show requirement was found.
+- Published the supported ladder of built-ins, controlled generated source
+  registration, bounded data-only templates, and external-process bridges.
+- Published a testable future reversal gate covering concrete need, narrow ABI,
+  exact compatibility, trust, lifecycle, containment, construction-free
+  inspection, rollback, hostile tests, and distribution ownership.
+- Added no module schema, ABI, loader, placeholder API, or build project and
+  advanced the architecture milestone to SEAC-12 at 11 of 12 steps complete.
+
+## 2026-08-15 - architecture - seac_11_12_execution_handoffs
+
+- Froze SEAC-11 as an evidence-based decision gate whose default outcome is no
+  native runtime loader. Generated registration, bounded data-only templates,
+  and external process bridges remain the supported capability ladder unless
+  a concrete reviewed workflow satisfies the explicit ABI, trust, isolation,
+  rollback, and distribution reversal gate.
+- Froze SEAC-12 around Grid, generated STL/Tetrahedron, and Lenia/Circuit Lenia
+  as the simple visual, content-backed, and complex deterministic reference
+  set. Signal Bloom remains the already-migrated package-authoring control.
+- Added ordered migration slices, complete static/native/host/persistence/build
+  validation, stop conditions, public authoring-guide requirements, and the
+  final 12-step architecture promotion checklist.
+- Routed the Project Ops roadmap, active convergence request, layer-system
+  roadmap, and docs index to the two handoffs.
+
+## 2026-08-15 - architecture - seac_10_operator_evidence_close
+
+- Closed the SEAC-10 remote diagnostics ledger from an isolated detached
+  Windows 11 25H2 worktree at commit `0511bf9`; the primary operator worktree
+  remained untouched.
+- Passed all 17 focused controlled-discovery tests with directory-symlink
+  containment enabled, all 24 public-app contracts, all 51 BrowserFlow
+  scenarios, and the isolated physical Release build with zero errors.
+- Captured an enabled, non-stale, construction-free snapshot containing the
+  available Signal Bloom package and generated tetrahedron, plus exact local
+  activation records for both candidates.
+- Operator evidence shows Tetrahedron Fixture and Signal Bloom running
+  concurrently in slots 1 and 2 without unexpected composition mutation.
+- Reclassified log-noise cleanup and live physical-MIDI/show rehearsal outside
+  SEAC-10. The reproduced missing-file removal notice belongs to missing-scene
+  recovery; the prior canonical-preferences publication warning did not recur.
+- SEAC-10 is promotion-complete. SEAC-11 is now the active architecture
+  decision and must retain no native loader unless observed package workflow
+  evidence justifies one.
+
 ## 2026-07-29 - architecture - seac_10_controlled_discovery
 
 - Added strict machine-local, default-off package and generated-STL root

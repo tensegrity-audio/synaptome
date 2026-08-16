@@ -3,7 +3,7 @@
 Status: Implemented; retained as the frozen execution contract
 Owner task: SEAC-6
 Canonical request:
-[`../project_ops/in_progress/spine_element_architecture_convergence.md`](../project_ops/in_progress/spine_element_architecture_convergence.md)
+[`../project_ops/completed/spine_element_architecture_convergence.md`](../project_ops/completed/spine_element_architecture_convergence.md)
 
 Implementation and operating guide:
 [`element_confidence_suite_v1.md`](element_confidence_suite_v1.md)

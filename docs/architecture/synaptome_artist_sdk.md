@@ -178,14 +178,15 @@ Target:
 - A Synaptome extension should be installable and testable without touching
   `ofApp.cpp` or a handwritten host aggregate.
 
-Current gap:
-- Strict Package v1 and controlled generated registration exist, but there is
-  no automatic extension loader.
-- Runtime discovery, activation recovery, and native-module policy remain
-  separate later gates.
+Current boundary:
+- Strict Package v1, controlled generated registration, and default-off
+  inspect-before-activate discovery exist.
+- [`Native Module Policy v1`](native_module_policy_v1.md) deliberately keeps
+  native runtime loading outside the supported v1 SDK. This is policy, not a
+  missing automatic-loader promise.
 - Broader built-in migration and public dependency guidance remain incomplete.
-- Extension install and validation should eventually avoid editing the
-  controlled host aggregate or project files.
+- Controlled source-package generation already avoids package-specific edits
+  to the host aggregate and project source lists; a normal rebuild is required.
 
 First public decision:
 - The first public Synaptome repo may ship with an honest controlled generated
@@ -193,12 +194,22 @@ First public decision:
 - Artist packages use a creator-only leaf, Package v1, catalog/scene fixtures,
   and validators instead of implying hot-loaded plugins exist.
 - Synaptome may claim no project-list or host-aggregate edit for controlled
-  source packages, but not runtime discovery or native plug-in loading.
+  source packages and bounded discovery of exact compiled types, but not
+  native plug-in loading, unloading, or hot reload.
 - `LayerFactory::registerType()` fails loudly for invalid descriptors, missing
   creators, and duplicate type IDs, so malformed or colliding source
   registrations cannot silently replace implementations. Generated
   registration preflights the complete controlled type set before mutation.
-  Discovery and transactional operator mappings remain later phases.
+  Discovery and transactional operator mappings are implemented as separate,
+  explicit transactions.
+
+Supported extension choices, in order, are: a built-in compiled type; a
+validated source package in the controlled registration set; bounded
+data-only content backed by an exact precompiled type; and an external process
+or reviewed transport bridge when isolation or independent deployment is
+required. A future native runtime module is permitted only after the evidence,
+ABI, compatibility, trust, lifecycle, containment, inspection, rollback,
+hostile-test, and distribution reversal gate in the policy is satisfied.
 
 ## Layer System Roadmap
 
@@ -389,12 +400,12 @@ For a normal openFrameworks sketch:
 
 | Gap | Current State | Target |
 | --- | --- | --- |
-| Public layer authoring guide | Architecture docs plus validated `docs/examples/artist_sdk/**` fixture. | Step-by-step guide expanded from the fixture. |
+| Public layer authoring guide | Complete task-oriented [`element_authoring_guide.md`](../element_authoring_guide.md) plus validated Signal Bloom, Grid, STL, and Lenia references. | Keep commands and reference artifacts current as contracts evolve. |
 | Parameter vocabulary | Implicit in code and examples. | Versioned reference plus generated manifest. |
 | Layer system roadmap | Layer package, folder discovery, file-backed generated layers, package params, options, presets, mapping presets, and bench work are larger than the SDK overview. | Use `synaptome_layer_system_roadmap.md` as the primary roadmap for improving the layer system. |
-| Factory registration | Package v1 generates Signal Bloom's complete contract and build record; its leaf supplies only the creator, and the host/benches share one generated entrypoint. | Extend the controlled set without host/project edits; decide discovery and native loading separately. |
+| Factory registration | Package v1 generates Signal Bloom's complete contract and build record; controlled discovery activates exact compiled types, and Native Module Policy v1 rejects runtime native loading. | Extend the controlled set without host/project edits and retain the no-loader reversal gate. |
 | Transport/reactivity contract | BPM and beat context exist, but clock source, confidence, onset/downbeat, and fallback policy are runtime concerns outside the layer roadmap. | Use `synaptome_transport_reactivity.md` for BPM, beat detection, and timing-source work. |
-| Catalog fixture | Golden static `LayerLibrary` ingestion snapshot plus validated artist-authored source/catalog/scene fixture. | Use both fixtures to tighten the public authoring guide and future package seam. |
+| Catalog fixture | Golden static `LayerLibrary` ingestion snapshot plus validated artist-authored source/catalog/scene fixture. | Keep both fixtures and the public authoring guide synchronized with future package changes. |
 | Mapping lifecycle | Real Browser/MIDI/OSC flows. | Public docs for global/scene/local mapping ownership. |
 | Media onboarding | Manifest-only `videos.json` contains one reviewed, provenance-complete public loop, `aurora-veil-r1`, assigned to the Browser-visible default clip layer. | Keep folder scanning deferred and require a bounded request for any additional asset. |
 | Display stability | Works, but still coupled to scene-load work. | Transaction-backed display/window contract. |

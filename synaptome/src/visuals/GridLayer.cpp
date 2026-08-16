@@ -8,172 +8,34 @@ namespace {
     const ofColor kGridLineColor(0, 255, 160);
 }
 
+void GridLayer::bindParameters(
+    synaptome::element::ParameterBinder& binder) {
+    binder.bind("segments", paramSegments_);
+    binder.bind("waveAmount", paramWaveAmount_);
+    binder.bind("waveFrequency", paramWaveFrequency_);
+    binder.bind("waveSpeed", paramWaveSpeed_);
+    binder.bind("bendAmount", paramBendAmount_);
+    binder.bind("bendFrequency", paramBendFrequency_);
+    binder.bind("bendSpeed", paramBendSpeed_);
+    binder.bind("deformAmount", paramDeformAmount_);
+    binder.bind("deformScale", paramDeformScale_);
+    binder.bind("deformSpeed", paramDeformSpeed_);
+    binder.bind("twistAmount", paramTwistAmount_);
+    binder.bind("twistSpeed", paramTwistSpeed_);
+    binder.bind("bulgeAmount", paramBulgeAmount_);
+    binder.bind("bulgeRadius", paramBulgeRadius_);
+    binder.bind("bulgeSpeed", paramBulgeSpeed_);
+    binder.bind("faceOpacity", paramFaceOpacity_);
+    binder.bind("visible", paramEnabled_);
+    binder.bind("wave", paramWave_);
+    binder.bind("bend", paramBend_);
+    binder.bind("deform", paramDeform_);
+    binder.bind("twist", paramTwist_);
+    binder.bind("bulge", paramBulge_);
+}
+
 void GridLayer::setup(ParameterRegistry& registry) {
-    const std::string prefix = registryPrefix().empty() ? "layer.grid" : registryPrefix();
-
-    ParameterRegistry::Descriptor boolMeta;
-    boolMeta.label = "Grid Visible";
-    boolMeta.group = "Visibility";
-    registry.addBool(prefix + ".visible", &paramEnabled_, paramEnabled_, boolMeta);
-
-    ParameterRegistry::Descriptor segMeta;
-    segMeta.label = "Grid Segments";
-    segMeta.group = "Grid";
-    segMeta.range.min = 20.0f;
-    segMeta.range.max = 200.0f;
-    segMeta.range.step = kSegmentStep;
-    registry.addFloat(prefix + ".segments", &paramSegments_, paramSegments_, segMeta);
-
-    ParameterRegistry::Descriptor waveMeta;
-    waveMeta.label = "Grid Wave";
-    waveMeta.group = "Grid";
-    waveMeta.description = "Enable radial sine wave displacement.";
-    registry.addBool(prefix + ".wave", &paramWave_, paramWave_, waveMeta);
-
-    ParameterRegistry::Descriptor waveAmountMeta;
-    waveAmountMeta.label = "Grid Wave Amount";
-    waveAmountMeta.group = "Grid";
-    waveAmountMeta.range.min = 0.0f;
-    waveAmountMeta.range.max = 120.0f;
-    waveAmountMeta.range.step = 1.0f;
-    registry.addFloat(prefix + ".waveAmount", &paramWaveAmount_, paramWaveAmount_, waveAmountMeta);
-
-    ParameterRegistry::Descriptor waveFrequencyMeta;
-    waveFrequencyMeta.label = "Grid Wave Frequency";
-    waveFrequencyMeta.group = "Grid";
-    waveFrequencyMeta.range.min = 0.1f;
-    waveFrequencyMeta.range.max = 12.0f;
-    waveFrequencyMeta.range.step = 0.05f;
-    registry.addFloat(prefix + ".waveFrequency", &paramWaveFrequency_, paramWaveFrequency_, waveFrequencyMeta);
-
-    ParameterRegistry::Descriptor waveSpeedMeta;
-    waveSpeedMeta.label = "Grid Wave Speed";
-    waveSpeedMeta.group = "Grid";
-    waveSpeedMeta.range.min = 0.0f;
-    waveSpeedMeta.range.max = 8.0f;
-    waveSpeedMeta.range.step = 0.01f;
-    registry.addFloat(prefix + ".waveSpeed", &paramWaveSpeed_, paramWaveSpeed_, waveSpeedMeta);
-
-    ParameterRegistry::Descriptor bendMeta;
-    bendMeta.label = "Grid Bend";
-    bendMeta.group = "Grid";
-    bendMeta.description = "Enable diagonal sine bend displacement.";
-    registry.addBool(prefix + ".bend", &paramBend_, paramBend_, bendMeta);
-
-    ParameterRegistry::Descriptor bendAmountMeta;
-    bendAmountMeta.label = "Grid Bend Amount";
-    bendAmountMeta.group = "Grid";
-    bendAmountMeta.range.min = 0.0f;
-    bendAmountMeta.range.max = 120.0f;
-    bendAmountMeta.range.step = 1.0f;
-    registry.addFloat(prefix + ".bendAmount", &paramBendAmount_, paramBendAmount_, bendAmountMeta);
-
-    ParameterRegistry::Descriptor bendFrequencyMeta;
-    bendFrequencyMeta.label = "Grid Bend Frequency";
-    bendFrequencyMeta.group = "Grid";
-    bendFrequencyMeta.range.min = 0.0f;
-    bendFrequencyMeta.range.max = 0.05f;
-    bendFrequencyMeta.range.step = 0.001f;
-    registry.addFloat(prefix + ".bendFrequency", &paramBendFrequency_, paramBendFrequency_, bendFrequencyMeta);
-
-    ParameterRegistry::Descriptor bendSpeedMeta;
-    bendSpeedMeta.label = "Grid Bend Speed";
-    bendSpeedMeta.group = "Grid";
-    bendSpeedMeta.range.min = 0.0f;
-    bendSpeedMeta.range.max = 8.0f;
-    bendSpeedMeta.range.step = 0.01f;
-    registry.addFloat(prefix + ".bendSpeed", &paramBendSpeed_, paramBendSpeed_, bendSpeedMeta);
-
-    ParameterRegistry::Descriptor deformMeta;
-    deformMeta.label = "Grid Noise";
-    deformMeta.group = "Grid";
-    deformMeta.description = "Enable irregular Perlin noise displacement.";
-    registry.addBool(prefix + ".deform", &paramDeform_, paramDeform_, deformMeta);
-
-    ParameterRegistry::Descriptor deformAmountMeta;
-    deformAmountMeta.label = "Grid Noise Amount";
-    deformAmountMeta.group = "Grid";
-    deformAmountMeta.range.min = 0.0f;
-    deformAmountMeta.range.max = 160.0f;
-    deformAmountMeta.range.step = 1.0f;
-    registry.addFloat(prefix + ".deformAmount", &paramDeformAmount_, paramDeformAmount_, deformAmountMeta);
-
-    ParameterRegistry::Descriptor deformScaleMeta;
-    deformScaleMeta.label = "Grid Noise Scale";
-    deformScaleMeta.group = "Grid";
-    deformScaleMeta.range.min = 0.1f;
-    deformScaleMeta.range.max = 8.0f;
-    deformScaleMeta.range.step = 0.05f;
-    registry.addFloat(prefix + ".deformScale", &paramDeformScale_, paramDeformScale_, deformScaleMeta);
-
-    ParameterRegistry::Descriptor deformSpeedMeta;
-    deformSpeedMeta.label = "Grid Noise Speed";
-    deformSpeedMeta.group = "Grid";
-    deformSpeedMeta.range.min = 0.0f;
-    deformSpeedMeta.range.max = 4.0f;
-    deformSpeedMeta.range.step = 0.01f;
-    registry.addFloat(prefix + ".deformSpeed", &paramDeformSpeed_, paramDeformSpeed_, deformSpeedMeta);
-
-    ParameterRegistry::Descriptor twistMeta;
-    twistMeta.label = "Grid Twist";
-    twistMeta.group = "Grid";
-    twistMeta.description = "Enable horizontal swirl displacement.";
-    registry.addBool(prefix + ".twist", &paramTwist_, paramTwist_, twistMeta);
-
-    ParameterRegistry::Descriptor twistAmountMeta;
-    twistAmountMeta.label = "Grid Twist Amount";
-    twistAmountMeta.group = "Grid";
-    twistAmountMeta.range.min = -180.0f;
-    twistAmountMeta.range.max = 180.0f;
-    twistAmountMeta.range.step = 1.0f;
-    twistAmountMeta.units = "deg";
-    registry.addFloat(prefix + ".twistAmount", &paramTwistAmount_, paramTwistAmount_, twistAmountMeta);
-
-    ParameterRegistry::Descriptor twistSpeedMeta;
-    twistSpeedMeta.label = "Grid Twist Speed";
-    twistSpeedMeta.group = "Grid";
-    twistSpeedMeta.range.min = 0.0f;
-    twistSpeedMeta.range.max = 4.0f;
-    twistSpeedMeta.range.step = 0.01f;
-    registry.addFloat(prefix + ".twistSpeed", &paramTwistSpeed_, paramTwistSpeed_, twistSpeedMeta);
-
-    ParameterRegistry::Descriptor bulgeMeta;
-    bulgeMeta.label = "Grid Bulge";
-    bulgeMeta.group = "Grid";
-    bulgeMeta.description = "Enable dome or bowl displacement.";
-    registry.addBool(prefix + ".bulge", &paramBulge_, paramBulge_, bulgeMeta);
-
-    ParameterRegistry::Descriptor bulgeAmountMeta;
-    bulgeAmountMeta.label = "Grid Bulge Amount";
-    bulgeAmountMeta.group = "Grid";
-    bulgeAmountMeta.range.min = -160.0f;
-    bulgeAmountMeta.range.max = 160.0f;
-    bulgeAmountMeta.range.step = 1.0f;
-    registry.addFloat(prefix + ".bulgeAmount", &paramBulgeAmount_, paramBulgeAmount_, bulgeAmountMeta);
-
-    ParameterRegistry::Descriptor bulgeRadiusMeta;
-    bulgeRadiusMeta.label = "Grid Bulge Radius";
-    bulgeRadiusMeta.group = "Grid";
-    bulgeRadiusMeta.range.min = 0.1f;
-    bulgeRadiusMeta.range.max = 1.5f;
-    bulgeRadiusMeta.range.step = 0.01f;
-    registry.addFloat(prefix + ".bulgeRadius", &paramBulgeRadius_, paramBulgeRadius_, bulgeRadiusMeta);
-
-    ParameterRegistry::Descriptor bulgeSpeedMeta;
-    bulgeSpeedMeta.label = "Grid Bulge Speed";
-    bulgeSpeedMeta.group = "Grid";
-    bulgeSpeedMeta.range.min = 0.0f;
-    bulgeSpeedMeta.range.max = 4.0f;
-    bulgeSpeedMeta.range.step = 0.01f;
-    registry.addFloat(prefix + ".bulgeSpeed", &paramBulgeSpeed_, paramBulgeSpeed_, bulgeSpeedMeta);
-
-    ParameterRegistry::Descriptor faceMeta;
-    faceMeta.label = "Grid Face Opacity";
-    faceMeta.group = "Grid";
-    faceMeta.range.min = 0.0f;
-    faceMeta.range.max = 1.0f;
-    faceMeta.range.step = 0.01f;
-    registry.addFloat(prefix + ".faceOpacity", &paramFaceOpacity_, paramFaceOpacity_, faceMeta);
+    (void)registry;
 }
 
 void GridLayer::update(const LayerUpdateParams& params) {

@@ -104,8 +104,9 @@ The central decision is:
 It may use a deliberately small set of openFrameworks rendering types. It must
 not expose the host application, operator UI, persistence implementation,
 device adapters, or runtime-owned registries. Generated static registration is
-the dependable installation path. Dynamic native modules remain a later,
-evidence-based decision.
+the dependable source installation path. The completed
+[`Native Module Policy v1`](native_module_policy_v1.md) decision keeps native
+element loading outside the supported v1 boundary.
 
 ## Current-State Inventory
 
@@ -124,10 +125,10 @@ architecture.
 | Composition | Runtime owns the fixed assignment/state/lifecycle records and coverage policy. `HostCompositionRenderer` owns per-slot/composite FBOs and presentation behind `HostCompositionEffects`; `ofApp::drawConsole` delegates. | The state and graphics owners are now explicit; real pixel/GL evidence remains a later confidence-suite gate. |
 | Registry | At the SEAC-2 freeze, `LayerFactory` was process-global. It is now Runtime-scoped with atomic declared records, validation, non-constructing lookup, and copied enumeration. Every shipping record carries `ElementTypeContract`; generated package records also expose package/version/signature identity. It still has no unregister or runtime-discovered package owner. | Type/action/parameter identity is isolated and inspectable; dynamic package ownership remains SEAC-10 work. |
 | Catalog | `LayerLibrary` owns legacy JSON loading, package activation, and preset merging. Signal Bloom's package now generates its Runtime type contract and controlled build record; legacy built-ins retain their reviewed declaration snapshot. | Runtime catalog discovery remains default-off and separate from compile-time generated registration. |
-| Parameters | Public pointer-free declaration DTOs and authoritative declarations now cover all 23 shipping types and 786 controls. Runtime publishes declaration metadata/defaults, enforces exact live ID/kind/storage parity, and exposes a separate copied base/live/origin/modifier snapshot owned by the spine. Signal Bloom uses explicit bind-only storage; 22 existing implementations use a checked setup-storage adapter whose metadata is discarded. SEAC-5A freezes value precedence, provenance vocabulary, and artifact ownership/version rules; the Scene compatibility reader and value-origin slice are implemented. | Direct bind-only migration remains cleanup. Mapping/profile/preference versioning and the Text transaction remain SEAC-5 implementation work. |
+| Parameters | Public pointer-free declaration DTOs and authoritative declarations cover all 23 shipping types and 786 controls. Runtime publishes declaration metadata/defaults, enforces exact live ID/kind/storage parity, and exposes a separate copied base/live/origin/modifier snapshot owned by the spine. Signal Bloom, Grid, STL Model, and Lenia use explicit bind-only storage; 19 implementations retain the checked setup-storage adapter whose metadata is discarded. | Direct migration of the remaining 19 adapters is cleanup. Keep value precedence, provenance, Scene, mapping, profile, preference, and Text transaction contracts stable. |
 | Services | Elements reach global services such as audio analysis, video catalog, and text state directly. | Isolated tests can still depend on hidden process state. |
 | Inspection | Type/kind/action/group/parameter inspection is construction-free for every registration. Browser counts/groups, the machine catalog, compatibility manifest, compiled declarations, and human reference come from the same reviewed snapshot. | Dynamic option providers remain runtime services, and package ownership/version inspection belongs to later phases. |
-| Tests | The package bench proves stub-backed element lifecycle/draw dispatch. Browser tests still use private app internals. `HostCompositionRendererTest` separately compiles the production renderer/Runtime sources against FBO/GL stubs. BrowserFlow passes 36 scenarios, and the operator reports successful Release and dual-screen use. | The renderer harness proves traversal/policy/failure behavior, not pixels, shader execution, or a real GL context; live physical-MIDI hardware and a complete show-machine recovery rehearsal remain deferred. |
+| Tests | Package and confidence benches prove real-SDK lifecycle, binding, deterministic update, graphics-context draw, teardown/reload, memory, and timing behavior. `HostCompositionRendererTest` separately compiles the production renderer/Runtime sources against FBO/GL stubs. BrowserFlow passes 51 scenarios, and the operator completed the SEAC-12 real-host Grid/STL Tetra/Lenia/Circuit Lenia review. | Live physical-MIDI hardware and the complete show-machine recovery rehearsal remain independently deferred. |
 
 The inventory also identifies two state risks that later tasks must preserve:
 
@@ -259,8 +260,9 @@ deterministically named creator. The host and isolated benches therefore use
 the same generated record without package-specific edits to `ofApp.cpp`,
 `BuiltinElements.cpp`, the solution, or project source lists.
 
-This is compile-time controlled source registration. Runtime discovery and
-native binary loading remain SEAC-10 and SEAC-11 concerns.
+This is compile-time controlled source registration. SEAC-10 added bounded
+runtime discovery without code loading; SEAC-11 retained the v1 no-native-
+loader policy.
 
 ## Element SDK v1 Contract
 
@@ -798,7 +800,7 @@ This decision does not promise or implement:
 - native hot loading or unloading;
 - automatic package discovery or activation;
 - the complete Scene v2/state-provenance model;
-- direct bind-only conversion of the 22 compatibility-adapted built-ins;
+- direct bind-only conversion of the remaining 19 compatibility-adapted built-ins;
 - scene, preset, or mapping migration to the declared parameter contract;
 - display label, implementation/package version or owner, capabilities,
   dependencies, resources, and persistence fields in `ElementDescriptor`;

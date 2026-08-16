@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "stl-model",
+  "elementType": "stlModel",
+  "bindingMode": "bind-only",
+  "inputs": {
+    "viewportWidth": 640,
+    "viewportHeight": 360,
+    "updateFrames": 60,
+    "fixedStepSeconds": 0.016666666666666666,
+    "bpm": 120,
+    "transportSpeed": 1.0,
+    "seed": 1001,
+    "determinismRepetitions": 2,
+    "genericInputs": {}
+  },
+  "dependencies": [
+    {"kind": "source", "id": "stl-header", "path": "synaptome/src/visuals/StlModelLayer.h"},
+    {"kind": "source", "id": "stl-implementation", "path": "synaptome/src/visuals/StlModelLayer.cpp"},
+    {"kind": "fixture", "id": "tetrahedron-stl", "path": "docs/examples/generated_layers/stl_models/tetrahedron.stl"},
+    {"kind": "project", "id": "stl-confidence-contract-project", "path": "synaptome/tests/ElementConfidenceStlContract/ElementConfidenceStlContract.vcxproj"}
+  ],
+  "contractHarness": {
+    "project": "synaptome/tests/ElementConfidenceStlContract/ElementConfidenceStlContract.vcxproj",
+    "executable": "synaptome/tests/ElementConfidenceStlContract/x64/Release/ElementConfidenceStlContract.exe"
+  },
+  "validators": [
+    {"id": "runtime-core-boundary", "command": ["{python}", "tools/validate_runtime_core_boundary.py"]},
+    {"id": "element-sdk-boundary", "command": ["{python}", "tools/validate_element_sdk_boundary.py"]},
+    {"id": "controlled-discovery", "command": ["{python}", "-m", "pytest", "tests/test_controlled_package_discovery_v1.py", "-q"]}
+  ]
+}

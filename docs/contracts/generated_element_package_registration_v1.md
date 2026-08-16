@@ -142,6 +142,9 @@ python tools\run_element_confidence.py `
 - Transactional preset and mapping preview/apply/edit/remove belongs to
   SEAC-9.
 - Default-off package and data-only content discovery belongs to SEAC-10.
-- Native binary module and ABI policy belongs to SEAC-11.
+- Native binary module and ABI policy is resolved by
+  [`Native Module Policy v1`](../architecture/native_module_policy_v1.md): v1
+  has no native runtime loader.
 - Catalog-wide representative migration and the final public authoring guide
-  belong to SEAC-12.
+  were completed by SEAC-12; retain the generated-registration boundary and
+  use the public authoring guide for current workflow instructions.

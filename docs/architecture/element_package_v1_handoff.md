@@ -4,7 +4,7 @@ Status: Implemented; retained as the frozen execution contract
 Owner task: SEAC-7
 Prepared: 2026-07-29
 Canonical request:
-[`../project_ops/in_progress/spine_element_architecture_convergence.md`](../project_ops/in_progress/spine_element_architecture_convergence.md)
+[`../project_ops/completed/spine_element_architecture_convergence.md`](../project_ops/completed/spine_element_architecture_convergence.md)
 
 Predecessor evidence:
 [`element_confidence_suite_v1_handoff.md`](element_confidence_suite_v1_handoff.md)
@@ -242,7 +242,7 @@ SEAC-7 is complete only when:
 - the handoff to SEAC-8 identifies a validated package/type record that can
   drive controlled registration without changing the package contract.
 
-## Explicitly Deferred
+## Explicitly Deferred At This Gate
 
 - generated registration and removal of handwritten aggregate/project-list
   edits: SEAC-8;
@@ -250,6 +250,12 @@ SEAC-7 is complete only when:
 - default-on or automatic package/content discovery: SEAC-10;
 - native binary module and ABI policy: SEAC-11;
 - catalog-wide representative migration and public authoring closure: SEAC-12.
+
+Closure note: SEAC-8 through SEAC-12 are now complete. Generated registration,
+transactional mappings, default-off controlled discovery, Native Module Policy
+v1, representative bind-only migration, and the public authoring guide are
+maintained by their final contracts and closure evidence rather than this
+earlier package handoff.
 
 Stop instead of widening the schema if parity requires constructing an element,
 if portable metadata needs machine-local state, if package validation mutates
