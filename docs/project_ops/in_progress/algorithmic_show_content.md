@@ -6,12 +6,12 @@ State Summary
 - Status: In progress
 - Steps Complete: 3 / 4
 - Progress: Twelve compiled source packages, 36 catalog looks and six effect-look scenes implemented; portable validation and operator guide complete.
-- Last Step Outcome: 2026-09-17 - Verified declarations, deterministic models, native adapters and recorded geometry; corrected reseed persistence before delivery.
-- Next Step: Build Release/x64 on the show machine, rehearse planned combinations and confirm physical MIDI/audio/projector behavior.
+- Last Step Outcome: 2026-09-18 - Repaired truncated incoming files, regenerated metadata, and verified public contracts, Python tests, LayerPackageBench, and the Windows Release/x64 app build with existing dependency libraries.
+- Next Step: Rehearse planned combinations and confirm physical MIDI/audio/projector behavior on the show machine.
 - Dependencies / Overlap: Element SDK v1, source registration, parameter manifests, existing effect chain, show_readiness_operator_stability.
 - Primary Scope: contracts
 - Secondary Scopes: tests, docs
-- Blocking Issues / Unknowns: Windows Release build, projector rendering and physical MIDI cannot run in this Linux workspace.
+- Blocking Issues / Unknowns: Interactive GPU/projector rendering and physical MIDI/audio acceptance remain pending.
 - Impact / Priority Notes: Content for the operator's next-day visuals show; preserve runtime behavior.
 - Priority Score: N/A
 - Priority Lane: Fast-Track
@@ -122,6 +122,7 @@ State Summary
 - 2026-09-17 - Delivered twelve source-contained bind-only models, 236 declared parameters and 36 ordinary catalog looks. Common visible host-mic suggestions share source profiles and preserve a nonzero silent baseline. Generated registration uses the existing extension path.
 - 2026-09-17 - Reviewed CPU captures of actual drawing geometry. Native checks caught and corrected a reseed persistence issue in Wave Tank, Chladni Plate and Phase Lattice; all actions now restart the declared seed without changing the persisted base.
 - 2026-09-17 - Completed docs/show_content_guide.md and docs/show_effect_looks.md. Documented existing scene-load route retirement, per-processor effect ownership and machine-local preset activation limits without changing host behavior.
+- 2026-09-18 - Integrated the local explicit-binding migration, repaired twelve truncated incoming files from Git history and authoritative generators, and expanded the SDK boundary check to the complete generated registration set.
 
 ## Validation
 
@@ -129,7 +130,9 @@ State Summary
 - Passed: 61 Python tests plus two subtests; strict extraction, release metadata, built-in OSC patterns, app independence and this request's Project Ops audits.
 - Passed: Twelve pure model suites and twelve real-adapter CPU suites, including deterministic replay, bounded stepping, finite visible geometry, parameter binding, transport/local pause, reseed persistence, slot opacity and graphics-state restoration. Existing LayerPackageBench remains green.
 - Passed: AddressSanitizer and UndefinedBehaviorSanitizer runs of models and adapters; leak detection disabled because the container does not support it.
-- Not Run: Windows Release build and hardware/projector acceptance, unavailable in Linux.
+- Passed on Windows after integration repair: all 24 public contracts; 60 Python tests and two subtests (one platform skip); strict extraction and SDK/Runtime boundaries; LayerPackageBench build/run; Release/x64 application build using existing dependency libraries.
+- Passed on Windows: rebuilt Signal Bloom confidence executable, construction-free descriptor check, and two deterministic lifecycle repetitions with all generated packages registered.
+- Not Run: Interactive GPU, physical MIDI/audio, and projector acceptance.
 - Existing documentation mismatch: The contributing guide's literal `project_ops_compatibility` audit command targets a completed request without an active roadmap entry, including on the original branch. The repository audit and current `algorithmic_show_content` request audit both pass; no unrelated historical roadmap entry was recreated.
 - Manual Evidence: Reviewed the twelve-panel contact sheet recorded from native adapter drawing geometry. These are CPU geometry/color captures, not OpenGL screenshots or a frame-rate benchmark.
 

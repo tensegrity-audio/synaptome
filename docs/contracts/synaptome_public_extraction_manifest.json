@@ -528,4 +528,309 @@
       "pattern": "packages/showcase/**",
       "reason": "Reviewed algorithmic show content source packages and contained model tests.",
       "required": false
-   
+    }
+  ],
+  "exclude": [
+    {
+      "pattern": ".github/**",
+      "reason": "Current CI still has firmware/helper jobs; public Synaptome CI needs a dedicated workflow."
+    },
+    {
+      "pattern": ".pio/**",
+      "reason": "PlatformIO build output."
+    },
+    {
+      "pattern": ".vscode/**",
+      "reason": "Generated/local editor state."
+    },
+    {
+      "pattern": "common/**",
+      "reason": "Shared radio/firmware contract candidate, not app runtime source."
+    },
+    {
+      "pattern": "platformio.ini",
+      "reason": "Current root PlatformIO config is firmware/helper validation, not public app validation."
+    },
+    {
+      "pattern": "tensegrity_gateway/**",
+      "reason": "Gateway implementation belongs in a helper repo."
+    },
+    {
+      "pattern": "tensegrity_matrixportal/**",
+      "reason": "Firmware implementation belongs outside public app runtime."
+    },
+    {
+      "pattern": "tensegrity_cyberdeck/**",
+      "reason": "Firmware implementation belongs outside public app runtime."
+    },
+    {
+      "pattern": "tensegrity_cardputer/**",
+      "reason": "Firmware implementation belongs outside public app runtime."
+    },
+    {
+      "pattern": "tensegrity_memento/**",
+      "reason": "Firmware/camera implementation belongs outside public app runtime."
+    },
+    {
+      "pattern": "media/**",
+      "reason": "Show/private media candidate, not core runtime."
+    },
+    {
+      "pattern": "nw_wrld/**",
+      "reason": "Unrelated experiment/content candidate."
+    },
+    {
+      "pattern": "docs/cardputer/**",
+      "reason": "Device-specific docs outside public app runtime."
+    },
+    {
+      "pattern": "docs/matrixportal/**",
+      "reason": "Device-specific docs outside public app runtime."
+    },
+    {
+      "pattern": "docs/memento/**",
+      "reason": "Device-specific docs outside public app runtime."
+    },
+    {
+      "pattern": "docs/mesh/**",
+      "reason": "Mesh/helper docs outside public app runtime."
+    },
+    {
+      "pattern": "docs/printer/**",
+      "reason": "Printer/device docs outside public app runtime."
+    },
+    {
+      "pattern": "docs/legacy/**",
+      "reason": "Historical docs."
+    },
+    {
+      "pattern": "docs/governance/**",
+      "reason": "Internal governance system unless generalized later."
+    },
+    {
+      "pattern": "docs/reports/**",
+      "reason": "Historical audit reports. Curate public excerpts separately."
+    },
+    {
+      "pattern": "docs/roadmap/**",
+      "reason": "Roadmap history. Curate public excerpts separately."
+    },
+    {
+      "pattern": "docs/DEVICE_DOCS_INDEX.md",
+      "reason": "Device-doc index outside public app runtime."
+    },
+    {
+      "pattern": "docs/DOC_MIGRATION_MAP_2026-02-27.md",
+      "reason": "Internal migration history."
+    },
+    {
+      "pattern": "docs/architecture.md",
+      "reason": "Mixed-system architecture. Public Synaptome architecture uses docs/architecture/synaptome_*.md."
+    },
+    {
+      "pattern": "docs/docops.md",
+      "reason": "Internal DocOps process."
+    },
+    {
+      "pattern": "schemas/docops_request_state.schema.json",
+      "reason": "Internal DocOps state schema."
+    },
+    {
+      "pattern": "docs/radio_protocol.md",
+      "reason": "Historical radio protocol doc until regenerated as a helper contract."
+    },
+    {
+      "pattern": "docs/matrixportal_eeg.md",
+      "reason": "Device-specific doc outside public app runtime."
+    },
+    {
+      "pattern": "synaptome/Synaptome.vcxproj.user",
+      "reason": "Local Visual Studio user state."
+    },
+    {
+      "pattern": "synaptome/src/thirdparty/*.exp",
+      "reason": "Generated linker export artifact; public source keeps third-party headers only."
+    },
+    {
+      "pattern": "synaptome/tests/BrowserFlowTest/BrowserFlowTest.vcxproj.user",
+      "reason": "Local Visual Studio user state."
+    },
+    {
+      "pattern": "synaptome/tests/BrowserFlowTest/BrowserFlowTest/x64/**",
+      "reason": "Generated test build output."
+    },
+    {
+      "pattern": "synaptome/tests/BrowserFlowTest/x64/**",
+      "reason": "Generated test build output."
+    },
+    {
+      "pattern": "synaptome/tests/HotkeyTest/HotkeyTest/x64/**",
+      "reason": "Generated test build output."
+    },
+    {
+      "pattern": "synaptome/tests/HotkeyTest/x64/**",
+      "reason": "Generated test build output."
+    },
+    {
+      "pattern": "synaptome/legacy_vs_identity/**",
+      "reason": "Rename rollback/archive files, not active public build identity."
+    },
+    {
+      "pattern": "synaptome/bin/*.exe",
+      "reason": "Generated binary output."
+    },
+    {
+      "pattern": "synaptome/bin/*.exp",
+      "reason": "Generated linker output."
+    },
+    {
+      "pattern": "synaptome/bin/*.lib",
+      "reason": "Generated linker output."
+    },
+    {
+      "pattern": "synaptome/bin/*.pdb",
+      "reason": "Generated debug symbols."
+    },
+    {
+      "pattern": "synaptome/bin/data/log.txt",
+      "reason": "Runtime log."
+    },
+    {
+      "pattern": "synaptome/bin/data/logs/**",
+      "reason": "Runtime logs and local device inventory."
+    },
+    {
+      "pattern": "synaptome/bin/data/config/console.json",
+      "reason": "App-written Console/display/operator layout state; regenerate locally or export as a fixture."
+    },
+    {
+      "pattern": "synaptome/bin/data/config/control_hub_prefs.json",
+      "reason": "App-written Browser/HUD operator preference state."
+    },
+    {
+      "pattern": "synaptome/bin/data/config/netmap.json",
+      "reason": "Radio/deployment config source; move with helper/radio contract package."
+    },
+    {
+      "pattern": "synaptome/bin/data/config/profiles.json",
+      "reason": "Legacy radio/video sync profile, not public app runtime default."
+    },
+    {
+      "pattern": "synaptome/bin/data/config/scene-last.json",
+      "reason": "App-written latest-scene state; public examples live under layers/scenes."
+    },
+    {
+      "pattern": "synaptome/bin/data/config/ui/control_hub.json",
+      "reason": "Legacy app-written Browser preference state."
+    },
+    {
+      "pattern": "synaptome/bin/data/layers/scenes/flimsy-steve.json",
+      "reason": "Named/local scene staged out of the public example set."
+    },
+    {
+      "pattern": "synaptome/bin/data/layers/scenes/unabletoeven.json",
+      "reason": "Named/local scene staged out of the public example set."
+    },
+    {
+      "pattern": "synaptome/bin/data/presets/**",
+      "reason": "Operator-local preset state until default/private config policy is locked."
+    },
+    {
+      "pattern": "synaptome/obj/**",
+      "reason": "Generated build output."
+    },
+    {
+      "pattern": "synaptome/x64/**",
+      "reason": "Generated build output."
+    },
+    {
+      "pattern": "tests/artifacts/**",
+      "reason": "Runtime/generated test artifacts except curated fixtures."
+    },
+    {
+      "pattern": "tools/docops",
+      "reason": "Internal DocOps helper marker."
+    },
+    {
+      "pattern": "tools/docops_*.py",
+      "reason": "Internal DocOps tooling."
+    },
+    {
+      "pattern": "tools/git-hooks/**",
+      "reason": "Internal workflow hooks until public contributor workflow is locked."
+    },
+    {
+      "pattern": "tools/gen_radio_config.py",
+      "reason": "Radio/helper contract generator; split with helper contract package."
+    },
+    {
+      "pattern": "tools/osc_regression.py",
+      "reason": "Gateway/radio regression until external contract package is split."
+    },
+    {
+      "pattern": "tools/osc_sniffer.py",
+      "reason": "Gateway/radio debugging helper."
+    },
+    {
+      "pattern": "tools/radio_ui_catalog_regression.py",
+      "reason": "Firmware UI catalog regression until helper contract package is split."
+    },
+    {
+      "pattern": "tools/validate_governance_contract.py",
+      "reason": "Internal governance validator."
+    },
+    {
+      "pattern": "tools/validate_legacy_payload_quarantine.py",
+      "reason": "Firmware legacy-quarantine validator."
+    },
+    {
+      "pattern": "tools/validate_tiny_screen_ui_contract.py",
+      "reason": "Embedded UI validator outside public app runtime."
+    },
+    {
+      "pattern": "tools/testdata/osc_regression/**",
+      "reason": "Gateway/radio fixtures until helper contract package is split."
+    },
+    {
+      "pattern": "tools/testdata/radio_ui_catalog/**",
+      "reason": "Firmware UI catalog fixtures until helper contract package is split."
+    },
+    {
+      "pattern": "*",
+      "reason": "Default: outside the current public Synaptome allowlist."
+    }
+  ],
+  "review": [],
+  "never_public": [
+    "common/**",
+    "platformio.ini",
+    "tensegrity_gateway/**",
+    "tensegrity_matrixportal/**",
+    "tensegrity_cyberdeck/**",
+    "tensegrity_cardputer/**",
+    "tensegrity_memento/**",
+    "synaptome/legacy_vs_identity/**",
+    "synaptome/src/thirdparty/*.exp",
+    "synaptome/tests/BrowserFlowTest/BrowserFlowTest.vcxproj.user",
+    "synaptome/tests/BrowserFlowTest/BrowserFlowTest/x64/**",
+    "synaptome/tests/BrowserFlowTest/x64/**",
+    "synaptome/tests/HotkeyTest/HotkeyTest/x64/**",
+    "synaptome/tests/HotkeyTest/x64/**",
+    "synaptome/bin/*.exe",
+    "synaptome/bin/*.exp",
+    "synaptome/bin/*.lib",
+    "synaptome/bin/*.pdb",
+    "synaptome/bin/data/log.txt",
+    "synaptome/bin/data/logs/**",
+    "synaptome/obj/**",
+    "synaptome/x64/**"
+  ],
+  "required_validation_before_publication": [
+    "python tools\\validate_synaptome_extraction_manifest.py --check --strict-review",
+    "python tools\\validate_configs.py --public-app",
+    "python tools\\check_app_independence.py",
+    "msbuild synaptome\\tests\\BrowserFlowTest\\BrowserFlowTest.vcxproj /p:Configuration=Release /p:Platform=x64",
+    "python tools\\run_control_hub_flow.py --dual-screen-phase2"
+  ],
+  "known_pre_extraction_gaps": []
+}

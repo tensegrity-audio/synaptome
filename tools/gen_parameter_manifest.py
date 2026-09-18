@@ -419,4 +419,252 @@ def build_manifest(
         templates = layer_templates.get(asset["type"], [])
         if not templates:
             if is_catalog_surface_without_layer_params(asset["type"]):
-                catalog_assets_without_layer_parameters.appen
+                catalog_assets_without_layer_parameters.append(
+                    {
+                        "assetId": asset["id"],
+                        "type": asset["type"],
+                        "reason": "catalog surface uses global/effect/HUD parameters instead of Layer::setup parameters",
+                        "source": asset["source"],
+                    }
+                )
+                continue
+            unresolved_assets.append(
+                {
+                    "assetId": asset["id"],
+                    "type": asset["type"],
+                    "reason": "no static parameter templates found for layer type",
+                    "source": asset["source"],
+                }
+            )
+            continue
+        for template in templates:
+            suffix = template["suffix"]
+            param_id = f"{asset['registryPrefix']}{suffix}"
+            default_value = default_from_layer(asset["defaults"], suffix)
+            if default_value is None:
+                default_value = template.get("default")
+            entry = {
+                "id": param_id,
+                "kind": template["kind"],
+                "scope": "layer_asset",
+                "family": family_for(param_id),
+                "units": template.get("units") or infer_units(param_id),
+                "assetId": asset["id"],
+                "layerType": asset["type"],
+                "template": f"{{registryPrefix}}{suffix}",
+                "source": asset["source"],
+            }
+            if default_value is not None:
+                entry["default"] = default_value
+                entry["defaultKind"] = value_kind(default_value)
+            add_unique(parameters, entry)
+
+        opacity_id = f"{asset['registryPrefix']}.opacity"
+        add_unique(
+            parameters,
+            {
+                "id": opacity_id,
+                "kind": "float",
+                "scope": "layer_asset",
+                "family": family_for(opacity_id),
+                "units": "normalized",
+                "assetId": asset["id"],
+                "layerType": asset["type"],
+                "template": "{registryPrefix}.opacity",
+                "default": asset.get("opacity", 1.0),
+                "defaultKind": "float",
+                "source": asset["source"],
+            },
+        )
+
+    selected_package_roots = tuple(package_roots or layer_package_discovery.fixture_roots())
+    package_manifest: dict[str, Any] | None = None
+    package_errors: list[str] = []
+    package_parameter_conflicts: list[dict[str, Any]] = []
+    if include_packages:
+        package_manifest, package_errors = layer_package_parameter_manifest.build_manifest(selected_package_roots)
+        if not package_errors:
+            for package_entry in package_manifest.get("parameters", []):
+                if not isinstance(package_entry, dict):
+                    continue
+                param_id = package_entry.get("id")
+                if not isinstance(param_id, str):
+                    continue
+                if param_id in parameters:
+                    package_parameter_conflicts.append(
+                        {
+                            "id": param_id,
+                            "existingSource": parameters[param_id].get("source"),
+                            "packageSource": package_entry.get("source"),
+                        }
+                    )
+                    continue
+                add_unique(parameters, package_entry)
+
+            for package_template in package_manifest.get("consoleSlotTemplates", []):
+                if not isinstance(package_template, dict):
+                    continue
+                suffix = package_template.get("suffix")
+                kind = package_template.get("kind")
+                if not isinstance(suffix, str) or not isinstance(kind, str):
+                    continue
+                console_key = (f".{suffix}", kind)
+                existing = console_templates.get(console_key)
+                if existing is None:
+                    console_templates[console_key] = dict(package_template)
+                    continue
+                for field in ("sourcePackages", "sourceLayerTypes"):
+                    existing_values = existing.setdefault(field, [])
+                    if not isinstance(existing_values, list):
+                        existing_values = []
+                    package_values = package_template.get(field, [])
+                    if isinstance(package_values, list):
+                        existing[field] = sorted(set(existing_values) | {str(item) for item in package_values})
+
+    console_template_list = sorted(console_templates.values(), key=lambda item: item["idPattern"])
+    for template in console_template_list:
+        template["sourceLayerTypes"] = sorted(set(template["sourceLayerTypes"]))
+    console_template_list.insert(
+        0,
+        {
+            "idPattern": "console.layer{slot}.opacity",
+            "kind": "float",
+            "suffix": "opacity",
+            "slotRange": [1, 8],
+            "sourceLayerTypes": ["all console layers"],
+        },
+    )
+
+    all_parameters = sorted(parameters.values(), key=lambda entry: entry["id"])
+    suffix_counts: dict[str, int] = {}
+    for entry in all_parameters:
+        suffix = entry["id"].rsplit(".", 1)[-1]
+        suffix_counts[suffix] = suffix_counts.get(suffix, 0) + 1
+    common_suffixes = [
+        {"suffix": suffix, "count": count}
+        for suffix, count in sorted(suffix_counts.items(), key=lambda pair: (-pair[1], pair[0]))
+        if count >= 3
+    ]
+
+    manifest: dict[str, Any] = {
+        "schemaVersion": 1,
+        "status": "generated",
+        "generator": "tools/gen_parameter_manifest.py",
+        "sourceStrategy": [
+            "Authoritative built-in ElementTypeContract declarations expanded through the reviewed contract snapshot.",
+            "Static C++ scan retained only for core/effect ParameterRegistry registrations outside elements.",
+            "Layer asset expansion from synaptome/bin/data/layers registryPrefix values.",
+            "Console slot templates are patterns because live scene prefixes are slot-indexed.",
+        ],
+        "sources": [
+            "synaptome/src/ofApp.cpp",
+            "synaptome/src/runtime/BuiltinElementHostBindings.cpp",
+            "synaptome/src/runtime/BuiltinElements.cpp",
+            "docs/examples/layer_packages/signal_bloom/"
+            "source/register_signal_bloom.cpp",
+            "docs/contracts/builtin_element_parameters.json",
+            "synaptome/bin/data/layers/**/*.json",
+        ],
+        "counts": {
+            "parameters": len(all_parameters),
+            "layerTemplates": len(layer_template_entries),
+            "consoleTemplates": len(console_template_list),
+            "catalogAssetsWithoutLayerParameters": len(catalog_assets_without_layer_parameters),
+            "unresolvedAssets": len(unresolved_assets),
+        },
+        "parameters": all_parameters,
+        "layerTemplates": layer_template_entries,
+        "consoleSlotTemplates": console_template_list,
+        "commonSuffixes": common_suffixes,
+        "catalogAssetsWithoutLayerParameters": catalog_assets_without_layer_parameters,
+        "unresolvedAssets": unresolved_assets,
+    }
+    if include_packages:
+        manifest["status"] = "draft-combined"
+        manifest["sourceStrategy"].append(
+            "Draft layer package parameter declarations are appended through tools/layer_package_parameter_manifest.py."
+        )
+        manifest["sources"].extend([rel(root) for root in selected_package_roots])
+        manifest["sources"].append("tools/layer_package_parameter_manifest.py")
+        manifest["packageDiscovery"] = layer_package_discovery.root_report(selected_package_roots)
+        manifest["packageErrors"] = package_errors
+        manifest["packageParameterConflicts"] = package_parameter_conflicts
+        manifest["counts"]["packageParameters"] = int((package_manifest or {}).get("counts", {}).get("parameters", 0))
+        manifest["counts"]["packageParameterConflicts"] = len(package_parameter_conflicts)
+    return manifest
+
+
+def validate_manifest(manifest: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    seen: set[str] = set()
+    for idx, entry in enumerate(manifest.get("parameters", [])):
+        param_id = entry.get("id")
+        if not isinstance(param_id, str):
+            errors.append(f"parameters[{idx}].id must be a string")
+            continue
+        if param_id in seen:
+            errors.append(f"duplicate parameter id: {param_id}")
+        seen.add(param_id)
+        if not PARAM_ID_RE.match(param_id):
+            errors.append(f"invalid parameter id: {param_id}")
+        if entry.get("kind") not in {"float", "bool", "string"}:
+            errors.append(f"{param_id}: kind must be float, bool, or string")
+
+    for idx, entry in enumerate(manifest.get("consoleSlotTemplates", [])):
+        pattern = entry.get("idPattern")
+        if not isinstance(pattern, str) or not CONSOLE_PATTERN_RE.match(pattern):
+            errors.append(f"consoleSlotTemplates[{idx}].idPattern is invalid: {pattern}")
+    for error in manifest.get("packageErrors", []):
+        errors.append(f"layer package error: {error}")
+    for conflict in manifest.get("packageParameterConflicts", []):
+        if isinstance(conflict, dict):
+            errors.append(f"package parameter conflicts with existing manifest id: {conflict.get('id')}")
+    return errors
+
+
+def dumps_manifest(manifest: dict[str, Any]) -> str:
+    return json.dumps(manifest, indent=2, sort_keys=False) + "\n"
+
+
+def main(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(description="Generate/check the Synaptome parameter manifest")
+    parser.add_argument("--output", default=None, help="Manifest path")
+    parser.add_argument("--write", action="store_true", help="Write the manifest")
+    parser.add_argument("--check", action="store_true", help="Fail if the checked-in manifest is stale")
+    parser.add_argument("--include-packages", action="store_true", help="Append draft layer package parameter entries")
+    parser.add_argument("--package-root", type=Path, action="append", help="Package discovery root for --include-packages")
+    args = parser.parse_args(argv)
+
+    package_roots = layer_package_discovery.roots_from_args(args.package_root, layer_package_discovery.fixture_roots())
+    manifest = build_manifest(include_packages=args.include_packages, package_roots=package_roots)
+    errors = validate_manifest(manifest)
+    if errors:
+        for error in errors:
+            print(f"error: {error}", file=sys.stderr)
+        return 1
+
+    output = Path(args.output) if args.output else (DEFAULT_COMBINED_OUTPUT if args.include_packages else DEFAULT_OUTPUT)
+    rendered = dumps_manifest(manifest)
+    if args.write:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(rendered, encoding="utf-8")
+        print(f"Wrote {output}")
+        return 0
+
+    if args.check:
+        if not output.exists():
+            print(f"error: missing manifest {output}", file=sys.stderr)
+            return 1
+        existing = output.read_text(encoding="utf-8")
+        if existing != rendered:
+            print(f"error: {output} is stale; run python tools\\gen_parameter_manifest.py --write", file=sys.stderr)
+            return 1
+        print(f"Parameter manifest is current: {output}")
+        return 0
+
+    print(rendered, end="")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv[1:]))

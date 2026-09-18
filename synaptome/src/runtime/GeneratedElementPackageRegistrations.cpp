@@ -457,4 +457,3549 @@ ElementTypeContract generatedContract0() {
 
 ElementTypeContract generatedContract1() {
     ElementTypeContract contract;
-    contr
+    contract.element = ElementDescriptor{
+        "show.chladniPlate",
+        ElementKind::Visual,
+        {
+
+        },
+    };
+    contract.parameters.groups = {
+        ParameterGroupDeclaration{"motion", "Motion", ""},
+        ParameterGroupDeclaration{"time", "Time", ""},
+        ParameterGroupDeclaration{"seed", "Seed", ""},
+        ParameterGroupDeclaration{"action", "Action", ""},
+        ParameterGroupDeclaration{"scale", "Scale", ""},
+        ParameterGroupDeclaration{"color", "Color", ""},
+        ParameterGroupDeclaration{"count", "Count", ""},
+        ParameterGroupDeclaration{"force", "Force", ""},
+        ParameterGroupDeclaration{"glow", "Glow", ""}
+    };
+    {
+        ParameterDeclaration value;
+        value.id = "speed";
+        value.kind = ParameterKind::Float;
+        value.groupId = "motion";
+        value.label = "Motion: Speed";
+        value.defaultValue = 0.800000012f;
+        value.range = ParameterRange{0.0f, 3.0f, 0.00999999978f};
+        value.units = "multiplier";
+        value.description = "Local motion rate, multiplied by transport speed.";
+        value.quickAccessOrder = 0;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "paused";
+        value.kind = ParameterKind::Bool;
+        value.groupId = "time";
+        value.label = "Time: Paused";
+        value.defaultValue = false;
+        value.units = "";
+        value.description = "Freeze simulation without discarding state.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "bpmSync";
+        value.kind = ParameterKind::Bool;
+        value.groupId = "time";
+        value.label = "Time: BPM Sync";
+        value.defaultValue = true;
+        value.units = "";
+        value.description = "Scale simulation rate by supplied transport BPM relative to 120 BPM.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "bpmMultiplier";
+        value.kind = ParameterKind::Float;
+        value.groupId = "time";
+        value.label = "Time: BPM Multiplier";
+        value.defaultValue = 1.0f;
+        value.range = ParameterRange{0.25f, 4.0f, 0.25f};
+        value.units = "multiplier";
+        value.description = "Transport rate multiplier used when BPM sync is enabled.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "seed";
+        value.kind = ParameterKind::Float;
+        value.groupId = "seed";
+        value.label = "Seed: Seed";
+        value.defaultValue = 1001.0f;
+        value.range = ParameterRange{1.0f, 1000000.0f, 1.0f};
+        value.units = "seed";
+        value.description = "Deterministic initial state. Changing this value explicitly resets the model.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "reseed";
+        value.kind = ParameterKind::Bool;
+        value.groupId = "action";
+        value.label = "Action: Reseed";
+        value.defaultValue = false;
+        value.units = "";
+        value.description = "Restart from the current stored seed once; returns to false. Edit Seed for a different deterministic variation.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "scale";
+        value.kind = ParameterKind::Float;
+        value.groupId = "scale";
+        value.label = "Scale: Size";
+        value.defaultValue = 0.939999998f;
+        value.range = ParameterRange{0.200000003f, 1.60000002f, 0.00999999978f};
+        value.units = "multiplier";
+        value.description = "Size of the simulated plate within the viewport.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "rotationDeg";
+        value.kind = ParameterKind::Float;
+        value.groupId = "motion";
+        value.label = "Motion: Rotation";
+        value.defaultValue = 0.0f;
+        value.range = ParameterRange{-180.0f, 180.0f, 1.0f};
+        value.units = "deg";
+        value.description = "Rotation of the rendered plate.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "colorR";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Red";
+        value.defaultValue = 0.980000019f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Normalized primary tint red.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "colorG";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Green";
+        value.defaultValue = 0.720000029f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Normalized primary tint green.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "colorB";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Blue";
+        value.defaultValue = 0.239999995f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Normalized primary tint blue.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "modeX";
+        value.kind = ParameterKind::Float;
+        value.groupId = "count";
+        value.label = "Count: Horizontal Mode Order";
+        value.defaultValue = 3.0f;
+        value.range = ParameterRange{1.0f, 9.0f, 1.0f};
+        value.units = "order";
+        value.description = "Horizontal standing-wave mode order; changes preserve all sand positions.";
+        value.quickAccessOrder = 1;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "modeY";
+        value.kind = ParameterKind::Float;
+        value.groupId = "count";
+        value.label = "Count: Vertical Mode Order";
+        value.defaultValue = 5.0f;
+        value.range = ParameterRange{1.0f, 9.0f, 1.0f};
+        value.units = "order";
+        value.description = "Vertical standing-wave mode order; changes preserve all sand positions.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "attraction";
+        value.kind = ParameterKind::Float;
+        value.groupId = "force";
+        value.label = "Force: Nodal Attraction";
+        value.defaultValue = 2.5f;
+        value.range = ParameterRange{0.0f, 6.0f, 0.00999999978f};
+        value.units = "1/s2";
+        value.description = "Strength of tracer drift toward standing-wave nodes.";
+        value.quickAccessOrder = 2;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "agitation";
+        value.kind = ParameterKind::Float;
+        value.groupId = "force";
+        value.label = "Force: Sand Agitation";
+        value.defaultValue = 0.159999996f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "normalized";
+        value.description = "Seeded random agitation releases grains from nodal lines.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "phaseRate";
+        value.kind = ParameterKind::Float;
+        value.groupId = "time";
+        value.label = "Time: Mode Phase Rate";
+        value.defaultValue = 0.119999997f;
+        value.range = ParameterRange{0.0f, 0.800000012f, 0.00999999978f};
+        value.units = "Hz";
+        value.description = "Continuously shifts one standing-wave component.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "particleRadius";
+        value.kind = ParameterKind::Float;
+        value.groupId = "scale";
+        value.label = "Scale: Grain Radius";
+        value.defaultValue = 0.00300000003f;
+        value.range = ParameterRange{0.00100000005f, 0.00800000038f, 9.99999975e-05f};
+        value.units = "plate";
+        value.description = "Display radius of each grain, relative to plate width.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "radiance";
+        value.kind = ParameterKind::Float;
+        value.groupId = "glow";
+        value.label = "Glow: Radiance";
+        value.defaultValue = 1.10000002f;
+        value.range = ParameterRange{0.100000001f, 3.0f, 0.00999999978f};
+        value.units = "multiplier";
+        value.description = "Brightness of grains; faster grains reveal displacement energy.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    return contract;
+}
+
+ElementTypeContract generatedContract2() {
+    ElementTypeContract contract;
+    contract.element = ElementDescriptor{
+        "show.dendriticCrystal",
+        ElementKind::Visual,
+        {
+
+        },
+    };
+    contract.parameters.groups = {
+        ParameterGroupDeclaration{"motion", "Motion", ""},
+        ParameterGroupDeclaration{"time", "Time", ""},
+        ParameterGroupDeclaration{"seed", "Seed", ""},
+        ParameterGroupDeclaration{"action", "Action", ""},
+        ParameterGroupDeclaration{"scale", "Scale", ""},
+        ParameterGroupDeclaration{"glow", "Glow", ""},
+        ParameterGroupDeclaration{"color", "Color", ""},
+        ParameterGroupDeclaration{"growth", "Growth", ""},
+        ParameterGroupDeclaration{"force", "Force", ""}
+    };
+    {
+        ParameterDeclaration value;
+        value.id = "speed";
+        value.kind = ParameterKind::Float;
+        value.groupId = "motion";
+        value.label = "Motion: Evolution Speed";
+        value.defaultValue = 1.0f;
+        value.range = ParameterRange{0.0f, 3.0f, 0.00999999978f};
+        value.units = "multiplier";
+        value.description = "Multiplies simulation time without rebuilding the model.";
+        value.quickAccessOrder = 0;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "paused";
+        value.kind = ParameterKind::Bool;
+        value.groupId = "time";
+        value.label = "Time: Pause";
+        value.defaultValue = false;
+        value.units = "";
+        value.description = "Freeze simulation time while keeping live color and rendering controls available.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "bpmSync";
+        value.kind = ParameterKind::Bool;
+        value.groupId = "time";
+        value.label = "Time: BPM Sync";
+        value.defaultValue = false;
+        value.units = "";
+        value.description = "Scale simulation speed by transport BPM relative to 120 BPM.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "bpmMultiplier";
+        value.kind = ParameterKind::Float;
+        value.groupId = "time";
+        value.label = "Time: BPM Multiplier";
+        value.defaultValue = 1.0f;
+        value.range = ParameterRange{0.25f, 4.0f, 0.25f};
+        value.units = "multiplier";
+        value.description = "BPM Multiplier.";
+        value.optionSource = ParameterOptionSource{"transport.bpmMultipliers", "multiplier", "label"};
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "seed";
+        value.kind = ParameterKind::Float;
+        value.groupId = "seed";
+        value.label = "Seed: Seed";
+        value.defaultValue = 130363.0f;
+        value.range = ParameterRange{1.0f, 999999.0f, 1.0f};
+        value.units = "integer";
+        value.description = "Deterministic initial condition. Changing the seed explicitly resets the model.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "reseed";
+        value.kind = ParameterKind::Bool;
+        value.groupId = "action";
+        value.label = "Action: Restart From Seed";
+        value.defaultValue = false;
+        value.units = "";
+        value.description = "Restart the existing seed; this momentary control resets after handling.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "scale";
+        value.kind = ParameterKind::Float;
+        value.groupId = "scale";
+        value.label = "Scale: Extent";
+        value.defaultValue = 0.959999979f;
+        value.range = ParameterRange{0.200000003f, 1.39999998f, 0.00999999978f};
+        value.units = "multiplier";
+        value.description = "Extent.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "rotationDeg";
+        value.kind = ParameterKind::Float;
+        value.groupId = "motion";
+        value.label = "Motion: Rotation";
+        value.defaultValue = 0.0f;
+        value.range = ParameterRange{-180.0f, 180.0f, 1.0f};
+        value.units = "deg";
+        value.description = "Rotation.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "lineWidth";
+        value.kind = ParameterKind::Float;
+        value.groupId = "scale";
+        value.label = "Scale: Cell Coverage";
+        value.defaultValue = 0.879999995f;
+        value.range = ParameterRange{0.349999994f, 1.0f, 0.00999999978f};
+        value.units = "fraction";
+        value.description = "Fraction of each lattice cell filled by crystalline material.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "glow";
+        value.kind = ParameterKind::Float;
+        value.groupId = "glow";
+        value.label = "Glow: Emission Gain";
+        value.defaultValue = 1.0f;
+        value.range = ParameterRange{0.0f, 2.0f, 0.00999999978f};
+        value.units = "multiplier";
+        value.description = "Model highlights brighten while the slot remains the sole whole-element opacity owner.";
+        value.quickAccessOrder = 5;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "colorR";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Primary Red";
+        value.defaultValue = 0.319999993f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Primary Red.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "colorG";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Primary Green";
+        value.defaultValue = 0.720000029f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Primary Green.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "colorB";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Primary Blue";
+        value.defaultValue = 1.0f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Primary Blue.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "accentR";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Accent Red";
+        value.defaultValue = 0.889999986f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Accent Red.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "accentG";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Accent Green";
+        value.defaultValue = 0.959999979f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Accent Green.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "accentB";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Accent Blue";
+        value.defaultValue = 1.0f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Accent Blue.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "growthRate";
+        value.kind = ParameterKind::Float;
+        value.groupId = "growth";
+        value.label = "Growth: Nutrient Diffusion Rate";
+        value.defaultValue = 3600.0f;
+        value.range = ParameterRange{0.0f, 15000.0f, 100.0f};
+        value.units = "steps/s";
+        value.description = "Total bounded walker steps per simulation second.";
+        value.quickAccessOrder = 1;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "adhesion";
+        value.kind = ParameterKind::Float;
+        value.groupId = "force";
+        value.label = "Force: Tip Adhesion";
+        value.defaultValue = 0.720000029f;
+        value.range = ParameterRange{0.0500000007f, 1.0f, 0.00999999978f};
+        value.units = "probability";
+        value.description = "Probability that a nutrient touching a branch joins it.";
+        value.quickAccessOrder = 2;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "anisotropy";
+        value.kind = ParameterKind::Float;
+        value.groupId = "force";
+        value.label = "Force: Axial Bias";
+        value.defaultValue = 0.680000007f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "normalized";
+        value.description = "Prefer cardinal lattice directions over diagonal random walks.";
+        value.quickAccessOrder = 3;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "dissolutionRate";
+        value.kind = ParameterKind::Float;
+        value.groupId = "time";
+        value.label = "Time: Dissolution Rate";
+        value.defaultValue = 0.0120000001f;
+        value.range = ParameterRange{0.0f, 0.100000001f, 0.00100000005f};
+        value.units = "1/s";
+        value.description = "Inverse lifetime for added cells; zero preserves them. Permanent nuclei remain visible.";
+        value.quickAccessOrder = 4;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "drift";
+        value.kind = ParameterKind::Float;
+        value.groupId = "motion";
+        value.label = "Motion: Nutrient Drift";
+        value.defaultValue = 0.119999997f;
+        value.range = ParameterRange{-1.0f, 1.0f, 0.00999999978f};
+        value.units = "normalized";
+        value.description = "Directional bias in nutrient walks; preserves lattice history.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    return contract;
+}
+
+ElementTypeContract generatedContract3() {
+    ElementTypeContract contract;
+    contract.element = ElementDescriptor{
+        "show.differentialGrowth",
+        ElementKind::Visual,
+        {
+
+        },
+    };
+    contract.parameters.groups = {
+        ParameterGroupDeclaration{"motion", "Motion", ""},
+        ParameterGroupDeclaration{"time", "Time", ""},
+        ParameterGroupDeclaration{"seed", "Seed", ""},
+        ParameterGroupDeclaration{"action", "Action", ""},
+        ParameterGroupDeclaration{"scale", "Scale", ""},
+        ParameterGroupDeclaration{"glow", "Glow", ""},
+        ParameterGroupDeclaration{"color", "Color", ""},
+        ParameterGroupDeclaration{"growth", "Growth", ""},
+        ParameterGroupDeclaration{"force", "Force", ""}
+    };
+    {
+        ParameterDeclaration value;
+        value.id = "speed";
+        value.kind = ParameterKind::Float;
+        value.groupId = "motion";
+        value.label = "Motion: Evolution Speed";
+        value.defaultValue = 1.0f;
+        value.range = ParameterRange{0.0f, 3.0f, 0.00999999978f};
+        value.units = "multiplier";
+        value.description = "Multiplies simulation time without rebuilding the model.";
+        value.quickAccessOrder = 0;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "paused";
+        value.kind = ParameterKind::Bool;
+        value.groupId = "time";
+        value.label = "Time: Pause";
+        value.defaultValue = false;
+        value.units = "";
+        value.description = "Freeze simulation time while keeping live color and rendering controls available.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "bpmSync";
+        value.kind = ParameterKind::Bool;
+        value.groupId = "time";
+        value.label = "Time: BPM Sync";
+        value.defaultValue = false;
+        value.units = "";
+        value.description = "Scale simulation speed by transport BPM relative to 120 BPM.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "bpmMultiplier";
+        value.kind = ParameterKind::Float;
+        value.groupId = "time";
+        value.label = "Time: BPM Multiplier";
+        value.defaultValue = 1.0f;
+        value.range = ParameterRange{0.25f, 4.0f, 0.25f};
+        value.units = "multiplier";
+        value.description = "BPM Multiplier.";
+        value.optionSource = ParameterOptionSource{"transport.bpmMultipliers", "multiplier", "label"};
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "seed";
+        value.kind = ParameterKind::Float;
+        value.groupId = "seed";
+        value.label = "Seed: Seed";
+        value.defaultValue = 104729.0f;
+        value.range = ParameterRange{1.0f, 999999.0f, 1.0f};
+        value.units = "integer";
+        value.description = "Deterministic initial condition. Changing the seed explicitly resets the model.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "reseed";
+        value.kind = ParameterKind::Bool;
+        value.groupId = "action";
+        value.label = "Action: Restart From Seed";
+        value.defaultValue = false;
+        value.units = "";
+        value.description = "Restart the existing seed; this momentary control resets after handling.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "scale";
+        value.kind = ParameterKind::Float;
+        value.groupId = "scale";
+        value.label = "Scale: Extent";
+        value.defaultValue = 0.959999979f;
+        value.range = ParameterRange{0.200000003f, 1.39999998f, 0.00999999978f};
+        value.units = "multiplier";
+        value.description = "Extent.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "rotationDeg";
+        value.kind = ParameterKind::Float;
+        value.groupId = "motion";
+        value.label = "Motion: Rotation";
+        value.defaultValue = 0.0f;
+        value.range = ParameterRange{-180.0f, 180.0f, 1.0f};
+        value.units = "deg";
+        value.description = "Rotation.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "lineWidth";
+        value.kind = ParameterKind::Float;
+        value.groupId = "scale";
+        value.label = "Scale: Stroke Width";
+        value.defaultValue = 1.60000002f;
+        value.range = ParameterRange{0.5f, 5.0f, 0.100000001f};
+        value.units = "px";
+        value.description = "Stroke Width.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "glow";
+        value.kind = ParameterKind::Float;
+        value.groupId = "glow";
+        value.label = "Glow: Emission Gain";
+        value.defaultValue = 1.0f;
+        value.range = ParameterRange{0.0f, 2.0f, 0.00999999978f};
+        value.units = "multiplier";
+        value.description = "Model highlights brighten while the slot remains the sole whole-element opacity owner.";
+        value.quickAccessOrder = 5;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "colorR";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Primary Red";
+        value.defaultValue = 0.280000001f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Primary Red.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "colorG";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Primary Green";
+        value.defaultValue = 0.939999998f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Primary Green.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "colorB";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Primary Blue";
+        value.defaultValue = 0.730000019f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Primary Blue.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "accentR";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Accent Red";
+        value.defaultValue = 0.949999988f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Accent Red.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "accentG";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Accent Green";
+        value.defaultValue = 0.589999974f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Accent Green.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "accentB";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Accent Blue";
+        value.defaultValue = 0.239999995f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Accent Blue.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "growthRate";
+        value.kind = ParameterKind::Float;
+        value.groupId = "growth";
+        value.label = "Growth: Expansion Rate";
+        value.defaultValue = 0.340000004f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "normalized";
+        value.description = "Growth slowly increases spring rest length; sweeping it preserves every existing node.";
+        value.quickAccessOrder = 1;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "repulsion";
+        value.kind = ParameterKind::Float;
+        value.groupId = "force";
+        value.label = "Force: Self Avoidance";
+        value.defaultValue = 0.949999988f;
+        value.range = ParameterRange{0.0f, 2.0f, 0.00999999978f};
+        value.units = "gain";
+        value.description = "Non-neighbor repulsion opens folded spaces in the curve.";
+        value.quickAccessOrder = 2;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "stiffness";
+        value.kind = ParameterKind::Float;
+        value.groupId = "force";
+        value.label = "Force: Spring Stiffness";
+        value.defaultValue = 0.800000012f;
+        value.range = ParameterRange{0.0f, 2.0f, 0.00999999978f};
+        value.units = "gain";
+        value.description = "Restoring force along neighboring segments.";
+        value.quickAccessOrder = 3;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "confinement";
+        value.kind = ParameterKind::Float;
+        value.groupId = "force";
+        value.label = "Force: Confinement";
+        value.defaultValue = 0.550000012f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "normalized";
+        value.description = "Soft circular boundary compresses the growing ring.";
+        value.quickAccessOrder = 4;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "driftRate";
+        value.kind = ParameterKind::Float;
+        value.groupId = "motion";
+        value.label = "Motion: Circulation Gain";
+        value.defaultValue = 0.119999997f;
+        value.range = ParameterRange{-1.0f, 1.0f, 0.00999999978f};
+        value.units = "multiplier";
+        value.description = "Signed strength of rotational advection; preserves the elastic ring.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    return contract;
+}
+
+ElementTypeContract generatedContract4() {
+    ElementTypeContract contract;
+    contract.element = ElementDescriptor{
+        "show.elasticLattice",
+        ElementKind::Visual,
+        {
+
+        },
+    };
+    contract.parameters.groups = {
+        ParameterGroupDeclaration{"motion", "Motion", ""},
+        ParameterGroupDeclaration{"time", "Time", ""},
+        ParameterGroupDeclaration{"scale", "Scale", ""},
+        ParameterGroupDeclaration{"seed", "Seed", ""},
+        ParameterGroupDeclaration{"action", "Action", ""},
+        ParameterGroupDeclaration{"force", "Force", ""},
+        ParameterGroupDeclaration{"visibility", "Visibility", ""},
+        ParameterGroupDeclaration{"color", "Color", ""}
+    };
+    {
+        ParameterDeclaration value;
+        value.id = "speed";
+        value.kind = ParameterKind::Float;
+        value.groupId = "motion";
+        value.label = "Motion: Speed";
+        value.defaultValue = 0.649999976f;
+        value.range = ParameterRange{0.0f, 4.0f, 0.00999999978f};
+        value.units = "multiplier";
+        value.description = "Local time multiplier; zero holds current state.";
+        value.quickAccessOrder = 4;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "bpmSync";
+        value.kind = ParameterKind::Bool;
+        value.groupId = "time";
+        value.label = "Time: BPM Sync";
+        value.defaultValue = true;
+        value.units = "";
+        value.description = "Multiply local time by transport BPM relative to 120 BPM.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "bpmMultiplier";
+        value.kind = ParameterKind::Float;
+        value.groupId = "time";
+        value.label = "Time: BPM Multiplier";
+        value.defaultValue = 1.0f;
+        value.range = ParameterRange{0.25f, 8.0f, 0.25f};
+        value.units = "multiplier";
+        value.description = "Rhythmic multiplier used only when BPM sync is enabled.";
+        value.optionSource = ParameterOptionSource{"transport.bpmMultipliers", "multiplier", "label"};
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "scale";
+        value.kind = ParameterKind::Float;
+        value.groupId = "scale";
+        value.label = "Scale: Scene Scale";
+        value.defaultValue = 1.0f;
+        value.range = ParameterRange{0.300000012f, 1.60000002f, 0.00999999978f};
+        value.units = "multiplier";
+        value.description = "Uniform size of the projected model.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "yawDeg";
+        value.kind = ParameterKind::Float;
+        value.groupId = "motion";
+        value.label = "Motion: View Yaw";
+        value.defaultValue = -24.0f;
+        value.range = ParameterRange{-180.0f, 180.0f, 1.0f};
+        value.units = "deg";
+        value.description = "Rotate the view around the vertical model axis.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "tiltDeg";
+        value.kind = ParameterKind::Float;
+        value.groupId = "motion";
+        value.label = "Motion: View Elevation";
+        value.defaultValue = 38.0f;
+        value.range = ParameterRange{10.0f, 75.0f, 1.0f};
+        value.units = "deg";
+        value.description = "Viewing elevation for explicit orthographic 3D projection.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "spinRate";
+        value.kind = ParameterKind::Float;
+        value.groupId = "motion";
+        value.label = "Motion: View Spin";
+        value.defaultValue = 3.0f;
+        value.range = ParameterRange{-30.0f, 30.0f, 0.100000001f};
+        value.units = "deg/s";
+        value.description = "Continuous view rotation, respecting local and transport speed.";
+        value.quickAccessOrder = 5;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "seed";
+        value.kind = ParameterKind::Float;
+        value.groupId = "seed";
+        value.label = "Seed: Seed";
+        value.defaultValue = 1001.0f;
+        value.range = ParameterRange{0.0f, 65535.0f, 1.0f};
+        value.units = "id";
+        value.description = "Deterministic initial state; changing this value explicitly reseeds the model.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "reseed";
+        value.kind = ParameterKind::Bool;
+        value.groupId = "action";
+        value.label = "Action: Reseed";
+        value.defaultValue = false;
+        value.units = "";
+        value.description = "One-shot request to restore the current seed; resets after handling.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "springStiffness";
+        value.kind = ParameterKind::Float;
+        value.groupId = "force";
+        value.label = "Force: Spring Stiffness";
+        value.defaultValue = 45.0f;
+        value.range = ParameterRange{8.0f, 90.0f, 0.5f};
+        value.units = "1/s2";
+        value.description = "Nearest-neighbor spring coupling in the fixed mass lattice.";
+        value.quickAccessOrder = 1;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "restoringForce";
+        value.kind = ParameterKind::Float;
+        value.groupId = "force";
+        value.label = "Force: Anchor Stiffness";
+        value.defaultValue = 2.5f;
+        value.range = ParameterRange{0.400000006f, 8.0f, 0.0500000007f};
+        value.units = "1/s2";
+        value.description = "Restoring force toward each node original height.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "dampingRate";
+        value.kind = ParameterKind::Float;
+        value.groupId = "time";
+        value.label = "Time: Damping Rate";
+        value.defaultValue = 1.20000005f;
+        value.range = ParameterRange{0.300000012f, 6.0f, 0.0500000007f};
+        value.units = "1/s";
+        value.description = "Viscous energy loss per second.";
+        value.quickAccessOrder = 2;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "impulseStrength";
+        value.kind = ParameterKind::Float;
+        value.groupId = "force";
+        value.label = "Force: Driver Strength";
+        value.defaultValue = 5.0f;
+        value.range = ParameterRange{0.0f, 15.0f, 0.100000001f};
+        value.units = "world/s2";
+        value.description = "Strength of the travelling localized periodic force.";
+        value.quickAccessOrder = 0;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "impulseRate";
+        value.kind = ParameterKind::Float;
+        value.groupId = "time";
+        value.label = "Time: Driver Frequency";
+        value.defaultValue = 0.449999988f;
+        value.range = ParameterRange{0.100000001f, 2.0f, 0.00999999978f};
+        value.units = "Hz";
+        value.description = "Driver orbit frequency; the force oscillates three times per orbit.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "heightScale";
+        value.kind = ParameterKind::Float;
+        value.groupId = "scale";
+        value.label = "Scale: Height Scale";
+        value.defaultValue = 1.0f;
+        value.range = ParameterRange{0.300000012f, 2.0f, 0.00999999978f};
+        value.units = "multiplier";
+        value.description = "Rendered height multiplier; leaves stored physical state intact.";
+        value.quickAccessOrder = 3;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "wireOpacity";
+        value.kind = ParameterKind::Float;
+        value.groupId = "visibility";
+        value.label = "Visibility: Grid Opacity";
+        value.defaultValue = 0.25f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "normalized";
+        value.description = "Opacity of the triangulated spring-edge subcomponent.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "colorR";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Base Red";
+        value.defaultValue = 0.0799999982f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Normalized base red component of the model-derived palette.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "colorG";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Base Green";
+        value.defaultValue = 0.0399999991f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Normalized base green component of the model-derived palette.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "colorB";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Base Blue";
+        value.defaultValue = 0.219999999f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Normalized base blue component of the model-derived palette.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "highlightR";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Highlight Red";
+        value.defaultValue = 0.949999988f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Normalized highlight red component of the model-derived palette.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "highlightG";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Highlight Green";
+        value.defaultValue = 0.550000012f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Normalized highlight green component of the model-derived palette.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "highlightB";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Highlight Blue";
+        value.defaultValue = 0.850000024f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Normalized highlight blue component of the model-derived palette.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    return contract;
+}
+
+ElementTypeContract generatedContract5() {
+    ElementTypeContract contract;
+    contract.element = ElementDescriptor{
+        "show.gerstnerOcean",
+        ElementKind::Visual,
+        {
+
+        },
+    };
+    contract.parameters.groups = {
+        ParameterGroupDeclaration{"motion", "Motion", ""},
+        ParameterGroupDeclaration{"time", "Time", ""},
+        ParameterGroupDeclaration{"scale", "Scale", ""},
+        ParameterGroupDeclaration{"seed", "Seed", ""},
+        ParameterGroupDeclaration{"action", "Action", ""},
+        ParameterGroupDeclaration{"force", "Force", ""},
+        ParameterGroupDeclaration{"visibility", "Visibility", ""},
+        ParameterGroupDeclaration{"color", "Color", ""}
+    };
+    {
+        ParameterDeclaration value;
+        value.id = "speed";
+        value.kind = ParameterKind::Float;
+        value.groupId = "motion";
+        value.label = "Motion: Speed";
+        value.defaultValue = 0.649999976f;
+        value.range = ParameterRange{0.0f, 4.0f, 0.00999999978f};
+        value.units = "multiplier";
+        value.description = "Local time multiplier; zero holds current state.";
+        value.quickAccessOrder = 4;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "bpmSync";
+        value.kind = ParameterKind::Bool;
+        value.groupId = "time";
+        value.label = "Time: BPM Sync";
+        value.defaultValue = true;
+        value.units = "";
+        value.description = "Multiply local time by transport BPM relative to 120 BPM.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "bpmMultiplier";
+        value.kind = ParameterKind::Float;
+        value.groupId = "time";
+        value.label = "Time: BPM Multiplier";
+        value.defaultValue = 1.0f;
+        value.range = ParameterRange{0.25f, 8.0f, 0.25f};
+        value.units = "multiplier";
+        value.description = "Rhythmic multiplier used only when BPM sync is enabled.";
+        value.optionSource = ParameterOptionSource{"transport.bpmMultipliers", "multiplier", "label"};
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "scale";
+        value.kind = ParameterKind::Float;
+        value.groupId = "scale";
+        value.label = "Scale: Scene Scale";
+        value.defaultValue = 1.0f;
+        value.range = ParameterRange{0.300000012f, 1.60000002f, 0.00999999978f};
+        value.units = "multiplier";
+        value.description = "Uniform size of the projected model.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "yawDeg";
+        value.kind = ParameterKind::Float;
+        value.groupId = "motion";
+        value.label = "Motion: View Yaw";
+        value.defaultValue = -24.0f;
+        value.range = ParameterRange{-180.0f, 180.0f, 1.0f};
+        value.units = "deg";
+        value.description = "Rotate the view around the vertical model axis.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "tiltDeg";
+        value.kind = ParameterKind::Float;
+        value.groupId = "motion";
+        value.label = "Motion: View Elevation";
+        value.defaultValue = 38.0f;
+        value.range = ParameterRange{10.0f, 75.0f, 1.0f};
+        value.units = "deg";
+        value.description = "Viewing elevation for explicit orthographic 3D projection.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "spinRate";
+        value.kind = ParameterKind::Float;
+        value.groupId = "motion";
+        value.label = "Motion: View Spin";
+        value.defaultValue = 3.0f;
+        value.range = ParameterRange{-30.0f, 30.0f, 0.100000001f};
+        value.units = "deg/s";
+        value.description = "Continuous view rotation, respecting local and transport speed.";
+        value.quickAccessOrder = 5;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "seed";
+        value.kind = ParameterKind::Float;
+        value.groupId = "seed";
+        value.label = "Seed: Seed";
+        value.defaultValue = 1001.0f;
+        value.range = ParameterRange{0.0f, 65535.0f, 1.0f};
+        value.units = "id";
+        value.description = "Deterministic initial state; changing this value explicitly reseeds the model.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "reseed";
+        value.kind = ParameterKind::Bool;
+        value.groupId = "action";
+        value.label = "Action: Reseed";
+        value.defaultValue = false;
+        value.units = "";
+        value.description = "One-shot request to restore the current seed; resets after handling.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "waveHeight";
+        value.kind = ParameterKind::Float;
+        value.groupId = "scale";
+        value.label = "Scale: Wave Height";
+        value.defaultValue = 0.180000007f;
+        value.range = ParameterRange{0.00999999978f, 0.319999993f, 0.00499999989f};
+        value.units = "world";
+        value.description = "Total peak amplitude of the three-component wave sum.";
+        value.quickAccessOrder = 0;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "wavelength";
+        value.kind = ParameterKind::Float;
+        value.groupId = "scale";
+        value.label = "Scale: Wavelength";
+        value.defaultValue = 1.79999995f;
+        value.range = ParameterRange{0.699999988f, 3.0f, 0.00999999978f};
+        value.units = "world";
+        value.description = "Fundamental wavelength; secondary wavelengths retain fixed physical ratios.";
+        value.quickAccessOrder = 1;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "steepness";
+        value.kind = ParameterKind::Float;
+        value.groupId = "force";
+        value.label = "Force: Steepness";
+        value.defaultValue = 0.75f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "normalized";
+        value.description = "Trochoidal horizontal displacement; aggregate gradient stays below 0.72.";
+        value.quickAccessOrder = 2;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "directionDeg";
+        value.kind = ParameterKind::Float;
+        value.groupId = "motion";
+        value.label = "Motion: Wave Direction";
+        value.defaultValue = 18.0f;
+        value.range = ParameterRange{-180.0f, 180.0f, 1.0f};
+        value.units = "deg";
+        value.description = "Principal travel direction of the wave system.";
+        value.quickAccessOrder = 3;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "wireOpacity";
+        value.kind = ParameterKind::Float;
+        value.groupId = "visibility";
+        value.label = "Visibility: Grid Opacity";
+        value.defaultValue = 0.200000003f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "normalized";
+        value.description = "Opacity of the mesh edge subcomponent; surface remains controlled by slot opacity.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "colorR";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Base Red";
+        value.defaultValue = 0.0250000004f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Normalized base red component of the model-derived palette.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "colorG";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Base Green";
+        value.defaultValue = 0.119999997f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Normalized base green component of the model-derived palette.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "colorB";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Base Blue";
+        value.defaultValue = 0.219999999f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Normalized base blue component of the model-derived palette.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "highlightR";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Highlight Red";
+        value.defaultValue = 0.379999995f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Normalized highlight red component of the model-derived palette.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "highlightG";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Highlight Green";
+        value.defaultValue = 0.879999995f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Normalized highlight green component of the model-derived palette.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "highlightB";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Highlight Blue";
+        value.defaultValue = 0.800000012f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Normalized highlight blue component of the model-derived palette.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    return contract;
+}
+
+ElementTypeContract generatedContract6() {
+    ElementTypeContract contract;
+    contract.element = ElementDescriptor{
+        "show.magneticDipoles",
+        ElementKind::Visual,
+        {
+
+        },
+    };
+    contract.parameters.groups = {
+        ParameterGroupDeclaration{"motion", "Motion", ""},
+        ParameterGroupDeclaration{"time", "Time", ""},
+        ParameterGroupDeclaration{"seed", "Seed", ""},
+        ParameterGroupDeclaration{"action", "Action", ""},
+        ParameterGroupDeclaration{"scale", "Scale", ""},
+        ParameterGroupDeclaration{"glow", "Glow", ""},
+        ParameterGroupDeclaration{"color", "Color", ""},
+        ParameterGroupDeclaration{"force", "Force", ""}
+    };
+    {
+        ParameterDeclaration value;
+        value.id = "speed";
+        value.kind = ParameterKind::Float;
+        value.groupId = "motion";
+        value.label = "Motion: Evolution Speed";
+        value.defaultValue = 1.0f;
+        value.range = ParameterRange{0.0f, 3.0f, 0.00999999978f};
+        value.units = "multiplier";
+        value.description = "Multiplies simulation time without rebuilding the model.";
+        value.quickAccessOrder = 0;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "paused";
+        value.kind = ParameterKind::Bool;
+        value.groupId = "time";
+        value.label = "Time: Pause";
+        value.defaultValue = false;
+        value.units = "";
+        value.description = "Freeze simulation time while keeping live color and rendering controls available.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "bpmSync";
+        value.kind = ParameterKind::Bool;
+        value.groupId = "time";
+        value.label = "Time: BPM Sync";
+        value.defaultValue = false;
+        value.units = "";
+        value.description = "Scale simulation speed by transport BPM relative to 120 BPM.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "bpmMultiplier";
+        value.kind = ParameterKind::Float;
+        value.groupId = "time";
+        value.label = "Time: BPM Multiplier";
+        value.defaultValue = 1.0f;
+        value.range = ParameterRange{0.25f, 4.0f, 0.25f};
+        value.units = "multiplier";
+        value.description = "BPM Multiplier.";
+        value.optionSource = ParameterOptionSource{"transport.bpmMultipliers", "multiplier", "label"};
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "seed";
+        value.kind = ParameterKind::Float;
+        value.groupId = "seed";
+        value.label = "Seed: Seed";
+        value.defaultValue = 155921.0f;
+        value.range = ParameterRange{1.0f, 999999.0f, 1.0f};
+        value.units = "integer";
+        value.description = "Deterministic initial condition. Changing the seed explicitly resets the model.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "reseed";
+        value.kind = ParameterKind::Bool;
+        value.groupId = "action";
+        value.label = "Action: Restart From Seed";
+        value.defaultValue = false;
+        value.units = "";
+        value.description = "Restart the existing seed; this momentary control resets after handling.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "scale";
+        value.kind = ParameterKind::Float;
+        value.groupId = "scale";
+        value.label = "Scale: Extent";
+        value.defaultValue = 0.959999979f;
+        value.range = ParameterRange{0.200000003f, 1.39999998f, 0.00999999978f};
+        value.units = "multiplier";
+        value.description = "Extent.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "rotationDeg";
+        value.kind = ParameterKind::Float;
+        value.groupId = "motion";
+        value.label = "Motion: Rotation";
+        value.defaultValue = 0.0f;
+        value.range = ParameterRange{-180.0f, 180.0f, 1.0f};
+        value.units = "deg";
+        value.description = "Rotation.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "lineWidth";
+        value.kind = ParameterKind::Float;
+        value.groupId = "scale";
+        value.label = "Scale: Stroke Width";
+        value.defaultValue = 1.60000002f;
+        value.range = ParameterRange{0.5f, 5.0f, 0.100000001f};
+        value.units = "px";
+        value.description = "Stroke Width.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "glow";
+        value.kind = ParameterKind::Float;
+        value.groupId = "glow";
+        value.label = "Glow: Emission Gain";
+        value.defaultValue = 1.0f;
+        value.range = ParameterRange{0.0f, 2.0f, 0.00999999978f};
+        value.units = "multiplier";
+        value.description = "Model highlights brighten while the slot remains the sole whole-element opacity owner.";
+        value.quickAccessOrder = 5;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "colorR";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Primary Red";
+        value.defaultValue = 0.239999995f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Primary Red.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "colorG";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Primary Green";
+        value.defaultValue = 0.779999971f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Primary Green.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "colorB";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Primary Blue";
+        value.defaultValue = 0.980000019f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Primary Blue.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "accentR";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Accent Red";
+        value.defaultValue = 0.949999988f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Accent Red.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "accentG";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Accent Green";
+        value.defaultValue = 0.449999988f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Accent Green.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "accentB";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Accent Blue";
+        value.defaultValue = 0.639999986f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Accent Blue.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "separation";
+        value.kind = ParameterKind::Float;
+        value.groupId = "scale";
+        value.label = "Scale: Pole Separation";
+        value.defaultValue = 0.460000008f;
+        value.range = ParameterRange{0.150000006f, 0.699999988f, 0.00999999978f};
+        value.units = "world";
+        value.description = "Radius of the source arrangement. Moving it preserves evolution phase.";
+        value.quickAccessOrder = 1;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "coupling";
+        value.kind = ParameterKind::Float;
+        value.groupId = "force";
+        value.label = "Force: Secondary Strength";
+        value.defaultValue = 0.620000005f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "normalized";
+        value.description = "Strength of the two secondary dipoles relative to the primary.";
+        value.quickAccessOrder = 2;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "orbitRate";
+        value.kind = ParameterKind::Float;
+        value.groupId = "motion";
+        value.label = "Motion: Source Orbit Rate";
+        value.defaultValue = 8.0f;
+        value.range = ParameterRange{-60.0f, 60.0f, 0.100000001f};
+        value.units = "deg/s";
+        value.description = "Deterministic source motion in the existing field.";
+        value.quickAccessOrder = 3;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "twist";
+        value.kind = ParameterKind::Float;
+        value.groupId = "force";
+        value.label = "Force: Moment Twist";
+        value.defaultValue = 0.349999994f;
+        value.range = ParameterRange{-1.0f, 1.0f, 0.00999999978f};
+        value.units = "normalized";
+        value.description = "Turn the magnetic moments while retaining source positions and evolution time.";
+        value.quickAccessOrder = 4;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "fieldReach";
+        value.kind = ParameterKind::Float;
+        value.groupId = "scale";
+        value.label = "Scale: Integration Boundary";
+        value.defaultValue = 0.879999995f;
+        value.range = ParameterRange{0.550000012f, 1.14999998f, 0.00999999978f};
+        value.units = "world";
+        value.description = "Finite radius terminating field lines; keeps integration cost bounded.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    return contract;
+}
+
+ElementTypeContract generatedContract7() {
+    ElementTypeContract contract;
+    contract.element = ElementDescriptor{
+        "show.phaseLattice",
+        ElementKind::Visual,
+        {
+
+        },
+    };
+    contract.parameters.groups = {
+        ParameterGroupDeclaration{"motion", "Motion", ""},
+        ParameterGroupDeclaration{"time", "Time", ""},
+        ParameterGroupDeclaration{"seed", "Seed", ""},
+        ParameterGroupDeclaration{"action", "Action", ""},
+        ParameterGroupDeclaration{"scale", "Scale", ""},
+        ParameterGroupDeclaration{"color", "Color", ""},
+        ParameterGroupDeclaration{"force", "Force", ""},
+        ParameterGroupDeclaration{"glow", "Glow", ""},
+        ParameterGroupDeclaration{"visibility", "Visibility", ""}
+    };
+    {
+        ParameterDeclaration value;
+        value.id = "speed";
+        value.kind = ParameterKind::Float;
+        value.groupId = "motion";
+        value.label = "Motion: Speed";
+        value.defaultValue = 0.800000012f;
+        value.range = ParameterRange{0.0f, 3.0f, 0.00999999978f};
+        value.units = "multiplier";
+        value.description = "Local motion rate, multiplied by transport speed.";
+        value.quickAccessOrder = 0;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "paused";
+        value.kind = ParameterKind::Bool;
+        value.groupId = "time";
+        value.label = "Time: Paused";
+        value.defaultValue = false;
+        value.units = "";
+        value.description = "Freeze simulation without discarding state.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "bpmSync";
+        value.kind = ParameterKind::Bool;
+        value.groupId = "time";
+        value.label = "Time: BPM Sync";
+        value.defaultValue = true;
+        value.units = "";
+        value.description = "Scale simulation rate by supplied transport BPM relative to 120 BPM.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "bpmMultiplier";
+        value.kind = ParameterKind::Float;
+        value.groupId = "time";
+        value.label = "Time: BPM Multiplier";
+        value.defaultValue = 1.0f;
+        value.range = ParameterRange{0.25f, 4.0f, 0.25f};
+        value.units = "multiplier";
+        value.description = "Transport rate multiplier used when BPM sync is enabled.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "seed";
+        value.kind = ParameterKind::Float;
+        value.groupId = "seed";
+        value.label = "Seed: Seed";
+        value.defaultValue = 1001.0f;
+        value.range = ParameterRange{1.0f, 1000000.0f, 1.0f};
+        value.units = "seed";
+        value.description = "Deterministic initial state. Changing this value explicitly resets the model.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "reseed";
+        value.kind = ParameterKind::Bool;
+        value.groupId = "action";
+        value.label = "Action: Reseed";
+        value.defaultValue = false;
+        value.units = "";
+        value.description = "Restart from the current stored seed once; returns to false. Edit Seed for a different deterministic variation.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "scale";
+        value.kind = ParameterKind::Float;
+        value.groupId = "scale";
+        value.label = "Scale: Size";
+        value.defaultValue = 0.939999998f;
+        value.range = ParameterRange{0.200000003f, 1.60000002f, 0.00999999978f};
+        value.units = "multiplier";
+        value.description = "Size of the simulated plate within the viewport.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "rotationDeg";
+        value.kind = ParameterKind::Float;
+        value.groupId = "motion";
+        value.label = "Motion: Rotation";
+        value.defaultValue = 0.0f;
+        value.range = ParameterRange{-180.0f, 180.0f, 1.0f};
+        value.units = "deg";
+        value.description = "Rotation of the rendered plate.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "colorR";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Red";
+        value.defaultValue = 0.519999981f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Normalized primary tint red.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "colorG";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Green";
+        value.defaultValue = 0.319999993f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Normalized primary tint green.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "colorB";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Blue";
+        value.defaultValue = 1.0f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Normalized primary tint blue.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "coupling";
+        value.kind = ParameterKind::Float;
+        value.groupId = "force";
+        value.label = "Force: Neighbor Coupling";
+        value.defaultValue = 2.4000001f;
+        value.range = ParameterRange{0.0f, 12.0f, 0.00999999978f};
+        value.units = "1/s";
+        value.description = "Phase attraction between four neighboring oscillators.";
+        value.quickAccessOrder = 1;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "frequency";
+        value.kind = ParameterKind::Float;
+        value.groupId = "time";
+        value.label = "Time: Natural Frequency";
+        value.defaultValue = 0.280000001f;
+        value.range = ParameterRange{0.0199999996f, 2.0f, 0.00999999978f};
+        value.units = "Hz";
+        value.description = "Common oscillator frequency before individual dispersion.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "dispersion";
+        value.kind = ParameterKind::Float;
+        value.groupId = "force";
+        value.label = "Force: Frequency Dispersion";
+        value.defaultValue = 0.5f;
+        value.range = ParameterRange{0.0f, 2.0f, 0.00999999978f};
+        value.units = "rad/s";
+        value.description = "Spread of persistent seeded natural frequency offsets.";
+        value.quickAccessOrder = 2;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "phaseLagDeg";
+        value.kind = ParameterKind::Float;
+        value.groupId = "motion";
+        value.label = "Motion: Coupling Phase Lag";
+        value.defaultValue = 30.0f;
+        value.range = ParameterRange{-90.0f, 90.0f, 0.5f};
+        value.units = "deg";
+        value.description = "Preferred phase lag in the local coupling interaction.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "radiance";
+        value.kind = ParameterKind::Float;
+        value.groupId = "glow";
+        value.label = "Glow: Radiance";
+        value.defaultValue = 1.10000002f;
+        value.range = ParameterRange{0.100000001f, 3.0f, 0.00999999978f};
+        value.units = "multiplier";
+        value.description = "Brightness of the phase field.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "contourOpacity";
+        value.kind = ParameterKind::Float;
+        value.groupId = "visibility";
+        value.label = "Visibility: Phase Contour Opacity";
+        value.defaultValue = 0.5f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "normalized";
+        value.description = "Opacity of internal equal-phase highlight bands.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    return contract;
+}
+
+ElementTypeContract generatedContract8() {
+    ElementTypeContract contract;
+    contract.element = ElementDescriptor{
+        "show.sandRipples",
+        ElementKind::Visual,
+        {
+
+        },
+    };
+    contract.parameters.groups = {
+        ParameterGroupDeclaration{"motion", "Motion", "Motion controls."},
+        ParameterGroupDeclaration{"time", "Time", "Time controls."},
+        ParameterGroupDeclaration{"scale", "Scale", "Scale controls."},
+        ParameterGroupDeclaration{"force", "Force", "Force controls."},
+        ParameterGroupDeclaration{"glow", "Glow", "Glow controls."},
+        ParameterGroupDeclaration{"color", "Color", "Color controls."},
+        ParameterGroupDeclaration{"seed", "Seed", "Seed controls."}
+    };
+    {
+        ParameterDeclaration value;
+        value.id = "speed";
+        value.kind = ParameterKind::Float;
+        value.groupId = "motion";
+        value.label = "Motion: Speed";
+        value.defaultValue = 0.800000012f;
+        value.range = ParameterRange{0.0f, 3.0f, 0.00999999978f};
+        value.units = "multiplier";
+        value.description = "Local simulation rate; zero pauses. Multiplied by the global transport speed.";
+        value.quickAccessOrder = 0;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "bpmSync";
+        value.kind = ParameterKind::Bool;
+        value.groupId = "time";
+        value.label = "Time: BPM Sync";
+        value.defaultValue = true;
+        value.units = "";
+        value.description = "Scale simulation time by global BPM relative to 120 BPM.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "bpmMultiplier";
+        value.kind = ParameterKind::Float;
+        value.groupId = "time";
+        value.label = "Time: BPM Multiplier";
+        value.defaultValue = 1.0f;
+        value.range = ParameterRange{0.25f, 4.0f, 0.25f};
+        value.units = "multiplier";
+        value.description = "BPM Multiplier.";
+        value.optionSource = ParameterOptionSource{"transport.bpmMultipliers", "multiplier", "label"};
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "scale";
+        value.kind = ParameterKind::Float;
+        value.groupId = "scale";
+        value.label = "Scale: Size";
+        value.defaultValue = 0.920000017f;
+        value.range = ParameterRange{0.25f, 2.0f, 0.00999999978f};
+        value.units = "multiplier";
+        value.description = "Size.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "rotationDeg";
+        value.kind = ParameterKind::Float;
+        value.groupId = "motion";
+        value.label = "Motion: Rotation";
+        value.defaultValue = 0.0f;
+        value.range = ParameterRange{-180.0f, 180.0f, 1.0f};
+        value.units = "deg";
+        value.description = "Rotation.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "transportRate";
+        value.kind = ParameterKind::Float;
+        value.groupId = "time";
+        value.label = "Time: Sand Transport";
+        value.defaultValue = 1.0f;
+        value.range = ParameterRange{0.0f, 4.0f, 0.00999999978f};
+        value.units = "multiplier";
+        value.description = "Rate of conservative erosion and downwind deposition.";
+        value.quickAccessOrder = 1;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "windDirectionDeg";
+        value.kind = ParameterKind::Float;
+        value.groupId = "motion";
+        value.label = "Motion: Wind Direction";
+        value.defaultValue = 12.0f;
+        value.range = ParameterRange{-180.0f, 180.0f, 1.0f};
+        value.units = "deg";
+        value.description = "Wind Direction.";
+        value.quickAccessOrder = 2;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "hopLength";
+        value.kind = ParameterKind::Float;
+        value.groupId = "scale";
+        value.label = "Scale: Saltation Distance";
+        value.defaultValue = 0.119999997f;
+        value.range = ParameterRange{0.0199999996f, 0.349999994f, 0.00499999989f};
+        value.units = "world";
+        value.description = "Saltation Distance.";
+        value.quickAccessOrder = 3;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "reposeSlope";
+        value.kind = ParameterKind::Float;
+        value.groupId = "force";
+        value.label = "Force: Repose Threshold";
+        value.defaultValue = 0.0250000004f;
+        value.range = ParameterRange{0.00499999989f, 0.119999997f, 0.00100000005f};
+        value.units = "";
+        value.description = "Maximum adjacent-cell height difference before conservative avalanching.";
+        value.quickAccessOrder = 4;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "relaxationRate";
+        value.kind = ParameterKind::Float;
+        value.groupId = "time";
+        value.label = "Time: Slope Relaxation";
+        value.defaultValue = 1.5f;
+        value.range = ParameterRange{0.0f, 4.0f, 0.00999999978f};
+        value.units = "multiplier";
+        value.description = "Slope Relaxation.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "reliefScale";
+        value.kind = ParameterKind::Float;
+        value.groupId = "scale";
+        value.label = "Scale: Relief Height";
+        value.defaultValue = 1.0f;
+        value.range = ParameterRange{0.100000001f, 3.0f, 0.00999999978f};
+        value.units = "multiplier";
+        value.description = "Relief Height.";
+        value.quickAccessOrder = 5;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "tiltDeg";
+        value.kind = ParameterKind::Float;
+        value.groupId = "motion";
+        value.label = "Motion: View Tilt";
+        value.defaultValue = 48.0f;
+        value.range = ParameterRange{10.0f, 80.0f, 1.0f};
+        value.units = "deg";
+        value.description = "View Tilt.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "ridgeContrast";
+        value.kind = ParameterKind::Float;
+        value.groupId = "glow";
+        value.label = "Glow: Ridge Contrast";
+        value.defaultValue = 1.0f;
+        value.range = ParameterRange{0.25f, 3.0f, 0.00999999978f};
+        value.units = "multiplier";
+        value.description = "Ridge Contrast.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "colorR";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Primary Red";
+        value.defaultValue = 0.800000012f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Primary Red.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "colorG";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Primary Green";
+        value.defaultValue = 0.370000005f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Primary Green.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "colorB";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Primary Blue";
+        value.defaultValue = 0.119999997f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Primary Blue.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "accentR";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Accent Red";
+        value.defaultValue = 1.0f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Accent Red.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "accentG";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Accent Green";
+        value.defaultValue = 0.860000014f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Accent Green.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "accentB";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Accent Blue";
+        value.defaultValue = 0.460000008f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Accent Blue.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "seed";
+        value.kind = ParameterKind::Float;
+        value.groupId = "seed";
+        value.label = "Seed: Seed";
+        value.defaultValue = 1702.0f;
+        value.range = ParameterRange{0.0f, 65535.0f, 1.0f};
+        value.units = "";
+        value.description = "Deterministic startup identity. Changing this value explicitly resets the simulation.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    return contract;
+}
+
+ElementTypeContract generatedContract9() {
+    ElementTypeContract contract;
+    contract.element = ElementDescriptor{
+        "show.strangeAttractor",
+        ElementKind::Visual,
+        {
+
+        },
+    };
+    contract.parameters.groups = {
+        ParameterGroupDeclaration{"motion", "Motion", ""},
+        ParameterGroupDeclaration{"time", "Time", ""},
+        ParameterGroupDeclaration{"scale", "Scale", ""},
+        ParameterGroupDeclaration{"seed", "Seed", ""},
+        ParameterGroupDeclaration{"action", "Action", ""},
+        ParameterGroupDeclaration{"force", "Force", ""},
+        ParameterGroupDeclaration{"color", "Color", ""}
+    };
+    {
+        ParameterDeclaration value;
+        value.id = "speed";
+        value.kind = ParameterKind::Float;
+        value.groupId = "motion";
+        value.label = "Motion: Speed";
+        value.defaultValue = 0.649999976f;
+        value.range = ParameterRange{0.0f, 4.0f, 0.00999999978f};
+        value.units = "multiplier";
+        value.description = "Local time multiplier; zero holds current state.";
+        value.quickAccessOrder = 4;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "bpmSync";
+        value.kind = ParameterKind::Bool;
+        value.groupId = "time";
+        value.label = "Time: BPM Sync";
+        value.defaultValue = true;
+        value.units = "";
+        value.description = "Multiply local time by transport BPM relative to 120 BPM.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "bpmMultiplier";
+        value.kind = ParameterKind::Float;
+        value.groupId = "time";
+        value.label = "Time: BPM Multiplier";
+        value.defaultValue = 1.0f;
+        value.range = ParameterRange{0.25f, 8.0f, 0.25f};
+        value.units = "multiplier";
+        value.description = "Rhythmic multiplier used only when BPM sync is enabled.";
+        value.optionSource = ParameterOptionSource{"transport.bpmMultipliers", "multiplier", "label"};
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "scale";
+        value.kind = ParameterKind::Float;
+        value.groupId = "scale";
+        value.label = "Scale: Scene Scale";
+        value.defaultValue = 1.0f;
+        value.range = ParameterRange{0.300000012f, 1.60000002f, 0.00999999978f};
+        value.units = "multiplier";
+        value.description = "Uniform size of the projected model.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "yawDeg";
+        value.kind = ParameterKind::Float;
+        value.groupId = "motion";
+        value.label = "Motion: View Yaw";
+        value.defaultValue = -24.0f;
+        value.range = ParameterRange{-180.0f, 180.0f, 1.0f};
+        value.units = "deg";
+        value.description = "Rotate the view around the vertical model axis.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "tiltDeg";
+        value.kind = ParameterKind::Float;
+        value.groupId = "motion";
+        value.label = "Motion: View Elevation";
+        value.defaultValue = 38.0f;
+        value.range = ParameterRange{10.0f, 75.0f, 1.0f};
+        value.units = "deg";
+        value.description = "Viewing elevation for explicit orthographic 3D projection.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "spinRate";
+        value.kind = ParameterKind::Float;
+        value.groupId = "motion";
+        value.label = "Motion: View Spin";
+        value.defaultValue = 3.0f;
+        value.range = ParameterRange{-30.0f, 30.0f, 0.100000001f};
+        value.units = "deg/s";
+        value.description = "Continuous view rotation, respecting local and transport speed.";
+        value.quickAccessOrder = 5;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "seed";
+        value.kind = ParameterKind::Float;
+        value.groupId = "seed";
+        value.label = "Seed: Seed";
+        value.defaultValue = 1001.0f;
+        value.range = ParameterRange{0.0f, 65535.0f, 1.0f};
+        value.units = "id";
+        value.description = "Deterministic initial state; changing this value explicitly reseeds the model.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "reseed";
+        value.kind = ParameterKind::Bool;
+        value.groupId = "action";
+        value.label = "Action: Reseed";
+        value.defaultValue = false;
+        value.units = "";
+        value.description = "One-shot request to restore the current seed; resets after handling.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "sigma";
+        value.kind = ParameterKind::Float;
+        value.groupId = "force";
+        value.label = "Force: Sigma";
+        value.defaultValue = 10.0f;
+        value.range = ParameterRange{6.0f, 16.0f, 0.0500000007f};
+        value.units = "coefficient";
+        value.description = "Lorenz x/y coupling coefficient.";
+        value.quickAccessOrder = 1;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "rho";
+        value.kind = ParameterKind::Float;
+        value.groupId = "force";
+        value.label = "Force: Rho";
+        value.defaultValue = 28.0f;
+        value.range = ParameterRange{24.0f, 40.0f, 0.0500000007f};
+        value.units = "coefficient";
+        value.description = "Lorenz convective forcing parameter; changes the attractor without resetting history.";
+        value.quickAccessOrder = 0;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "beta";
+        value.kind = ParameterKind::Float;
+        value.groupId = "force";
+        value.label = "Force: Beta";
+        value.defaultValue = 2.66666675f;
+        value.range = ParameterRange{2.0f, 3.5f, 0.00999999978f};
+        value.units = "coefficient";
+        value.description = "Lorenz vertical dissipation coefficient.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "trailSeconds";
+        value.kind = ParameterKind::Float;
+        value.groupId = "time";
+        value.label = "Time: Trail History";
+        value.defaultValue = 5.5f;
+        value.range = ParameterRange{0.200000003f, 6.0f, 0.0500000007f};
+        value.units = "s";
+        value.description = "Visible span of the fixed six-second model-time history.";
+        value.quickAccessOrder = 3;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "ribbonWidth";
+        value.kind = ParameterKind::Float;
+        value.groupId = "scale";
+        value.label = "Scale: Ribbon Width";
+        value.defaultValue = 0.00600000005f;
+        value.range = ParameterRange{0.00100000005f, 0.0250000004f, 0.00100000005f};
+        value.units = "world";
+        value.description = "Projected ribbon width in normalized model world units.";
+        value.quickAccessOrder = 2;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "colorR";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Base Red";
+        value.defaultValue = 0.0799999982f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Normalized base red component of the model-derived palette.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "colorG";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Base Green";
+        value.defaultValue = 0.379999995f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Normalized base green component of the model-derived palette.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "colorB";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Base Blue";
+        value.defaultValue = 0.800000012f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Normalized base blue component of the model-derived palette.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "highlightR";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Highlight Red";
+        value.defaultValue = 0.649999976f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Normalized highlight red component of the model-derived palette.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "highlightG";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Highlight Green";
+        value.defaultValue = 0.980000019f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Normalized highlight green component of the model-derived palette.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "highlightB";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Highlight Blue";
+        value.defaultValue = 0.899999976f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Normalized highlight blue component of the model-derived palette.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    return contract;
+}
+
+ElementTypeContract generatedContract10() {
+    ElementTypeContract contract;
+    contract.element = ElementDescriptor{
+        "show.voronoiFoam",
+        ElementKind::Visual,
+        {
+
+        },
+    };
+    contract.parameters.groups = {
+        ParameterGroupDeclaration{"motion", "Motion", "Motion controls."},
+        ParameterGroupDeclaration{"time", "Time", "Time controls."},
+        ParameterGroupDeclaration{"scale", "Scale", "Scale controls."},
+        ParameterGroupDeclaration{"force", "Force", "Force controls."},
+        ParameterGroupDeclaration{"visibility", "Visibility", "Visibility controls."},
+        ParameterGroupDeclaration{"glow", "Glow", "Glow controls."},
+        ParameterGroupDeclaration{"color", "Color", "Color controls."},
+        ParameterGroupDeclaration{"seed", "Seed", "Seed controls."}
+    };
+    {
+        ParameterDeclaration value;
+        value.id = "speed";
+        value.kind = ParameterKind::Float;
+        value.groupId = "motion";
+        value.label = "Motion: Speed";
+        value.defaultValue = 0.800000012f;
+        value.range = ParameterRange{0.0f, 3.0f, 0.00999999978f};
+        value.units = "multiplier";
+        value.description = "Local simulation rate; zero pauses. Multiplied by the global transport speed.";
+        value.quickAccessOrder = 0;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "bpmSync";
+        value.kind = ParameterKind::Bool;
+        value.groupId = "time";
+        value.label = "Time: BPM Sync";
+        value.defaultValue = true;
+        value.units = "";
+        value.description = "Scale simulation time by global BPM relative to 120 BPM.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "bpmMultiplier";
+        value.kind = ParameterKind::Float;
+        value.groupId = "time";
+        value.label = "Time: BPM Multiplier";
+        value.defaultValue = 1.0f;
+        value.range = ParameterRange{0.25f, 4.0f, 0.25f};
+        value.units = "multiplier";
+        value.description = "BPM Multiplier.";
+        value.optionSource = ParameterOptionSource{"transport.bpmMultipliers", "multiplier", "label"};
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "scale";
+        value.kind = ParameterKind::Float;
+        value.groupId = "scale";
+        value.label = "Scale: Size";
+        value.defaultValue = 0.920000017f;
+        value.range = ParameterRange{0.25f, 2.0f, 0.00999999978f};
+        value.units = "multiplier";
+        value.description = "Size.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "rotationDeg";
+        value.kind = ParameterKind::Float;
+        value.groupId = "motion";
+        value.label = "Motion: Rotation";
+        value.defaultValue = 0.0f;
+        value.range = ParameterRange{-180.0f, 180.0f, 1.0f};
+        value.units = "deg";
+        value.description = "Rotation.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "driftSpeed";
+        value.kind = ParameterKind::Float;
+        value.groupId = "motion";
+        value.label = "Motion: Site Drift";
+        value.defaultValue = 0.349999994f;
+        value.range = ParameterRange{0.0f, 2.0f, 0.00999999978f};
+        value.units = "multiplier";
+        value.description = "Multiplier on the bounded self-propelled drift of each existing site.";
+        value.quickAccessOrder = 1;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "relaxationRate";
+        value.kind = ParameterKind::Float;
+        value.groupId = "time";
+        value.label = "Time: Cell Relaxation";
+        value.defaultValue = 0.699999988f;
+        value.range = ParameterRange{0.0f, 3.0f, 0.00999999978f};
+        value.units = "perSecond";
+        value.description = "Cell Relaxation.";
+        value.quickAccessOrder = 2;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "repulsionWeight";
+        value.kind = ParameterKind::Float;
+        value.groupId = "force";
+        value.label = "Force: Cell Pressure";
+        value.defaultValue = 0.5f;
+        value.range = ParameterRange{0.0f, 2.0f, 0.00999999978f};
+        value.units = "multiplier";
+        value.description = "Cell Pressure.";
+        value.quickAccessOrder = 3;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "shear";
+        value.kind = ParameterKind::Float;
+        value.groupId = "force";
+        value.label = "Force: Shear";
+        value.defaultValue = 0.150000006f;
+        value.range = ParameterRange{-1.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Signed shear flow deforms existing cells without replacing sites.";
+        value.quickAccessOrder = 4;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "wallWidth";
+        value.kind = ParameterKind::Float;
+        value.groupId = "scale";
+        value.label = "Scale: Wall Width";
+        value.defaultValue = 0.0240000002f;
+        value.range = ParameterRange{0.00600000005f, 0.0799999982f, 0.00100000005f};
+        value.units = "world";
+        value.description = "Wall Width.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "cellFill";
+        value.kind = ParameterKind::Float;
+        value.groupId = "visibility";
+        value.label = "Visibility: Cell Interior Opacity";
+        value.defaultValue = 0.140000001f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Opacity of cell interiors; cell walls remain visible.";
+        value.quickAccessOrder = 5;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "edgeRadiance";
+        value.kind = ParameterKind::Float;
+        value.groupId = "glow";
+        value.label = "Glow: Wall Radiance";
+        value.defaultValue = 1.0f;
+        value.range = ParameterRange{0.200000003f, 3.0f, 0.00999999978f};
+        value.units = "multiplier";
+        value.description = "Wall Radiance.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "colorR";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Primary Red";
+        value.defaultValue = 0.150000006f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Primary Red.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "colorG";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Primary Green";
+        value.defaultValue = 0.939999998f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Primary Green.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "colorB";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Primary Blue";
+        value.defaultValue = 0.680000007f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Primary Blue.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "accentR";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Accent Red";
+        value.defaultValue = 0.349999994f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Accent Red.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "accentG";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Accent Green";
+        value.defaultValue = 0.200000003f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Accent Green.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "accentB";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Accent Blue";
+        value.defaultValue = 1.0f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Accent Blue.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "seed";
+        value.kind = ParameterKind::Float;
+        value.groupId = "seed";
+        value.label = "Seed: Seed";
+        value.defaultValue = 1703.0f;
+        value.range = ParameterRange{0.0f, 65535.0f, 1.0f};
+        value.units = "";
+        value.description = "Deterministic startup identity. Changing this value explicitly resets the simulation.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    return contract;
+}
+
+ElementTypeContract generatedContract11() {
+    ElementTypeContract contract;
+    contract.element = ElementDescriptor{
+        "show.vortexAdvection",
+        ElementKind::Visual,
+        {
+
+        },
+    };
+    contract.parameters.groups = {
+        ParameterGroupDeclaration{"motion", "Motion", "Motion controls."},
+        ParameterGroupDeclaration{"time", "Time", "Time controls."},
+        ParameterGroupDeclaration{"scale", "Scale", "Scale controls."},
+        ParameterGroupDeclaration{"force", "Force", "Force controls."},
+        ParameterGroupDeclaration{"color", "Color", "Color controls."},
+        ParameterGroupDeclaration{"seed", "Seed", "Seed controls."}
+    };
+    {
+        ParameterDeclaration value;
+        value.id = "speed";
+        value.kind = ParameterKind::Float;
+        value.groupId = "motion";
+        value.label = "Motion: Speed";
+        value.defaultValue = 0.800000012f;
+        value.range = ParameterRange{0.0f, 3.0f, 0.00999999978f};
+        value.units = "multiplier";
+        value.description = "Local simulation rate; zero pauses. Multiplied by the global transport speed.";
+        value.quickAccessOrder = 0;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "bpmSync";
+        value.kind = ParameterKind::Bool;
+        value.groupId = "time";
+        value.label = "Time: BPM Sync";
+        value.defaultValue = true;
+        value.units = "";
+        value.description = "Scale simulation time by global BPM relative to 120 BPM.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "bpmMultiplier";
+        value.kind = ParameterKind::Float;
+        value.groupId = "time";
+        value.label = "Time: BPM Multiplier";
+        value.defaultValue = 1.0f;
+        value.range = ParameterRange{0.25f, 4.0f, 0.25f};
+        value.units = "multiplier";
+        value.description = "BPM Multiplier.";
+        value.optionSource = ParameterOptionSource{"transport.bpmMultipliers", "multiplier", "label"};
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "scale";
+        value.kind = ParameterKind::Float;
+        value.groupId = "scale";
+        value.label = "Scale: Size";
+        value.defaultValue = 0.920000017f;
+        value.range = ParameterRange{0.25f, 2.0f, 0.00999999978f};
+        value.units = "multiplier";
+        value.description = "Size.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "rotationDeg";
+        value.kind = ParameterKind::Float;
+        value.groupId = "motion";
+        value.label = "Motion: Rotation";
+        value.defaultValue = 0.0f;
+        value.range = ParameterRange{-180.0f, 180.0f, 1.0f};
+        value.units = "deg";
+        value.description = "Rotation.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "circulation";
+        value.kind = ParameterKind::Float;
+        value.groupId = "force";
+        value.label = "Force: Circulation";
+        value.defaultValue = 1.0f;
+        value.range = ParameterRange{-2.5f, 2.5f, 0.00999999978f};
+        value.units = "";
+        value.description = "Signed vortex circulation. Sweeping through zero reverses rotation without reseeding.";
+        value.quickAccessOrder = 1;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "coreRadius";
+        value.kind = ParameterKind::Float;
+        value.groupId = "scale";
+        value.label = "Scale: Vortex Core";
+        value.defaultValue = 0.0850000009f;
+        value.range = ParameterRange{0.0250000004f, 0.300000012f, 0.00100000005f};
+        value.units = "world";
+        value.description = "Vortex Core.";
+        value.quickAccessOrder = 2;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "strain";
+        value.kind = ParameterKind::Float;
+        value.groupId = "force";
+        value.label = "Force: Shear Strain";
+        value.defaultValue = 0.180000007f;
+        value.range = ParameterRange{-1.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Signed incompressible background strain; stretches existing tracer structures.";
+        value.quickAccessOrder = 3;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "vortexDrift";
+        value.kind = ParameterKind::Float;
+        value.groupId = "motion";
+        value.label = "Motion: Vortex Drift";
+        value.defaultValue = 0.400000006f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Advection of vortex centers by the other vortices.";
+        value.quickAccessOrder = 4;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "trailTimeSec";
+        value.kind = ParameterKind::Float;
+        value.groupId = "time";
+        value.label = "Time: Trail History";
+        value.defaultValue = 1.10000002f;
+        value.range = ParameterRange{0.100000001f, 1.29999995f, 0.00999999978f};
+        value.units = "s";
+        value.description = "Visible duration of the retained 30 Hz tracer history.";
+        value.quickAccessOrder = 5;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "lineWidth";
+        value.kind = ParameterKind::Float;
+        value.groupId = "scale";
+        value.label = "Scale: Line Width";
+        value.defaultValue = 1.29999995f;
+        value.range = ParameterRange{0.5f, 3.0f, 0.100000001f};
+        value.units = "px";
+        value.description = "Line Width.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "colorR";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Primary Red";
+        value.defaultValue = 0.0500000007f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Primary Red.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "colorG";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Primary Green";
+        value.defaultValue = 0.800000012f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Primary Green.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "colorB";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Primary Blue";
+        value.defaultValue = 1.0f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Primary Blue.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "accentR";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Accent Red";
+        value.defaultValue = 0.949999988f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Accent Red.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "accentG";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Accent Green";
+        value.defaultValue = 0.180000007f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Accent Green.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "accentB";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Accent Blue";
+        value.defaultValue = 0.519999981f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Accent Blue.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "seed";
+        value.kind = ParameterKind::Float;
+        value.groupId = "seed";
+        value.label = "Seed: Seed";
+        value.defaultValue = 1701.0f;
+        value.range = ParameterRange{0.0f, 65535.0f, 1.0f};
+        value.units = "";
+        value.description = "Deterministic startup identity. Changing this value explicitly resets the simulation.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    return contract;
+}
+
+ElementTypeContract generatedContract12() {
+    ElementTypeContract contract;
+    contract.element = ElementDescriptor{
+        "show.waveTank",
+        ElementKind::Visual,
+        {
+
+        },
+    };
+    contract.parameters.groups = {
+        ParameterGroupDeclaration{"motion", "Motion", ""},
+        ParameterGroupDeclaration{"time", "Time", ""},
+        ParameterGroupDeclaration{"seed", "Seed", ""},
+        ParameterGroupDeclaration{"action", "Action", ""},
+        ParameterGroupDeclaration{"scale", "Scale", ""},
+        ParameterGroupDeclaration{"color", "Color", ""},
+        ParameterGroupDeclaration{"force", "Force", ""},
+        ParameterGroupDeclaration{"glow", "Glow", ""},
+        ParameterGroupDeclaration{"count", "Count", ""},
+        ParameterGroupDeclaration{"visibility", "Visibility", ""}
+    };
+    {
+        ParameterDeclaration value;
+        value.id = "speed";
+        value.kind = ParameterKind::Float;
+        value.groupId = "motion";
+        value.label = "Motion: Speed";
+        value.defaultValue = 0.800000012f;
+        value.range = ParameterRange{0.0f, 3.0f, 0.00999999978f};
+        value.units = "multiplier";
+        value.description = "Local motion rate, multiplied by transport speed.";
+        value.quickAccessOrder = 0;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "paused";
+        value.kind = ParameterKind::Bool;
+        value.groupId = "time";
+        value.label = "Time: Paused";
+        value.defaultValue = false;
+        value.units = "";
+        value.description = "Freeze simulation without discarding state.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "bpmSync";
+        value.kind = ParameterKind::Bool;
+        value.groupId = "time";
+        value.label = "Time: BPM Sync";
+        value.defaultValue = true;
+        value.units = "";
+        value.description = "Scale simulation rate by supplied transport BPM relative to 120 BPM.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "bpmMultiplier";
+        value.kind = ParameterKind::Float;
+        value.groupId = "time";
+        value.label = "Time: BPM Multiplier";
+        value.defaultValue = 1.0f;
+        value.range = ParameterRange{0.25f, 4.0f, 0.25f};
+        value.units = "multiplier";
+        value.description = "Transport rate multiplier used when BPM sync is enabled.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "seed";
+        value.kind = ParameterKind::Float;
+        value.groupId = "seed";
+        value.label = "Seed: Seed";
+        value.defaultValue = 1001.0f;
+        value.range = ParameterRange{1.0f, 1000000.0f, 1.0f};
+        value.units = "seed";
+        value.description = "Deterministic initial state. Changing this value explicitly resets the model.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "reseed";
+        value.kind = ParameterKind::Bool;
+        value.groupId = "action";
+        value.label = "Action: Reseed";
+        value.defaultValue = false;
+        value.units = "";
+        value.description = "Restart from the current stored seed once; returns to false. Edit Seed for a different deterministic variation.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "scale";
+        value.kind = ParameterKind::Float;
+        value.groupId = "scale";
+        value.label = "Scale: Size";
+        value.defaultValue = 0.939999998f;
+        value.range = ParameterRange{0.200000003f, 1.60000002f, 0.00999999978f};
+        value.units = "multiplier";
+        value.description = "Size of the simulated plate within the viewport.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "rotationDeg";
+        value.kind = ParameterKind::Float;
+        value.groupId = "motion";
+        value.label = "Motion: Rotation";
+        value.defaultValue = 0.0f;
+        value.range = ParameterRange{-180.0f, 180.0f, 1.0f};
+        value.units = "deg";
+        value.description = "Rotation of the rendered plate.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "colorR";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Red";
+        value.defaultValue = 0.0799999982f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Normalized primary tint red.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "colorG";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Green";
+        value.defaultValue = 0.720000029f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Normalized primary tint green.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "colorB";
+        value.kind = ParameterKind::Float;
+        value.groupId = "color";
+        value.label = "Color: Blue";
+        value.defaultValue = 1.0f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "";
+        value.description = "Normalized primary tint blue.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "waveSpeed";
+        value.kind = ParameterKind::Float;
+        value.groupId = "motion";
+        value.label = "Motion: Wave Speed";
+        value.defaultValue = 16.0f;
+        value.range = ParameterRange{2.0f, 28.0f, 0.100000001f};
+        value.units = "cells/s";
+        value.description = "Propagation speed in the discrete membrane.";
+        value.quickAccessOrder = 1;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "damping";
+        value.kind = ParameterKind::Float;
+        value.groupId = "time";
+        value.label = "Time: Damping";
+        value.defaultValue = 0.550000012f;
+        value.range = ParameterRange{0.0500000007f, 3.0f, 0.00999999978f};
+        value.units = "1/s";
+        value.description = "Velocity decay; higher values shorten ripple memory.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "driveStrength";
+        value.kind = ParameterKind::Float;
+        value.groupId = "force";
+        value.label = "Force: Drive Strength";
+        value.defaultValue = 5.0f;
+        value.range = ParameterRange{0.0f, 12.0f, 0.0500000007f};
+        value.units = "cells/s2";
+        value.description = "Forcing amplitude applied by four persistent point sources.";
+        value.quickAccessOrder = 2;
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "driveFrequency";
+        value.kind = ParameterKind::Float;
+        value.groupId = "time";
+        value.label = "Time: Drive Frequency";
+        value.defaultValue = 0.800000012f;
+        value.range = ParameterRange{0.100000001f, 3.0f, 0.00999999978f};
+        value.units = "Hz";
+        value.description = "Frequency of the source oscillations.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "sourceSpread";
+        value.kind = ParameterKind::Float;
+        value.groupId = "scale";
+        value.label = "Scale: Source Spread";
+        value.defaultValue = 0.600000024f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "normalized";
+        value.description = "Spread the existing four sources around the plate center.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "radiance";
+        value.kind = ParameterKind::Float;
+        value.groupId = "glow";
+        value.label = "Glow: Radiance";
+        value.defaultValue = 1.14999998f;
+        value.range = ParameterRange{0.100000001f, 3.0f, 0.00999999978f};
+        value.units = "multiplier";
+        value.description = "Luminous response to membrane displacement and slope.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "contourCount";
+        value.kind = ParameterKind::Float;
+        value.groupId = "count";
+        value.label = "Count: Height Contours";
+        value.defaultValue = 12.0f;
+        value.range = ParameterRange{2.0f, 24.0f, 1.0f};
+        value.units = "count";
+        value.description = "Number of display contour intervals per unit displacement.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    {
+        ParameterDeclaration value;
+        value.id = "contourOpacity";
+        value.kind = ParameterKind::Float;
+        value.groupId = "visibility";
+        value.label = "Visibility: Contour Opacity";
+        value.defaultValue = 0.550000012f;
+        value.range = ParameterRange{0.0f, 1.0f, 0.00999999978f};
+        value.units = "normalized";
+        value.description = "Opacity of internal wave-height contours.";
+        value.visible = true;
+        contract.parameters.parameters.push_back(std::move(value));
+    }
+    return contract;
+}
+
+
+} // namespace
+
+const GeneratedElementPackageRegistration*
+generatedElementPackageRegistrations(std::size_t& count) noexcept {
+    count = sizeof(kRegistrations) / sizeof(kRegistrations[0]);
+    return kRegistrations;
+}
+
+void registerGeneratedElementPackages(LayerFactory& elementTypes) {
+    if (elementTypes.contains("example.signalBloom")) {
+        throw std::logic_error(
+            "generated package type already registered: example.signalBloom");
+    }
+    if (elementTypes.contains("show.chladniPlate")) {
+        throw std::logic_error(
+            "generated package type already registered: show.chladniPlate");
+    }
+    if (elementTypes.contains("show.dendriticCrystal")) {
+        throw std::logic_error(
+            "generated package type already registered: show.dendriticCrystal");
+    }
+    if (elementTypes.contains("show.differentialGrowth")) {
+        throw std::logic_error(
+            "generated package type already registered: show.differentialGrowth");
+    }
+    if (elementTypes.contains("show.elasticLattice")) {
+        throw std::logic_error(
+            "generated package type already registered: show.elasticLattice");
+    }
+    if (elementTypes.contains("show.gerstnerOcean")) {
+        throw std::logic_error(
+            "generated package type already registered: show.gerstnerOcean");
+    }
+    if (elementTypes.contains("show.magneticDipoles")) {
+        throw std::logic_error(
+            "generated package type already registered: show.magneticDipoles");
+    }
+    if (elementTypes.contains("show.phaseLattice")) {
+        throw std::logic_error(
+            "generated package type already registered: show.phaseLattice");
+    }
+    if (elementTypes.contains("show.sandRipples")) {
+        throw std::logic_error(
+            "generated package type already registered: show.sandRipples");
+    }
+    if (elementTypes.contains("show.strangeAttractor")) {
+        throw std::logic_error(
+            "generated package type already registered: show.strangeAttractor");
+    }
+    if (elementTypes.contains("show.voronoiFoam")) {
+        throw std::logic_error(
+            "generated package type already registered: show.voronoiFoam");
+    }
+    if (elementTypes.contains("show.vortexAdvection")) {
+        throw std::logic_error(
+            "generated package type already registered: show.vortexAdvection");
+    }
+    if (elementTypes.contains("show.waveTank")) {
+        throw std::logic_error(
+            "generated package type already registered: show.waveTank");
+    }
+    elementTypes.registerType(
+        generatedContract0(),
+        [] { return synaptomeCreateElementPackage_examples_signal_bloom(); },
+        LayerFactory::ParameterBindingMode::Explicit);
+    if (!elementTypes.contains("example.signalBloom")) {
+        throw std::logic_error(
+            "generated registrar did not publish expected type: example.signalBloom");
+    }
+    elementTypes.registerType(
+        generatedContract1(),
+        [] { return synaptomeCreateElementPackage_show_chladni_plate(); },
+        LayerFactory::ParameterBindingMode::Explicit);
+    if (!elementTypes.contains("show.chladniPlate")) {
+        throw std::logic_error(
+            "generated registrar did not publish expected type: show.chladniPlate");
+    }
+    elementTypes.registerType(
+        generatedContract2(),
+        [] { return synaptomeCreateElementPackage_show_dendritic_crystal(); },
+        LayerFactory::ParameterBindingMode::Explicit);
+    if (!elementTypes.contains("show.dendriticCrystal")) {
+        throw std::logic_error(
+            "generated registrar did not publish expected type: show.dendriticCrystal");
+    }
+    elementTypes.registerType(
+        generatedContract3(),
+        [] { return synaptomeCreateElementPackage_show_differential_growth(); },
+        LayerFactory::ParameterBindingMode::Explicit);
+    if (!elementTypes.contains("show.differentialGrowth")) {
+        throw std::logic_error(
+            "generated registrar did not publish expected type: show.differentialGrowth");
+    }
+    elementTypes.registerType(
+        generatedContract4(),
+        [] { return synaptomeCreateElementPackage_show_elastic_lattice(); },
+        LayerFactory::ParameterBindingMode::Explicit);
+    if (!elementTypes.contains("show.elasticLattice")) {
+        throw std::logic_error(
+            "generated registrar did not publish expected type: show.elasticLattice");
+    }
+    elementTypes.registerType(
+        generatedContract5(),
+        [] { return synaptomeCreateElementPackage_show_gerstner_ocean(); },
+        LayerFactory::ParameterBindingMode::Explicit);
+    if (!elementTypes.contains("show.gerstnerOcean")) {
+        throw std::logic_error(
+            "generated registrar did not publish expected type: show.gerstnerOcean");
+    }
+    elementTypes.registerType(
+        generatedContract6(),
+        [] { return synaptomeCreateElementPackage_show_magnetic_dipoles(); },
+        LayerFactory::ParameterBindingMode::Explicit);
+    if (!elementTypes.contains("show.magneticDipoles")) {
+        throw std::logic_error(
+            "generated registrar did not publish expected type: show.magneticDipoles");
+    }
+    elementTypes.registerType(
+        generatedContract7(),
+        [] { return synaptomeCreateElementPackage_show_phase_lattice(); },
+        LayerFactory::ParameterBindingMode::Explicit);
+    if (!elementTypes.contains("show.phaseLattice")) {
+        throw std::logic_error(
+            "generated registrar did not publish expected type: show.phaseLattice");
+    }
+    elementTypes.registerType(
+        generatedContract8(),
+        [] { return synaptomeCreateElementPackage_show_sand_ripples(); },
+        LayerFactory::ParameterBindingMode::Explicit);
+    if (!elementTypes.contains("show.sandRipples")) {
+        throw std::logic_error(
+            "generated registrar did not publish expected type: show.sandRipples");
+    }
+    elementTypes.registerType(
+        generatedContract9(),
+        [] { return synaptomeCreateElementPackage_show_strange_attractor(); },
+        LayerFactory::ParameterBindingMode::Explicit);
+    if (!elementTypes.contains("show.strangeAttractor")) {
+        throw std::logic_error(
+            "generated registrar did not publish expected type: show.strangeAttractor");
+    }
+    elementTypes.registerType(
+        generatedContract10(),
+        [] { return synaptomeCreateElementPackage_show_voronoi_foam(); },
+        LayerFactory::ParameterBindingMode::Explicit);
+    if (!elementTypes.contains("show.voronoiFoam")) {
+        throw std::logic_error(
+            "generated registrar did not publish expected type: show.voronoiFoam");
+    }
+    elementTypes.registerType(
+        generatedContract11(),
+        [] { return synaptomeCreateElementPackage_show_vortex_advection(); },
+        LayerFactory::ParameterBindingMode::Explicit);
+    if (!elementTypes.contains("show.vortexAdvection")) {
+        throw std::logic_error(
+            "generated registrar did not publish expected type: show.vortexAdvection");
+    }
+    elementTypes.registerType(
+        generatedContract12(),
+        [] { return synaptomeCreateElementPackage_show_wave_tank(); },
+        LayerFactory::ParameterBindingMode::Explicit);
+    if (!elementTypes.contains("show.waveTank")) {
+        throw std::logic_error(
+            "generated registrar did not publish expected type: show.waveTank");
+    }
+}
+
+} // namespace synaptome::runtime

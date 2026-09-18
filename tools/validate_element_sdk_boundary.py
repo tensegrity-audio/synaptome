@@ -7,6 +7,8 @@ import re
 import sys
 from pathlib import Path
 
+import generate_element_package_registrations
+
 ROOT = Path(__file__).resolve().parents[1]
 APP = ROOT / "synaptome"
 SDK = APP / "sdk" / "include" / "synaptome" / "element" / "compat"
@@ -467,4 +469,381 @@ def main() -> int:
     forbidden_contract_roots = (
         r"$(synaptomeapproot)\src;",
         r"$(synaptomeapproot)\src\core",
-   
+        r"$(synaptomeapproot)\src\visuals",
+        r"$(synaptomeapproot)\src\ui",
+        r"$(synaptomeapproot)\src\io",
+    )
+    for token in forbidden_contract_roots:
+        if token in contract_lower:
+            errors.append(f"compile-contract project exposes private include root {token}")
+
+    element_lower = element_project.lower()
+    for token in (
+        "synaptomeenablegeneratedelementpackages",
+        r"docs\examples\layer_packages\signal_bloom\source\signalbloomlayer.cpp",
+        r"docs\examples\layer_packages\signal_bloom\source\register_signal_bloom.cpp",
+        "generatedelementpackageregistrations.cpp",
+    ):
+        if token not in element_lower:
+            errors.append(f"generated package build target missing {token}")
+
+    app_lower = app_project.lower()
+    for token in (
+        r'clcompile include="src\visuals\signalbloomlayer.cpp"',
+        r"elements\signal_bloom\element_signalbloom.vcxproj",
+        r'clcompile include="src\runtime\signalbloomregistration.cpp"',
+    ):
+        if token in app_lower:
+            errors.append(
+                "host project retains obsolete Signal Bloom wiring: "
+                + token
+            )
+    if "synaptomeenablegeneratedelementpackages>true" not in app_lower:
+        errors.append(
+            "host must opt into the generated package build target"
+        )
+    if r'clcompile include="src\runtime\builtinelements.cpp"' not in app_lower:
+        errors.append("host project must compile the controlled registration unit")
+    if (
+        r'clcompile include="src\runtime\builtinelementhostbindings.cpp"'
+        not in app_lower
+    ):
+        errors.append("host project must compile the built-in host binding unit")
+    if (
+        r'clinclude include="src\runtime\builtinelementhostbindings.h"'
+        not in app_lower
+    ):
+        errors.append("host project must include the built-in host binding header")
+    if "SignalBloomLayer" in app_source:
+        errors.append("ofApp.cpp must not know the Signal Bloom concrete class")
+    if ".registerType(" in app_source:
+        errors.append("ofApp.cpp must delegate all element type bindings")
+    if "registerBuiltinElements(elementTypes_)" not in app_source:
+        errors.append("host must call the controlled built-in registration entrypoint")
+    if (
+        "registerBuiltinElementHostParameters(paramRegistry)"
+        not in app_source
+    ):
+        errors.append("host must register built-in host parameters through the binding unit")
+    if "updateBuiltinElementHostParameters()" not in app_source:
+        errors.append("host must synchronize built-in host parameters through the binding unit")
+    for token in ("TextLayerState", "TextLayer.h"):
+        if token in app_source or token in app_header:
+            errors.append(
+                "ofApp must not own the text element compatibility binding: "
+                + token
+            )
+    for token in (
+        "TextLayer",
+        "TextLayerState",
+        "::instance",
+        "syncFontSelection",
+        "std::function",
+        "Composition",
+        "ofFbo",
+        "Layer*",
+        "void*",
+    ):
+        if token in builtin_host_bindings_header:
+            errors.append(
+                "built-in host binding header exposes concrete or executable "
+                "ownership: "
+                + token
+            )
+    for token in (
+        "void registerBuiltinElementHostParameters(ParameterRegistry& registry);",
+        "void updateBuiltinElementHostParameters();",
+    ):
+        if token not in builtin_host_bindings_header:
+            errors.append(
+                "built-in host binding header is missing its pointer-free "
+                "entrypoint: "
+                + token
+            )
+    for token in (
+        '#include "../visuals/TextLayerState.h"',
+        "TextLayerState::instance()",
+        "refreshAvailableFonts()",
+        "syncFontSelection()",
+    ):
+        if token not in builtin_host_bindings_source:
+            errors.append(
+                "built-in host binding source must privately own text state "
+                "synchronization: "
+                + token
+            )
+    expected_text_parameter_ids = {
+        "overlay.text.content",
+        "overlay.text.topLeft",
+        "overlay.text.topRight",
+        "overlay.text.bottomLeft",
+        "overlay.text.bottomRight",
+        "overlay.text.font",
+        "overlay.text.fontIndex",
+        "overlay.text.size",
+        "overlay.text.corner.size",
+        "overlay.text.color.r",
+        "overlay.text.color.g",
+        "overlay.text.color.b",
+    }
+    bound_text_parameter_id_list = re.findall(
+        r'add(?:Float|String)\s*\(\s*"(overlay\.text\.[^"]+)"',
+        builtin_host_bindings_source,
+    )
+    if (
+        len(bound_text_parameter_id_list) != len(expected_text_parameter_ids)
+        or set(bound_text_parameter_id_list) != expected_text_parameter_ids
+    ):
+        errors.append(
+            "built-in host binding source must own exactly the 12 text "
+            "parameter IDs"
+        )
+    if "registerGeneratedElementPackages(elementTypes)" not in builtin_source:
+        errors.append(
+            "built-in registration unit must compose generated packages"
+        )
+    for token in (
+        "GeneratedElementPackageRegistration",
+        "generatedElementPackageRegistrations",
+        "registerGeneratedElementPackages",
+        '"examples.signal_bloom"',
+        '"example.signalBloom"',
+        '"39e6e7934d09689bd1a952e2d040f3a36ebdf595a47446778d1745a2fcdb00de"',
+    ):
+        if token not in (
+            generated_registration_header
+            + "\n"
+            + generated_registration_source
+        ):
+            errors.append(
+                "generated registration surface is missing " + token
+            )
+    for token in (
+        "ElementTypeContract generatedContract0()",
+        '"example.signalBloom"',
+        "contract.parameters.groups =",
+        "contract.parameters.parameters.push_back",
+        "ParameterOptionSource{",
+        '"transport.bpmMultipliers"',
+        "ParameterDeprecation{",
+        '"opacity"',
+        "elementTypes.registerType(",
+        "generatedContract0()",
+        "synaptomeCreateElementPackage_examples_signal_bloom",
+    ):
+        if token not in generated_registration_source:
+            errors.append(
+                "generated Signal Bloom registration is missing " + token
+            )
+    for token in (
+        "synaptomeCreateElementPackage_examples_signal_bloom",
+        "std::make_unique<SignalBloomLayer>",
+    ):
+        if token not in signal_registration_source:
+            errors.append("Signal Bloom creator is missing " + token)
+    bench_project_lower = bench_project.lower()
+    if r"\src\runtime\builtinelements.cpp" in bench_project_lower:
+        errors.append("package bench must not compile the full host built-in registrar")
+    if "synaptomeenablegeneratedelementpackages>true" not in bench_project_lower:
+        errors.append(
+            "package bench must opt into generated package registration"
+        )
+    if "registerGeneratedElementPackages(factory)" not in bench_source:
+        errors.append(
+            "package bench must call generated package registration"
+        )
+
+    registered_types = set(
+        re.findall(
+            r'registerType\(\s*(?:ElementDescriptor\s*)?\{\s*"([^"]+)"',
+            builtin_source + "\n" + generated_registration_source,
+        )
+    )
+    registered_types.update(
+        re.findall(
+            r'register(?:Explicit)?Builtin\(\s*ElementDescriptor\s*\{\s*"([^"]+)"',
+            builtin_source,
+        )
+    )
+    package_types: set[str] = set()
+    try:
+        records = generate_element_package_registrations.load_records()
+        package_types = {record.type_id for record in records}
+        errors.extend(
+            generate_element_package_registrations.check_outputs(
+                generate_element_package_registrations.generated_outputs()
+            )
+        )
+        registered_types.update(package_types)
+    except generate_element_package_registrations.GenerationError as exc:
+        errors.append(f"invalid generated package registration: {exc}")
+    canonical_types: set[str] = set()
+    for catalog_path in (APP / "bin" / "data" / "layers").rglob("*.json"):
+        try:
+            catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        layer_type = catalog.get("type") if isinstance(catalog, dict) else None
+        if (
+            isinstance(layer_type, str)
+            and layer_type
+            and not layer_type.startswith("fx.")
+            and layer_type != "ui.hud.widget"
+        ):
+            canonical_types.add(layer_type)
+    allowed_types = canonical_types | package_types
+    for package_path in (ROOT / "docs" / "examples" / "layer_packages").rglob(
+        "layer.package.json"
+    ):
+        try:
+            package = json.loads(package_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        asset = package.get("asset") if isinstance(package, dict) else None
+        layer_type = asset.get("type") if isinstance(asset, dict) else None
+        if isinstance(layer_type, str) and layer_type:
+            allowed_types.add(layer_type)
+    unexpected_registrations = sorted(registered_types - allowed_types)
+    if unexpected_registrations:
+        errors.append(
+            "registered types must be canonical catalog or opt-in package types: "
+            + ", ".join(unexpected_registrations)
+        )
+    missing_canonical_registrations = sorted(canonical_types - registered_types)
+    if missing_canonical_registrations:
+        errors.append(
+            "canonical runtime types must remain registered: "
+            + ", ".join(missing_canonical_registrations)
+        )
+
+    concrete_classes = set(
+        re.findall(
+            r"std::make_unique<([^>]+)>",
+            builtin_source + "\n" + signal_registration_source,
+        )
+    )
+    leaked_classes = sorted(
+        class_name
+        for class_name in concrete_classes
+        if re.search(
+            rf"\b{re.escape(class_name)}\b",
+            app_source + "\n" + app_header,
+        )
+    )
+    if leaked_classes:
+        errors.append(
+            "ofApp must not include or reference registration-only concrete elements: "
+            + ", ".join(leaked_classes)
+        )
+    runtime_project_lower = runtime_project.lower()
+    app_project_lower = app_project.lower()
+    for token in (
+        r'clcompile include="src\host\hostcompositionrenderer.cpp"',
+        r'clinclude include="src\host\hostcompositionrenderer.h"',
+        r'clinclude include="src\host\hostcompositioneffects.h"',
+    ):
+        if token not in app_project_lower:
+            errors.append(
+                "host application project is missing composition-renderer "
+                "wiring " + token
+            )
+    for token in (
+        "class HostCompositionEffects",
+        "isConsoleRouted",
+        "defaultCoverageForType",
+        "applySlot",
+        "applyGlobal",
+    ):
+        if token not in host_effects_header:
+            errors.append(f"host composition effect interface is missing {token}")
+    for token in (
+        "enum class RenderStatus",
+        "class HostCompositionRenderer",
+        "HostCompositionRenderer(",
+        "RenderStatus render(",
+        "drawLatest(",
+        "drawPreview(",
+        "hasFrame(",
+        "releaseGraphicsResources(",
+    ):
+        if token not in host_renderer_header + host_renderer_source:
+            errors.append(f"host composition renderer is missing {token}")
+    for target_name, target_text in (
+        ("RuntimeCore", runtime_project),
+        (
+            "Element SDK compile contract",
+            contract_project + "\n" + example_header + "\n" + example_source,
+        ),
+        (
+        "generated Signal Bloom package target",
+            element_project + "\n" + runtime_header + "\n" + runtime_source,
+        ),
+        ("layer package bench", bench_project + "\n" + bench_source),
+        ("browser flow", browser_flow_project),
+    ):
+        lowered_target = target_text.lower()
+        for token in (
+            "hostcompositionrenderer",
+            "hostcompositioneffects",
+            r"\src\host",
+        ):
+            if token in lowered_target:
+                errors.append(
+                    f"{target_name} must exclude host-only composition "
+                    f"rendering: {token}"
+                )
+    for registration_unit in (
+        "builtinelementhostbindings.cpp",
+        "builtinelements.cpp",
+        "generatedelementpackageregistrations.cpp",
+    ):
+        if registration_unit in runtime_project_lower:
+            errors.append(
+                "RuntimeCore must exclude host registration unit "
+                + registration_unit
+            )
+    binding_unit = "builtinelementhostbindings"
+    if (
+        binding_unit in runtime_project_lower
+        or binding_unit in element_lower
+        or binding_unit in bench_project_lower
+    ):
+        errors.append(
+            "RuntimeCore and element/package targets must exclude the "
+            "host-only built-in binding unit"
+        )
+    browser_flow_project_lower = browser_flow_project.lower()
+    for token in (
+        r"\src\runtime\builtinelementhostbindings.cpp",
+        r"\src\visuals\textlayerstate.cpp",
+    ):
+        if token not in browser_flow_project_lower:
+            errors.append(
+                "BrowserFlow must compile the zero-text host binding seam: " + token
+            )
+    if r"\src\visuals\textlayer.cpp" in browser_flow_project_lower:
+        errors.append(
+            "BrowserFlow zero-text binding contract must not compile TextLayer.cpp"
+        )
+    if '#include "../docs/examples/artist_sdk/SignalBloomLayer.cpp"' in bench_source:
+        errors.append("bench must link the compile-contract library instead of including .cpp")
+    if '#include "../synaptome/src/visuals/LayerFactory.cpp"' in bench_source:
+        errors.append("bench must compile LayerFactory as a project item instead of including .cpp")
+
+    if errors:
+        print("[element-sdk-boundary] FAIL")
+        for error in errors:
+            print(f"  - {error}")
+        return 1
+    print(
+        "[element-sdk-boundary] PASS public includes, generated package sources, "
+        "pointer-free static element/action/parameter declarations, explicit "
+        "legacy/declared registration, bind-only live actions, typed telemetry, "
+        "controlled registration, compile-contract roots, and no "
+        "Runtime/host-renderer composition leak"
+    )
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
