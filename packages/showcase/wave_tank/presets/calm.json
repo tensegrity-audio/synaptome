@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "packageId": "show.wave_tank",
+  "assetId": "show.wave_tank",
+  "presetId": "calm",
+  "label": "Calm",
+  "description": "Does not change seed or reset simulation history.",
+  "parameters": {
+    "speed": 0.55,
+    "paused": false,
+    "bpmSync": true,
+    "bpmMultiplier": 1.0,
+    "scale": 0.94,
+    "rotationDeg": 0.0,
+    "colorR": 0.08,
+    "colorG": 0.72,
+    "colorB": 1.0,
+    "waveSpeed": 16.0,
+    "damping": 0.9,
+    "driveStrength": 2.5,
+    "driveFrequency": 0.45,
+    "sourceSpread": 0.75,
+    "radiance": 0.9,
+    "contourCount": 12.0,
+    "contourOpacity": 0.55
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "id": "show.gerstner_ocean.calm",
+  "label": "Gerstner Ocean / Calm",
+  "category": "Generative",
+  "layerGroup": "Planetary And World Models",
+  "model": "gerstner-wave-surface",
+  "stateModel": "fixed triangulated grid sampling three dispersive trochoidal waves with bounded phase and non-folding horizontal displacement",
+  "type": "show.gerstnerOcean",
+  "registryPrefix": "show.gerstner_ocean.calm",
+  "description": "A faceted ocean driven by three deep-water Gerstner waves. Height, face normal and slope determine all facet colors.",
+  "tags": [
+    "algorithmic",
+    "showcase",
+    "low-poly"
+  ],
+  "defaults": {
+    "speed": 0.28,
+    "bpmSync": true,
+    "bpmMultiplier": 1,
+    "scale": 1,
+    "yawDeg": -24,
+    "tiltDeg": 38,
+    "spinRate": 0,
+    "seed": 1001,
+    "reseed": false,
+    "waveHeight": 0.08,
+    "wavelength": 2.5,
+    "steepness": 0.4,
+    "directionDeg": 18,
+    "wireOpacity": 0.08,
+    "colorR": 0.025,
+    "colorG": 0.12,
+    "colorB": 0.22,
+    "highlightR": 0.38,
+    "highlightG": 0.88,
+    "highlightB": 0.8
+  },
+  "schemaVersion": 1,
+  "packageVersion": "0.1.0",
+  "opacity": 1.0
+}

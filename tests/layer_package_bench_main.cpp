@@ -76,11 +76,14 @@ int main() {
         const auto& package = surface.package;
         auto typeContractCopies = factory.typeContracts();
 
-        typeContractCopies[0].state =
+        auto selectedCopy = std::find_if(typeContractCopies.begin(), typeContractCopies.end(),
+            [](const auto& record) { return record.contract.element.typeId == "example.signalBloom"; });
+        require(selectedCopy != typeContractCopies.end(), "Signal Bloom copied contract is missing");
+        selectedCopy->state =
             LayerFactory::ParameterDeclarationState::LegacySetupDiscovery;
-        typeContractCopies[0].contract.parameters.groups[0].id =
+        selectedCopy->contract.parameters.groups[0].id =
             "copyMutated";
-        typeContractCopies[0].contract.parameters.parameters[0].id =
+        selectedCopy->contract.parameters.parameters[0].id =
             "copyMutated";
         require(
             factory.typeContract("example.signalBloom") == typeContract &&

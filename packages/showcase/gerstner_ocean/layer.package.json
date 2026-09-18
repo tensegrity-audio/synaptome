@@ -1,0 +1,505 @@
+{
+  "schemaVersion": 1,
+  "packageId": "show.gerstner_ocean",
+  "packageVersion": "0.1.0",
+  "implementationVersion": "0.1.0",
+  "description": "A faceted ocean driven by three deep-water Gerstner waves. Height, face normal and slope determine all facet colors.",
+  "element": {
+    "id": "show.gerstnerOcean",
+    "kind": "visual",
+    "bindingMode": "bind-only",
+    "actions": []
+  },
+  "asset": {
+    "id": "show.gerstner_ocean",
+    "label": "Gerstner Ocean",
+    "category": "Generative",
+    "layerGroup": "Planetary And World Models",
+    "model": "gerstner-wave-surface",
+    "stateModel": "fixed triangulated grid sampling three dispersive trochoidal waves with bounded phase and non-folding horizontal displacement",
+    "type": "show.gerstnerOcean",
+    "registryPrefix": "show.gerstner_ocean",
+    "description": "A faceted ocean driven by three deep-water Gerstner waves. Height, face normal and slope determine all facet colors.",
+    "tags": [
+      "algorithmic",
+      "showcase",
+      "low-poly"
+    ],
+    "defaults": {}
+  },
+  "source": {
+    "strategy": "source-registration",
+    "registration": "source/register_gerstner_ocean.cpp",
+    "files": [
+      "source/GerstnerOceanLayer.h",
+      "source/GerstnerOceanLayer.cpp",
+      "source/GerstnerOceanModel.h",
+      "source/Projection.h"
+    ]
+  },
+  "capabilities": [
+    "graphics.opengl",
+    "transport.read",
+    "parameters.dynamic-options"
+  ],
+  "dependencies": [
+    {
+      "id": "synaptome.element-sdk",
+      "kind": "static-library",
+      "required": true,
+      "versionRange": ">=0.1.0 <1.0.0",
+      "resolvedVersion": "0.1.0",
+      "provider": "synaptome.element-sdk"
+    },
+    {
+      "id": "synaptome.runtime",
+      "kind": "runtime-service",
+      "required": true,
+      "versionRange": ">=0.1.0 <1.0.0",
+      "resolvedVersion": "0.1.0",
+      "provider": "synaptome.runtime"
+    }
+  ],
+  "parameterGroups": [
+    {
+      "id": "motion",
+      "label": "Motion",
+      "description": ""
+    },
+    {
+      "id": "time",
+      "label": "Time",
+      "description": ""
+    },
+    {
+      "id": "scale",
+      "label": "Scale",
+      "description": ""
+    },
+    {
+      "id": "seed",
+      "label": "Seed",
+      "description": ""
+    },
+    {
+      "id": "action",
+      "label": "Action",
+      "description": ""
+    },
+    {
+      "id": "force",
+      "label": "Force",
+      "description": ""
+    },
+    {
+      "id": "visibility",
+      "label": "Visibility",
+      "description": ""
+    },
+    {
+      "id": "color",
+      "label": "Color",
+      "description": ""
+    }
+  ],
+  "parameters": [
+    {
+      "id": "speed",
+      "kind": "float",
+      "groupId": "motion",
+      "label": "Motion: Speed",
+      "default": 0.65,
+      "visible": true,
+      "description": "Local time multiplier; zero holds current state.",
+      "range": {
+        "min": 0,
+        "max": 4,
+        "step": 0.01
+      },
+      "units": "multiplier",
+      "quickAccessOrder": 4
+    },
+    {
+      "id": "bpmSync",
+      "kind": "bool",
+      "groupId": "time",
+      "label": "Time: BPM Sync",
+      "default": true,
+      "visible": true,
+      "description": "Multiply local time by transport BPM relative to 120 BPM."
+    },
+    {
+      "id": "bpmMultiplier",
+      "kind": "float",
+      "groupId": "time",
+      "label": "Time: BPM Multiplier",
+      "default": 1,
+      "visible": true,
+      "description": "Rhythmic multiplier used only when BPM sync is enabled.",
+      "range": {
+        "min": 0.25,
+        "max": 8,
+        "step": 0.25
+      },
+      "units": "multiplier",
+      "optionsSource": {
+        "id": "transport.bpmMultipliers",
+        "value": "multiplier",
+        "label": "label"
+      }
+    },
+    {
+      "id": "scale",
+      "kind": "float",
+      "groupId": "scale",
+      "label": "Scale: Scene Scale",
+      "default": 1,
+      "visible": true,
+      "description": "Uniform size of the projected model.",
+      "range": {
+        "min": 0.3,
+        "max": 1.6,
+        "step": 0.01
+      },
+      "units": "multiplier"
+    },
+    {
+      "id": "yawDeg",
+      "kind": "float",
+      "groupId": "motion",
+      "label": "Motion: View Yaw",
+      "default": -24,
+      "visible": true,
+      "description": "Rotate the view around the vertical model axis.",
+      "range": {
+        "min": -180,
+        "max": 180,
+        "step": 1
+      },
+      "units": "deg"
+    },
+    {
+      "id": "tiltDeg",
+      "kind": "float",
+      "groupId": "motion",
+      "label": "Motion: View Elevation",
+      "default": 38,
+      "visible": true,
+      "description": "Viewing elevation for explicit orthographic 3D projection.",
+      "range": {
+        "min": 10,
+        "max": 75,
+        "step": 1
+      },
+      "units": "deg"
+    },
+    {
+      "id": "spinRate",
+      "kind": "float",
+      "groupId": "motion",
+      "label": "Motion: View Spin",
+      "default": 3,
+      "visible": true,
+      "description": "Continuous view rotation, respecting local and transport speed.",
+      "range": {
+        "min": -30,
+        "max": 30,
+        "step": 0.1
+      },
+      "units": "deg/s",
+      "quickAccessOrder": 5
+    },
+    {
+      "id": "seed",
+      "kind": "float",
+      "groupId": "seed",
+      "label": "Seed: Seed",
+      "default": 1001,
+      "visible": true,
+      "description": "Deterministic initial state; changing this value explicitly reseeds the model.",
+      "range": {
+        "min": 0,
+        "max": 65535,
+        "step": 1
+      },
+      "units": "id"
+    },
+    {
+      "id": "reseed",
+      "kind": "bool",
+      "groupId": "action",
+      "label": "Action: Reseed",
+      "default": false,
+      "visible": true,
+      "description": "One-shot request to restore the current seed; resets after handling."
+    },
+    {
+      "id": "waveHeight",
+      "kind": "float",
+      "groupId": "scale",
+      "label": "Scale: Wave Height",
+      "default": 0.18,
+      "visible": true,
+      "description": "Total peak amplitude of the three-component wave sum.",
+      "range": {
+        "min": 0.01,
+        "max": 0.32,
+        "step": 0.005
+      },
+      "units": "world",
+      "quickAccessOrder": 0
+    },
+    {
+      "id": "wavelength",
+      "kind": "float",
+      "groupId": "scale",
+      "label": "Scale: Wavelength",
+      "default": 1.8,
+      "visible": true,
+      "description": "Fundamental wavelength; secondary wavelengths retain fixed physical ratios.",
+      "range": {
+        "min": 0.7,
+        "max": 3,
+        "step": 0.01
+      },
+      "units": "world",
+      "quickAccessOrder": 1
+    },
+    {
+      "id": "steepness",
+      "kind": "float",
+      "groupId": "force",
+      "label": "Force: Steepness",
+      "default": 0.75,
+      "visible": true,
+      "description": "Trochoidal horizontal displacement; aggregate gradient stays below 0.72.",
+      "range": {
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      },
+      "units": "normalized",
+      "quickAccessOrder": 2
+    },
+    {
+      "id": "directionDeg",
+      "kind": "float",
+      "groupId": "motion",
+      "label": "Motion: Wave Direction",
+      "default": 18,
+      "visible": true,
+      "description": "Principal travel direction of the wave system.",
+      "range": {
+        "min": -180,
+        "max": 180,
+        "step": 1
+      },
+      "units": "deg",
+      "quickAccessOrder": 3
+    },
+    {
+      "id": "wireOpacity",
+      "kind": "float",
+      "groupId": "visibility",
+      "label": "Visibility: Grid Opacity",
+      "default": 0.2,
+      "visible": true,
+      "description": "Opacity of the mesh edge subcomponent; surface remains controlled by slot opacity.",
+      "range": {
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      },
+      "units": "normalized"
+    },
+    {
+      "id": "colorR",
+      "kind": "float",
+      "groupId": "color",
+      "label": "Color: Base Red",
+      "default": 0.025,
+      "visible": true,
+      "description": "Normalized base red component of the model-derived palette.",
+      "range": {
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    },
+    {
+      "id": "colorG",
+      "kind": "float",
+      "groupId": "color",
+      "label": "Color: Base Green",
+      "default": 0.12,
+      "visible": true,
+      "description": "Normalized base green component of the model-derived palette.",
+      "range": {
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    },
+    {
+      "id": "colorB",
+      "kind": "float",
+      "groupId": "color",
+      "label": "Color: Base Blue",
+      "default": 0.22,
+      "visible": true,
+      "description": "Normalized base blue component of the model-derived palette.",
+      "range": {
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    },
+    {
+      "id": "highlightR",
+      "kind": "float",
+      "groupId": "color",
+      "label": "Color: Highlight Red",
+      "default": 0.38,
+      "visible": true,
+      "description": "Normalized highlight red component of the model-derived palette.",
+      "range": {
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    },
+    {
+      "id": "highlightG",
+      "kind": "float",
+      "groupId": "color",
+      "label": "Color: Highlight Green",
+      "default": 0.88,
+      "visible": true,
+      "description": "Normalized highlight green component of the model-derived palette.",
+      "range": {
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    },
+    {
+      "id": "highlightB",
+      "kind": "float",
+      "groupId": "color",
+      "label": "Color: Highlight Blue",
+      "default": 0.8,
+      "visible": true,
+      "description": "Normalized highlight blue component of the model-derived palette.",
+      "range": {
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    }
+  ],
+  "presets": [
+    {
+      "presetId": "default",
+      "label": "Default",
+      "path": "presets/default.json",
+      "description": "Default performance starting point."
+    },
+    {
+      "presetId": "calm",
+      "label": "Calm",
+      "path": "presets/calm.json",
+      "description": "Calm performance starting point."
+    },
+    {
+      "presetId": "energized",
+      "label": "Energized",
+      "path": "presets/energized.json",
+      "description": "Energized performance starting point."
+    }
+  ],
+  "presetBanks": [
+    {
+      "id": "performance",
+      "label": "Performance",
+      "presets": [
+        "default",
+        "calm",
+        "energized"
+      ]
+    }
+  ],
+  "mappingPresets": [
+    {
+      "id": "hostMic",
+      "label": "Host Mic",
+      "description": "Optional visible model-control routes. Shared host-mic profiles scale the current base by 0.65 to 1.65; preview conflicts before applying. Silent input retains motion.",
+      "applyMode": "suggestion-only",
+      "mappings": [
+        {
+          "target": {
+            "kind": "parameter",
+            "id": "waveHeight"
+          },
+          "source": {
+            "kind": "osc",
+            "pattern": "/sensor/host/localmic/mic-bass",
+            "in": [
+              0.0,
+              0.18
+            ],
+            "out": [
+              0.65,
+              1.65
+            ],
+            "smooth": 0.2,
+            "deadband": 0.01,
+            "blend": "scale",
+            "relative": true
+          }
+        },
+        {
+          "target": {
+            "kind": "parameter",
+            "id": "steepness"
+          },
+          "source": {
+            "kind": "osc",
+            "pattern": "/sensor/host/localmic/mic-level",
+            "in": [
+              0.0,
+              0.12
+            ],
+            "out": [
+              0.65,
+              1.65
+            ],
+            "smooth": 0.2,
+            "deadband": 0.01,
+            "blend": "scale",
+            "relative": true
+          }
+        }
+      ]
+    }
+  ],
+  "media": [],
+  "tests": {
+    "confidenceProfile": "tests/layer_test.json",
+    "fixtures": [
+      "tests/model_test.cpp"
+    ]
+  },
+  "aliases": [],
+  "deprecations": [],
+  "migrations": [],
+  "compatibility": {
+    "sdk": {
+      "versionRange": ">=0.1.0 <1.0.0",
+      "resolvedVersion": "0.1.0"
+    },
+    "runtime": {
+      "versionRange": ">=0.1.0 <1.0.0",
+      "resolvedVersion": "0.1.0"
+    }
+  }
+}

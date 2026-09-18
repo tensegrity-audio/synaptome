@@ -111,6 +111,7 @@ inline void ofPushView() {}
 inline void ofPopView() {}
 inline void ofTranslate(float, float) {}
 inline void ofScale(float, float) {}
+inline void ofRotateDeg(float) {}
 inline void ofSetColor(const ofColor& color) {
 #if defined(SYNAPTOME_OF_STUB_TRACE)
     ofstub::record({
@@ -198,6 +199,7 @@ inline void ofEnableBlendMode(ofBlendMode mode) {
     });
 #endif
 }
+inline void ofEnableAlphaBlending() { ofEnableBlendMode(OF_BLENDMODE_ALPHA); }
 inline void ofDisableBlendMode() {
 #if defined(SYNAPTOME_OF_STUB_TRACE)
     ofstub::record({

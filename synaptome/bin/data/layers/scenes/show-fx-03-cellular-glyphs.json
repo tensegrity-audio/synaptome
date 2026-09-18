@@ -1,0 +1,59 @@
+{
+  "scene": {
+    "schemaVersion": 2,
+    "source": {
+      "name": "show-fx-03-cellular-glyphs",
+      "path": "layers/scenes/show-fx-03-cellular-glyphs.json"
+    },
+    "storage": {
+      "kind": "named",
+      "name": "show-fx-03-cellular-glyphs",
+      "path": "layers/scenes/show-fx-03-cellular-glyphs.json"
+    },
+    "description": "Stable Braille glyphs preserve the growing cellular field as luminous typographic tissue.",
+    "contentKind": "effect-look"
+  },
+  "console": {
+    "slots": [
+      {
+        "index": 1,
+        "assetId": "generative.lenia",
+        "label": "Lenia",
+        "active": true,
+        "opacity": 1.0,
+        "parameters": {
+          "console.layer1.fieldR": 0.2,
+          "console.layer1.fieldG": 1.0,
+          "console.layer1.fieldB": 0.7,
+          "console.layer1.edgeR": 0.88,
+          "console.layer1.edgeG": 1.0,
+          "console.layer1.edgeB": 0.92,
+          "console.layer1.edgeGlow": 1.35
+        }
+      },
+      {
+        "index": 2,
+        "assetId": "fx.ascii",
+        "label": "Cellular Glyphs",
+        "active": true,
+        "opacity": 1.0,
+        "coverage": {
+          "mode": "upstream",
+          "columns": 1
+        },
+        "parameters": {
+          "effects.ascii.route": 1,
+          "effects.ascii.coverage": 1,
+          "effects.ascii.coverageMask": true,
+          "effects.ascii.characterSet": 2,
+          "effects.ascii.aspect": 0,
+          "effects.ascii.padding": 0.05,
+          "effects.ascii.colorMode": 0,
+          "effects.ascii.block": 8,
+          "effects.ascii.gamma": 0.75,
+          "effects.ascii.jitter": 0.0
+        }
+      }
+    ]
+  }
+}

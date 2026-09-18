@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "packageId": "show.sand_ripples",
+  "assetId": "show.sand_ripples",
+  "presetId": "calm",
+  "label": "Calm",
+  "description": "State-preserving calm controls for Sand Ripples.",
+  "parameters": {
+    "speed": 0.4,
+    "bpmSync": true,
+    "bpmMultiplier": 1,
+    "scale": 0.92,
+    "rotationDeg": 0,
+    "transportRate": 0.5,
+    "windDirectionDeg": 12,
+    "hopLength": 0.12,
+    "reposeSlope": 0.025,
+    "relaxationRate": 1.8,
+    "reliefScale": 0.75,
+    "tiltDeg": 48,
+    "ridgeContrast": 1,
+    "colorR": 0.8,
+    "colorG": 0.37,
+    "colorB": 0.12,
+    "accentR": 1,
+    "accentG": 0.86,
+    "accentB": 0.46
+  }
+}

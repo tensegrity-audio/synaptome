@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "packageId": "show.magnetic_dipoles",
+  "assetId": "show.magnetic_dipoles",
+  "presetId": "default",
+  "label": "Default",
+  "description": "Default Magnetic Dipoles operating point; ordinary parameter changes preserve state.",
+  "parameters": {
+    "speed": 1.0,
+    "paused": false,
+    "bpmSync": false,
+    "bpmMultiplier": 1.0,
+    "seed": 155921.0,
+    "reseed": false,
+    "scale": 0.96,
+    "rotationDeg": 0.0,
+    "lineWidth": 1.6,
+    "glow": 1.0,
+    "colorR": 0.24,
+    "colorG": 0.78,
+    "colorB": 0.98,
+    "accentR": 0.95,
+    "accentG": 0.45,
+    "accentB": 0.64,
+    "separation": 0.46,
+    "coupling": 0.62,
+    "orbitRate": 8.0,
+    "twist": 0.35,
+    "fieldReach": 0.88
+  }
+}

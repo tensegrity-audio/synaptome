@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "packageId": "show.elastic_lattice",
+  "assetId": "show.elastic_lattice",
+  "presetId": "default",
+  "label": "Default",
+  "description": "Default Elastic Lattice settings. Presets preserve current simulation history.",
+  "parameters": {
+    "speed": 0.65,
+    "bpmSync": true,
+    "bpmMultiplier": 1,
+    "scale": 1,
+    "yawDeg": -24,
+    "tiltDeg": 38,
+    "spinRate": 3,
+    "springStiffness": 45,
+    "restoringForce": 2.5,
+    "dampingRate": 1.2,
+    "impulseStrength": 5,
+    "impulseRate": 0.45,
+    "heightScale": 1,
+    "wireOpacity": 0.25,
+    "colorR": 0.08,
+    "colorG": 0.04,
+    "colorB": 0.22,
+    "highlightR": 0.95,
+    "highlightG": 0.55,
+    "highlightB": 0.85
+  }
+}

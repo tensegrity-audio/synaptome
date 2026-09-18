@@ -13,5 +13,101 @@
       <AdditionalIncludeDirectories>$(SynaptomeRepoRoot)\docs\examples\layer_packages\signal_bloom\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ObjectFileName>$(IntDir)GeneratedElementPackages\synaptomeCreateElementPackage_examples_signal_bloom\register_signal_bloom.obj</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="$(SynaptomeRepoRoot)\packages\showcase\chladni_plate\source\ChladniPlateLayer.cpp">
+      <AdditionalIncludeDirectories>$(SynaptomeRepoRoot)\packages\showcase\chladni_plate\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ObjectFileName>$(IntDir)GeneratedElementPackages\synaptomeCreateElementPackage_show_chladni_plate\ChladniPlateLayer.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="$(SynaptomeRepoRoot)\packages\showcase\chladni_plate\source\register_chladni_plate.cpp">
+      <AdditionalIncludeDirectories>$(SynaptomeRepoRoot)\packages\showcase\chladni_plate\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ObjectFileName>$(IntDir)GeneratedElementPackages\synaptomeCreateElementPackage_show_chladni_plate\register_chladni_plate.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="$(SynaptomeRepoRoot)\packages\showcase\dendritic_crystal\source\DendriticCrystalLayer.cpp">
+      <AdditionalIncludeDirectories>$(SynaptomeRepoRoot)\packages\showcase\dendritic_crystal\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ObjectFileName>$(IntDir)GeneratedElementPackages\synaptomeCreateElementPackage_show_dendritic_crystal\DendriticCrystalLayer.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="$(SynaptomeRepoRoot)\packages\showcase\dendritic_crystal\source\register_dendritic_crystal.cpp">
+      <AdditionalIncludeDirectories>$(SynaptomeRepoRoot)\packages\showcase\dendritic_crystal\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ObjectFileName>$(IntDir)GeneratedElementPackages\synaptomeCreateElementPackage_show_dendritic_crystal\register_dendritic_crystal.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="$(SynaptomeRepoRoot)\packages\showcase\differential_growth\source\DifferentialGrowthLayer.cpp">
+      <AdditionalIncludeDirectories>$(SynaptomeRepoRoot)\packages\showcase\differential_growth\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ObjectFileName>$(IntDir)GeneratedElementPackages\synaptomeCreateElementPackage_show_differential_growth\DifferentialGrowthLayer.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="$(SynaptomeRepoRoot)\packages\showcase\differential_growth\source\register_differential_growth.cpp">
+      <AdditionalIncludeDirectories>$(SynaptomeRepoRoot)\packages\showcase\differential_growth\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ObjectFileName>$(IntDir)GeneratedElementPackages\synaptomeCreateElementPackage_show_differential_growth\register_differential_growth.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="$(SynaptomeRepoRoot)\packages\showcase\elastic_lattice\source\ElasticLatticeLayer.cpp">
+      <AdditionalIncludeDirectories>$(SynaptomeRepoRoot)\packages\showcase\elastic_lattice\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ObjectFileName>$(IntDir)GeneratedElementPackages\synaptomeCreateElementPackage_show_elastic_lattice\ElasticLatticeLayer.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="$(SynaptomeRepoRoot)\packages\showcase\elastic_lattice\source\register_elastic_lattice.cpp">
+      <AdditionalIncludeDirectories>$(SynaptomeRepoRoot)\packages\showcase\elastic_lattice\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ObjectFileName>$(IntDir)GeneratedElementPackages\synaptomeCreateElementPackage_show_elastic_lattice\register_elastic_lattice.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="$(SynaptomeRepoRoot)\packages\showcase\gerstner_ocean\source\GerstnerOceanLayer.cpp">
+      <AdditionalIncludeDirectories>$(SynaptomeRepoRoot)\packages\showcase\gerstner_ocean\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ObjectFileName>$(IntDir)GeneratedElementPackages\synaptomeCreateElementPackage_show_gerstner_ocean\GerstnerOceanLayer.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="$(SynaptomeRepoRoot)\packages\showcase\gerstner_ocean\source\register_gerstner_ocean.cpp">
+      <AdditionalIncludeDirectories>$(SynaptomeRepoRoot)\packages\showcase\gerstner_ocean\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ObjectFileName>$(IntDir)GeneratedElementPackages\synaptomeCreateElementPackage_show_gerstner_ocean\register_gerstner_ocean.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="$(SynaptomeRepoRoot)\packages\showcase\magnetic_dipoles\source\MagneticDipolesLayer.cpp">
+      <AdditionalIncludeDirectories>$(SynaptomeRepoRoot)\packages\showcase\magnetic_dipoles\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ObjectFileName>$(IntDir)GeneratedElementPackages\synaptomeCreateElementPackage_show_magnetic_dipoles\MagneticDipolesLayer.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="$(SynaptomeRepoRoot)\packages\showcase\magnetic_dipoles\source\register_magnetic_dipoles.cpp">
+      <AdditionalIncludeDirectories>$(SynaptomeRepoRoot)\packages\showcase\magnetic_dipoles\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ObjectFileName>$(IntDir)GeneratedElementPackages\synaptomeCreateElementPackage_show_magnetic_dipoles\register_magnetic_dipoles.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="$(SynaptomeRepoRoot)\packages\showcase\phase_lattice\source\PhaseLatticeLayer.cpp">
+      <AdditionalIncludeDirectories>$(SynaptomeRepoRoot)\packages\showcase\phase_lattice\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ObjectFileName>$(IntDir)GeneratedElementPackages\synaptomeCreateElementPackage_show_phase_lattice\PhaseLatticeLayer.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="$(SynaptomeRepoRoot)\packages\showcase\phase_lattice\source\register_phase_lattice.cpp">
+      <AdditionalIncludeDirectories>$(SynaptomeRepoRoot)\packages\showcase\phase_lattice\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ObjectFileName>$(IntDir)GeneratedElementPackages\synaptomeCreateElementPackage_show_phase_lattice\register_phase_lattice.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="$(SynaptomeRepoRoot)\packages\showcase\sand_ripples\source\SandRipplesLayer.cpp">
+      <AdditionalIncludeDirectories>$(SynaptomeRepoRoot)\packages\showcase\sand_ripples\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ObjectFileName>$(IntDir)GeneratedElementPackages\synaptomeCreateElementPackage_show_sand_ripples\SandRipplesLayer.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="$(SynaptomeRepoRoot)\packages\showcase\sand_ripples\source\register_sand_ripples.cpp">
+      <AdditionalIncludeDirectories>$(SynaptomeRepoRoot)\packages\showcase\sand_ripples\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ObjectFileName>$(IntDir)GeneratedElementPackages\synaptomeCreateElementPackage_show_sand_ripples\register_sand_ripples.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="$(SynaptomeRepoRoot)\packages\showcase\strange_attractor\source\StrangeAttractorLayer.cpp">
+      <AdditionalIncludeDirectories>$(SynaptomeRepoRoot)\packages\showcase\strange_attractor\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ObjectFileName>$(IntDir)GeneratedElementPackages\synaptomeCreateElementPackage_show_strange_attractor\StrangeAttractorLayer.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="$(SynaptomeRepoRoot)\packages\showcase\strange_attractor\source\register_strange_attractor.cpp">
+      <AdditionalIncludeDirectories>$(SynaptomeRepoRoot)\packages\showcase\strange_attractor\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ObjectFileName>$(IntDir)GeneratedElementPackages\synaptomeCreateElementPackage_show_strange_attractor\register_strange_attractor.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="$(SynaptomeRepoRoot)\packages\showcase\voronoi_foam\source\VoronoiFoamLayer.cpp">
+      <AdditionalIncludeDirectories>$(SynaptomeRepoRoot)\packages\showcase\voronoi_foam\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ObjectFileName>$(IntDir)GeneratedElementPackages\synaptomeCreateElementPackage_show_voronoi_foam\VoronoiFoamLayer.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="$(SynaptomeRepoRoot)\packages\showcase\voronoi_foam\source\register_voronoi_foam.cpp">
+      <AdditionalIncludeDirectories>$(SynaptomeRepoRoot)\packages\showcase\voronoi_foam\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ObjectFileName>$(IntDir)GeneratedElementPackages\synaptomeCreateElementPackage_show_voronoi_foam\register_voronoi_foam.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="$(SynaptomeRepoRoot)\packages\showcase\vortex_advection\source\VortexAdvectionLayer.cpp">
+      <AdditionalIncludeDirectories>$(SynaptomeRepoRoot)\packages\showcase\vortex_advection\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ObjectFileName>$(IntDir)GeneratedElementPackages\synaptomeCreateElementPackage_show_vortex_advection\VortexAdvectionLayer.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="$(SynaptomeRepoRoot)\packages\showcase\vortex_advection\source\register_vortex_advection.cpp">
+      <AdditionalIncludeDirectories>$(SynaptomeRepoRoot)\packages\showcase\vortex_advection\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ObjectFileName>$(IntDir)GeneratedElementPackages\synaptomeCreateElementPackage_show_vortex_advection\register_vortex_advection.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="$(SynaptomeRepoRoot)\packages\showcase\wave_tank\source\WaveTankLayer.cpp">
+      <AdditionalIncludeDirectories>$(SynaptomeRepoRoot)\packages\showcase\wave_tank\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ObjectFileName>$(IntDir)GeneratedElementPackages\synaptomeCreateElementPackage_show_wave_tank\WaveTankLayer.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="$(SynaptomeRepoRoot)\packages\showcase\wave_tank\source\register_wave_tank.cpp">
+      <AdditionalIncludeDirectories>$(SynaptomeRepoRoot)\packages\showcase\wave_tank\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ObjectFileName>$(IntDir)GeneratedElementPackages\synaptomeCreateElementPackage_show_wave_tank\register_wave_tank.obj</ObjectFileName>
+    </ClCompile>
   </ItemGroup>
 </Project>

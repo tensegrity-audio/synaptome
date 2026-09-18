@@ -4,7 +4,8 @@
   "sourceStrategy": [
     "Read-only inspection payload assembled from package and generated-layer fixture metadata.",
     "The Browser consumes the runtime copy as read-only metadata and never instantiates these entries for inspection.",
-    "Entries must not require layer instantiation, scene mutation, runtime scanning, or canonical manifest changes."
+    "Entries must not require layer instantiation, scene mutation, runtime scanning, or canonical manifest changes.",
+    "Reviewed compiled show packages expose default, calm and energized catalog looks; mapping presets remain suggestions."
   ],
   "optionPolicy": {
     "unavailableStoredValue": "preserve-and-mark-unavailable",
@@ -15,29 +16,40 @@
     "tools/generated_layer_catalog_regression.py",
     "docs/schemas/layer_browser_inspection_payload.schema.json",
     "docs/examples/layer_packages",
-    "docs/examples/generated_layers"
+    "docs/examples/generated_layers",
+    "packages/showcase",
+    "tools/generate_showcase_content.py"
   ],
   "counts": {
-    "entries": 2,
-    "packageEntries": 1,
+    "entries": 38,
+    "packageEntries": 37,
     "generatedEntries": 1,
-    "parameters": 33,
+    "parameters": 741,
     "presets": 3,
-    "mappingPresets": 1,
-    "categories": 2,
-    "layerGroups": 2
+    "mappingPresets": 37,
+    "categories": 3,
+    "layerGroups": 10
   },
   "categories": {
     "Examples": 1,
-    "Generated": 1
+    "Generated": 1,
+    "Generative": 36
   },
   "layerGroups": {
     "Artist SDK": 1,
-    "Models": 1
+    "Cellular Fields": 6,
+    "Dynamical Systems": 6,
+    "Field Geometry": 3,
+    "Fluid Motion": 3,
+    "Models": 1,
+    "Morphogenesis": 6,
+    "Physical Fields": 6,
+    "Planetary And World Models": 3,
+    "Planetary Fields": 3
   },
   "kinds": {
     "generated-content-layer": 1,
-    "package-layer": 1
+    "package-layer": 37
   },
   "entries": [
     {
@@ -590,47 +602,4 @@
               "max": 180.0,
               "step": 1.0
             },
-            "units": "deg"
-          },
-          {
-            "id": "scale",
-            "kind": "float",
-            "label": "Model: Scale",
-            "section": "Model",
-            "default": 180.0,
-            "range": {
-              "min": 20.0,
-              "max": 500.0,
-              "step": 1.0
-            },
-            "units": "world"
-          },
-          {
-            "id": "spin",
-            "kind": "float",
-            "label": "Model: Spin",
-            "section": "Model",
-            "default": 12.0,
-            "range": {
-              "min": -360.0,
-              "max": 360.0,
-              "step": 1.0
-            },
-            "units": "deg/s"
-          },
-          {
-            "id": "visible",
-            "kind": "bool",
-            "label": "Visibility: Visible",
-            "section": "Visibility",
-            "default": true
-          }
-        ],
-        "actions": []
-      },
-      "presets": [],
-      "presetBanks": [],
-      "mappingPresets": []
-    }
-  ]
-}
+            "units

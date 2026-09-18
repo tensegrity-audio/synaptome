@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "packageId": "show.chladni_plate",
+  "assetId": "show.chladni_plate",
+  "presetId": "calm",
+  "label": "Calm",
+  "description": "Does not change seed or reset simulation history.",
+  "parameters": {
+    "speed": 0.55,
+    "paused": false,
+    "bpmSync": true,
+    "bpmMultiplier": 1.0,
+    "scale": 0.94,
+    "rotationDeg": 0.0,
+    "colorR": 0.98,
+    "colorG": 0.72,
+    "colorB": 0.24,
+    "modeX": 3.0,
+    "modeY": 5.0,
+    "attraction": 3.5,
+    "agitation": 0.04,
+    "phaseRate": 0.035,
+    "particleRadius": 0.003,
+    "radiance": 0.85
+  }
+}

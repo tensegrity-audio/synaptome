@@ -1,0 +1,465 @@
+{
+  "schemaVersion": 1,
+  "packageId": "show.wave_tank",
+  "packageVersion": "0.1.0",
+  "implementationVersion": "0.1.0",
+  "description": "Interfering ripples on a damped membrane, rendered as luminous height contours and shaded facets.",
+  "element": {
+    "id": "show.waveTank",
+    "kind": "visual",
+    "bindingMode": "bind-only",
+    "actions": []
+  },
+  "asset": {
+    "id": "show.wave_tank",
+    "label": "Wave Tank",
+    "category": "Generative",
+    "layerGroup": "Physical Fields",
+    "model": "damped-wave-grid",
+    "stateModel": "Fixed 72 by 48 membrane with persistent displacement, velocity, four seeded sources, and fixed-step time.",
+    "type": "show.waveTank",
+    "registryPrefix": "show.wave_tank",
+    "description": "Interfering ripples on a damped membrane, rendered as luminous height contours and shaded facets.",
+    "tags": [
+      "algorithmic",
+      "showcase",
+      "simulation"
+    ],
+    "defaults": {}
+  },
+  "source": {
+    "strategy": "source-registration",
+    "registration": "source/register_wave_tank.cpp",
+    "files": [
+      "source/WaveTankModel.h",
+      "source/WaveTankLayer.h",
+      "source/WaveTankLayer.cpp"
+    ]
+  },
+  "capabilities": [
+    "graphics.opengl",
+    "transport.read"
+  ],
+  "dependencies": [
+    {
+      "id": "synaptome.element-sdk",
+      "kind": "static-library",
+      "required": true,
+      "versionRange": ">=0.1.0 <1.0.0",
+      "resolvedVersion": "0.1.0",
+      "provider": "synaptome.element-sdk"
+    },
+    {
+      "id": "synaptome.runtime",
+      "kind": "runtime-service",
+      "required": true,
+      "versionRange": ">=0.1.0 <1.0.0",
+      "resolvedVersion": "0.1.0",
+      "provider": "synaptome.runtime"
+    }
+  ],
+  "parameterGroups": [
+    {
+      "id": "motion",
+      "label": "Motion",
+      "description": ""
+    },
+    {
+      "id": "time",
+      "label": "Time",
+      "description": ""
+    },
+    {
+      "id": "seed",
+      "label": "Seed",
+      "description": ""
+    },
+    {
+      "id": "action",
+      "label": "Action",
+      "description": ""
+    },
+    {
+      "id": "scale",
+      "label": "Scale",
+      "description": ""
+    },
+    {
+      "id": "color",
+      "label": "Color",
+      "description": ""
+    },
+    {
+      "id": "force",
+      "label": "Force",
+      "description": ""
+    },
+    {
+      "id": "glow",
+      "label": "Glow",
+      "description": ""
+    },
+    {
+      "id": "count",
+      "label": "Count",
+      "description": ""
+    },
+    {
+      "id": "visibility",
+      "label": "Visibility",
+      "description": ""
+    }
+  ],
+  "parameters": [
+    {
+      "id": "speed",
+      "kind": "float",
+      "groupId": "motion",
+      "label": "Motion: Speed",
+      "default": 0.8,
+      "visible": true,
+      "description": "Local motion rate, multiplied by transport speed.",
+      "range": {
+        "min": 0,
+        "max": 3,
+        "step": 0.01
+      },
+      "units": "multiplier",
+      "quickAccessOrder": 0
+    },
+    {
+      "id": "paused",
+      "kind": "bool",
+      "groupId": "time",
+      "label": "Time: Paused",
+      "default": false,
+      "visible": true,
+      "description": "Freeze simulation without discarding state."
+    },
+    {
+      "id": "bpmSync",
+      "kind": "bool",
+      "groupId": "time",
+      "label": "Time: BPM Sync",
+      "default": true,
+      "visible": true,
+      "description": "Scale simulation rate by supplied transport BPM relative to 120 BPM."
+    },
+    {
+      "id": "bpmMultiplier",
+      "kind": "float",
+      "groupId": "time",
+      "label": "Time: BPM Multiplier",
+      "default": 1.0,
+      "visible": true,
+      "description": "Transport rate multiplier used when BPM sync is enabled.",
+      "range": {
+        "min": 0.25,
+        "max": 4,
+        "step": 0.25
+      },
+      "units": "multiplier"
+    },
+    {
+      "id": "seed",
+      "kind": "float",
+      "groupId": "seed",
+      "label": "Seed: Seed",
+      "default": 1001.0,
+      "visible": true,
+      "description": "Deterministic initial state. Changing this value explicitly resets the model.",
+      "range": {
+        "min": 1,
+        "max": 1000000,
+        "step": 1
+      },
+      "units": "seed"
+    },
+    {
+      "id": "reseed",
+      "kind": "bool",
+      "groupId": "action",
+      "label": "Action: Reseed",
+      "default": false,
+      "visible": true,
+      "description": "Restart from the current stored seed once; returns to false. Edit Seed for a different deterministic variation."
+    },
+    {
+      "id": "scale",
+      "kind": "float",
+      "groupId": "scale",
+      "label": "Scale: Size",
+      "default": 0.94,
+      "visible": true,
+      "description": "Size of the simulated plate within the viewport.",
+      "range": {
+        "min": 0.2,
+        "max": 1.6,
+        "step": 0.01
+      },
+      "units": "multiplier"
+    },
+    {
+      "id": "rotationDeg",
+      "kind": "float",
+      "groupId": "motion",
+      "label": "Motion: Rotation",
+      "default": 0.0,
+      "visible": true,
+      "description": "Rotation of the rendered plate.",
+      "range": {
+        "min": -180,
+        "max": 180,
+        "step": 1
+      },
+      "units": "deg"
+    },
+    {
+      "id": "colorR",
+      "kind": "float",
+      "groupId": "color",
+      "label": "Color: Red",
+      "default": 0.08,
+      "visible": true,
+      "description": "Normalized primary tint red.",
+      "range": {
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    },
+    {
+      "id": "colorG",
+      "kind": "float",
+      "groupId": "color",
+      "label": "Color: Green",
+      "default": 0.72,
+      "visible": true,
+      "description": "Normalized primary tint green.",
+      "range": {
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    },
+    {
+      "id": "colorB",
+      "kind": "float",
+      "groupId": "color",
+      "label": "Color: Blue",
+      "default": 1.0,
+      "visible": true,
+      "description": "Normalized primary tint blue.",
+      "range": {
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    },
+    {
+      "id": "waveSpeed",
+      "kind": "float",
+      "groupId": "motion",
+      "label": "Motion: Wave Speed",
+      "default": 16.0,
+      "visible": true,
+      "description": "Propagation speed in the discrete membrane.",
+      "range": {
+        "min": 2,
+        "max": 28,
+        "step": 0.1
+      },
+      "units": "cells/s",
+      "quickAccessOrder": 1
+    },
+    {
+      "id": "damping",
+      "kind": "float",
+      "groupId": "time",
+      "label": "Time: Damping",
+      "default": 0.55,
+      "visible": true,
+      "description": "Velocity decay; higher values shorten ripple memory.",
+      "range": {
+        "min": 0.05,
+        "max": 3,
+        "step": 0.01
+      },
+      "units": "1/s"
+    },
+    {
+      "id": "driveStrength",
+      "kind": "float",
+      "groupId": "force",
+      "label": "Force: Drive Strength",
+      "default": 5.0,
+      "visible": true,
+      "description": "Forcing amplitude applied by four persistent point sources.",
+      "range": {
+        "min": 0,
+        "max": 12,
+        "step": 0.05
+      },
+      "units": "cells/s2",
+      "quickAccessOrder": 2
+    },
+    {
+      "id": "driveFrequency",
+      "kind": "float",
+      "groupId": "time",
+      "label": "Time: Drive Frequency",
+      "default": 0.8,
+      "visible": true,
+      "description": "Frequency of the source oscillations.",
+      "range": {
+        "min": 0.1,
+        "max": 3,
+        "step": 0.01
+      },
+      "units": "Hz"
+    },
+    {
+      "id": "sourceSpread",
+      "kind": "float",
+      "groupId": "scale",
+      "label": "Scale: Source Spread",
+      "default": 0.6,
+      "visible": true,
+      "description": "Spread the existing four sources around the plate center.",
+      "range": {
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      },
+      "units": "normalized"
+    },
+    {
+      "id": "radiance",
+      "kind": "float",
+      "groupId": "glow",
+      "label": "Glow: Radiance",
+      "default": 1.15,
+      "visible": true,
+      "description": "Luminous response to membrane displacement and slope.",
+      "range": {
+        "min": 0.1,
+        "max": 3,
+        "step": 0.01
+      },
+      "units": "multiplier"
+    },
+    {
+      "id": "contourCount",
+      "kind": "float",
+      "groupId": "count",
+      "label": "Count: Height Contours",
+      "default": 12.0,
+      "visible": true,
+      "description": "Number of display contour intervals per unit displacement.",
+      "range": {
+        "min": 2,
+        "max": 24,
+        "step": 1
+      },
+      "units": "count"
+    },
+    {
+      "id": "contourOpacity",
+      "kind": "float",
+      "groupId": "visibility",
+      "label": "Visibility: Contour Opacity",
+      "default": 0.55,
+      "visible": true,
+      "description": "Opacity of internal wave-height contours.",
+      "range": {
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      },
+      "units": "normalized"
+    }
+  ],
+  "presets": [
+    {
+      "presetId": "default",
+      "label": "Default",
+      "path": "presets/default.json",
+      "description": "Balanced first-load behavior."
+    },
+    {
+      "presetId": "calm",
+      "label": "Calm",
+      "path": "presets/calm.json",
+      "description": "Slower, restrained dynamics within the same state model."
+    },
+    {
+      "presetId": "energized",
+      "label": "Energized",
+      "path": "presets/energized.json",
+      "description": "Stronger dynamics while retaining the current simulation state."
+    }
+  ],
+  "presetBanks": [
+    {
+      "id": "performance",
+      "label": "Performance",
+      "presets": [
+        "default",
+        "calm",
+        "energized"
+      ]
+    }
+  ],
+  "mappingPresets": [
+    {
+      "id": "hostMicMotion",
+      "label": "Host Mic Motion",
+      "description": "Optional visible model-control routes. Shared host-mic profiles scale the current base by 0.65 to 1.65; preview conflicts before applying. Silent input retains motion.",
+      "applyMode": "suggestion-only",
+      "mappings": [
+        {
+          "target": {
+            "kind": "parameter",
+            "id": "driveStrength"
+          },
+          "source": {
+            "kind": "osc",
+            "pattern": "/sensor/host/localmic/mic-bass",
+            "in": [
+              0.0,
+              0.18
+            ],
+            "out": [
+              0.65,
+              1.65
+            ],
+            "smooth": 0.2,
+            "deadband": 0.01,
+            "blend": "scale",
+            "relative": true
+          }
+        }
+      ]
+    }
+  ],
+  "media": [],
+  "tests": {
+    "confidenceProfile": "tests/layer_test.json",
+    "fixtures": [
+      "tests/model_test.cpp"
+    ]
+  },
+  "aliases": [],
+  "deprecations": [],
+  "migrations": [],
+  "compatibility": {
+    "sdk": {
+      "versionRange": ">=0.1.0 <1.0.0",
+      "resolvedVersion": "0.1.0"
+    },
+    "runtime": {
+      "versionRange": ">=0.1.0 <1.0.0",
+      "resolvedVersion": "0.1.0"
+    }
+  }
+}

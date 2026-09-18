@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "packageId": "show.magnetic_dipoles",
+  "assetId": "show.magnetic_dipoles",
+  "presetId": "calm",
+  "label": "Calm",
+  "description": "Calm Magnetic Dipoles operating point; ordinary parameter changes preserve state.",
+  "parameters": {
+    "speed": 0.65,
+    "paused": false,
+    "bpmSync": false,
+    "bpmMultiplier": 1.0,
+    "seed": 155921.0,
+    "reseed": false,
+    "scale": 0.96,
+    "rotationDeg": 0.0,
+    "lineWidth": 1.6,
+    "glow": 0.7,
+    "colorR": 0.24,
+    "colorG": 0.78,
+    "colorB": 0.98,
+    "accentR": 0.95,
+    "accentG": 0.45,
+    "accentB": 0.64,
+    "separation": 0.46,
+    "coupling": 0.42,
+    "orbitRate": 3.15,
+    "twist": 0.12,
+    "fieldReach": 0.88
+  }
+}

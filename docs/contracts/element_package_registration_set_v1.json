@@ -1,6 +1,18 @@
 {
   "schemaVersion": 1,
   "packages": [
-    "docs/examples/layer_packages/signal_bloom/layer.package.json"
+    "docs/examples/layer_packages/signal_bloom/layer.package.json",
+    "packages/showcase/chladni_plate/layer.package.json",
+    "packages/showcase/dendritic_crystal/layer.package.json",
+    "packages/showcase/differential_growth/layer.package.json",
+    "packages/showcase/elastic_lattice/layer.package.json",
+    "packages/showcase/gerstner_ocean/layer.package.json",
+    "packages/showcase/magnetic_dipoles/layer.package.json",
+    "packages/showcase/phase_lattice/layer.package.json",
+    "packages/showcase/sand_ripples/layer.package.json",
+    "packages/showcase/strange_attractor/layer.package.json",
+    "packages/showcase/voronoi_foam/layer.package.json",
+    "packages/showcase/vortex_advection/layer.package.json",
+    "packages/showcase/wave_tank/layer.package.json"
   ]
 }

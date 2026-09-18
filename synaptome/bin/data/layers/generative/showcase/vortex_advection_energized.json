@@ -1,0 +1,40 @@
+{
+  "id": "show.vortex_advection.energized",
+  "label": "Vortex Advection / Energized",
+  "category": "Generative",
+  "layerGroup": "Fluid Motion",
+  "model": "periodic-soft-core-point-vortices",
+  "stateModel": "Eight interacting softened point vortices advect 384 tracers with fixed-length history.",
+  "type": "show.vortexAdvection",
+  "registryPrefix": "show.vortex_advection.energized",
+  "description": "Curling counter-rotating eddies and stretched transport filaments.",
+  "tags": [
+    "generative",
+    "showcase",
+    "deterministic",
+    "simulation"
+  ],
+  "defaults": {
+    "speed": 1.2,
+    "bpmSync": true,
+    "bpmMultiplier": 1,
+    "scale": 0.92,
+    "rotationDeg": 0,
+    "circulation": 1.8,
+    "coreRadius": 0.085,
+    "strain": 0.65,
+    "vortexDrift": 0.8,
+    "trailTimeSec": 0.75,
+    "lineWidth": 1.3,
+    "colorR": 0.05,
+    "colorG": 0.8,
+    "colorB": 1,
+    "accentR": 0.95,
+    "accentG": 0.18,
+    "accentB": 0.52,
+    "seed": 1701
+  },
+  "schemaVersion": 1,
+  "packageVersion": "0.1.0",
+  "opacity": 1.0
+}

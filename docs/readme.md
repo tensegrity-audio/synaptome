@@ -6,6 +6,9 @@ surface, not private source-workspace details or helper implementations.
 
 ## Start Here
 
+- [Algorithmic show content](show_content_guide.md)
+- [Six saved effect looks](show_effect_looks.md)
+
 - [Root setup guide](../README.md)
 - [Build environment](build_env.md)
 - [Validation playbook](dev_playbook.md)

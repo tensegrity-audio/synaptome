@@ -1,0 +1,66 @@
+{
+  "scene": {
+    "schemaVersion": 2,
+    "source": {
+      "name": "show-fx-05-chromatic-drift",
+      "path": "layers/scenes/show-fx-05-chromatic-drift.json"
+    },
+    "storage": {
+      "kind": "named",
+      "name": "show-fx-05-chromatic-drift",
+      "path": "layers/scenes/show-fx-05-chromatic-drift.json"
+    },
+    "description": "Chromatic channel separation and gentle analog tracking movement pull colored edges from flowing noise.",
+    "contentKind": "effect-look"
+  },
+  "console": {
+    "slots": [
+      {
+        "index": 1,
+        "assetId": "generative.perlin",
+        "label": "Perlin Noise",
+        "active": true,
+        "opacity": 1.0,
+        "parameters": {
+          "console.layer1.scale": 2.6,
+          "console.layer1.speed": 0.18,
+          "console.layer1.brightness": 1.0,
+          "console.layer1.contrast": 1.45,
+          "console.layer1.palette": 2,
+          "console.layer1.paletteRate": 0.08
+        }
+      },
+      {
+        "index": 2,
+        "assetId": "fx.crt",
+        "label": "Chromatic Drift",
+        "active": true,
+        "opacity": 1.0,
+        "coverage": {
+          "mode": "upstream",
+          "columns": 1
+        },
+        "parameters": {
+          "effects.crt.route": 1,
+          "effects.crt.coverage": 1,
+          "effects.crt.coverageMask": true,
+          "effects.crt.scanline": 0.0,
+          "effects.crt.vignette": 0.0,
+          "effects.crt.bleed": 0.1,
+          "effects.crt.softness": 0.0,
+          "effects.crt.glow": 0.08,
+          "effects.crt.perChannelOffset": 0.26,
+          "effects.crt.scanlineJitter": 0.0,
+          "effects.crt.subpixelDensity": 0.0,
+          "effects.crt.subpixelAspect": 2.0,
+          "effects.crt.subpixelPadding": 0.0,
+          "effects.crt.rgbMisalignment": 0.34,
+          "effects.crt.syncTear": 0.0,
+          "effects.crt.trackingWobble": 0.08,
+          "effects.crt.lumaNoise": 0.0,
+          "effects.crt.headSwitch": 0.0
+        }
+      }
+    ]
+  }
+}

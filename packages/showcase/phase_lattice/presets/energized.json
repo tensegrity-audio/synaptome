@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "packageId": "show.phase_lattice",
+  "assetId": "show.phase_lattice",
+  "presetId": "energized",
+  "label": "Energized",
+  "description": "Does not change seed or reset simulation history.",
+  "parameters": {
+    "speed": 1.1,
+    "paused": false,
+    "bpmSync": true,
+    "bpmMultiplier": 1.0,
+    "scale": 0.94,
+    "rotationDeg": 0.0,
+    "colorR": 0.52,
+    "colorG": 0.32,
+    "colorB": 1.0,
+    "coupling": 1.6,
+    "frequency": 0.65,
+    "dispersion": 1.4,
+    "phaseLagDeg": 60.0,
+    "radiance": 1.4,
+    "contourOpacity": 0.5
+  }
+}

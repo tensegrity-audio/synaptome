@@ -12,5 +12,6 @@
 #include "ofLog.h"
 #include "ofCamera.h"
 #include "ofMesh.h"
+#include "ofGLStub.h"
 
 #endif

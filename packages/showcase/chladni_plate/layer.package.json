@@ -1,0 +1,445 @@
+{
+  "schemaVersion": 1,
+  "packageId": "show.chladni_plate",
+  "packageVersion": "0.1.0",
+  "implementationVersion": "0.1.0",
+  "description": "Vibrating sand gathers into nodal lace, then scatters and finds new paths as mode orders and forcing change.",
+  "element": {
+    "id": "show.chladniPlate",
+    "kind": "visual",
+    "bindingMode": "bind-only",
+    "actions": []
+  },
+  "asset": {
+    "id": "show.chladni_plate",
+    "label": "Chladni Plate",
+    "category": "Generative",
+    "layerGroup": "Physical Fields",
+    "model": "standing-wave-sand",
+    "stateModel": "1800 persistent sand tracers with positions and velocities descending a continuously deformable standing-wave potential.",
+    "type": "show.chladniPlate",
+    "registryPrefix": "show.chladni_plate",
+    "description": "Vibrating sand gathers into nodal lace, then scatters and finds new paths as mode orders and forcing change.",
+    "tags": [
+      "algorithmic",
+      "showcase",
+      "simulation"
+    ],
+    "defaults": {}
+  },
+  "source": {
+    "strategy": "source-registration",
+    "registration": "source/register_chladni_plate.cpp",
+    "files": [
+      "source/ChladniPlateModel.h",
+      "source/ChladniPlateLayer.h",
+      "source/ChladniPlateLayer.cpp"
+    ]
+  },
+  "capabilities": [
+    "graphics.opengl",
+    "transport.read"
+  ],
+  "dependencies": [
+    {
+      "id": "synaptome.element-sdk",
+      "kind": "static-library",
+      "required": true,
+      "versionRange": ">=0.1.0 <1.0.0",
+      "resolvedVersion": "0.1.0",
+      "provider": "synaptome.element-sdk"
+    },
+    {
+      "id": "synaptome.runtime",
+      "kind": "runtime-service",
+      "required": true,
+      "versionRange": ">=0.1.0 <1.0.0",
+      "resolvedVersion": "0.1.0",
+      "provider": "synaptome.runtime"
+    }
+  ],
+  "parameterGroups": [
+    {
+      "id": "motion",
+      "label": "Motion",
+      "description": ""
+    },
+    {
+      "id": "time",
+      "label": "Time",
+      "description": ""
+    },
+    {
+      "id": "seed",
+      "label": "Seed",
+      "description": ""
+    },
+    {
+      "id": "action",
+      "label": "Action",
+      "description": ""
+    },
+    {
+      "id": "scale",
+      "label": "Scale",
+      "description": ""
+    },
+    {
+      "id": "color",
+      "label": "Color",
+      "description": ""
+    },
+    {
+      "id": "count",
+      "label": "Count",
+      "description": ""
+    },
+    {
+      "id": "force",
+      "label": "Force",
+      "description": ""
+    },
+    {
+      "id": "glow",
+      "label": "Glow",
+      "description": ""
+    }
+  ],
+  "parameters": [
+    {
+      "id": "speed",
+      "kind": "float",
+      "groupId": "motion",
+      "label": "Motion: Speed",
+      "default": 0.8,
+      "visible": true,
+      "description": "Local motion rate, multiplied by transport speed.",
+      "range": {
+        "min": 0,
+        "max": 3,
+        "step": 0.01
+      },
+      "units": "multiplier",
+      "quickAccessOrder": 0
+    },
+    {
+      "id": "paused",
+      "kind": "bool",
+      "groupId": "time",
+      "label": "Time: Paused",
+      "default": false,
+      "visible": true,
+      "description": "Freeze simulation without discarding state."
+    },
+    {
+      "id": "bpmSync",
+      "kind": "bool",
+      "groupId": "time",
+      "label": "Time: BPM Sync",
+      "default": true,
+      "visible": true,
+      "description": "Scale simulation rate by supplied transport BPM relative to 120 BPM."
+    },
+    {
+      "id": "bpmMultiplier",
+      "kind": "float",
+      "groupId": "time",
+      "label": "Time: BPM Multiplier",
+      "default": 1.0,
+      "visible": true,
+      "description": "Transport rate multiplier used when BPM sync is enabled.",
+      "range": {
+        "min": 0.25,
+        "max": 4,
+        "step": 0.25
+      },
+      "units": "multiplier"
+    },
+    {
+      "id": "seed",
+      "kind": "float",
+      "groupId": "seed",
+      "label": "Seed: Seed",
+      "default": 1001.0,
+      "visible": true,
+      "description": "Deterministic initial state. Changing this value explicitly resets the model.",
+      "range": {
+        "min": 1,
+        "max": 1000000,
+        "step": 1
+      },
+      "units": "seed"
+    },
+    {
+      "id": "reseed",
+      "kind": "bool",
+      "groupId": "action",
+      "label": "Action: Reseed",
+      "default": false,
+      "visible": true,
+      "description": "Restart from the current stored seed once; returns to false. Edit Seed for a different deterministic variation."
+    },
+    {
+      "id": "scale",
+      "kind": "float",
+      "groupId": "scale",
+      "label": "Scale: Size",
+      "default": 0.94,
+      "visible": true,
+      "description": "Size of the simulated plate within the viewport.",
+      "range": {
+        "min": 0.2,
+        "max": 1.6,
+        "step": 0.01
+      },
+      "units": "multiplier"
+    },
+    {
+      "id": "rotationDeg",
+      "kind": "float",
+      "groupId": "motion",
+      "label": "Motion: Rotation",
+      "default": 0.0,
+      "visible": true,
+      "description": "Rotation of the rendered plate.",
+      "range": {
+        "min": -180,
+        "max": 180,
+        "step": 1
+      },
+      "units": "deg"
+    },
+    {
+      "id": "colorR",
+      "kind": "float",
+      "groupId": "color",
+      "label": "Color: Red",
+      "default": 0.98,
+      "visible": true,
+      "description": "Normalized primary tint red.",
+      "range": {
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    },
+    {
+      "id": "colorG",
+      "kind": "float",
+      "groupId": "color",
+      "label": "Color: Green",
+      "default": 0.72,
+      "visible": true,
+      "description": "Normalized primary tint green.",
+      "range": {
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    },
+    {
+      "id": "colorB",
+      "kind": "float",
+      "groupId": "color",
+      "label": "Color: Blue",
+      "default": 0.24,
+      "visible": true,
+      "description": "Normalized primary tint blue.",
+      "range": {
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    },
+    {
+      "id": "modeX",
+      "kind": "float",
+      "groupId": "count",
+      "label": "Count: Horizontal Mode Order",
+      "default": 3.0,
+      "visible": true,
+      "description": "Horizontal standing-wave mode order; changes preserve all sand positions.",
+      "range": {
+        "min": 1,
+        "max": 9,
+        "step": 1
+      },
+      "units": "order",
+      "quickAccessOrder": 1
+    },
+    {
+      "id": "modeY",
+      "kind": "float",
+      "groupId": "count",
+      "label": "Count: Vertical Mode Order",
+      "default": 5.0,
+      "visible": true,
+      "description": "Vertical standing-wave mode order; changes preserve all sand positions.",
+      "range": {
+        "min": 1,
+        "max": 9,
+        "step": 1
+      },
+      "units": "order"
+    },
+    {
+      "id": "attraction",
+      "kind": "float",
+      "groupId": "force",
+      "label": "Force: Nodal Attraction",
+      "default": 2.5,
+      "visible": true,
+      "description": "Strength of tracer drift toward standing-wave nodes.",
+      "range": {
+        "min": 0,
+        "max": 6,
+        "step": 0.01
+      },
+      "units": "1/s2",
+      "quickAccessOrder": 2
+    },
+    {
+      "id": "agitation",
+      "kind": "float",
+      "groupId": "force",
+      "label": "Force: Sand Agitation",
+      "default": 0.16,
+      "visible": true,
+      "description": "Seeded random agitation releases grains from nodal lines.",
+      "range": {
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      },
+      "units": "normalized"
+    },
+    {
+      "id": "phaseRate",
+      "kind": "float",
+      "groupId": "time",
+      "label": "Time: Mode Phase Rate",
+      "default": 0.12,
+      "visible": true,
+      "description": "Continuously shifts one standing-wave component.",
+      "range": {
+        "min": 0,
+        "max": 0.8,
+        "step": 0.01
+      },
+      "units": "Hz"
+    },
+    {
+      "id": "particleRadius",
+      "kind": "float",
+      "groupId": "scale",
+      "label": "Scale: Grain Radius",
+      "default": 0.003,
+      "visible": true,
+      "description": "Display radius of each grain, relative to plate width.",
+      "range": {
+        "min": 0.001,
+        "max": 0.008,
+        "step": 0.0001
+      },
+      "units": "plate"
+    },
+    {
+      "id": "radiance",
+      "kind": "float",
+      "groupId": "glow",
+      "label": "Glow: Radiance",
+      "default": 1.1,
+      "visible": true,
+      "description": "Brightness of grains; faster grains reveal displacement energy.",
+      "range": {
+        "min": 0.1,
+        "max": 3,
+        "step": 0.01
+      },
+      "units": "multiplier"
+    }
+  ],
+  "presets": [
+    {
+      "presetId": "default",
+      "label": "Default",
+      "path": "presets/default.json",
+      "description": "Balanced first-load behavior."
+    },
+    {
+      "presetId": "calm",
+      "label": "Calm",
+      "path": "presets/calm.json",
+      "description": "Slower, restrained dynamics within the same state model."
+    },
+    {
+      "presetId": "energized",
+      "label": "Energized",
+      "path": "presets/energized.json",
+      "description": "Stronger dynamics while retaining the current simulation state."
+    }
+  ],
+  "presetBanks": [
+    {
+      "id": "performance",
+      "label": "Performance",
+      "presets": [
+        "default",
+        "calm",
+        "energized"
+      ]
+    }
+  ],
+  "mappingPresets": [
+    {
+      "id": "hostMicMotion",
+      "label": "Host Mic Motion",
+      "description": "Optional visible model-control routes. Shared host-mic profiles scale the current base by 0.65 to 1.65; preview conflicts before applying. Silent input retains motion.",
+      "applyMode": "suggestion-only",
+      "mappings": [
+        {
+          "target": {
+            "kind": "parameter",
+            "id": "agitation"
+          },
+          "source": {
+            "kind": "osc",
+            "pattern": "/sensor/host/localmic/mic-bass",
+            "in": [
+              0.0,
+              0.18
+            ],
+            "out": [
+              0.65,
+              1.65
+            ],
+            "smooth": 0.2,
+            "deadband": 0.01,
+            "blend": "scale",
+            "relative": true
+          }
+        }
+      ]
+    }
+  ],
+  "media": [],
+  "tests": {
+    "confidenceProfile": "tests/layer_test.json",
+    "fixtures": [
+      "tests/model_test.cpp"
+    ]
+  },
+  "aliases": [],
+  "deprecations": [],
+  "migrations": [],
+  "compatibility": {
+    "sdk": {
+      "versionRange": ">=0.1.0 <1.0.0",
+      "resolvedVersion": "0.1.0"
+    },
+    "runtime": {
+      "versionRange": ">=0.1.0 <1.0.0",
+      "resolvedVersion": "0.1.0"
+    }
+  }
+}

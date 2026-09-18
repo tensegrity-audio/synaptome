@@ -1,0 +1,43 @@
+{
+  "id": "show.dendritic_crystal",
+  "label": "Dendritic Crystal",
+  "category": "Generative",
+  "layerGroup": "Morphogenesis",
+  "model": "diffusion-limited-accretion",
+  "stateModel": "Finite lattice occupancy, permanent seed branches, stochastic nutrient walkers and local age-driven dissolution",
+  "type": "show.dendriticCrystal",
+  "registryPrefix": "show.dendritic_crystal",
+  "description": "Finite lattice occupancy, permanent seed branches, stochastic nutrient walkers and local age-driven dissolution. No media assets or direct audio dependencies.",
+  "tags": [
+    "showcase",
+    "algorithmic",
+    "deterministic",
+    "2d"
+  ],
+  "defaults": {
+    "speed": 1.0,
+    "paused": false,
+    "bpmSync": false,
+    "bpmMultiplier": 1.0,
+    "seed": 130363.0,
+    "reseed": false,
+    "scale": 0.96,
+    "rotationDeg": 0.0,
+    "lineWidth": 0.88,
+    "glow": 1.0,
+    "colorR": 0.32,
+    "colorG": 0.72,
+    "colorB": 1.0,
+    "accentR": 0.89,
+    "accentG": 0.96,
+    "accentB": 1.0,
+    "growthRate": 3600.0,
+    "adhesion": 0.72,
+    "anisotropy": 0.68,
+    "dissolutionRate": 0.012,
+    "drift": 0.12
+  },
+  "schemaVersion": 1,
+  "packageVersion": "0.1.0",
+  "opacity": 1.0
+}

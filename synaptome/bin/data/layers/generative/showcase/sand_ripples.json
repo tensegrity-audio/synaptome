@@ -1,0 +1,42 @@
+{
+  "id": "show.sand_ripples",
+  "label": "Sand Ripples",
+  "category": "Generative",
+  "layerGroup": "Planetary Fields",
+  "model": "conservative-saltation-repose",
+  "stateModel": "A 64 by 40 periodic height field transports sand downwind and relaxes slopes above the repose threshold.",
+  "type": "show.sandRipples",
+  "registryPrefix": "show.sand_ripples",
+  "description": "Migrating dunes with coherent ridges and faceted low-poly relief.",
+  "tags": [
+    "generative",
+    "showcase",
+    "deterministic",
+    "simulation"
+  ],
+  "defaults": {
+    "speed": 0.8,
+    "bpmSync": true,
+    "bpmMultiplier": 1,
+    "scale": 0.92,
+    "rotationDeg": 0,
+    "transportRate": 1,
+    "windDirectionDeg": 12,
+    "hopLength": 0.12,
+    "reposeSlope": 0.025,
+    "relaxationRate": 1.5,
+    "reliefScale": 1,
+    "tiltDeg": 48,
+    "ridgeContrast": 1,
+    "colorR": 0.8,
+    "colorG": 0.37,
+    "colorB": 0.12,
+    "accentR": 1,
+    "accentG": 0.86,
+    "accentB": 0.46,
+    "seed": 1702
+  },
+  "schemaVersion": 1,
+  "packageVersion": "0.1.0",
+  "opacity": 1.0
+}

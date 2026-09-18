@@ -1,0 +1,40 @@
+{
+  "id": "show.wave_tank.energized",
+  "label": "Wave Tank / Energized",
+  "category": "Generative",
+  "layerGroup": "Physical Fields",
+  "model": "damped-wave-grid",
+  "stateModel": "Fixed 72 by 48 membrane with persistent displacement, velocity, four seeded sources, and fixed-step time.",
+  "type": "show.waveTank",
+  "registryPrefix": "show.wave_tank.energized",
+  "description": "Interfering ripples on a damped membrane, rendered as luminous height contours and shaded facets.",
+  "tags": [
+    "algorithmic",
+    "showcase",
+    "simulation"
+  ],
+  "defaults": {
+    "speed": 1.2,
+    "paused": false,
+    "bpmSync": true,
+    "bpmMultiplier": 1.0,
+    "seed": 1001.0,
+    "reseed": false,
+    "scale": 0.94,
+    "rotationDeg": 0.0,
+    "colorR": 0.08,
+    "colorG": 0.72,
+    "colorB": 1.0,
+    "waveSpeed": 16.0,
+    "damping": 0.3,
+    "driveStrength": 9.0,
+    "driveFrequency": 1.4,
+    "sourceSpread": 0.9,
+    "radiance": 1.5,
+    "contourCount": 12.0,
+    "contourOpacity": 0.55
+  },
+  "schemaVersion": 1,
+  "packageVersion": "0.1.0",
+  "opacity": 1.0
+}

@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "packageId": "show.gerstner_ocean",
+  "assetId": "show.gerstner_ocean",
+  "presetId": "energized",
+  "label": "Energized",
+  "description": "Energized Gerstner Ocean settings. Presets preserve current simulation history.",
+  "parameters": {
+    "speed": 0.85,
+    "bpmSync": true,
+    "bpmMultiplier": 1,
+    "scale": 1,
+    "yawDeg": -24,
+    "tiltDeg": 38,
+    "spinRate": 5,
+    "waveHeight": 0.3,
+    "wavelength": 1.15,
+    "steepness": 1,
+    "directionDeg": 18,
+    "wireOpacity": 0.26,
+    "colorR": 0.025,
+    "colorG": 0.12,
+    "colorB": 0.22,
+    "highlightR": 0.38,
+    "highlightG": 0.88,
+    "highlightB": 0.8
+  }
+}

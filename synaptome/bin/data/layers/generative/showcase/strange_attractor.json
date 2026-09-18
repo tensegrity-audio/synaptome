@@ -1,0 +1,41 @@
+{
+  "id": "show.strange_attractor",
+  "label": "Strange Attractor",
+  "category": "Generative",
+  "layerGroup": "Dynamical Systems",
+  "model": "lorenz-rk4",
+  "stateModel": "four bounded RK4 Lorenz trajectories with fixed circular histories and explicit projected ribbon rendering",
+  "type": "show.strangeAttractor",
+  "registryPrefix": "show.strange_attractor",
+  "description": "Four nearby Lorenz trajectories separate into luminous folded ribbons. Color follows trajectory speed, depth and history age.",
+  "tags": [
+    "algorithmic",
+    "showcase",
+    "chaotic-dynamics"
+  ],
+  "defaults": {
+    "speed": 0.65,
+    "bpmSync": true,
+    "bpmMultiplier": 1,
+    "scale": 1,
+    "yawDeg": -24,
+    "tiltDeg": 38,
+    "spinRate": 3,
+    "seed": 1001,
+    "reseed": false,
+    "sigma": 10,
+    "rho": 28,
+    "beta": 2.666666667,
+    "trailSeconds": 5.5,
+    "ribbonWidth": 0.006,
+    "colorR": 0.08,
+    "colorG": 0.38,
+    "colorB": 0.8,
+    "highlightR": 0.65,
+    "highlightG": 0.98,
+    "highlightB": 0.9
+  },
+  "schemaVersion": 1,
+  "packageVersion": "0.1.0",
+  "opacity": 1.0
+}

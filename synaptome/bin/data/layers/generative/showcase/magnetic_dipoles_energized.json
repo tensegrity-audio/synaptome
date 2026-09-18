@@ -1,0 +1,43 @@
+{
+  "id": "show.magnetic_dipoles.energized",
+  "label": "Magnetic Dipoles / Energized",
+  "category": "Generative",
+  "layerGroup": "Field Geometry",
+  "model": "dipole-superposition",
+  "stateModel": "Three deterministic moving magnetic moments with analytical field superposition and bounded midpoint streamline integration",
+  "type": "show.magneticDipoles",
+  "registryPrefix": "show.magnetic_dipoles.energized",
+  "description": "Three deterministic moving magnetic moments with analytical field superposition and bounded midpoint streamline integration. No media assets or direct audio dependencies.",
+  "tags": [
+    "showcase",
+    "algorithmic",
+    "deterministic",
+    "2d"
+  ],
+  "defaults": {
+    "speed": 1.35,
+    "paused": false,
+    "bpmSync": false,
+    "bpmMultiplier": 1.0,
+    "seed": 155921.0,
+    "reseed": false,
+    "scale": 0.96,
+    "rotationDeg": 0.0,
+    "lineWidth": 1.6,
+    "glow": 1.35,
+    "colorR": 0.24,
+    "colorG": 0.78,
+    "colorB": 0.98,
+    "accentR": 0.95,
+    "accentG": 0.45,
+    "accentB": 0.64,
+    "separation": 0.38,
+    "coupling": 0.94,
+    "orbitRate": 16.0,
+    "twist": 0.62,
+    "fieldReach": 0.88
+  },
+  "schemaVersion": 1,
+  "packageVersion": "0.1.0",
+  "opacity": 1.0
+}

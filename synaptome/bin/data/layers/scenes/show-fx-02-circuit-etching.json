@@ -1,0 +1,52 @@
+{
+  "scene": {
+    "schemaVersion": 2,
+    "source": {
+      "name": "show-fx-02-circuit-etching",
+      "path": "layers/scenes/show-fx-02-circuit-etching.json"
+    },
+    "storage": {
+      "kind": "named",
+      "name": "show-fx-02-circuit-etching",
+      "path": "layers/scenes/show-fx-02-circuit-etching.json"
+    },
+    "description": "An ordered Bayer screen quantizes circuit mycelium into a coarse jade electronic engraving.",
+    "contentKind": "effect-look"
+  },
+  "console": {
+    "slots": [
+      {
+        "index": 1,
+        "assetId": "generative.circuitMycelium",
+        "label": "Circuit Mycelium",
+        "active": true,
+        "opacity": 1.0,
+        "parameters": {
+          "console.layer1.traceR": 0.65,
+          "console.layer1.traceG": 1.0,
+          "console.layer1.traceB": 0.82,
+          "console.layer1.glow": 0.45,
+          "console.layer1.backgroundAlpha": 0.0
+        }
+      },
+      {
+        "index": 2,
+        "assetId": "fx.dither",
+        "label": "Circuit Etching",
+        "active": true,
+        "opacity": 1.0,
+        "coverage": {
+          "mode": "upstream",
+          "columns": 1
+        },
+        "parameters": {
+          "effects.dither.route": 1,
+          "effects.dither.coverage": 1,
+          "effects.dither.coverageMask": true,
+          "effects.dither.mode": 2,
+          "effects.dither.cellSize": 6
+        }
+      }
+    ]
+  }
+}

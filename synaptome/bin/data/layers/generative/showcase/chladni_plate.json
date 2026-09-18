@@ -1,0 +1,39 @@
+{
+  "id": "show.chladni_plate",
+  "label": "Chladni Plate",
+  "category": "Generative",
+  "layerGroup": "Physical Fields",
+  "model": "standing-wave-sand",
+  "stateModel": "1800 persistent sand tracers with positions and velocities descending a continuously deformable standing-wave potential.",
+  "type": "show.chladniPlate",
+  "registryPrefix": "show.chladni_plate",
+  "description": "Vibrating sand gathers into nodal lace, then scatters and finds new paths as mode orders and forcing change.",
+  "tags": [
+    "algorithmic",
+    "showcase",
+    "simulation"
+  ],
+  "defaults": {
+    "speed": 0.8,
+    "paused": false,
+    "bpmSync": true,
+    "bpmMultiplier": 1.0,
+    "seed": 1001.0,
+    "reseed": false,
+    "scale": 0.94,
+    "rotationDeg": 0.0,
+    "colorR": 0.98,
+    "colorG": 0.72,
+    "colorB": 0.24,
+    "modeX": 3.0,
+    "modeY": 5.0,
+    "attraction": 2.5,
+    "agitation": 0.16,
+    "phaseRate": 0.12,
+    "particleRadius": 0.003,
+    "radiance": 1.1
+  },
+  "schemaVersion": 1,
+  "packageVersion": "0.1.0",
+  "opacity": 1.0
+}

@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "packageId": "show.phase_lattice",
+  "assetId": "show.phase_lattice",
+  "presetId": "calm",
+  "label": "Calm",
+  "description": "Does not change seed or reset simulation history.",
+  "parameters": {
+    "speed": 0.6,
+    "paused": false,
+    "bpmSync": true,
+    "bpmMultiplier": 1.0,
+    "scale": 0.94,
+    "rotationDeg": 0.0,
+    "colorR": 0.52,
+    "colorG": 0.32,
+    "colorB": 1.0,
+    "coupling": 5.0,
+    "frequency": 0.16,
+    "dispersion": 0.15,
+    "phaseLagDeg": 10.0,
+    "radiance": 0.9,
+    "contourOpacity": 0.5
+  }
+}

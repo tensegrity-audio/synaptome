@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "packageId": "show.gerstner_ocean",
+  "assetId": "show.gerstner_ocean",
+  "presetId": "default",
+  "label": "Default",
+  "description": "Default Gerstner Ocean settings. Presets preserve current simulation history.",
+  "parameters": {
+    "speed": 0.65,
+    "bpmSync": true,
+    "bpmMultiplier": 1,
+    "scale": 1,
+    "yawDeg": -24,
+    "tiltDeg": 38,
+    "spinRate": 3,
+    "waveHeight": 0.18,
+    "wavelength": 1.8,
+    "steepness": 0.75,
+    "directionDeg": 18,
+    "wireOpacity": 0.2,
+    "colorR": 0.025,
+    "colorG": 0.12,
+    "colorB": 0.22,
+    "highlightR": 0.38,
+    "highlightG": 0.88,
+    "highlightB": 0.8
+  }
+}

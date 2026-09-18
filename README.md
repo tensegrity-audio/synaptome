@@ -145,6 +145,8 @@ Expected current signals:
 
 ## Docs
 
+- [Algorithmic show content: setup, controls and rehearsal](docs/show_content_guide.md)
+
 - [Docs Index](docs/readme.md)
 - [Build Environment](docs/build_env.md)
 - [Validation Playbook](docs/dev_playbook.md)

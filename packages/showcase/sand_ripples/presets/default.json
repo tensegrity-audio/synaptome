@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "packageId": "show.sand_ripples",
+  "assetId": "show.sand_ripples",
+  "presetId": "default",
+  "label": "Default",
+  "description": "State-preserving default controls for Sand Ripples.",
+  "parameters": {
+    "speed": 0.8,
+    "bpmSync": true,
+    "bpmMultiplier": 1,
+    "scale": 0.92,
+    "rotationDeg": 0,
+    "transportRate": 1,
+    "windDirectionDeg": 12,
+    "hopLength": 0.12,
+    "reposeSlope": 0.025,
+    "relaxationRate": 1.5,
+    "reliefScale": 1,
+    "tiltDeg": 48,
+    "ridgeContrast": 1,
+    "colorR": 0.8,
+    "colorG": 0.37,
+    "colorB": 0.12,
+    "accentR": 1,
+    "accentG": 0.86,
+    "accentB": 0.46
+  }
+}

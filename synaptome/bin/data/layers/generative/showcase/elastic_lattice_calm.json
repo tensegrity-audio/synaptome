@@ -1,0 +1,43 @@
+{
+  "id": "show.elastic_lattice.calm",
+  "label": "Elastic Lattice / Calm",
+  "category": "Generative",
+  "layerGroup": "Dynamical Systems",
+  "model": "damped-spring-membrane",
+  "stateModel": "fixed mass-spring height lattice with clamped edges, anchor restoring forces, viscosity and a travelling localized periodic driver",
+  "type": "show.elasticLattice",
+  "registryPrefix": "show.elastic_lattice.calm",
+  "description": "An elastic low-poly membrane rings and folds under a travelling driver. Displacement, local strain and face normals determine its facets.",
+  "tags": [
+    "algorithmic",
+    "showcase",
+    "low-poly"
+  ],
+  "defaults": {
+    "speed": 0.4,
+    "bpmSync": true,
+    "bpmMultiplier": 1,
+    "scale": 1,
+    "yawDeg": -24,
+    "tiltDeg": 38,
+    "spinRate": 1,
+    "seed": 1001,
+    "reseed": false,
+    "springStiffness": 45,
+    "restoringForce": 2.5,
+    "dampingRate": 2,
+    "impulseStrength": 2,
+    "impulseRate": 0.22,
+    "heightScale": 1,
+    "wireOpacity": 0.15,
+    "colorR": 0.08,
+    "colorG": 0.04,
+    "colorB": 0.22,
+    "highlightR": 0.95,
+    "highlightG": 0.55,
+    "highlightB": 0.85
+  },
+  "schemaVersion": 1,
+  "packageVersion": "0.1.0",
+  "opacity": 1.0
+}
