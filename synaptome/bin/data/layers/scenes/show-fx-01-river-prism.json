@@ -1,0 +1,60 @@
+{
+  "scene": {
+    "schemaVersion": 2,
+    "source": {
+      "name": "show-fx-01-river-prism",
+      "path": "layers/scenes/show-fx-01-river-prism.json"
+    },
+    "storage": {
+      "kind": "named",
+      "name": "show-fx-01-river-prism",
+      "path": "layers/scenes/show-fx-01-river-prism.json"
+    },
+    "description": "Radial kaleidoscope turns the evolving river centerline into an eight-fold cyan current.",
+    "contentKind": "effect-look"
+  },
+  "console": {
+    "slots": [
+      {
+        "index": 1,
+        "assetId": "generative.riverFormation",
+        "label": "River Formation",
+        "active": true,
+        "opacity": 1.0,
+        "parameters": {
+          "console.layer1.seed": 61817,
+          "console.layer1.riverWidth": 3.4,
+          "console.layer1.colorR": 0.18,
+          "console.layer1.colorG": 0.9,
+          "console.layer1.colorB": 1.0,
+          "console.layer1.trailBoost": 3.2,
+          "console.layer1.oxbowAlpha": 0.28
+        }
+      },
+      {
+        "index": 2,
+        "assetId": "fx.mirror",
+        "label": "River Prism",
+        "active": true,
+        "opacity": 1.0,
+        "coverage": {
+          "mode": "upstream",
+          "columns": 1
+        },
+        "parameters": {
+          "effects.mirror.route": 1,
+          "effects.mirror.coverage": 1,
+          "effects.mirror.coverageMask": true,
+          "effects.mirror.mode": 3,
+          "effects.mirror.segments": 8,
+          "effects.mirror.angle": 22.0,
+          "effects.mirror.originX": 0.5,
+          "effects.mirror.originY": 0.5,
+          "effects.mirror.zoom": 1.15,
+          "effects.mirror.mix": 0.9,
+          "effects.mirror.detail": 0.12
+        }
+      }
+    ]
+  }
+}

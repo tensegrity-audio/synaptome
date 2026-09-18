@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <cmath>
 #include <filesystem>
 #include <fstream>
@@ -77,17 +78,18 @@ inline DeclaredSurfaceEvidence verifyDeclaredPackageSurface(
     DeclaredSurfaceEvidence evidence;
     evidence.descriptor = factory.descriptor(typeId);
     auto descriptors = factory.descriptors();
+    auto selectedDescriptor = std::find_if(descriptors.begin(), descriptors.end(),
+        [&](const auto& descriptor) { return descriptor.typeId == typeId; });
     require(
         evidence.descriptor &&
             evidence.descriptor->typeId == typeId &&
             evidence.descriptor->kind ==
                 synaptome::element::ElementKind::Visual &&
             evidence.descriptor->actions.empty() &&
-            descriptors.size() == 1 &&
-            descriptors.front().typeId == typeId,
+            selectedDescriptor != descriptors.end(),
         "static " + displayName +
             " descriptor was not inspectable before creation");
-    descriptors.front().typeId = "copy.mutated";
+    selectedDescriptor->typeId = "copy.mutated";
     require(
         factory.descriptor(typeId)->typeId == typeId,
         "mutating the enumerated descriptor copy changed the factory");
@@ -103,7 +105,8 @@ inline DeclaredSurfaceEvidence verifyDeclaredPackageSurface(
                 expectedGroups.size() &&
             evidence.typeContract->contract.parameters.parameters.size() ==
                 expectedParameterGroups.size() &&
-            typeContractCopies.size() == 1,
+            std::count_if(typeContractCopies.begin(), typeContractCopies.end(),
+                [&](const auto& record) { return record.contract.element.typeId == typeId; }) == 1,
         displayName +
             " static parameter contract was not inspectable before creation");
 

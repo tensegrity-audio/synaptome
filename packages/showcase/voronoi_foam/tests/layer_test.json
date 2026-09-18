@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "packageId": "show.voronoi_foam",
+  "presetId": "default",
+  "frames": 240,
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "transport": {
+    "bpm": 120.0,
+    "speed": 1.0
+  },
+  "seed": 1703
+}

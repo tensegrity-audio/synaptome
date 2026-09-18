@@ -1,0 +1,547 @@
+{
+  "schemaVersion": 1,
+  "packageId": "show.differential_growth",
+  "packageVersion": "0.1.0",
+  "implementationVersion": "0.1.0",
+  "description": "Differential Growth: bounded deterministic algorithmic performance content.",
+  "element": {
+    "id": "show.differentialGrowth",
+    "kind": "visual",
+    "bindingMode": "bind-only",
+    "actions": []
+  },
+  "asset": {
+    "id": "show.differential_growth",
+    "label": "Differential Growth",
+    "category": "Generative",
+    "layerGroup": "Morphogenesis",
+    "model": "elastic-ring-growth",
+    "stateModel": "Ordered elastic closed curve with nonlocal repulsion, confinement and bounded edge subdivision",
+    "type": "show.differentialGrowth",
+    "registryPrefix": "show.differential_growth",
+    "description": "Ordered elastic closed curve with nonlocal repulsion, confinement and bounded edge subdivision. No media assets or direct audio dependencies.",
+    "tags": [
+      "showcase",
+      "algorithmic",
+      "deterministic",
+      "2d"
+    ],
+    "defaults": {}
+  },
+  "source": {
+    "strategy": "source-registration",
+    "registration": "source/register_differential_growth.cpp",
+    "files": [
+      "source/DifferentialGrowthLayer.h",
+      "source/DifferentialGrowthLayer.cpp",
+      "source/DifferentialGrowthModel.h"
+    ]
+  },
+  "capabilities": [
+    "graphics.opengl",
+    "transport.read",
+    "parameters.dynamic-options"
+  ],
+  "dependencies": [
+    {
+      "id": "synaptome.element-sdk",
+      "kind": "static-library",
+      "required": true,
+      "versionRange": ">=0.1.0 <1.0.0",
+      "resolvedVersion": "0.1.0",
+      "provider": "synaptome.element-sdk"
+    },
+    {
+      "id": "synaptome.runtime",
+      "kind": "runtime-service",
+      "required": true,
+      "versionRange": ">=0.1.0 <1.0.0",
+      "resolvedVersion": "0.1.0",
+      "provider": "synaptome.runtime"
+    }
+  ],
+  "parameterGroups": [
+    {
+      "id": "motion",
+      "label": "Motion",
+      "description": ""
+    },
+    {
+      "id": "time",
+      "label": "Time",
+      "description": ""
+    },
+    {
+      "id": "seed",
+      "label": "Seed",
+      "description": ""
+    },
+    {
+      "id": "action",
+      "label": "Action",
+      "description": ""
+    },
+    {
+      "id": "scale",
+      "label": "Scale",
+      "description": ""
+    },
+    {
+      "id": "glow",
+      "label": "Glow",
+      "description": ""
+    },
+    {
+      "id": "color",
+      "label": "Color",
+      "description": ""
+    },
+    {
+      "id": "growth",
+      "label": "Growth",
+      "description": ""
+    },
+    {
+      "id": "force",
+      "label": "Force",
+      "description": ""
+    }
+  ],
+  "parameters": [
+    {
+      "id": "speed",
+      "kind": "float",
+      "groupId": "motion",
+      "label": "Motion: Evolution Speed",
+      "default": 1.0,
+      "visible": true,
+      "range": {
+        "min": 0.0,
+        "max": 3.0,
+        "step": 0.01
+      },
+      "units": "multiplier",
+      "description": "Multiplies simulation time without rebuilding the model.",
+      "quickAccessOrder": 0
+    },
+    {
+      "id": "paused",
+      "kind": "bool",
+      "groupId": "time",
+      "label": "Time: Pause",
+      "default": false,
+      "visible": true,
+      "description": "Freeze simulation time while keeping live color and rendering controls available."
+    },
+    {
+      "id": "bpmSync",
+      "kind": "bool",
+      "groupId": "time",
+      "label": "Time: BPM Sync",
+      "default": false,
+      "visible": true,
+      "description": "Scale simulation speed by transport BPM relative to 120 BPM."
+    },
+    {
+      "id": "bpmMultiplier",
+      "kind": "float",
+      "groupId": "time",
+      "label": "Time: BPM Multiplier",
+      "default": 1.0,
+      "visible": true,
+      "range": {
+        "min": 0.25,
+        "max": 4.0,
+        "step": 0.25
+      },
+      "units": "multiplier",
+      "description": "BPM Multiplier.",
+      "optionsSource": {
+        "id": "transport.bpmMultipliers",
+        "value": "multiplier",
+        "label": "label"
+      }
+    },
+    {
+      "id": "seed",
+      "kind": "float",
+      "groupId": "seed",
+      "label": "Seed: Seed",
+      "default": 104729.0,
+      "visible": true,
+      "range": {
+        "min": 1.0,
+        "max": 999999.0,
+        "step": 1.0
+      },
+      "units": "integer",
+      "description": "Deterministic initial condition. Changing the seed explicitly resets the model."
+    },
+    {
+      "id": "reseed",
+      "kind": "bool",
+      "groupId": "action",
+      "label": "Action: Restart From Seed",
+      "default": false,
+      "visible": true,
+      "description": "Restart the existing seed; this momentary control resets after handling."
+    },
+    {
+      "id": "scale",
+      "kind": "float",
+      "groupId": "scale",
+      "label": "Scale: Extent",
+      "default": 0.96,
+      "visible": true,
+      "range": {
+        "min": 0.2,
+        "max": 1.4,
+        "step": 0.01
+      },
+      "units": "multiplier",
+      "description": "Extent."
+    },
+    {
+      "id": "rotationDeg",
+      "kind": "float",
+      "groupId": "motion",
+      "label": "Motion: Rotation",
+      "default": 0.0,
+      "visible": true,
+      "range": {
+        "min": -180.0,
+        "max": 180.0,
+        "step": 1.0
+      },
+      "units": "deg",
+      "description": "Rotation."
+    },
+    {
+      "id": "lineWidth",
+      "kind": "float",
+      "groupId": "scale",
+      "label": "Scale: Stroke Width",
+      "default": 1.6,
+      "visible": true,
+      "range": {
+        "min": 0.5,
+        "max": 5.0,
+        "step": 0.1
+      },
+      "units": "px",
+      "description": "Stroke Width."
+    },
+    {
+      "id": "glow",
+      "kind": "float",
+      "groupId": "glow",
+      "label": "Glow: Emission Gain",
+      "default": 1.0,
+      "visible": true,
+      "range": {
+        "min": 0.0,
+        "max": 2.0,
+        "step": 0.01
+      },
+      "units": "multiplier",
+      "description": "Model highlights brighten while the slot remains the sole whole-element opacity owner.",
+      "quickAccessOrder": 5
+    },
+    {
+      "id": "colorR",
+      "kind": "float",
+      "groupId": "color",
+      "label": "Color: Primary Red",
+      "default": 0.28,
+      "visible": true,
+      "range": {
+        "min": 0.0,
+        "max": 1.0,
+        "step": 0.01
+      },
+      "units": "",
+      "description": "Primary Red."
+    },
+    {
+      "id": "colorG",
+      "kind": "float",
+      "groupId": "color",
+      "label": "Color: Primary Green",
+      "default": 0.94,
+      "visible": true,
+      "range": {
+        "min": 0.0,
+        "max": 1.0,
+        "step": 0.01
+      },
+      "units": "",
+      "description": "Primary Green."
+    },
+    {
+      "id": "colorB",
+      "kind": "float",
+      "groupId": "color",
+      "label": "Color: Primary Blue",
+      "default": 0.73,
+      "visible": true,
+      "range": {
+        "min": 0.0,
+        "max": 1.0,
+        "step": 0.01
+      },
+      "units": "",
+      "description": "Primary Blue."
+    },
+    {
+      "id": "accentR",
+      "kind": "float",
+      "groupId": "color",
+      "label": "Color: Accent Red",
+      "default": 0.95,
+      "visible": true,
+      "range": {
+        "min": 0.0,
+        "max": 1.0,
+        "step": 0.01
+      },
+      "units": "",
+      "description": "Accent Red."
+    },
+    {
+      "id": "accentG",
+      "kind": "float",
+      "groupId": "color",
+      "label": "Color: Accent Green",
+      "default": 0.59,
+      "visible": true,
+      "range": {
+        "min": 0.0,
+        "max": 1.0,
+        "step": 0.01
+      },
+      "units": "",
+      "description": "Accent Green."
+    },
+    {
+      "id": "accentB",
+      "kind": "float",
+      "groupId": "color",
+      "label": "Color: Accent Blue",
+      "default": 0.24,
+      "visible": true,
+      "range": {
+        "min": 0.0,
+        "max": 1.0,
+        "step": 0.01
+      },
+      "units": "",
+      "description": "Accent Blue."
+    },
+    {
+      "id": "growthRate",
+      "kind": "float",
+      "groupId": "growth",
+      "label": "Growth: Expansion Rate",
+      "default": 0.34,
+      "visible": true,
+      "range": {
+        "min": 0.0,
+        "max": 1.0,
+        "step": 0.01
+      },
+      "units": "normalized",
+      "description": "Growth slowly increases spring rest length; sweeping it preserves every existing node.",
+      "quickAccessOrder": 1
+    },
+    {
+      "id": "repulsion",
+      "kind": "float",
+      "groupId": "force",
+      "label": "Force: Self Avoidance",
+      "default": 0.95,
+      "visible": true,
+      "range": {
+        "min": 0.0,
+        "max": 2.0,
+        "step": 0.01
+      },
+      "units": "gain",
+      "description": "Non-neighbor repulsion opens folded spaces in the curve.",
+      "quickAccessOrder": 2
+    },
+    {
+      "id": "stiffness",
+      "kind": "float",
+      "groupId": "force",
+      "label": "Force: Spring Stiffness",
+      "default": 0.8,
+      "visible": true,
+      "range": {
+        "min": 0.0,
+        "max": 2.0,
+        "step": 0.01
+      },
+      "units": "gain",
+      "description": "Restoring force along neighboring segments.",
+      "quickAccessOrder": 3
+    },
+    {
+      "id": "confinement",
+      "kind": "float",
+      "groupId": "force",
+      "label": "Force: Confinement",
+      "default": 0.55,
+      "visible": true,
+      "range": {
+        "min": 0.0,
+        "max": 1.0,
+        "step": 0.01
+      },
+      "units": "normalized",
+      "description": "Soft circular boundary compresses the growing ring.",
+      "quickAccessOrder": 4
+    },
+    {
+      "id": "driftRate",
+      "kind": "float",
+      "groupId": "motion",
+      "label": "Motion: Circulation Gain",
+      "default": 0.12,
+      "visible": true,
+      "range": {
+        "min": -1.0,
+        "max": 1.0,
+        "step": 0.01
+      },
+      "units": "multiplier",
+      "description": "Signed strength of rotational advection; preserves the elastic ring."
+    }
+  ],
+  "presets": [
+    {
+      "presetId": "default",
+      "label": "Default",
+      "path": "presets/default.json",
+      "description": "Default performance settings."
+    },
+    {
+      "presetId": "calm",
+      "label": "Calm",
+      "path": "presets/calm.json",
+      "description": "Calm performance settings."
+    },
+    {
+      "presetId": "energized",
+      "label": "Energized",
+      "path": "presets/energized.json",
+      "description": "Energized performance settings."
+    }
+  ],
+  "presetBanks": [
+    {
+      "id": "performance",
+      "label": "Performance",
+      "presets": [
+        "default",
+        "calm",
+        "energized"
+      ]
+    }
+  ],
+  "mappingPresets": [
+    {
+      "id": "hostMic",
+      "label": "Host Mic",
+      "description": "Optional visible model-control routes. Shared host-mic profiles scale the current base by 0.65 to 1.65; preview conflicts before applying. Silent input retains motion.",
+      "applyMode": "suggestion-only",
+      "mappings": [
+        {
+          "target": {
+            "kind": "parameter",
+            "id": "repulsion"
+          },
+          "source": {
+            "kind": "osc",
+            "pattern": "/sensor/host/localmic/mic-bass",
+            "in": [
+              0.0,
+              0.18
+            ],
+            "out": [
+              0.65,
+              1.65
+            ],
+            "smooth": 0.2,
+            "deadband": 0.01,
+            "blend": "scale",
+            "relative": true
+          }
+        },
+        {
+          "target": {
+            "kind": "parameter",
+            "id": "growthRate"
+          },
+          "source": {
+            "kind": "osc",
+            "pattern": "/sensor/host/localmic/mic-mids",
+            "in": [
+              0.0,
+              0.16
+            ],
+            "out": [
+              0.65,
+              1.65
+            ],
+            "smooth": 0.2,
+            "deadband": 0.01,
+            "blend": "scale",
+            "relative": true
+          }
+        },
+        {
+          "target": {
+            "kind": "parameter",
+            "id": "glow"
+          },
+          "source": {
+            "kind": "osc",
+            "pattern": "/sensor/host/localmic/mic-highs",
+            "in": [
+              0.0,
+              0.1
+            ],
+            "out": [
+              0.65,
+              1.65
+            ],
+            "smooth": 0.2,
+            "deadband": 0.01,
+            "blend": "scale",
+            "relative": true
+          }
+        }
+      ]
+    }
+  ],
+  "media": [],
+  "tests": {
+    "confidenceProfile": "tests/layer_test.json",
+    "fixtures": [
+      "tests/model_test.cpp"
+    ]
+  },
+  "aliases": [],
+  "deprecations": [],
+  "migrations": [],
+  "compatibility": {
+    "sdk": {
+      "versionRange": ">=0.1.0 <1.0.0",
+      "resolvedVersion": "0.1.0"
+    },
+    "runtime": {
+      "versionRange": ">=0.1.0 <1.0.0",
+      "resolvedVersion": "0.1.0"
+    }
+  }
+}

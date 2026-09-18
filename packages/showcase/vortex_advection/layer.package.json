@@ -1,0 +1,465 @@
+{
+  "schemaVersion": 1,
+  "packageId": "show.vortex_advection",
+  "packageVersion": "0.1.0",
+  "implementationVersion": "0.1.0",
+  "description": "Vortex Advection: curling counter-rotating eddies and stretched transport filaments.",
+  "element": {
+    "id": "show.vortexAdvection",
+    "kind": "visual",
+    "bindingMode": "bind-only",
+    "actions": []
+  },
+  "asset": {
+    "id": "show.vortex_advection",
+    "label": "Vortex Advection",
+    "category": "Generative",
+    "layerGroup": "Fluid Motion",
+    "model": "periodic-soft-core-point-vortices",
+    "stateModel": "Eight interacting softened point vortices advect 384 tracers with fixed-length history.",
+    "type": "show.vortexAdvection",
+    "registryPrefix": "show.vortex_advection",
+    "description": "Curling counter-rotating eddies and stretched transport filaments.",
+    "tags": [
+      "generative",
+      "showcase",
+      "deterministic",
+      "simulation"
+    ],
+    "defaults": {}
+  },
+  "source": {
+    "strategy": "source-registration",
+    "registration": "source/register_vortex_advection.cpp",
+    "files": [
+      "source/VortexAdvectionModel.h",
+      "source/VortexAdvectionLayer.h",
+      "source/VortexAdvectionLayer.cpp"
+    ]
+  },
+  "capabilities": [
+    "graphics.opengl",
+    "transport.read",
+    "parameters.dynamic-options"
+  ],
+  "dependencies": [
+    {
+      "id": "synaptome.element-sdk",
+      "kind": "static-library",
+      "required": true,
+      "versionRange": ">=0.1.0 <1.0.0",
+      "resolvedVersion": "0.1.0",
+      "provider": "synaptome.element-sdk"
+    },
+    {
+      "id": "synaptome.runtime",
+      "kind": "runtime-service",
+      "required": true,
+      "versionRange": ">=0.1.0 <1.0.0",
+      "resolvedVersion": "0.1.0",
+      "provider": "synaptome.runtime"
+    }
+  ],
+  "parameterGroups": [
+    {
+      "id": "motion",
+      "label": "Motion",
+      "description": "Motion controls."
+    },
+    {
+      "id": "time",
+      "label": "Time",
+      "description": "Time controls."
+    },
+    {
+      "id": "scale",
+      "label": "Scale",
+      "description": "Scale controls."
+    },
+    {
+      "id": "force",
+      "label": "Force",
+      "description": "Force controls."
+    },
+    {
+      "id": "color",
+      "label": "Color",
+      "description": "Color controls."
+    },
+    {
+      "id": "seed",
+      "label": "Seed",
+      "description": "Seed controls."
+    }
+  ],
+  "parameters": [
+    {
+      "id": "speed",
+      "kind": "float",
+      "groupId": "motion",
+      "label": "Motion: Speed",
+      "default": 0.8,
+      "visible": true,
+      "description": "Local simulation rate; zero pauses. Multiplied by the global transport speed.",
+      "range": {
+        "min": 0,
+        "max": 3,
+        "step": 0.01
+      },
+      "units": "multiplier",
+      "quickAccessOrder": 0
+    },
+    {
+      "id": "bpmSync",
+      "kind": "bool",
+      "groupId": "time",
+      "label": "Time: BPM Sync",
+      "default": true,
+      "visible": true,
+      "description": "Scale simulation time by global BPM relative to 120 BPM."
+    },
+    {
+      "id": "bpmMultiplier",
+      "kind": "float",
+      "groupId": "time",
+      "label": "Time: BPM Multiplier",
+      "default": 1,
+      "visible": true,
+      "description": "BPM Multiplier.",
+      "range": {
+        "min": 0.25,
+        "max": 4,
+        "step": 0.25
+      },
+      "units": "multiplier",
+      "optionsSource": {
+        "id": "transport.bpmMultipliers",
+        "value": "multiplier",
+        "label": "label"
+      }
+    },
+    {
+      "id": "scale",
+      "kind": "float",
+      "groupId": "scale",
+      "label": "Scale: Size",
+      "default": 0.92,
+      "visible": true,
+      "description": "Size.",
+      "range": {
+        "min": 0.25,
+        "max": 2,
+        "step": 0.01
+      },
+      "units": "multiplier"
+    },
+    {
+      "id": "rotationDeg",
+      "kind": "float",
+      "groupId": "motion",
+      "label": "Motion: Rotation",
+      "default": 0,
+      "visible": true,
+      "description": "Rotation.",
+      "range": {
+        "min": -180,
+        "max": 180,
+        "step": 1
+      },
+      "units": "deg"
+    },
+    {
+      "id": "circulation",
+      "kind": "float",
+      "groupId": "force",
+      "label": "Force: Circulation",
+      "default": 1,
+      "visible": true,
+      "description": "Signed vortex circulation. Sweeping through zero reverses rotation without reseeding.",
+      "range": {
+        "min": -2.5,
+        "max": 2.5,
+        "step": 0.01
+      },
+      "quickAccessOrder": 1
+    },
+    {
+      "id": "coreRadius",
+      "kind": "float",
+      "groupId": "scale",
+      "label": "Scale: Vortex Core",
+      "default": 0.085,
+      "visible": true,
+      "description": "Vortex Core.",
+      "range": {
+        "min": 0.025,
+        "max": 0.3,
+        "step": 0.001
+      },
+      "units": "world",
+      "quickAccessOrder": 2
+    },
+    {
+      "id": "strain",
+      "kind": "float",
+      "groupId": "force",
+      "label": "Force: Shear Strain",
+      "default": 0.18,
+      "visible": true,
+      "description": "Signed incompressible background strain; stretches existing tracer structures.",
+      "range": {
+        "min": -1,
+        "max": 1,
+        "step": 0.01
+      },
+      "quickAccessOrder": 3
+    },
+    {
+      "id": "vortexDrift",
+      "kind": "float",
+      "groupId": "motion",
+      "label": "Motion: Vortex Drift",
+      "default": 0.4,
+      "visible": true,
+      "description": "Advection of vortex centers by the other vortices.",
+      "range": {
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      },
+      "quickAccessOrder": 4
+    },
+    {
+      "id": "trailTimeSec",
+      "kind": "float",
+      "groupId": "time",
+      "label": "Time: Trail History",
+      "default": 1.1,
+      "visible": true,
+      "description": "Visible duration of the retained 30 Hz tracer history.",
+      "range": {
+        "min": 0.1,
+        "max": 1.3,
+        "step": 0.01
+      },
+      "units": "s",
+      "quickAccessOrder": 5
+    },
+    {
+      "id": "lineWidth",
+      "kind": "float",
+      "groupId": "scale",
+      "label": "Scale: Line Width",
+      "default": 1.3,
+      "visible": true,
+      "description": "Line Width.",
+      "range": {
+        "min": 0.5,
+        "max": 3,
+        "step": 0.1
+      },
+      "units": "px"
+    },
+    {
+      "id": "colorR",
+      "kind": "float",
+      "groupId": "color",
+      "label": "Color: Primary Red",
+      "default": 0.05,
+      "visible": true,
+      "description": "Primary Red.",
+      "range": {
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    },
+    {
+      "id": "colorG",
+      "kind": "float",
+      "groupId": "color",
+      "label": "Color: Primary Green",
+      "default": 0.8,
+      "visible": true,
+      "description": "Primary Green.",
+      "range": {
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    },
+    {
+      "id": "colorB",
+      "kind": "float",
+      "groupId": "color",
+      "label": "Color: Primary Blue",
+      "default": 1,
+      "visible": true,
+      "description": "Primary Blue.",
+      "range": {
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    },
+    {
+      "id": "accentR",
+      "kind": "float",
+      "groupId": "color",
+      "label": "Color: Accent Red",
+      "default": 0.95,
+      "visible": true,
+      "description": "Accent Red.",
+      "range": {
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    },
+    {
+      "id": "accentG",
+      "kind": "float",
+      "groupId": "color",
+      "label": "Color: Accent Green",
+      "default": 0.18,
+      "visible": true,
+      "description": "Accent Green.",
+      "range": {
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    },
+    {
+      "id": "accentB",
+      "kind": "float",
+      "groupId": "color",
+      "label": "Color: Accent Blue",
+      "default": 0.52,
+      "visible": true,
+      "description": "Accent Blue.",
+      "range": {
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    },
+    {
+      "id": "seed",
+      "kind": "float",
+      "groupId": "seed",
+      "label": "Seed: Seed",
+      "default": 1701,
+      "visible": true,
+      "description": "Deterministic startup identity. Changing this value explicitly resets the simulation.",
+      "range": {
+        "min": 0,
+        "max": 65535,
+        "step": 1
+      }
+    }
+  ],
+  "presets": [
+    {
+      "presetId": "default",
+      "label": "Default",
+      "path": "presets/default.json",
+      "description": "Complete baseline model with immediate visible output."
+    },
+    {
+      "presetId": "calm",
+      "label": "Calm",
+      "path": "presets/calm.json",
+      "description": "Slower motion and restrained deformation."
+    },
+    {
+      "presetId": "energized",
+      "label": "Energized",
+      "path": "presets/energized.json",
+      "description": "Faster evolution and stronger model forces."
+    }
+  ],
+  "presetBanks": [
+    {
+      "id": "performance",
+      "label": "Performance",
+      "presets": [
+        "default",
+        "calm",
+        "energized"
+      ]
+    }
+  ],
+  "mappingPresets": [
+    {
+      "id": "hostMicMotion",
+      "label": "Host Mic Motion",
+      "description": "Optional visible model-control routes. Shared host-mic profiles scale the current base by 0.65 to 1.65; preview conflicts before applying. Silent input retains motion.",
+      "applyMode": "suggestion-only",
+      "mappings": [
+        {
+          "target": {
+            "kind": "parameter",
+            "id": "circulation"
+          },
+          "source": {
+            "kind": "osc",
+            "pattern": "/sensor/host/localmic/mic-bass",
+            "in": [
+              0.0,
+              0.18
+            ],
+            "out": [
+              0.65,
+              1.65
+            ],
+            "smooth": 0.2,
+            "deadband": 0.01,
+            "blend": "scale",
+            "relative": true
+          }
+        },
+        {
+          "target": {
+            "kind": "parameter",
+            "id": "strain"
+          },
+          "source": {
+            "kind": "osc",
+            "pattern": "/sensor/host/localmic/mic-level",
+            "in": [
+              0.0,
+              0.12
+            ],
+            "out": [
+              0.65,
+              1.65
+            ],
+            "smooth": 0.2,
+            "deadband": 0.01,
+            "blend": "scale",
+            "relative": true
+          }
+        }
+      ]
+    }
+  ],
+  "media": [],
+  "tests": {
+    "confidenceProfile": "tests/layer_test.json",
+    "fixtures": []
+  },
+  "aliases": [],
+  "deprecations": [],
+  "migrations": [],
+  "compatibility": {
+    "sdk": {
+      "versionRange": ">=0.1.0 <1.0.0",
+      "resolvedVersion": "0.1.0"
+    },
+    "runtime": {
+      "versionRange": ">=0.1.0 <1.0.0",
+      "resolvedVersion": "0.1.0"
+    }
+  }
+}

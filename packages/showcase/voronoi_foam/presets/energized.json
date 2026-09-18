@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "packageId": "show.voronoi_foam",
+  "assetId": "show.voronoi_foam",
+  "presetId": "energized",
+  "label": "Energized",
+  "description": "State-preserving energized controls for Voronoi Foam.",
+  "parameters": {
+    "speed": 1.1,
+    "bpmSync": true,
+    "bpmMultiplier": 1,
+    "scale": 0.92,
+    "rotationDeg": 0,
+    "driftSpeed": 1,
+    "relaxationRate": 0.7,
+    "repulsionWeight": 1.2,
+    "shear": 0.7,
+    "wallWidth": 0.038,
+    "cellFill": 0.14,
+    "edgeRadiance": 1.4,
+    "colorR": 0.15,
+    "colorG": 0.94,
+    "colorB": 0.68,
+    "accentR": 0.35,
+    "accentG": 0.2,
+    "accentB": 1
+  }
+}

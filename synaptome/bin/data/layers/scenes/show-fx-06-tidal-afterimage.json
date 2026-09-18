@@ -1,0 +1,64 @@
+{
+  "scene": {
+    "schemaVersion": 2,
+    "source": {
+      "name": "show-fx-06-tidal-afterimage",
+      "path": "layers/scenes/show-fx-06-tidal-afterimage.json"
+    },
+    "storage": {
+      "kind": "named",
+      "name": "show-fx-06-tidal-afterimage",
+      "path": "layers/scenes/show-fx-06-tidal-afterimage.json"
+    },
+    "description": "Short cyan-to-violet motion echoes expose the ripples and direction changes in a flock.",
+    "contentKind": "effect-look"
+  },
+  "console": {
+    "slots": [
+      {
+        "index": 1,
+        "assetId": "generative.murmuration",
+        "label": "Murmuration",
+        "active": true,
+        "opacity": 1.0,
+        "parameters": {
+          "console.layer1.boidCount": 80,
+          "console.layer1.trailFade": 0.055,
+          "console.layer1.trailAlpha": 0.4,
+          "console.layer1.pointSize": 2.0,
+          "console.layer1.preyAlpha": 1.0
+        }
+      },
+      {
+        "index": 2,
+        "assetId": "fx.motion_extract",
+        "label": "Tidal Afterimage",
+        "active": true,
+        "opacity": 1.0,
+        "coverage": {
+          "mode": "upstream",
+          "columns": 1
+        },
+        "parameters": {
+          "effects.motion.route": 1,
+          "effects.motion.coverage": 1,
+          "effects.motion.coverageMask": true,
+          "effects.motion.threshold": 0.04,
+          "effects.motion.boost": 3.2,
+          "effects.motion.mix": 0.65,
+          "effects.motion.softness": 0.12,
+          "effects.motion.fadeBeats": 4,
+          "effects.motion.blur": 0.18,
+          "effects.motion.alphaMix": 0.0,
+          "effects.motion.headColorR": 70,
+          "effects.motion.headColorG": 245,
+          "effects.motion.headColorB": 220,
+          "effects.motion.tailColorR": 90,
+          "effects.motion.tailColorG": 55,
+          "effects.motion.tailColorB": 210,
+          "effects.motion.tailOpacity": 30
+        }
+      }
+    ]
+  }
+}

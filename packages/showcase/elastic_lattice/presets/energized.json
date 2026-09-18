@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "packageId": "show.elastic_lattice",
+  "assetId": "show.elastic_lattice",
+  "presetId": "energized",
+  "label": "Energized",
+  "description": "Energized Elastic Lattice settings. Presets preserve current simulation history.",
+  "parameters": {
+    "speed": 1,
+    "bpmSync": true,
+    "bpmMultiplier": 1,
+    "scale": 1,
+    "yawDeg": -24,
+    "tiltDeg": 38,
+    "spinRate": 6,
+    "springStiffness": 70,
+    "restoringForce": 2.5,
+    "dampingRate": 0.65,
+    "impulseStrength": 12,
+    "impulseRate": 0.65,
+    "heightScale": 1.3,
+    "wireOpacity": 0.25,
+    "colorR": 0.08,
+    "colorG": 0.04,
+    "colorB": 0.22,
+    "highlightR": 0.95,
+    "highlightG": 0.55,
+    "highlightB": 0.85
+  }
+}

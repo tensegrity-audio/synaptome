@@ -1,0 +1,41 @@
+{
+  "id": "show.voronoi_foam",
+  "label": "Voronoi Foam",
+  "category": "Generative",
+  "layerGroup": "Cellular Fields",
+  "model": "moving-centroidal-voronoi",
+  "stateModel": "32 moving periodic Voronoi sites relax toward sampled cell centroids while short-range pressure and shear deform the cells.",
+  "type": "show.voronoiFoam",
+  "registryPrefix": "show.voronoi_foam",
+  "description": "Breathing cell walls, shifting membranes, and softly filled crystalline tissue.",
+  "tags": [
+    "generative",
+    "showcase",
+    "deterministic",
+    "simulation"
+  ],
+  "defaults": {
+    "speed": 0.8,
+    "bpmSync": true,
+    "bpmMultiplier": 1,
+    "scale": 0.92,
+    "rotationDeg": 0,
+    "driftSpeed": 0.35,
+    "relaxationRate": 0.7,
+    "repulsionWeight": 0.5,
+    "shear": 0.15,
+    "wallWidth": 0.024,
+    "cellFill": 0.14,
+    "edgeRadiance": 1,
+    "colorR": 0.15,
+    "colorG": 0.94,
+    "colorB": 0.68,
+    "accentR": 0.35,
+    "accentG": 0.2,
+    "accentB": 1,
+    "seed": 1703
+  },
+  "schemaVersion": 1,
+  "packageVersion": "0.1.0",
+  "opacity": 1.0
+}

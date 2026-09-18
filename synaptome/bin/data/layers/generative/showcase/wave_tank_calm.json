@@ -1,0 +1,40 @@
+{
+  "id": "show.wave_tank.calm",
+  "label": "Wave Tank / Calm",
+  "category": "Generative",
+  "layerGroup": "Physical Fields",
+  "model": "damped-wave-grid",
+  "stateModel": "Fixed 72 by 48 membrane with persistent displacement, velocity, four seeded sources, and fixed-step time.",
+  "type": "show.waveTank",
+  "registryPrefix": "show.wave_tank.calm",
+  "description": "Interfering ripples on a damped membrane, rendered as luminous height contours and shaded facets.",
+  "tags": [
+    "algorithmic",
+    "showcase",
+    "simulation"
+  ],
+  "defaults": {
+    "speed": 0.55,
+    "paused": false,
+    "bpmSync": true,
+    "bpmMultiplier": 1.0,
+    "seed": 1001.0,
+    "reseed": false,
+    "scale": 0.94,
+    "rotationDeg": 0.0,
+    "colorR": 0.08,
+    "colorG": 0.72,
+    "colorB": 1.0,
+    "waveSpeed": 16.0,
+    "damping": 0.9,
+    "driveStrength": 2.5,
+    "driveFrequency": 0.45,
+    "sourceSpread": 0.75,
+    "radiance": 0.9,
+    "contourCount": 12.0,
+    "contourOpacity": 0.55
+  },
+  "schemaVersion": 1,
+  "packageVersion": "0.1.0",
+  "opacity": 1.0
+}

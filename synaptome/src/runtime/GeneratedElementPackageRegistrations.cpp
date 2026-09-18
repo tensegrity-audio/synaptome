@@ -10,6 +10,18 @@
 #include <utility>
 
 std::unique_ptr<Layer> synaptomeCreateElementPackage_examples_signal_bloom();
+std::unique_ptr<Layer> synaptomeCreateElementPackage_show_chladni_plate();
+std::unique_ptr<Layer> synaptomeCreateElementPackage_show_dendritic_crystal();
+std::unique_ptr<Layer> synaptomeCreateElementPackage_show_differential_growth();
+std::unique_ptr<Layer> synaptomeCreateElementPackage_show_elastic_lattice();
+std::unique_ptr<Layer> synaptomeCreateElementPackage_show_gerstner_ocean();
+std::unique_ptr<Layer> synaptomeCreateElementPackage_show_magnetic_dipoles();
+std::unique_ptr<Layer> synaptomeCreateElementPackage_show_phase_lattice();
+std::unique_ptr<Layer> synaptomeCreateElementPackage_show_sand_ripples();
+std::unique_ptr<Layer> synaptomeCreateElementPackage_show_strange_attractor();
+std::unique_ptr<Layer> synaptomeCreateElementPackage_show_voronoi_foam();
+std::unique_ptr<Layer> synaptomeCreateElementPackage_show_vortex_advection();
+std::unique_ptr<Layer> synaptomeCreateElementPackage_show_wave_tank();
 
 namespace synaptome::runtime {
 namespace {
@@ -38,6 +50,150 @@ constexpr GeneratedElementPackageRegistration kRegistrations[] = {
         "examples.signal_bloom",
         "source/register_signal_bloom.cpp",
         "39e6e7934d09689bd1a952e2d040f3a36ebdf595a47446778d1745a2fcdb00de",
+    },
+    {
+        "show.chladni_plate",
+        "0.1.0",
+        "0.1.0",
+        "show.chladniPlate",
+        "visual",
+        "bind-only",
+        "show.chladni_plate",
+        "show.chladni_plate",
+        "source/register_chladni_plate.cpp",
+        "15a9335fa1d248ccf80456bc2ae5690f1384f00384132cceeefd9c79086ac19f",
+    },
+    {
+        "show.dendritic_crystal",
+        "0.1.0",
+        "0.1.0",
+        "show.dendriticCrystal",
+        "visual",
+        "bind-only",
+        "show.dendritic_crystal",
+        "show.dendritic_crystal",
+        "source/register_dendritic_crystal.cpp",
+        "43aaa5e82dc64c72906462a4e5ab49b012832c86f3bc8cbe5d7fbda1b9822879",
+    },
+    {
+        "show.differential_growth",
+        "0.1.0",
+        "0.1.0",
+        "show.differentialGrowth",
+        "visual",
+        "bind-only",
+        "show.differential_growth",
+        "show.differential_growth",
+        "source/register_differential_growth.cpp",
+        "a19ddf8919c6d193e6a761eb980f606e43e24ccbbdbb4737bd8766ca2d2c001c",
+    },
+    {
+        "show.elastic_lattice",
+        "0.1.0",
+        "0.1.0",
+        "show.elasticLattice",
+        "visual",
+        "bind-only",
+        "show.elastic_lattice",
+        "show.elastic_lattice",
+        "source/register_elastic_lattice.cpp",
+        "beb0153e78f4c34544af2505c1cc84e47f5b1b817ad56e333c89efbde1da6cd6",
+    },
+    {
+        "show.gerstner_ocean",
+        "0.1.0",
+        "0.1.0",
+        "show.gerstnerOcean",
+        "visual",
+        "bind-only",
+        "show.gerstner_ocean",
+        "show.gerstner_ocean",
+        "source/register_gerstner_ocean.cpp",
+        "3bdc0448253157f9bbe935032b66d433e35d2b79af55be83036f8c5ae9c3b852",
+    },
+    {
+        "show.magnetic_dipoles",
+        "0.1.0",
+        "0.1.0",
+        "show.magneticDipoles",
+        "visual",
+        "bind-only",
+        "show.magnetic_dipoles",
+        "show.magnetic_dipoles",
+        "source/register_magnetic_dipoles.cpp",
+        "f52ad94b59201b9d35340993eef0d06773431e83c2360244da83785eb1ac54b8",
+    },
+    {
+        "show.phase_lattice",
+        "0.1.0",
+        "0.1.0",
+        "show.phaseLattice",
+        "visual",
+        "bind-only",
+        "show.phase_lattice",
+        "show.phase_lattice",
+        "source/register_phase_lattice.cpp",
+        "918b5cebb4f4a3faa7feaeafb977da549de8115a88a4b48200ed32f72b00b51e",
+    },
+    {
+        "show.sand_ripples",
+        "0.1.0",
+        "0.1.0",
+        "show.sandRipples",
+        "visual",
+        "bind-only",
+        "show.sand_ripples",
+        "show.sand_ripples",
+        "source/register_sand_ripples.cpp",
+        "76307bbc79aba7b24f834a79b34421d72bbd47c94086f2f75e15f5544dc62097",
+    },
+    {
+        "show.strange_attractor",
+        "0.1.0",
+        "0.1.0",
+        "show.strangeAttractor",
+        "visual",
+        "bind-only",
+        "show.strange_attractor",
+        "show.strange_attractor",
+        "source/register_strange_attractor.cpp",
+        "55b58e6186ac4594421d29fbb0ca983e9f1348ab2c831c7ef1c4a0682965e81a",
+    },
+    {
+        "show.voronoi_foam",
+        "0.1.0",
+        "0.1.0",
+        "show.voronoiFoam",
+        "visual",
+        "bind-only",
+        "show.voronoi_foam",
+        "show.voronoi_foam",
+        "source/register_voronoi_foam.cpp",
+        "5a4da4b918b01f57586eef55fb38974b726d8f25644420f9a254477c13ebc5a4",
+    },
+    {
+        "show.vortex_advection",
+        "0.1.0",
+        "0.1.0",
+        "show.vortexAdvection",
+        "visual",
+        "bind-only",
+        "show.vortex_advection",
+        "show.vortex_advection",
+        "source/register_vortex_advection.cpp",
+        "e92194157eaac9fb3499fe51c1da1169facb8613b7e995d58b7af1579a599a73",
+    },
+    {
+        "show.wave_tank",
+        "0.1.0",
+        "0.1.0",
+        "show.waveTank",
+        "visual",
+        "bind-only",
+        "show.wave_tank",
+        "show.wave_tank",
+        "source/register_wave_tank.cpp",
+        "d7d420a59c7497b6987bf86c86c9d3d1683a2fbcce33c865a01ef6c593d3376f",
     },
 };
 
@@ -299,28 +455,6 @@ ElementTypeContract generatedContract0() {
     return contract;
 }
 
-
-} // namespace
-
-const GeneratedElementPackageRegistration*
-generatedElementPackageRegistrations(std::size_t& count) noexcept {
-    count = sizeof(kRegistrations) / sizeof(kRegistrations[0]);
-    return kRegistrations;
-}
-
-void registerGeneratedElementPackages(LayerFactory& elementTypes) {
-    if (elementTypes.contains("example.signalBloom")) {
-        throw std::logic_error(
-            "generated package type already registered: example.signalBloom");
-    }
-    elementTypes.registerType(
-        generatedContract0(),
-        [] { return synaptomeCreateElementPackage_examples_signal_bloom(); },
-        LayerFactory::ParameterBindingMode::Explicit);
-    if (!elementTypes.contains("example.signalBloom")) {
-        throw std::logic_error(
-            "generated registrar did not publish expected type: example.signalBloom");
-    }
-}
-
-} // namespace synaptome::runtime
+ElementTypeContract generatedContract1() {
+    ElementTypeContract contract;
+    contr

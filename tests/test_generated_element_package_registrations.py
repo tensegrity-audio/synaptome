@@ -40,8 +40,9 @@ def _copy_package(tmp_path: Path, name: str) -> Path:
 
 def test_reference_record_is_validated_and_complete() -> None:
     records = generator.load_records()
-    assert len(records) == 1
-    record = records[0]
+    references = json.loads(generator.REGISTRATION_SET.read_text())["packages"]
+    assert len(records) == len(references)
+    record = next(record for record in records if record.package_id == "examples.signal_bloom")
     assert record.package_id == "examples.signal_bloom"
     assert record.type_id == "example.signalBloom"
     assert record.binding_mode == "bind-only"

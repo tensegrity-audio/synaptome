@@ -1,0 +1,502 @@
+{
+  "schemaVersion": 1,
+  "packageId": "show.sand_ripples",
+  "packageVersion": "0.1.0",
+  "implementationVersion": "0.1.0",
+  "description": "Sand Ripples: migrating dunes with coherent ridges and faceted low-poly relief.",
+  "element": {
+    "id": "show.sandRipples",
+    "kind": "visual",
+    "bindingMode": "bind-only",
+    "actions": []
+  },
+  "asset": {
+    "id": "show.sand_ripples",
+    "label": "Sand Ripples",
+    "category": "Generative",
+    "layerGroup": "Planetary Fields",
+    "model": "conservative-saltation-repose",
+    "stateModel": "A 64 by 40 periodic height field transports sand downwind and relaxes slopes above the repose threshold.",
+    "type": "show.sandRipples",
+    "registryPrefix": "show.sand_ripples",
+    "description": "Migrating dunes with coherent ridges and faceted low-poly relief.",
+    "tags": [
+      "generative",
+      "showcase",
+      "deterministic",
+      "simulation"
+    ],
+    "defaults": {}
+  },
+  "source": {
+    "strategy": "source-registration",
+    "registration": "source/register_sand_ripples.cpp",
+    "files": [
+      "source/SandRipplesModel.h",
+      "source/SandRipplesLayer.h",
+      "source/SandRipplesLayer.cpp"
+    ]
+  },
+  "capabilities": [
+    "graphics.opengl",
+    "transport.read",
+    "parameters.dynamic-options"
+  ],
+  "dependencies": [
+    {
+      "id": "synaptome.element-sdk",
+      "kind": "static-library",
+      "required": true,
+      "versionRange": ">=0.1.0 <1.0.0",
+      "resolvedVersion": "0.1.0",
+      "provider": "synaptome.element-sdk"
+    },
+    {
+      "id": "synaptome.runtime",
+      "kind": "runtime-service",
+      "required": true,
+      "versionRange": ">=0.1.0 <1.0.0",
+      "resolvedVersion": "0.1.0",
+      "provider": "synaptome.runtime"
+    }
+  ],
+  "parameterGroups": [
+    {
+      "id": "motion",
+      "label": "Motion",
+      "description": "Motion controls."
+    },
+    {
+      "id": "time",
+      "label": "Time",
+      "description": "Time controls."
+    },
+    {
+      "id": "scale",
+      "label": "Scale",
+      "description": "Scale controls."
+    },
+    {
+      "id": "force",
+      "label": "Force",
+      "description": "Force controls."
+    },
+    {
+      "id": "glow",
+      "label": "Glow",
+      "description": "Glow controls."
+    },
+    {
+      "id": "color",
+      "label": "Color",
+      "description": "Color controls."
+    },
+    {
+      "id": "seed",
+      "label": "Seed",
+      "description": "Seed controls."
+    }
+  ],
+  "parameters": [
+    {
+      "id": "speed",
+      "kind": "float",
+      "groupId": "motion",
+      "label": "Motion: Speed",
+      "default": 0.8,
+      "visible": true,
+      "description": "Local simulation rate; zero pauses. Multiplied by the global transport speed.",
+      "range": {
+        "min": 0,
+        "max": 3,
+        "step": 0.01
+      },
+      "units": "multiplier",
+      "quickAccessOrder": 0
+    },
+    {
+      "id": "bpmSync",
+      "kind": "bool",
+      "groupId": "time",
+      "label": "Time: BPM Sync",
+      "default": true,
+      "visible": true,
+      "description": "Scale simulation time by global BPM relative to 120 BPM."
+    },
+    {
+      "id": "bpmMultiplier",
+      "kind": "float",
+      "groupId": "time",
+      "label": "Time: BPM Multiplier",
+      "default": 1,
+      "visible": true,
+      "description": "BPM Multiplier.",
+      "range": {
+        "min": 0.25,
+        "max": 4,
+        "step": 0.25
+      },
+      "units": "multiplier",
+      "optionsSource": {
+        "id": "transport.bpmMultipliers",
+        "value": "multiplier",
+        "label": "label"
+      }
+    },
+    {
+      "id": "scale",
+      "kind": "float",
+      "groupId": "scale",
+      "label": "Scale: Size",
+      "default": 0.92,
+      "visible": true,
+      "description": "Size.",
+      "range": {
+        "min": 0.25,
+        "max": 2,
+        "step": 0.01
+      },
+      "units": "multiplier"
+    },
+    {
+      "id": "rotationDeg",
+      "kind": "float",
+      "groupId": "motion",
+      "label": "Motion: Rotation",
+      "default": 0,
+      "visible": true,
+      "description": "Rotation.",
+      "range": {
+        "min": -180,
+        "max": 180,
+        "step": 1
+      },
+      "units": "deg"
+    },
+    {
+      "id": "transportRate",
+      "kind": "float",
+      "groupId": "time",
+      "label": "Time: Sand Transport",
+      "default": 1,
+      "visible": true,
+      "description": "Rate of conservative erosion and downwind deposition.",
+      "range": {
+        "min": 0,
+        "max": 4,
+        "step": 0.01
+      },
+      "units": "multiplier",
+      "quickAccessOrder": 1
+    },
+    {
+      "id": "windDirectionDeg",
+      "kind": "float",
+      "groupId": "motion",
+      "label": "Motion: Wind Direction",
+      "default": 12,
+      "visible": true,
+      "description": "Wind Direction.",
+      "range": {
+        "min": -180,
+        "max": 180,
+        "step": 1
+      },
+      "units": "deg",
+      "quickAccessOrder": 2
+    },
+    {
+      "id": "hopLength",
+      "kind": "float",
+      "groupId": "scale",
+      "label": "Scale: Saltation Distance",
+      "default": 0.12,
+      "visible": true,
+      "description": "Saltation Distance.",
+      "range": {
+        "min": 0.02,
+        "max": 0.35,
+        "step": 0.005
+      },
+      "units": "world",
+      "quickAccessOrder": 3
+    },
+    {
+      "id": "reposeSlope",
+      "kind": "float",
+      "groupId": "force",
+      "label": "Force: Repose Threshold",
+      "default": 0.025,
+      "visible": true,
+      "description": "Maximum adjacent-cell height difference before conservative avalanching.",
+      "range": {
+        "min": 0.005,
+        "max": 0.12,
+        "step": 0.001
+      },
+      "quickAccessOrder": 4
+    },
+    {
+      "id": "relaxationRate",
+      "kind": "float",
+      "groupId": "time",
+      "label": "Time: Slope Relaxation",
+      "default": 1.5,
+      "visible": true,
+      "description": "Slope Relaxation.",
+      "range": {
+        "min": 0,
+        "max": 4,
+        "step": 0.01
+      },
+      "units": "multiplier"
+    },
+    {
+      "id": "reliefScale",
+      "kind": "float",
+      "groupId": "scale",
+      "label": "Scale: Relief Height",
+      "default": 1,
+      "visible": true,
+      "description": "Relief Height.",
+      "range": {
+        "min": 0.1,
+        "max": 3,
+        "step": 0.01
+      },
+      "units": "multiplier",
+      "quickAccessOrder": 5
+    },
+    {
+      "id": "tiltDeg",
+      "kind": "float",
+      "groupId": "motion",
+      "label": "Motion: View Tilt",
+      "default": 48,
+      "visible": true,
+      "description": "View Tilt.",
+      "range": {
+        "min": 10,
+        "max": 80,
+        "step": 1
+      },
+      "units": "deg"
+    },
+    {
+      "id": "ridgeContrast",
+      "kind": "float",
+      "groupId": "glow",
+      "label": "Glow: Ridge Contrast",
+      "default": 1,
+      "visible": true,
+      "description": "Ridge Contrast.",
+      "range": {
+        "min": 0.25,
+        "max": 3,
+        "step": 0.01
+      },
+      "units": "multiplier"
+    },
+    {
+      "id": "colorR",
+      "kind": "float",
+      "groupId": "color",
+      "label": "Color: Primary Red",
+      "default": 0.8,
+      "visible": true,
+      "description": "Primary Red.",
+      "range": {
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    },
+    {
+      "id": "colorG",
+      "kind": "float",
+      "groupId": "color",
+      "label": "Color: Primary Green",
+      "default": 0.37,
+      "visible": true,
+      "description": "Primary Green.",
+      "range": {
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    },
+    {
+      "id": "colorB",
+      "kind": "float",
+      "groupId": "color",
+      "label": "Color: Primary Blue",
+      "default": 0.12,
+      "visible": true,
+      "description": "Primary Blue.",
+      "range": {
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    },
+    {
+      "id": "accentR",
+      "kind": "float",
+      "groupId": "color",
+      "label": "Color: Accent Red",
+      "default": 1,
+      "visible": true,
+      "description": "Accent Red.",
+      "range": {
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    },
+    {
+      "id": "accentG",
+      "kind": "float",
+      "groupId": "color",
+      "label": "Color: Accent Green",
+      "default": 0.86,
+      "visible": true,
+      "description": "Accent Green.",
+      "range": {
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    },
+    {
+      "id": "accentB",
+      "kind": "float",
+      "groupId": "color",
+      "label": "Color: Accent Blue",
+      "default": 0.46,
+      "visible": true,
+      "description": "Accent Blue.",
+      "range": {
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    },
+    {
+      "id": "seed",
+      "kind": "float",
+      "groupId": "seed",
+      "label": "Seed: Seed",
+      "default": 1702,
+      "visible": true,
+      "description": "Deterministic startup identity. Changing this value explicitly resets the simulation.",
+      "range": {
+        "min": 0,
+        "max": 65535,
+        "step": 1
+      }
+    }
+  ],
+  "presets": [
+    {
+      "presetId": "default",
+      "label": "Default",
+      "path": "presets/default.json",
+      "description": "Complete baseline model with immediate visible output."
+    },
+    {
+      "presetId": "calm",
+      "label": "Calm",
+      "path": "presets/calm.json",
+      "description": "Slower motion and restrained deformation."
+    },
+    {
+      "presetId": "energized",
+      "label": "Energized",
+      "path": "presets/energized.json",
+      "description": "Faster evolution and stronger model forces."
+    }
+  ],
+  "presetBanks": [
+    {
+      "id": "performance",
+      "label": "Performance",
+      "presets": [
+        "default",
+        "calm",
+        "energized"
+      ]
+    }
+  ],
+  "mappingPresets": [
+    {
+      "id": "hostMicMotion",
+      "label": "Host Mic Motion",
+      "description": "Optional visible model-control routes. Shared host-mic profiles scale the current base by 0.65 to 1.65; preview conflicts before applying. Silent input retains motion.",
+      "applyMode": "suggestion-only",
+      "mappings": [
+        {
+          "target": {
+            "kind": "parameter",
+            "id": "transportRate"
+          },
+          "source": {
+            "kind": "osc",
+            "pattern": "/sensor/host/localmic/mic-bass",
+            "in": [
+              0.0,
+              0.18
+            ],
+            "out": [
+              0.65,
+              1.65
+            ],
+            "smooth": 0.2,
+            "deadband": 0.01,
+            "blend": "scale",
+            "relative": true
+          }
+        },
+        {
+          "target": {
+            "kind": "parameter",
+            "id": "reliefScale"
+          },
+          "source": {
+            "kind": "osc",
+            "pattern": "/sensor/host/localmic/mic-level",
+            "in": [
+              0.0,
+              0.12
+            ],
+            "out": [
+              0.65,
+              1.65
+            ],
+            "smooth": 0.2,
+            "deadband": 0.01,
+            "blend": "scale",
+            "relative": true
+          }
+        }
+      ]
+    }
+  ],
+  "media": [],
+  "tests": {
+    "confidenceProfile": "tests/layer_test.json",
+    "fixtures": []
+  },
+  "aliases": [],
+  "deprecations": [],
+  "migrations": [],
+  "compatibility": {
+    "sdk": {
+      "versionRange": ">=0.1.0 <1.0.0",
+      "resolvedVersion": "0.1.0"
+    },
+    "runtime": {
+      "versionRange": ">=0.1.0 <1.0.0",
+      "resolvedVersion": "0.1.0"
+    }
+  }
+}

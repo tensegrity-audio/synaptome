@@ -1,0 +1,38 @@
+{
+  "id": "show.phase_lattice.energized",
+  "label": "Phase Lattice / Energized",
+  "category": "Generative",
+  "layerGroup": "Cellular Fields",
+  "model": "kuramoto-sakaguchi-lattice",
+  "stateModel": "Fixed 64 by 44 periodic oscillator lattice with persistent phase and seeded natural-frequency offset per cell.",
+  "type": "show.phaseLattice",
+  "registryPrefix": "show.phase_lattice.energized",
+  "description": "Locally coupled oscillators form moving phase domains, synchronization fronts, and glowing interference bands.",
+  "tags": [
+    "algorithmic",
+    "showcase",
+    "simulation"
+  ],
+  "defaults": {
+    "speed": 1.1,
+    "paused": false,
+    "bpmSync": true,
+    "bpmMultiplier": 1.0,
+    "seed": 1001.0,
+    "reseed": false,
+    "scale": 0.94,
+    "rotationDeg": 0.0,
+    "colorR": 0.52,
+    "colorG": 0.32,
+    "colorB": 1.0,
+    "coupling": 1.6,
+    "frequency": 0.65,
+    "dispersion": 1.4,
+    "phaseLagDeg": 60.0,
+    "radiance": 1.4,
+    "contourOpacity": 0.5
+  },
+  "schemaVersion": 1,
+  "packageVersion": "0.1.0",
+  "opacity": 1.0
+}

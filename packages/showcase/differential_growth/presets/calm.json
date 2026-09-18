@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "packageId": "show.differential_growth",
+  "assetId": "show.differential_growth",
+  "presetId": "calm",
+  "label": "Calm",
+  "description": "Calm Differential Growth operating point; ordinary parameter changes preserve state.",
+  "parameters": {
+    "speed": 0.55,
+    "paused": false,
+    "bpmSync": false,
+    "bpmMultiplier": 1.0,
+    "seed": 104729.0,
+    "reseed": false,
+    "scale": 0.96,
+    "rotationDeg": 0.0,
+    "lineWidth": 1.6,
+    "glow": 0.72,
+    "colorR": 0.28,
+    "colorG": 0.94,
+    "colorB": 0.73,
+    "accentR": 0.95,
+    "accentG": 0.59,
+    "accentB": 0.24,
+    "growthRate": 0.12,
+    "repulsion": 0.72,
+    "stiffness": 0.8,
+    "confinement": 0.55,
+    "driftRate": 0.045
+  }
+}

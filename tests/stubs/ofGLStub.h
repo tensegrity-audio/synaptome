@@ -12,6 +12,7 @@ using GLenum = unsigned int;
 using GLboolean = unsigned char;
 
 constexpr GLenum GL_DEPTH_TEST = 0x0B71;
+constexpr GLenum GL_CULL_FACE = 0x0B44;
 constexpr GLenum GL_SCISSOR_TEST = 0x0C11;
 constexpr GLenum GL_VERTEX_SHADER = 0x8B31;
 constexpr GLenum GL_FRAGMENT_SHADER = 0x8B30;

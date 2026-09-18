@@ -1,0 +1,43 @@
+{
+  "id": "show.differential_growth.energized",
+  "label": "Differential Growth / Energized",
+  "category": "Generative",
+  "layerGroup": "Morphogenesis",
+  "model": "elastic-ring-growth",
+  "stateModel": "Ordered elastic closed curve with nonlocal repulsion, confinement and bounded edge subdivision",
+  "type": "show.differentialGrowth",
+  "registryPrefix": "show.differential_growth.energized",
+  "description": "Ordered elastic closed curve with nonlocal repulsion, confinement and bounded edge subdivision. No media assets or direct audio dependencies.",
+  "tags": [
+    "showcase",
+    "algorithmic",
+    "deterministic",
+    "2d"
+  ],
+  "defaults": {
+    "speed": 1.45,
+    "paused": false,
+    "bpmSync": false,
+    "bpmMultiplier": 1.0,
+    "seed": 104729.0,
+    "reseed": false,
+    "scale": 0.96,
+    "rotationDeg": 0.0,
+    "lineWidth": 1.6,
+    "glow": 1.35,
+    "colorR": 0.28,
+    "colorG": 0.94,
+    "colorB": 0.73,
+    "accentR": 0.95,
+    "accentG": 0.59,
+    "accentB": 0.24,
+    "growthRate": 0.82,
+    "repulsion": 1.5,
+    "stiffness": 1.1,
+    "confinement": 0.82,
+    "driftRate": 0.12
+  },
+  "schemaVersion": 1,
+  "packageVersion": "0.1.0",
+  "opacity": 1.0
+}

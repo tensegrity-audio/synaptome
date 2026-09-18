@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "packageId": "show.elastic_lattice",
+  "assetId": "show.elastic_lattice",
+  "presetId": "calm",
+  "label": "Calm",
+  "description": "Calm Elastic Lattice settings. Presets preserve current simulation history.",
+  "parameters": {
+    "speed": 0.4,
+    "bpmSync": true,
+    "bpmMultiplier": 1,
+    "scale": 1,
+    "yawDeg": -24,
+    "tiltDeg": 38,
+    "spinRate": 1,
+    "springStiffness": 45,
+    "restoringForce": 2.5,
+    "dampingRate": 2,
+    "impulseStrength": 2,
+    "impulseRate": 0.22,
+    "heightScale": 1,
+    "wireOpacity": 0.15,
+    "colorR": 0.08,
+    "colorG": 0.04,
+    "colorB": 0.22,
+    "highlightR": 0.95,
+    "highlightG": 0.55,
+    "highlightB": 0.85
+  }
+}

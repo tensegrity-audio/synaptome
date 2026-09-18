@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "packageId": "show.strange_attractor",
+  "assetId": "show.strange_attractor",
+  "presetId": "energized",
+  "label": "Energized",
+  "description": "Energized Strange Attractor settings. Presets preserve current simulation history.",
+  "parameters": {
+    "speed": 1.1,
+    "bpmSync": true,
+    "bpmMultiplier": 1,
+    "scale": 1,
+    "yawDeg": -24,
+    "tiltDeg": 38,
+    "spinRate": 8,
+    "sigma": 13,
+    "rho": 35,
+    "beta": 2.666666667,
+    "trailSeconds": 3.8,
+    "ribbonWidth": 0.008,
+    "colorR": 0.08,
+    "colorG": 0.38,
+    "colorB": 0.8,
+    "highlightR": 0.65,
+    "highlightG": 0.98,
+    "highlightB": 0.9
+  }
+}

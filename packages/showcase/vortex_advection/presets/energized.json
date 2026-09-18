@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "packageId": "show.vortex_advection",
+  "assetId": "show.vortex_advection",
+  "presetId": "energized",
+  "label": "Energized",
+  "description": "State-preserving energized controls for Vortex Advection.",
+  "parameters": {
+    "speed": 1.2,
+    "bpmSync": true,
+    "bpmMultiplier": 1,
+    "scale": 0.92,
+    "rotationDeg": 0,
+    "circulation": 1.8,
+    "coreRadius": 0.085,
+    "strain": 0.65,
+    "vortexDrift": 0.8,
+    "trailTimeSec": 0.75,
+    "lineWidth": 1.3,
+    "colorR": 0.05,
+    "colorG": 0.8,
+    "colorB": 1,
+    "accentR": 0.95,
+    "accentG": 0.18,
+    "accentB": 0.52
+  }
+}

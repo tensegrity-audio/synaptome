@@ -1,0 +1,69 @@
+{
+  "scene": {
+    "schemaVersion": 2,
+    "source": {
+      "name": "show-fx-04-phosphor-bloom",
+      "path": "layers/scenes/show-fx-04-phosphor-bloom.json"
+    },
+    "storage": {
+      "kind": "named",
+      "name": "show-fx-04-phosphor-bloom",
+      "path": "layers/scenes/show-fx-04-phosphor-bloom.json"
+    },
+    "description": "A restrained phosphor halo softens moving filaments while leaving their structure readable.",
+    "contentKind": "effect-look"
+  },
+  "console": {
+    "slots": [
+      {
+        "index": 1,
+        "assetId": "generative.flowField",
+        "label": "Flow Field",
+        "active": true,
+        "opacity": 1.0,
+        "parameters": {
+          "console.layer1.particleCount": 650,
+          "console.layer1.trailFade": 0.045,
+          "console.layer1.trailBoost": 1.1,
+          "console.layer1.colorAR": 0.08,
+          "console.layer1.colorAG": 0.95,
+          "console.layer1.colorAB": 0.62,
+          "console.layer1.colorBR": 0.48,
+          "console.layer1.colorBG": 0.7,
+          "console.layer1.colorBB": 1.0
+        }
+      },
+      {
+        "index": 2,
+        "assetId": "fx.crt",
+        "label": "Phosphor Bloom",
+        "active": true,
+        "opacity": 1.0,
+        "coverage": {
+          "mode": "upstream",
+          "columns": 1
+        },
+        "parameters": {
+          "effects.crt.route": 1,
+          "effects.crt.coverage": 1,
+          "effects.crt.coverageMask": true,
+          "effects.crt.scanline": 0.14,
+          "effects.crt.vignette": 0.1,
+          "effects.crt.bleed": 0.06,
+          "effects.crt.softness": 0.16,
+          "effects.crt.glow": 0.32,
+          "effects.crt.perChannelOffset": 0.0,
+          "effects.crt.scanlineJitter": 0.0,
+          "effects.crt.subpixelDensity": 0.0,
+          "effects.crt.subpixelAspect": 2.0,
+          "effects.crt.subpixelPadding": 0.0,
+          "effects.crt.rgbMisalignment": 0.0,
+          "effects.crt.syncTear": 0.0,
+          "effects.crt.trackingWobble": 0.0,
+          "effects.crt.lumaNoise": 0.0,
+          "effects.crt.headSwitch": 0.0
+        }
+      }
+    ]
+  }
+}

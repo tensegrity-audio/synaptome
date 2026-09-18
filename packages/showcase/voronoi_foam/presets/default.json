@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "packageId": "show.voronoi_foam",
+  "assetId": "show.voronoi_foam",
+  "presetId": "default",
+  "label": "Default",
+  "description": "State-preserving default controls for Voronoi Foam.",
+  "parameters": {
+    "speed": 0.8,
+    "bpmSync": true,
+    "bpmMultiplier": 1,
+    "scale": 0.92,
+    "rotationDeg": 0,
+    "driftSpeed": 0.35,
+    "relaxationRate": 0.7,
+    "repulsionWeight": 0.5,
+    "shear": 0.15,
+    "wallWidth": 0.024,
+    "cellFill": 0.14,
+    "edgeRadiance": 1,
+    "colorR": 0.15,
+    "colorG": 0.94,
+    "colorB": 0.68,
+    "accentR": 0.35,
+    "accentG": 0.2,
+    "accentB": 1
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "packageId": "show.phase_lattice",
+  "assetId": "show.phase_lattice",
+  "presetId": "default",
+  "label": "Default",
+  "description": "Does not change seed or reset simulation history.",
+  "parameters": {
+    "speed": 0.8,
+    "paused": false,
+    "bpmSync": true,
+    "bpmMultiplier": 1.0,
+    "scale": 0.94,
+    "rotationDeg": 0.0,
+    "colorR": 0.52,
+    "colorG": 0.32,
+    "colorB": 1.0,
+    "coupling": 2.4,
+    "frequency": 0.28,
+    "dispersion": 0.5,
+    "phaseLagDeg": 30.0,
+    "radiance": 1.1,
+    "contourOpacity": 0.5
+  }
+}

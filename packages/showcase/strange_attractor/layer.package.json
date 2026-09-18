@@ -1,0 +1,500 @@
+{
+  "schemaVersion": 1,
+  "packageId": "show.strange_attractor",
+  "packageVersion": "0.1.0",
+  "implementationVersion": "0.1.0",
+  "description": "Four nearby Lorenz trajectories separate into luminous folded ribbons. Color follows trajectory speed, depth and history age.",
+  "element": {
+    "id": "show.strangeAttractor",
+    "kind": "visual",
+    "bindingMode": "bind-only",
+    "actions": []
+  },
+  "asset": {
+    "id": "show.strange_attractor",
+    "label": "Strange Attractor",
+    "category": "Generative",
+    "layerGroup": "Dynamical Systems",
+    "model": "lorenz-rk4",
+    "stateModel": "four bounded RK4 Lorenz trajectories with fixed circular histories and explicit projected ribbon rendering",
+    "type": "show.strangeAttractor",
+    "registryPrefix": "show.strange_attractor",
+    "description": "Four nearby Lorenz trajectories separate into luminous folded ribbons. Color follows trajectory speed, depth and history age.",
+    "tags": [
+      "algorithmic",
+      "showcase",
+      "chaotic-dynamics"
+    ],
+    "defaults": {}
+  },
+  "source": {
+    "strategy": "source-registration",
+    "registration": "source/register_strange_attractor.cpp",
+    "files": [
+      "source/StrangeAttractorLayer.h",
+      "source/StrangeAttractorLayer.cpp",
+      "source/StrangeAttractorModel.h",
+      "source/Projection.h"
+    ]
+  },
+  "capabilities": [
+    "graphics.opengl",
+    "transport.read",
+    "parameters.dynamic-options"
+  ],
+  "dependencies": [
+    {
+      "id": "synaptome.element-sdk",
+      "kind": "static-library",
+      "required": true,
+      "versionRange": ">=0.1.0 <1.0.0",
+      "resolvedVersion": "0.1.0",
+      "provider": "synaptome.element-sdk"
+    },
+    {
+      "id": "synaptome.runtime",
+      "kind": "runtime-service",
+      "required": true,
+      "versionRange": ">=0.1.0 <1.0.0",
+      "resolvedVersion": "0.1.0",
+      "provider": "synaptome.runtime"
+    }
+  ],
+  "parameterGroups": [
+    {
+      "id": "motion",
+      "label": "Motion",
+      "description": ""
+    },
+    {
+      "id": "time",
+      "label": "Time",
+      "description": ""
+    },
+    {
+      "id": "scale",
+      "label": "Scale",
+      "description": ""
+    },
+    {
+      "id": "seed",
+      "label": "Seed",
+      "description": ""
+    },
+    {
+      "id": "action",
+      "label": "Action",
+      "description": ""
+    },
+    {
+      "id": "force",
+      "label": "Force",
+      "description": ""
+    },
+    {
+      "id": "color",
+      "label": "Color",
+      "description": ""
+    }
+  ],
+  "parameters": [
+    {
+      "id": "speed",
+      "kind": "float",
+      "groupId": "motion",
+      "label": "Motion: Speed",
+      "default": 0.65,
+      "visible": true,
+      "description": "Local time multiplier; zero holds current state.",
+      "range": {
+        "min": 0,
+        "max": 4,
+        "step": 0.01
+      },
+      "units": "multiplier",
+      "quickAccessOrder": 4
+    },
+    {
+      "id": "bpmSync",
+      "kind": "bool",
+      "groupId": "time",
+      "label": "Time: BPM Sync",
+      "default": true,
+      "visible": true,
+      "description": "Multiply local time by transport BPM relative to 120 BPM."
+    },
+    {
+      "id": "bpmMultiplier",
+      "kind": "float",
+      "groupId": "time",
+      "label": "Time: BPM Multiplier",
+      "default": 1,
+      "visible": true,
+      "description": "Rhythmic multiplier used only when BPM sync is enabled.",
+      "range": {
+        "min": 0.25,
+        "max": 8,
+        "step": 0.25
+      },
+      "units": "multiplier",
+      "optionsSource": {
+        "id": "transport.bpmMultipliers",
+        "value": "multiplier",
+        "label": "label"
+      }
+    },
+    {
+      "id": "scale",
+      "kind": "float",
+      "groupId": "scale",
+      "label": "Scale: Scene Scale",
+      "default": 1,
+      "visible": true,
+      "description": "Uniform size of the projected model.",
+      "range": {
+        "min": 0.3,
+        "max": 1.6,
+        "step": 0.01
+      },
+      "units": "multiplier"
+    },
+    {
+      "id": "yawDeg",
+      "kind": "float",
+      "groupId": "motion",
+      "label": "Motion: View Yaw",
+      "default": -24,
+      "visible": true,
+      "description": "Rotate the view around the vertical model axis.",
+      "range": {
+        "min": -180,
+        "max": 180,
+        "step": 1
+      },
+      "units": "deg"
+    },
+    {
+      "id": "tiltDeg",
+      "kind": "float",
+      "groupId": "motion",
+      "label": "Motion: View Elevation",
+      "default": 38,
+      "visible": true,
+      "description": "Viewing elevation for explicit orthographic 3D projection.",
+      "range": {
+        "min": 10,
+        "max": 75,
+        "step": 1
+      },
+      "units": "deg"
+    },
+    {
+      "id": "spinRate",
+      "kind": "float",
+      "groupId": "motion",
+      "label": "Motion: View Spin",
+      "default": 3,
+      "visible": true,
+      "description": "Continuous view rotation, respecting local and transport speed.",
+      "range": {
+        "min": -30,
+        "max": 30,
+        "step": 0.1
+      },
+      "units": "deg/s",
+      "quickAccessOrder": 5
+    },
+    {
+      "id": "seed",
+      "kind": "float",
+      "groupId": "seed",
+      "label": "Seed: Seed",
+      "default": 1001,
+      "visible": true,
+      "description": "Deterministic initial state; changing this value explicitly reseeds the model.",
+      "range": {
+        "min": 0,
+        "max": 65535,
+        "step": 1
+      },
+      "units": "id"
+    },
+    {
+      "id": "reseed",
+      "kind": "bool",
+      "groupId": "action",
+      "label": "Action: Reseed",
+      "default": false,
+      "visible": true,
+      "description": "One-shot request to restore the current seed; resets after handling."
+    },
+    {
+      "id": "sigma",
+      "kind": "float",
+      "groupId": "force",
+      "label": "Force: Sigma",
+      "default": 10,
+      "visible": true,
+      "description": "Lorenz x/y coupling coefficient.",
+      "range": {
+        "min": 6,
+        "max": 16,
+        "step": 0.05
+      },
+      "units": "coefficient",
+      "quickAccessOrder": 1
+    },
+    {
+      "id": "rho",
+      "kind": "float",
+      "groupId": "force",
+      "label": "Force: Rho",
+      "default": 28,
+      "visible": true,
+      "description": "Lorenz convective forcing parameter; changes the attractor without resetting history.",
+      "range": {
+        "min": 24,
+        "max": 40,
+        "step": 0.05
+      },
+      "units": "coefficient",
+      "quickAccessOrder": 0
+    },
+    {
+      "id": "beta",
+      "kind": "float",
+      "groupId": "force",
+      "label": "Force: Beta",
+      "default": 2.666666667,
+      "visible": true,
+      "description": "Lorenz vertical dissipation coefficient.",
+      "range": {
+        "min": 2,
+        "max": 3.5,
+        "step": 0.01
+      },
+      "units": "coefficient"
+    },
+    {
+      "id": "trailSeconds",
+      "kind": "float",
+      "groupId": "time",
+      "label": "Time: Trail History",
+      "default": 5.5,
+      "visible": true,
+      "description": "Visible span of the fixed six-second model-time history.",
+      "range": {
+        "min": 0.2,
+        "max": 6,
+        "step": 0.05
+      },
+      "units": "s",
+      "quickAccessOrder": 3
+    },
+    {
+      "id": "ribbonWidth",
+      "kind": "float",
+      "groupId": "scale",
+      "label": "Scale: Ribbon Width",
+      "default": 0.006,
+      "visible": true,
+      "description": "Projected ribbon width in normalized model world units.",
+      "range": {
+        "min": 0.001,
+        "max": 0.025,
+        "step": 0.001
+      },
+      "units": "world",
+      "quickAccessOrder": 2
+    },
+    {
+      "id": "colorR",
+      "kind": "float",
+      "groupId": "color",
+      "label": "Color: Base Red",
+      "default": 0.08,
+      "visible": true,
+      "description": "Normalized base red component of the model-derived palette.",
+      "range": {
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    },
+    {
+      "id": "colorG",
+      "kind": "float",
+      "groupId": "color",
+      "label": "Color: Base Green",
+      "default": 0.38,
+      "visible": true,
+      "description": "Normalized base green component of the model-derived palette.",
+      "range": {
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    },
+    {
+      "id": "colorB",
+      "kind": "float",
+      "groupId": "color",
+      "label": "Color: Base Blue",
+      "default": 0.8,
+      "visible": true,
+      "description": "Normalized base blue component of the model-derived palette.",
+      "range": {
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    },
+    {
+      "id": "highlightR",
+      "kind": "float",
+      "groupId": "color",
+      "label": "Color: Highlight Red",
+      "default": 0.65,
+      "visible": true,
+      "description": "Normalized highlight red component of the model-derived palette.",
+      "range": {
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    },
+    {
+      "id": "highlightG",
+      "kind": "float",
+      "groupId": "color",
+      "label": "Color: Highlight Green",
+      "default": 0.98,
+      "visible": true,
+      "description": "Normalized highlight green component of the model-derived palette.",
+      "range": {
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    },
+    {
+      "id": "highlightB",
+      "kind": "float",
+      "groupId": "color",
+      "label": "Color: Highlight Blue",
+      "default": 0.9,
+      "visible": true,
+      "description": "Normalized highlight blue component of the model-derived palette.",
+      "range": {
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    }
+  ],
+  "presets": [
+    {
+      "presetId": "default",
+      "label": "Default",
+      "path": "presets/default.json",
+      "description": "Default performance starting point."
+    },
+    {
+      "presetId": "calm",
+      "label": "Calm",
+      "path": "presets/calm.json",
+      "description": "Calm performance starting point."
+    },
+    {
+      "presetId": "energized",
+      "label": "Energized",
+      "path": "presets/energized.json",
+      "description": "Energized performance starting point."
+    }
+  ],
+  "presetBanks": [
+    {
+      "id": "performance",
+      "label": "Performance",
+      "presets": [
+        "default",
+        "calm",
+        "energized"
+      ]
+    }
+  ],
+  "mappingPresets": [
+    {
+      "id": "hostMic",
+      "label": "Host Mic",
+      "description": "Optional visible model-control routes. Shared host-mic profiles scale the current base by 0.65 to 1.65; preview conflicts before applying. Silent input retains motion.",
+      "applyMode": "suggestion-only",
+      "mappings": [
+        {
+          "target": {
+            "kind": "parameter",
+            "id": "rho"
+          },
+          "source": {
+            "kind": "osc",
+            "pattern": "/sensor/host/localmic/mic-bass",
+            "in": [
+              0.0,
+              0.18
+            ],
+            "out": [
+              0.65,
+              1.65
+            ],
+            "smooth": 0.2,
+            "deadband": 0.01,
+            "blend": "scale",
+            "relative": true
+          }
+        },
+        {
+          "target": {
+            "kind": "parameter",
+            "id": "ribbonWidth"
+          },
+          "source": {
+            "kind": "osc",
+            "pattern": "/sensor/host/localmic/mic-level",
+            "in": [
+              0.0,
+              0.12
+            ],
+            "out": [
+              0.65,
+              1.65
+            ],
+            "smooth": 0.2,
+            "deadband": 0.01,
+            "blend": "scale",
+            "relative": true
+          }
+        }
+      ]
+    }
+  ],
+  "media": [],
+  "tests": {
+    "confidenceProfile": "tests/layer_test.json",
+    "fixtures": [
+      "tests/model_test.cpp"
+    ]
+  },
+  "aliases": [],
+  "deprecations": [],
+  "migrations": [],
+  "compatibility": {
+    "sdk": {
+      "versionRange": ">=0.1.0 <1.0.0",
+      "resolvedVersion": "0.1.0"
+    },
+    "runtime": {
+      "versionRange": ">=0.1.0 <1.0.0",
+      "resolvedVersion": "0.1.0"
+    }
+  }
+}

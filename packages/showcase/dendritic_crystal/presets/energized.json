@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "packageId": "show.dendritic_crystal",
+  "assetId": "show.dendritic_crystal",
+  "presetId": "energized",
+  "label": "Energized",
+  "description": "Energized Dendritic Crystal operating point; ordinary parameter changes preserve state.",
+  "parameters": {
+    "speed": 1.25,
+    "paused": false,
+    "bpmSync": false,
+    "bpmMultiplier": 1.0,
+    "seed": 130363.0,
+    "reseed": false,
+    "scale": 0.96,
+    "rotationDeg": 0.0,
+    "lineWidth": 0.88,
+    "glow": 1.4,
+    "colorR": 0.32,
+    "colorG": 0.72,
+    "colorB": 1.0,
+    "accentR": 0.89,
+    "accentG": 0.96,
+    "accentB": 1.0,
+    "growthRate": 7800.0,
+    "adhesion": 0.94,
+    "anisotropy": 0.32,
+    "dissolutionRate": 0.03,
+    "drift": 0.12
+  }
+}

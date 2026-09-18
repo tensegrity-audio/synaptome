@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "packageId": "show.chladni_plate",
+  "assetId": "show.chladni_plate",
+  "presetId": "energized",
+  "label": "Energized",
+  "description": "Does not change seed or reset simulation history.",
+  "parameters": {
+    "speed": 1.1,
+    "paused": false,
+    "bpmSync": true,
+    "bpmMultiplier": 1.0,
+    "scale": 0.94,
+    "rotationDeg": 0.0,
+    "colorR": 0.98,
+    "colorG": 0.72,
+    "colorB": 0.24,
+    "modeX": 6.0,
+    "modeY": 7.0,
+    "attraction": 4.0,
+    "agitation": 0.55,
+    "phaseRate": 0.32,
+    "particleRadius": 0.003,
+    "radiance": 1.5
+  }
+}
