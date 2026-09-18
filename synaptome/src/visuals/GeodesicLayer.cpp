@@ -9,7 +9,30 @@ namespace {
     const ofColor kGeodesicLineColor(255, 140, 0);
 }
 
-void GeodesicLayer::setup(ParameterRegistry& registry) {
+void GeodesicLayer::bindParameters(
+    synaptome::element::ParameterBinder& binder) {
+    binder.bind("spin", paramSpinDeg_);
+    binder.bind("hover", paramHoverAmp_);
+    binder.bind("baseHeight", paramBaseHeight_);
+    binder.bind("orbitRadius", paramOrbitRadius_);
+    binder.bind("orbitSpeed", paramOrbitSpeedDeg_);
+    binder.bind("rotateX", paramRotateXDeg_);
+    binder.bind("rotateY", paramRotateYDeg_);
+    binder.bind("rotateZ", paramRotateZDeg_);
+    binder.bind("radius", paramRadius_);
+    binder.bind("subdivisions", paramSubdivisions_);
+    binder.bind("deformAmount", paramDeformAmount_);
+    binder.bind("deformScale", paramDeformScale_);
+    binder.bind("deformSpeed", paramDeformSpeed_);
+    binder.bind("lineOpacity", paramLineOpacity_);
+    binder.bind("faceOpacity", paramFaceOpacity_);
+    binder.bind("visible", paramEnabled_);
+    binder.bind("deform", paramDeform_);
+}
+
+void GeodesicLayer::setup(ParameterRegistry& publishedRegistry) {
+    (void)publishedRegistry;
+    ParameterRegistry registry;
     const std::string prefix = registryPrefix().empty() ? "layer.geodesic" : registryPrefix();
 
     ParameterRegistry::Descriptor visMeta;

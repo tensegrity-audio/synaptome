@@ -1,12 +1,16 @@
 #pragma once
 
 #include "Layer.h"
+#include <synaptome/element/ParameterBinding.h>
 #include <cstdint>
 #include <random>
 #include <vector>
 
-class GameOfLifeLayer : public Layer {
+class GameOfLifeLayer : public Layer,
+    public synaptome::element::ParameterBindable {
 public:
+    void bindParameters(
+        synaptome::element::ParameterBinder& binder) override;
     void configure(const ofJson& config) override;
     void setup(ParameterRegistry& registry) override;
     void registerActions(

@@ -338,7 +338,87 @@ void SolarSystemLayer::configure(const ofJson& config) {
     clampParams();
 }
 
-void SolarSystemLayer::setup(ParameterRegistry& registry) {
+void SolarSystemLayer::bindParameters(
+    synaptome::element::ParameterBinder& binder) {
+    binder.bind("alpha", paramAlpha_);
+    binder.bind("calloutAlpha", paramCalloutAlpha_);
+    binder.bind("calloutBackgroundAlpha", paramCalloutBackgroundAlpha_);
+    binder.bind("calloutScale", paramCalloutScale_);
+    binder.bind("calloutFocusMode", paramCalloutFocusMode_);
+    binder.bind("calloutMaxVisible", paramCalloutMaxVisible_);
+    binder.bind("calloutCycleSeconds", paramCalloutCycleSeconds_);
+    binder.bind("scale", paramScale_);
+    binder.bind("sceneZoom", paramSceneZoom_);
+    binder.bind("orbitSpread", paramOrbitSpread_);
+    binder.bind("orbitSpeed", paramOrbitSpeed_);
+    binder.bind("orbitTilt", paramOrbitTilt_);
+    binder.bind("orbitRotation", paramOrbitRotation_);
+    binder.bind("orbitPlaneVariation", paramOrbitPlaneVariation_);
+    binder.bind("eccentricity", paramEccentricity_);
+    binder.bind("depth", paramDepth_);
+    binder.bind("starSize", paramStarSize_);
+    binder.bind("starGlow", paramStarGlow_);
+    binder.bind("starRadiance", paramStarRadiance_);
+    binder.bind("starEmissionAudio", paramStarEmissionAudio_);
+    binder.bind("starSurfaceTurbulence", paramStarSurfaceTurbulence_);
+    binder.bind("solarBurstIntensity", paramSolarBurstIntensity_);
+    binder.bind("sideFillLight", paramSideFillLight_);
+    binder.bind("visitorEvents", paramVisitorEvents_);
+    binder.bind("artifactActivity", paramArtifactActivity_);
+    binder.bind("planetSize", paramPlanetSize_);
+    binder.bind("observedDiversity", paramObservedDiversity_);
+    binder.bind("planetVariation", paramPlanetVariation_);
+    binder.bind("asteroidDensity", paramAsteroidDensity_);
+    binder.bind("cometDensity", paramCometDensity_);
+    binder.bind("orbitAlpha", paramOrbitAlpha_);
+    binder.bind("orbitThickness", paramOrbitThickness_);
+    binder.bind("trailAlpha", paramTrailAlpha_);
+    binder.bind("trailLength", paramTrailLength_);
+    binder.bind("trailSteps", paramTrailSteps_);
+    binder.bind("trailStampGain", paramTrailStampGain_);
+    binder.bind("trailStampLife", paramTrailStampLife_);
+    binder.bind("atmosphereGrowth", paramAtmosphereGrowth_);
+    binder.bind("lifeReactivity", paramLifeReactivity_);
+    binder.bind("biosphereThreshold", paramBiosphereThreshold_);
+    binder.bind("civilizationGrowth", paramCivilizationGrowth_);
+    binder.bind("moonSize", paramMoonSize_);
+    binder.bind("moonSpeed", paramMoonSpeed_);
+    binder.bind("audioAmount", paramAudioAmount_);
+    binder.bind("audioSmoothing", paramAudioSmoothing_);
+    binder.bind("bassScale", paramBassScale_);
+    binder.bind("midsSpeed", paramMidsSpeed_);
+    binder.bind("highsSparkle", paramHighsSparkle_);
+    binder.bind("waveformAmount", paramWaveformAmount_);
+    binder.bind("seed", paramSeed_);
+    binder.bind("bgAlpha", paramBgAlpha_);
+    binder.bind("bgR", paramBgR_);
+    binder.bind("bgG", paramBgG_);
+    binder.bind("bgB", paramBgB_);
+    binder.bind("starR", paramStarR_);
+    binder.bind("starG", paramStarG_);
+    binder.bind("starB", paramStarB_);
+    binder.bind("orbitR", paramOrbitR_);
+    binder.bind("orbitG", paramOrbitG_);
+    binder.bind("orbitB", paramOrbitB_);
+    binder.bind("trailR", paramTrailR_);
+    binder.bind("trailG", paramTrailG_);
+    binder.bind("trailB", paramTrailB_);
+    binder.bind("visible", paramEnabled_);
+    binder.bind("showOrbits", paramShowOrbits_);
+    binder.bind("showTrails", paramShowTrails_);
+    binder.bind("showMoons", paramShowMoons_);
+    binder.bind("showRings", paramShowRings_);
+    binder.bind("showAsteroids", paramShowAsteroids_);
+    binder.bind("showComets", paramShowComets_);
+    binder.bind("showWaveformBelt", paramShowWaveformBelt_);
+    binder.bind("showCallouts", paramShowCallouts_);
+    binder.bind("calloutCompact", paramCalloutCompact_);
+    binder.bind("reseed", paramReseedRequested_);
+}
+
+void SolarSystemLayer::setup(ParameterRegistry& publishedRegistry) {
+    (void)publishedRegistry;
+    ParameterRegistry registry;
     const std::string prefix = registryPrefix().empty() ? "generative.solarSystem" : registryPrefix();
     clampParams();
 

@@ -1,12 +1,16 @@
 #pragma once
 
 #include "Layer.h"
+#include <synaptome/element/ParameterBinding.h>
 #include "TextLayerState.h"
 #include "ofTrueTypeFont.h"
 #include <optional>
 
-class TextLayer : public Layer {
+class TextLayer : public Layer,
+    public synaptome::element::ParameterBindable {
 public:
+    void bindParameters(
+        synaptome::element::ParameterBinder& binder) override;
     void configure(const ofJson& config) override;
     void setup(ParameterRegistry& registry) override;
     void onParameterRegistryCommitted(

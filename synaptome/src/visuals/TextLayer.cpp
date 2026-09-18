@@ -50,6 +50,10 @@ void TextLayer::configure(const ofJson& config) {
     stagedState_ = std::move(staged);
 }
 
+void TextLayer::bindParameters(
+    synaptome::element::ParameterBinder& binder) {
+}
+
 void TextLayer::setup(ParameterRegistry& registry) {
     (void)registry;
     // Text configuration is shared compatibility state. Candidate

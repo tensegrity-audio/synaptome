@@ -65,7 +65,29 @@ void AudioWaveformLayer::configure(const ofJson& config) {
     clampParams();
 }
 
-void AudioWaveformLayer::setup(ParameterRegistry& registry) {
+void AudioWaveformLayer::bindParameters(
+    synaptome::element::ParameterBinder& binder) {
+    binder.bind("gain", paramGain_);
+    binder.bind("verticalScale", paramVerticalScale_);
+    binder.bind("lineThickness", paramLineThickness_);
+    binder.bind("alpha", paramAlpha_);
+    binder.bind("smoothing", paramSmoothing_);
+    binder.bind("bandHeight", paramBandHeight_);
+    binder.bind("bandAlpha", paramBandAlpha_);
+    binder.bind("bgAlpha", paramBgAlpha_);
+    binder.bind("colorR", paramColorR_);
+    binder.bind("colorG", paramColorG_);
+    binder.bind("colorB", paramColorB_);
+    binder.bind("bgColorR", paramBgColorR_);
+    binder.bind("bgColorG", paramBgColorG_);
+    binder.bind("bgColorB", paramBgColorB_);
+    binder.bind("visible", paramEnabled_);
+    binder.bind("showBands", paramShowBands_);
+}
+
+void AudioWaveformLayer::setup(ParameterRegistry& publishedRegistry) {
+    (void)publishedRegistry;
+    ParameterRegistry registry;
     const std::string prefix = registryPrefix().empty() ? "sensors.audio.waveform" : registryPrefix();
     clampParams();
 

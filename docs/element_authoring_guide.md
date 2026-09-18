@@ -235,5 +235,6 @@ Before review:
 - package version, compatibility, dependencies, provenance, and release notes
   describe the actual change.
 
-The remaining legacy setup adapters are cleanup candidates, not permission to
-copy their metadata-registration pattern into new elements.
+Every shipping element now uses explicit binding. Some built-ins retain inert
+scratch-registry calls solely because their resource setup is shared with an
+older host; do not copy that metadata-registration pattern into new elements.

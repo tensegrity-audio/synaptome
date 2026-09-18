@@ -1,13 +1,17 @@
 #pragma once
 
 #include "Layer.h"
+#include <synaptome/element/ParameterBinding.h>
 
 #include <cstdint>
 #include <random>
 #include <vector>
 
-class RiverFormationLayer : public Layer {
+class RiverFormationLayer : public Layer,
+    public synaptome::element::ParameterBindable {
 public:
+    void bindParameters(
+        synaptome::element::ParameterBinder& binder) override;
     struct RiverCell {
         float elevation = 0.0f;
         float sediment = 0.0f;

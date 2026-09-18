@@ -171,7 +171,53 @@ void RiverFormationLayer::configure(const ofJson& config) {
     }
 }
 
-void RiverFormationLayer::setup(ParameterRegistry& registry) {
+void RiverFormationLayer::bindParameters(
+    synaptome::element::ParameterBinder& binder) {
+    binder.bind("alpha", paramAlpha_);
+    binder.bind("speed", paramSpeed_);
+    binder.bind("bpmMultiplier", paramBpmMultiplier_);
+    binder.bind("autoReseedEveryBeats", paramAutoReseedEveryBeats_);
+    binder.bind("seed", paramSeed_);
+    binder.bind("warmupSteps", paramWarmupSteps_);
+    binder.bind("pathPoints", paramPathPoints_);
+    binder.bind("riverWidth", paramRiverWidth_);
+    binder.bind("widthVariation", paramWidthVariation_);
+    binder.bind("widthPulse", paramWidthPulse_);
+    binder.bind("migrationRate", paramMigrationRate_);
+    binder.bind("erosionStrength", paramErosionStrength_);
+    binder.bind("depositionStrength", paramDepositionStrength_);
+    binder.bind("channelDepth", paramChannelDepth_);
+    binder.bind("bankHardness", paramBankHardness_);
+    binder.bind("trailDecay", paramTrailDecay_);
+    binder.bind("oxbowDecay", paramOxbowDecay_);
+    binder.bind("cutoffFactor", paramCutoffFactor_);
+    binder.bind("branchChance", paramBranchChance_);
+    binder.bind("maxBranches", paramMaxBranches_);
+    binder.bind("branchLength", paramBranchLength_);
+    binder.bind("branchAngle", paramBranchAngle_);
+    binder.bind("branchWidth", paramBranchWidth_);
+    binder.bind("noiseAmount", paramNoiseAmount_);
+    binder.bind("valleyConfinement", paramValleyConfinement_);
+    binder.bind("meanderSmoothing", paramMeanderSmoothing_);
+    binder.bind("curvatureMemory", paramCurvatureMemory_);
+    binder.bind("stabilityClamp", paramStabilityClamp_);
+    binder.bind("trailBoost", paramTrailBoost_);
+    binder.bind("trailAlpha", paramTrailAlpha_);
+    binder.bind("oxbowAlpha", paramOxbowAlpha_);
+    binder.bind("glowAmount", paramGlowAmount_);
+    binder.bind("maskThreshold", paramMaskThreshold_);
+    binder.bind("colorR", paramColorR_);
+    binder.bind("colorG", paramColorG_);
+    binder.bind("colorB", paramColorB_);
+    binder.bind("visible", paramEnabled_);
+    binder.bind("bpmSync", paramBpmSync_);
+    binder.bind("reseed", paramReseedRequested_);
+    binder.bind("autoReseed", paramAutoReseed_);
+}
+
+void RiverFormationLayer::setup(ParameterRegistry& publishedRegistry) {
+    (void)publishedRegistry;
+    ParameterRegistry registry;
     const std::string prefix = registryPrefix().empty() ? "generative.riverFormation" : registryPrefix();
     clampParams();
 

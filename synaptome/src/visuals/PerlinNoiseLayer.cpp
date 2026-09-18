@@ -69,7 +69,28 @@ void PerlinNoiseLayer::configure(const ofJson& config) {
     baseTextureSize_ = textureSize_;
 }
 
-void PerlinNoiseLayer::setup(ParameterRegistry& registry) {
+void PerlinNoiseLayer::bindParameters(
+    synaptome::element::ParameterBinder& binder) {
+    binder.bind("scale", paramScale_);
+    binder.bind("speed", paramSpeed_);
+    binder.bind("brightness", paramBrightness_);
+    binder.bind("contrast", paramContrast_);
+    binder.bind("alpha", paramAlpha_);
+    binder.bind("texelZoom", paramTexelZoom_);
+    binder.bind("colorR", paramColorR_);
+    binder.bind("colorG", paramColorG_);
+    binder.bind("colorB", paramColorB_);
+    binder.bind("octaves", paramOctaves_);
+    binder.bind("lacunarity", paramLacunarity_);
+    binder.bind("persistence", paramPersistence_);
+    binder.bind("palette", paramPaletteIndex_);
+    binder.bind("paletteRate", paramPaletteRate_);
+    binder.bind("visible", paramEnabled_);
+}
+
+void PerlinNoiseLayer::setup(ParameterRegistry& publishedRegistry) {
+    (void)publishedRegistry;
+    ParameterRegistry registry;
     const std::string prefix = registryPrefix().empty() ? "layer.perlin" : registryPrefix();
 
     paramOctaves_ = ofClamp(paramOctaves_, 1.0f, 8.0f);

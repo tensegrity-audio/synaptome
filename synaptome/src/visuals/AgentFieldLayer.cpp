@@ -101,7 +101,41 @@ void AgentFieldLayer::configure(const ofJson& config) {
     }
 }
 
-void AgentFieldLayer::setup(ParameterRegistry& registry) {
+void AgentFieldLayer::bindParameters(
+    synaptome::element::ParameterBinder& binder) {
+    binder.bind("speed", paramSpeed_);
+    binder.bind("bpmMultiplier", paramBpmMultiplier_);
+    binder.bind("alpha", paramAlpha_);
+    binder.bind("seed", paramSeed_);
+    binder.bind("autoReseedEveryBeats", paramAutoReseedEveryBeats_);
+    binder.bind("mode", paramMode_);
+    binder.bind("agentCount", paramAgentCount_);
+    binder.bind("stepSize", paramStepSize_);
+    binder.bind("turnRate", paramTurnRate_);
+    binder.bind("sensorAngle", paramSensorAngle_);
+    binder.bind("sensorDistance", paramSensorDistance_);
+    binder.bind("deposit", paramDeposit_);
+    binder.bind("decay", paramDecay_);
+    binder.bind("diffuse", paramDiffuse_);
+    binder.bind("trailBoost", paramTrailBoost_);
+    binder.bind("resetCoverage", paramResetCoverage_);
+    binder.bind("backgroundAlpha", paramBackgroundAlpha_);
+    binder.bind("trailAlpha", paramTrailAlpha_);
+    binder.bind("bgR", paramBgR_);
+    binder.bind("bgG", paramBgG_);
+    binder.bind("bgB", paramBgB_);
+    binder.bind("trailR", paramTrailR_);
+    binder.bind("trailG", paramTrailG_);
+    binder.bind("trailB", paramTrailB_);
+    binder.bind("visible", paramEnabled_);
+    binder.bind("bpmSync", paramBpmSync_);
+    binder.bind("autoReseed", paramAutoReseed_);
+    binder.bind("reseed", paramReseedRequested_);
+}
+
+void AgentFieldLayer::setup(ParameterRegistry& publishedRegistry) {
+    (void)publishedRegistry;
+    ParameterRegistry registry;
     const std::string prefix = registryPrefix().empty() ? "layer.agentField" : registryPrefix();
 
     LayerParameterBuilder common(registry, prefix, "Generative");

@@ -67,7 +67,46 @@ void ReactionDiffusionLayer::configure(const ofJson& config) {
     }
 }
 
-void ReactionDiffusionLayer::setup(ParameterRegistry& registry) {
+void ReactionDiffusionLayer::bindParameters(
+    synaptome::element::ParameterBinder& binder) {
+    binder.bind("speed", paramSpeed_);
+    binder.bind("bpmMultiplier", paramBpmMultiplier_);
+    binder.bind("alpha", paramAlpha_);
+    binder.bind("autoReseedEveryBeats", paramAutoReseedEveryBeats_);
+    binder.bind("feedRate", paramFeedRate_);
+    binder.bind("killRate", paramKillRate_);
+    binder.bind("diffusionA", paramDiffusionA_);
+    binder.bind("diffusionB", paramDiffusionB_);
+    binder.bind("injectionRate", paramInjectionRate_);
+    binder.bind("injectionAmount", paramInjectionAmount_);
+    binder.bind("injectionRadius", paramInjectionRadius_);
+    binder.bind("seed", paramSeed_);
+    binder.bind("seedDensity", paramSeedDensity_);
+    binder.bind("contourThreshold", paramContourThreshold_);
+    binder.bind("contourWidth", paramContourWidth_);
+    binder.bind("fieldScale", paramFieldScale_);
+    binder.bind("backgroundAlpha", paramBackgroundAlpha_);
+    binder.bind("fieldAlpha", paramFieldAlpha_);
+    binder.bind("contourOpacity", paramContourOpacity_);
+    binder.bind("bgR", paramBgR_);
+    binder.bind("bgG", paramBgG_);
+    binder.bind("bgB", paramBgB_);
+    binder.bind("fieldR", paramFieldR_);
+    binder.bind("fieldG", paramFieldG_);
+    binder.bind("fieldB", paramFieldB_);
+    binder.bind("contourR", paramContourR_);
+    binder.bind("contourG", paramContourG_);
+    binder.bind("contourB", paramContourB_);
+    binder.bind("visible", paramEnabled_);
+    binder.bind("bpmSync", paramBpmSync_);
+    binder.bind("paused", paramPaused_);
+    binder.bind("reseed", paramReseedRequested_);
+    binder.bind("autoReseed", paramAutoReseed_);
+}
+
+void ReactionDiffusionLayer::setup(ParameterRegistry& publishedRegistry) {
+    (void)publishedRegistry;
+    ParameterRegistry registry;
     const std::string prefix = registryPrefix().empty() ? "layer.reactionDiffusion" : registryPrefix();
     clampParams();
 

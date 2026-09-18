@@ -49,23 +49,10 @@ void registerBuiltinElements(LayerFactory& elementTypes) {
                 builtinElementParameterDeclarations(typeId),
             },
             std::move(creator),
-            LayerFactory::ParameterBindingMode::
-                LegacySetupAdapter);
-    };
-    const auto registerExplicitBuiltin =
-        [&](ElementDescriptor descriptor,
-            LayerFactory::Creator creator) {
-        const std::string typeId = descriptor.typeId;
-        elementTypes.registerType(
-            ElementTypeContract{
-                std::move(descriptor),
-                builtinElementParameterDeclarations(typeId),
-            },
-            std::move(creator),
             LayerFactory::ParameterBindingMode::Explicit);
     };
 
-    registerExplicitBuiltin(
+    registerBuiltin(
         ElementDescriptor{"grid", ElementKind::Visual, {}},
         []() { return std::make_unique<GridLayer>(); });
     registerBuiltin(
@@ -97,7 +84,7 @@ void registerBuiltinElements(LayerFactory& elementTypes) {
     registerBuiltin(
         ElementDescriptor{"perlin", ElementKind::Visual, {}},
         []() { return std::make_unique<PerlinNoiseLayer>(); });
-    registerExplicitBuiltin(
+    registerBuiltin(
         ElementDescriptor{"stlModel", ElementKind::Visual, {}},
         []() { return std::make_unique<StlModelLayer>(); });
     registerBuiltin(
@@ -117,7 +104,7 @@ void registerBuiltinElements(LayerFactory& elementTypes) {
     registerBuiltin(
         ElementDescriptor{"reactionDiffusion", ElementKind::Visual, {}},
         []() { return std::make_unique<ReactionDiffusionLayer>(); });
-    registerExplicitBuiltin(
+    registerBuiltin(
         ElementDescriptor{"lenia", ElementKind::Visual, {}},
         []() { return std::make_unique<LeniaLayer>(); });
     registerBuiltin(

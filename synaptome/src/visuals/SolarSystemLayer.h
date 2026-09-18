@@ -1,13 +1,17 @@
 #pragma once
 
 #include "Layer.h"
+#include <synaptome/element/ParameterBinding.h>
 
 #include <cstdint>
 #include <string>
 #include <vector>
 
-class SolarSystemLayer : public Layer {
+class SolarSystemLayer : public Layer,
+    public synaptome::element::ParameterBindable {
 public:
+    void bindParameters(
+        synaptome::element::ParameterBinder& binder) override;
     void configure(const ofJson& config) override;
     void setup(ParameterRegistry& registry) override;
     void update(const LayerUpdateParams& params) override;

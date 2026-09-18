@@ -1,12 +1,16 @@
 #pragma once
 
 #include "Layer.h"
+#include <synaptome/element/ParameterBinding.h>
 #include "ofVideoPlayer.h"
 #include "../media/VideoCatalog.h"
 #include <string>
 
-class VideoClipLayer : public Layer {
+class VideoClipLayer : public Layer,
+    public synaptome::element::ParameterBindable {
 public:
+    void bindParameters(
+        synaptome::element::ParameterBinder& binder) override;
     void configure(const ofJson& config) override;
     void setup(ParameterRegistry& registry) override;
     void update(const LayerUpdateParams& params) override;

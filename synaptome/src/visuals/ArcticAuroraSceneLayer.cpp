@@ -378,7 +378,77 @@ void ArcticAuroraSceneLayer::configure(const ofJson& config) {
     clampParams();
 }
 
-void ArcticAuroraSceneLayer::setup(ParameterRegistry& registry) {
+void ArcticAuroraSceneLayer::bindParameters(
+    synaptome::element::ParameterBinder& binder) {
+    binder.bind("alpha", paramAlpha_);
+    binder.bind("sceneScale", paramSceneScale_);
+    binder.bind("sceneOffsetY", paramSceneOffsetY_);
+    binder.bind("sceneOffsetZ", paramSceneOffsetZ_);
+    binder.bind("waterWidth", paramWaterWidth_);
+    binder.bind("waterNearZ", paramWaterNearZ_);
+    binder.bind("waterFarZ", paramWaterFarZ_);
+    binder.bind("waterLevel", paramWaterLevel_);
+    binder.bind("waterWaveIdle", paramWaterWaveIdle_);
+    binder.bind("waterHighlight", paramWaterHighlight_);
+    binder.bind("waterReflection", paramWaterReflection_);
+    binder.bind("waterHorizonFog", paramWaterHorizonFog_);
+    binder.bind("waterAlpha", paramWaterAlpha_);
+    binder.bind("waterBrightness", paramWaterBrightness_);
+    binder.bind("waterTranslucency", paramWaterTranslucency_);
+    binder.bind("waterCurvature", paramWaterCurvature_);
+    binder.bind("waterHemisphereDepth", paramWaterHemisphereDepth_);
+    binder.bind("waterNoiseAmount", paramWaterNoiseAmount_);
+    binder.bind("waterNoiseScale", paramWaterNoiseScale_);
+    binder.bind("waterRippleAmount", paramWaterRippleAmount_);
+    binder.bind("waterRippleRadius", paramWaterRippleRadius_);
+    binder.bind("waterAuroraLight", paramWaterAuroraLight_);
+    binder.bind("icebergCount", paramIcebergCount_);
+    binder.bind("icebergScale", paramIcebergScale_);
+    binder.bind("icebergSpread", paramIcebergSpread_);
+    binder.bind("icebergRimLight", paramIcebergRimLight_);
+    binder.bind("icebergBreakup", paramIcebergBreakup_);
+    binder.bind("icebergBreakupSpeed", paramIcebergBreakupSpeed_);
+    binder.bind("auroraWidth", paramAuroraWidth_);
+    binder.bind("auroraBaseY", paramAuroraBaseY_);
+    binder.bind("auroraHeight", paramAuroraHeight_);
+    binder.bind("auroraDepthNear", paramAuroraDepthNear_);
+    binder.bind("auroraDepthFar", paramAuroraDepthFar_);
+    binder.bind("auroraGlow", paramAuroraGlow_);
+    binder.bind("auroraBloom", paramAuroraBloom_);
+    binder.bind("auroraFoldStrength", paramAuroraFoldStrength_);
+    binder.bind("auroraRayDensity", paramAuroraRayDensity_);
+    binder.bind("auroraCurtainCount", paramAuroraCurtainCount_);
+    binder.bind("audioAmount", paramAudioAmount_);
+    binder.bind("audioSmoothing", paramAudioSmoothing_);
+    binder.bind("seed", paramSeed_);
+    binder.bind("skyTopR", paramSkyTopR_);
+    binder.bind("skyTopG", paramSkyTopG_);
+    binder.bind("skyTopB", paramSkyTopB_);
+    binder.bind("skyHorizonR", paramSkyHorizonR_);
+    binder.bind("skyHorizonG", paramSkyHorizonG_);
+    binder.bind("skyHorizonB", paramSkyHorizonB_);
+    binder.bind("waterR", paramWaterR_);
+    binder.bind("waterG", paramWaterG_);
+    binder.bind("waterB", paramWaterB_);
+    binder.bind("auroraR", paramAuroraR_);
+    binder.bind("auroraG", paramAuroraG_);
+    binder.bind("auroraB", paramAuroraB_);
+    binder.bind("aurora2R", paramAurora2R_);
+    binder.bind("aurora2G", paramAurora2G_);
+    binder.bind("aurora2B", paramAurora2B_);
+    binder.bind("iceRimR", paramIceRimR_);
+    binder.bind("iceRimG", paramIceRimG_);
+    binder.bind("iceRimB", paramIceRimB_);
+    binder.bind("iceAccentR", paramIceAccentR_);
+    binder.bind("iceAccentG", paramIceAccentG_);
+    binder.bind("iceAccentB", paramIceAccentB_);
+    binder.bind("visible", paramEnabled_);
+    binder.bind("reseed", paramReseedRequested_);
+}
+
+void ArcticAuroraSceneLayer::setup(ParameterRegistry& publishedRegistry) {
+    (void)publishedRegistry;
+    ParameterRegistry registry;
     const std::string prefix = registryPrefix().empty() ? "generative.arcticAuroraScene" : registryPrefix();
     clampParams();
 

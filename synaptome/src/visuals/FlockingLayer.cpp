@@ -85,7 +85,58 @@ void FlockingLayer::configure(const ofJson& config) {
     }
 }
 
-void FlockingLayer::setup(ParameterRegistry& registry) {
+void FlockingLayer::bindParameters(
+    synaptome::element::ParameterBinder& binder) {
+    binder.bind("speed", paramSpeed_);
+    binder.bind("bpmMultiplier", paramBpmMultiplier_);
+    binder.bind("alpha", paramAlpha_);
+    binder.bind("seed", paramSeed_);
+    binder.bind("mode", paramMode_);
+    binder.bind("boidCount", paramBoidCount_);
+    binder.bind("predatorCount", paramPredatorCount_);
+    binder.bind("predatorPressure", paramPredatorPressure_);
+    binder.bind("fearPropagation", paramFearPropagation_);
+    binder.bind("fearDecay", paramFearDecay_);
+    binder.bind("fearRadius", paramFearRadius_);
+    binder.bind("fearForce", paramFearForce_);
+    binder.bind("fearTrailAlpha", paramFearTrailAlpha_);
+    binder.bind("neighborCount", paramNeighborCount_);
+    binder.bind("cohesion", paramCohesion_);
+    binder.bind("alignment", paramAlignment_);
+    binder.bind("separation", paramSeparation_);
+    binder.bind("predatorSeparation", paramPredatorSeparation_);
+    binder.bind("chase", paramChase_);
+    binder.bind("evade", paramEvade_);
+    binder.bind("noise", paramNoise_);
+    binder.bind("trailFade", paramTrailFade_);
+    binder.bind("trailDeposit", paramTrailDeposit_);
+    binder.bind("pointSize", paramPointSize_);
+    binder.bind("backgroundAlpha", paramBackgroundAlpha_);
+    binder.bind("trailAlpha", paramTrailAlpha_);
+    binder.bind("preyAlpha", paramPreyAlpha_);
+    binder.bind("predAlpha", paramPredAlpha_);
+    binder.bind("bgR", paramBgR_);
+    binder.bind("bgG", paramBgG_);
+    binder.bind("bgB", paramBgB_);
+    binder.bind("trailR", paramTrailR_);
+    binder.bind("trailG", paramTrailG_);
+    binder.bind("trailB", paramTrailB_);
+    binder.bind("preyR", paramPreyR_);
+    binder.bind("preyG", paramPreyG_);
+    binder.bind("preyB", paramPreyB_);
+    binder.bind("predatorR", paramPredR_);
+    binder.bind("predatorG", paramPredG_);
+    binder.bind("predatorB", paramPredB_);
+    binder.bind("visible", paramEnabled_);
+    binder.bind("bpmSync", paramBpmSync_);
+    binder.bind("reseed", paramReseedRequested_);
+    binder.bind("predatorEnabled", paramPredatorEnabled_);
+    binder.bind("fearWaveEnabled", paramFearWaveEnabled_);
+}
+
+void FlockingLayer::setup(ParameterRegistry& publishedRegistry) {
+    (void)publishedRegistry;
+    ParameterRegistry registry;
     const std::string prefix = registryPrefix().empty() ? "layer.flocking" : registryPrefix();
 
     LayerParameterBuilder common(registry, prefix, "Generative");

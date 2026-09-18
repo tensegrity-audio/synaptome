@@ -279,7 +279,19 @@ std::string VideoGrabberLayer::resolutionOptionsSummary() const {
 }
 
 
-void VideoGrabberLayer::setup(ParameterRegistry& registry) {
+void VideoGrabberLayer::bindParameters(
+    synaptome::element::ParameterBinder& binder) {
+    binder.bind("gain", paramGain_);
+    binder.bind("device", paramDeviceIndex_);
+    binder.bind("resolution", paramResolutionIndex_);
+    binder.bind("visible", paramEnabled_);
+    binder.bind("mirror", paramMirror_);
+    binder.bind("deviceInfoOverlay", paramShowDeviceOverlay_);
+}
+
+void VideoGrabberLayer::setup(ParameterRegistry& publishedRegistry) {
+    (void)publishedRegistry;
+    ParameterRegistry registry;
     refreshDevices();
 
     if (!devices_.empty()) {

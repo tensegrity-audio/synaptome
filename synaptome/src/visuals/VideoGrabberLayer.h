@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Layer.h"
+#include <synaptome/element/ParameterBinding.h>
 #ifdef TENSEGRITY_CUSTOM_VIDEO_GRABBER_HEADER
 #include TENSEGRITY_CUSTOM_VIDEO_GRABBER_HEADER
 #else
@@ -15,8 +16,11 @@
 
 class ofTexture;
 
-class VideoGrabberLayer : public Layer {
+class VideoGrabberLayer : public Layer,
+    public synaptome::element::ParameterBindable {
 public:
+    void bindParameters(
+        synaptome::element::ParameterBinder& binder) override;
     class Grabber {
     public:
         virtual ~Grabber() = default;

@@ -69,7 +69,50 @@ void ExcitableMediaLayer::configure(const ofJson& config) {
     }
 }
 
-void ExcitableMediaLayer::setup(ParameterRegistry& registry) {
+void ExcitableMediaLayer::bindParameters(
+    synaptome::element::ParameterBinder& binder) {
+    binder.bind("speed", paramSpeed_);
+    binder.bind("bpmMultiplier", paramBpmMultiplier_);
+    binder.bind("alpha", paramAlpha_);
+    binder.bind("autoReseedEveryBeats", paramAutoReseedEveryBeats_);
+    binder.bind("seed", paramSeed_);
+    binder.bind("seedDensity", paramSeedDensity_);
+    binder.bind("propagationRate", paramPropagationRate_);
+    binder.bind("excitationThreshold", paramExcitationThreshold_);
+    binder.bind("refractoryTime", paramRefractoryTime_);
+    binder.bind("seedRate", paramSeedRate_);
+    binder.bind("wavefrontWidth", paramWavefrontWidth_);
+    binder.bind("sparkleAmount", paramSparkleAmount_);
+    binder.bind("fieldDiffusion", paramFieldDiffusion_);
+    binder.bind("decayRate", paramDecayRate_);
+    binder.bind("injectionRadius", paramInjectionRadius_);
+    binder.bind("fieldScale", paramFieldScale_);
+    binder.bind("backgroundAlpha", paramBackgroundAlpha_);
+    binder.bind("excitationAlpha", paramExcitationAlpha_);
+    binder.bind("refractoryAlpha", paramRefractoryAlpha_);
+    binder.bind("wavefrontOpacity", paramWavefrontOpacity_);
+    binder.bind("bgR", paramBgR_);
+    binder.bind("bgG", paramBgG_);
+    binder.bind("bgB", paramBgB_);
+    binder.bind("exciteR", paramExciteR_);
+    binder.bind("exciteG", paramExciteG_);
+    binder.bind("exciteB", paramExciteB_);
+    binder.bind("refractoryR", paramRefractoryR_);
+    binder.bind("refractoryG", paramRefractoryG_);
+    binder.bind("refractoryB", paramRefractoryB_);
+    binder.bind("waveR", paramWaveR_);
+    binder.bind("waveG", paramWaveG_);
+    binder.bind("waveB", paramWaveB_);
+    binder.bind("visible", paramEnabled_);
+    binder.bind("bpmSync", paramBpmSync_);
+    binder.bind("paused", paramPaused_);
+    binder.bind("reseed", paramReseedRequested_);
+    binder.bind("autoReseed", paramAutoReseed_);
+}
+
+void ExcitableMediaLayer::setup(ParameterRegistry& publishedRegistry) {
+    (void)publishedRegistry;
+    ParameterRegistry registry;
     const std::string prefix = registryPrefix().empty() ? "layer.excitableMedia" : registryPrefix();
     clampParams();
     LayerParameterBuilder common(registry, prefix, "Generative");

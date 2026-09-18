@@ -284,9 +284,8 @@ another Runtime's registrations. A registration atomically stores a declared
 copied enumeration do not construct an element. The
 minimal element descriptor still contains only type ID, kind, and ordered
 actions; the separate pointer-free parameter declaration set carries static
-groups and parameter metadata. All 23 built-in types are declared; Signal
-Bloom is the explicit bind-only reference and the other 22 use the checked
-setup-storage adapter. Display label, version/package ownership,
+groups and parameter metadata. All 23 built-in types are declared and use
+explicit bind-only storage. Display label, version/package ownership,
 capabilities/dependencies, resources, and persistence metadata remain later
 contracts. The legacy class name may change only with a focused source
 migration; the stable type IDs do not.

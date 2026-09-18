@@ -2,6 +2,7 @@
 
 #include "EightDirectionMotion.h"
 #include "Layer.h"
+#include <synaptome/element/ParameterBinding.h>
 #include <cstdint>
 #include <random>
 #include <string>
@@ -11,8 +12,10 @@
 // position change is an integer multiple of one of EightDirectionMotion's
 // compass steps; model profiles only change how an agent chooses its next
 // heading.
-class CircuitTraceLayer : public Layer {
+class CircuitTraceLayer : public Layer,
+                                public synaptome::element::ParameterBindable {
 public:
+    void bindParameters(synaptome::element::ParameterBinder& binder) override;
     enum class Model {
         CircuitSlime,
         CircuitMycelium,

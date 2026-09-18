@@ -24,7 +24,18 @@ void VideoClipLayer::configure(const ofJson& config) {
     }
 }
 
-void VideoClipLayer::setup(ParameterRegistry& registry) {
+void VideoClipLayer::bindParameters(
+    synaptome::element::ParameterBinder& binder) {
+    binder.bind("gain", paramGain_);
+    binder.bind("clip", paramClipIndex_);
+    binder.bind("visible", paramEnabled_);
+    binder.bind("mirror", paramMirror_);
+    binder.bind("loop", paramLoop_);
+}
+
+void VideoClipLayer::setup(ParameterRegistry& publishedRegistry) {
+    (void)publishedRegistry;
+    ParameterRegistry registry;
     auto& catalog = VideoCatalog::instance();
     const auto& clips = catalog.clips();
     if (!clips.empty()) {

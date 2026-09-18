@@ -456,7 +456,104 @@ void MountainIslandLayer::configure(const ofJson& config) {
     clampParams();
 }
 
-void MountainIslandLayer::setup(ParameterRegistry& registry) {
+void MountainIslandLayer::bindParameters(
+    synaptome::element::ParameterBinder& binder) {
+    binder.bind("alpha", paramAlpha_);
+    binder.bind("sceneScale", paramSceneScale_);
+    binder.bind("sceneOffsetY", paramSceneOffsetY_);
+    binder.bind("sceneOffsetZ", paramSceneOffsetZ_);
+    binder.bind("spinAngle", paramSpinAngle_);
+    binder.bind("spinSpeed", paramSpinSpeed_);
+    binder.bind("waterRadius", paramWaterRadius_);
+    binder.bind("waterLevel", paramWaterLevel_);
+    binder.bind("waterRimDepth", paramWaterRimDepth_);
+    binder.bind("waterHighlight", paramWaterHighlight_);
+    binder.bind("waterWaveAmount", paramWaterWaveAmount_);
+    binder.bind("shoreGlow", paramShoreGlow_);
+    binder.bind("submergedLandDepth", paramSubmergedLandDepth_);
+    binder.bind("solidWorldAlpha", paramSolidWorldAlpha_);
+    binder.bind("islandRadius", paramIslandRadius_);
+    binder.bind("pointCount", paramPointCount_);
+    binder.bind("boundaryPoints", paramBoundaryPoints_);
+    binder.bind("triangleTargetLength", paramTriangleTargetLength_);
+    binder.bind("mountainHeight", paramMountainHeight_);
+    binder.bind("roughness", paramRoughness_);
+    binder.bind("shorelineJitter", paramShorelineJitter_);
+    binder.bind("peakCount", paramPeakCount_);
+    binder.bind("snowLine", paramSnowLine_);
+    binder.bind("treeLine", paramTreeLine_);
+    binder.bind("sandHeight", paramSandHeight_);
+    binder.bind("upliftRadius", paramUpliftRadius_);
+    binder.bind("upliftScatter", paramUpliftScatter_);
+    binder.bind("upliftFalloff", paramUpliftFalloff_);
+    binder.bind("seabedUndulation", paramSeabedUndulation_);
+    binder.bind("edgeUndulation", paramEdgeUndulation_);
+    binder.bind("wireAlpha", paramWireAlpha_);
+    binder.bind("growth", paramGrowth_);
+    binder.bind("growthRate", paramGrowthRate_);
+    binder.bind("growthCurve", paramGrowthCurve_);
+    binder.bind("cloudCount", paramCloudCount_);
+    binder.bind("cloudPuffCount", paramCloudPuffCount_);
+    binder.bind("cloudFacetSegments", paramCloudFacetSegments_);
+    binder.bind("cloudFacetRings", paramCloudFacetRings_);
+    binder.bind("cloudScale", paramCloudScale_);
+    binder.bind("cloudDensity", paramCloudDensity_);
+    binder.bind("cloudBaseHeight", paramCloudBaseHeight_);
+    binder.bind("cloudLayerDepth", paramCloudLayerDepth_);
+    binder.bind("cloudClearance", paramCloudClearance_);
+    binder.bind("cloudWindAngle", paramCloudWindAngle_);
+    binder.bind("cloudWindSpeed", paramCloudWindSpeed_);
+    binder.bind("cloudTurbulence", paramCloudTurbulence_);
+    binder.bind("cloudMountainAvoidance", paramCloudMountainAvoidance_);
+    binder.bind("cloudUpdraft", paramCloudUpdraft_);
+    binder.bind("cloudShadowAlpha", paramCloudShadowAlpha_);
+    binder.bind("audioAmount", paramAudioAmount_);
+    binder.bind("audioSmoothing", paramAudioSmoothing_);
+    binder.bind("bassLift", paramBassLift_);
+    binder.bind("highsGlint", paramHighsGlint_);
+    binder.bind("seed", paramSeed_);
+    binder.bind("skyTopR", paramSkyTopR_);
+    binder.bind("skyTopG", paramSkyTopG_);
+    binder.bind("skyTopB", paramSkyTopB_);
+    binder.bind("skyHorizonR", paramSkyHorizonR_);
+    binder.bind("skyHorizonG", paramSkyHorizonG_);
+    binder.bind("skyHorizonB", paramSkyHorizonB_);
+    binder.bind("waterR", paramWaterR_);
+    binder.bind("waterG", paramWaterG_);
+    binder.bind("waterB", paramWaterB_);
+    binder.bind("shallowR", paramShallowR_);
+    binder.bind("shallowG", paramShallowG_);
+    binder.bind("shallowB", paramShallowB_);
+    binder.bind("shoreR", paramShoreR_);
+    binder.bind("shoreG", paramShoreG_);
+    binder.bind("shoreB", paramShoreB_);
+    binder.bind("lowlandR", paramLowlandR_);
+    binder.bind("lowlandG", paramLowlandG_);
+    binder.bind("lowlandB", paramLowlandB_);
+    binder.bind("rockR", paramRockR_);
+    binder.bind("rockG", paramRockG_);
+    binder.bind("rockB", paramRockB_);
+    binder.bind("snowR", paramSnowR_);
+    binder.bind("snowG", paramSnowG_);
+    binder.bind("snowB", paramSnowB_);
+    binder.bind("wireR", paramWireR_);
+    binder.bind("wireG", paramWireG_);
+    binder.bind("wireB", paramWireB_);
+    binder.bind("cloudR", paramCloudR_);
+    binder.bind("cloudG", paramCloudG_);
+    binder.bind("cloudB", paramCloudB_);
+    binder.bind("cloudShadeR", paramCloudShadeR_);
+    binder.bind("cloudShadeG", paramCloudShadeG_);
+    binder.bind("cloudShadeB", paramCloudShadeB_);
+    binder.bind("visible", paramEnabled_);
+    binder.bind("autoGrow", paramAutoGrow_);
+    binder.bind("growthReseed", paramGrowthReseedRequested_);
+    binder.bind("reseed", paramReseedRequested_);
+}
+
+void MountainIslandLayer::setup(ParameterRegistry& publishedRegistry) {
+    (void)publishedRegistry;
+    ParameterRegistry registry;
     const std::string prefix = registryPrefix().empty() ? "generative.mountainIsland" : registryPrefix();
     clampParams();
 

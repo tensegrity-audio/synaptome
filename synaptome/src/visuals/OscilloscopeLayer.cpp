@@ -138,7 +138,63 @@ void OscilloscopeLayer::configure(const ofJson& config) {
     clampParams();
 }
 
-void OscilloscopeLayer::setup(ParameterRegistry& registry) {
+void OscilloscopeLayer::bindParameters(
+    synaptome::element::ParameterBinder& binder) {
+    binder.bind("pattern", paramPattern_);
+    binder.bind("signalMode", paramSignalMode_);
+    binder.bind("waveformGain", paramWaveformGain_);
+    binder.bind("waveformMix", paramWaveformMix_);
+    binder.bind("waveformDelay", paramWaveformDelay_);
+    binder.bind("waveformSmoothing", paramWaveformSmoothing_);
+    binder.bind("waveformPersistence", paramWaveformPersistence_);
+    binder.bind("modMode", paramModMode_);
+    binder.bind("xInput", paramXInput_);
+    binder.bind("yInput", paramYInput_);
+    binder.bind("speedInput", paramSpeedInput_);
+    binder.bind("baseAmount", paramBaseAmount_);
+    binder.bind("modAmount", paramModAmount_);
+    binder.bind("radialAmount", paramRadialAmount_);
+    binder.bind("wiggleAmount", paramWiggleAmount_);
+    binder.bind("amplitude", paramAmplitude_);
+    binder.bind("speed", paramSpeed_);
+    binder.bind("speedModAmount", paramSpeedModAmount_);
+    binder.bind("freqX", paramFreqX_);
+    binder.bind("freqY", paramFreqY_);
+    binder.bind("phaseOffsetDeg", paramPhaseOffsetDeg_);
+    binder.bind("morph", paramMorph_);
+    binder.bind("gridDivisions", paramGridDivisions_);
+    binder.bind("gridAlpha", paramGridAlpha_);
+    binder.bind("glowAlpha", paramGlowAlpha_);
+    binder.bind("glowRadius", paramGlowRadius_);
+    binder.bind("glowFalloff", paramGlowFalloff_);
+    binder.bind("xScale", paramXScale_);
+    binder.bind("yScale", paramYScale_);
+    binder.bind("xBias", paramXBias_);
+    binder.bind("yBias", paramYBias_);
+    binder.bind("rotationDeg", paramRotationDeg_);
+    binder.bind("historySize", paramHistorySize_);
+    binder.bind("sampleDensity", paramSampleDensity_);
+    binder.bind("thickness", paramThickness_);
+    binder.bind("alpha", paramAlpha_);
+    binder.bind("decay", paramDecay_);
+    binder.bind("intensity", paramIntensity_);
+    binder.bind("pointSize", paramPointSize_);
+    binder.bind("colorR", paramColorR_);
+    binder.bind("colorG", paramColorG_);
+    binder.bind("colorB", paramColorB_);
+    binder.bind("bgColorR", paramBgColorR_);
+    binder.bind("bgColorG", paramBgColorG_);
+    binder.bind("bgColorB", paramBgColorB_);
+    binder.bind("visible", paramEnabled_);
+    binder.bind("showGrid", paramShowGrid_);
+    binder.bind("showCrosshair", paramShowCrosshair_);
+    binder.bind("showGlow", paramShowGlow_);
+    binder.bind("triggerSync", paramTriggerSync_);
+}
+
+void OscilloscopeLayer::setup(ParameterRegistry& publishedRegistry) {
+    (void)publishedRegistry;
+    ParameterRegistry registry;
     const std::string prefix = registryPrefix().empty() ? "layer.oscilloscope" : registryPrefix();
     clampParams();
 

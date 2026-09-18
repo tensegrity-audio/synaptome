@@ -2,6 +2,19 @@
 
 This changelog records Project Ops and administrative workflow changes. Product release versioning remains governed by `docs/release_policy.md`.
 
+## 2026-08-16 - architecture - catalog_wide_explicit_binding
+
+- Migrated the remaining 19 built-ins to exact declaration-backed
+  `ParameterBinder` storage; all 23 built-in registrations now select explicit
+  binding and preserve the existing 786-parameter public contract.
+- Kept resource initialization in `setup()` and isolated older shared-source
+  registration statements in private scratch registries, so setup publishes
+  no parameter metadata to Runtime.
+- Passed the generated contract, Element SDK boundary, Release build, and
+  RuntimeCore lifecycle/ownership/action suite. The graphics-context live
+  validator could not run in the non-interactive shell because GLFW terminated
+  during window creation before validation began.
+
 ## 2026-08-15 - architecture - seac_12_representative_migration
 
 - Migrated Grid, STL Model, and Lenia from compatibility setup discovery to

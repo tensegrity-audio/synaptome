@@ -256,7 +256,43 @@ void CircuitTraceLayer::configure(const ofJson& config) {
         clampDefault(defaults, "traceB", paramTraceB_, 0.0f, 1.0f);
 }
 
-void CircuitTraceLayer::setup(ParameterRegistry& registry) {
+void CircuitTraceLayer::bindParameters(
+    synaptome::element::ParameterBinder& binder) {
+    binder.bind("speed", paramSpeed_);
+    binder.bind("bpmMultiplier", paramBpmMultiplier_);
+    binder.bind("alpha", paramAlpha_);
+    binder.bind("seed", paramSeed_);
+    binder.bind("autoReseedEveryBeats", paramAutoReseedEveryBeats_);
+    binder.bind("behavior", paramBehavior_);
+    binder.bind("agentCount", paramAgentCount_);
+    binder.bind("stepSize", paramStepSize_);
+    binder.bind("sensorDistance", paramSensorDistance_);
+    binder.bind("turnChance", paramTurnChance_);
+    binder.bind("branchChance", paramBranchChance_);
+    binder.bind("deposit", paramDeposit_);
+    binder.bind("decay", paramDecay_);
+    binder.bind("diffuse", paramDiffuse_);
+    binder.bind("tracePersistence", paramTracePersistence_);
+    binder.bind("traceWidth", paramTraceWidth_);
+    binder.bind("glow", paramGlow_);
+    binder.bind("viaChance", paramViaChance_);
+    binder.bind("backgroundAlpha", paramBackgroundAlpha_);
+    binder.bind("trailAlpha", paramTrailAlpha_);
+    binder.bind("bgR", paramBgR_);
+    binder.bind("bgG", paramBgG_);
+    binder.bind("bgB", paramBgB_);
+    binder.bind("traceR", paramTraceR_);
+    binder.bind("traceG", paramTraceG_);
+    binder.bind("traceB", paramTraceB_);
+    binder.bind("visible", paramVisible_);
+    binder.bind("bpmSync", paramBpmSync_);
+    binder.bind("reseed", paramReseed_);
+    binder.bind("autoReseed", paramAutoReseed_);
+}
+
+void CircuitTraceLayer::setup(ParameterRegistry& publishedRegistry) {
+    (void)publishedRegistry;
+    ParameterRegistry registry;
     const std::string prefix =
         registryPrefix().empty() ? "layer.circuitTrace" : registryPrefix();
     LayerParameterBuilder common(registry, prefix);

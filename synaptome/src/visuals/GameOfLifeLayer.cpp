@@ -70,7 +70,36 @@ void GameOfLifeLayer::configure(const ofJson& config) {
     }
 }
 
-void GameOfLifeLayer::setup(ParameterRegistry& registry) {
+void GameOfLifeLayer::bindParameters(
+    synaptome::element::ParameterBinder& binder) {
+    binder.bind("speed", paramSpeed_);
+    binder.bind("bpmMultiplier", paramBpmMultiplier_);
+    binder.bind("seed", paramSeed_);
+    binder.bind("density", paramSeedDensity_);
+    binder.bind("fadeFrames", paramFadeFrames_);
+    binder.bind("preset", paramPresetIndex_);
+    binder.bind("aliveR", paramAliveR_);
+    binder.bind("aliveG", paramAliveG_);
+    binder.bind("aliveB", paramAliveB_);
+    binder.bind("deadR", paramDeadR_);
+    binder.bind("deadG", paramDeadG_);
+    binder.bind("deadB", paramDeadB_);
+    binder.bind("alpha", paramAlpha_);
+    binder.bind("aliveAlpha", paramAliveAlpha_);
+    binder.bind("deadAlpha", paramDeadAlpha_);
+    binder.bind("reseedQuantizeBeats", paramReseedQuantizeBeats_);
+    binder.bind("autoReseedEveryBeats", paramAutoReseedEveryBeats_);
+    binder.bind("visible", paramEnabled_);
+    binder.bind("bpmSync", paramBpmSync_);
+    binder.bind("paused", paramPaused_);
+    binder.bind("reseed", paramReseedRequested_);
+    binder.bind("wrap", paramWrap_);
+    binder.bind("autoReseed", paramAutoReseed_);
+}
+
+void GameOfLifeLayer::setup(ParameterRegistry& publishedRegistry) {
+    (void)publishedRegistry;
+    ParameterRegistry registry;
     const std::string prefix = registryPrefix().empty() ? "layer.gameOfLife" : registryPrefix();
     LayerParameterBuilder common(registry, prefix, "Generative");
 

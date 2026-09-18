@@ -17,9 +17,8 @@ public:
     virtual void bind(std::string parameterId, std::string& storage) = 0;
 };
 
-// Transitional source-linked interface for elements whose parameter
-// declarations are authoritative. Legacy Layer::setup discovery remains
-// available to types that have not migrated yet.
+// Source-linked interface for elements whose parameter declarations are
+// authoritative. Layer::setup is reserved for resource initialization.
 class ParameterBindable {
 public:
     virtual ~ParameterBindable() = default;

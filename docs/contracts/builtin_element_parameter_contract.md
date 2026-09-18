@@ -34,16 +34,13 @@ keeps compatibility manifests synchronized.
 - The static declaration owns Runtime metadata and declared defaults.
 - A live element must bind exactly the declared IDs and kinds. Missing,
   duplicate, extra, or wrong-kind bindings fail preparation transactionally.
-- New elements should use explicit bind-only storage through
-  `ParameterBinder`.
-- Nineteen legacy built-ins currently use `LegacySetupAdapter`. Their
-  `setup()` methods are permitted to initialize storage and resources, but
-  metadata emitted during setup is discarded and checked against the static
-  declaration.
-- In the compatibility adapter, setup must pass the configured storage value
-  as the registry default. `ParameterRegistry::add*` writes its supplied
-  default into live storage; passing the static default would overwrite asset,
-  preset, or scene configuration.
+- All 23 built-ins use explicit bind-only storage through `ParameterBinder`.
+  `LegacySetupAdapter` remains a Runtime compatibility mode, but no built-in
+  registration selects it.
+- `setup()` initializes resources only from Runtime's perspective. Built-ins
+  that still share source with an older host direct their obsolete setup-time
+  registration calls into a private scratch registry; those records never
+  bind storage or enter the published Runtime table.
 - Stable public IDs are compatibility boundaries for scenes, presets, MIDI,
   OSC, Browser controls, and automation. Renaming one requires an explicit
   alias or migration, updated fixtures, and release notes.
@@ -126,6 +123,9 @@ It does not yet provide:
 - automatic package discovery (SEAC-10);
 - a stable binary plugin ABI or support for dropping in an arbitrary raw
   openFrameworks `ofApp` folder.
+
+Removing the now-inert scratch registration statements from shared built-in
+setup code is source cleanup, not a remaining framework migration.
 
 An openFrameworks experiment must still be wrapped as an element and declare a
 stable Synaptome contract before it gains scenes, presets, Browser inspection,

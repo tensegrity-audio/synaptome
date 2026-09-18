@@ -565,8 +565,8 @@ remains untested. Preferences v1, transactional Text adoption, and the
 portable/local-state gate close SEAC-5. Audio, webcam, display, and path
 selection remain named compatibility adapters for a future independently
 transactional machine-profile version.
-SEAC-6 through SEAC-12 are complete. Grid, STL Model, and Lenia are bind-only
-references, the public authoring guide is published, automated gates pass,
+SEAC-6 through SEAC-12 are complete. All shipping elements use explicit
+bind-only storage, the public authoring guide is published, automated gates pass,
 and the operator completed the real-host Grid/STL Tetra/Lenia/Circuit Lenia
 review recorded in the
 [`SEAC-12 migration handoff`](representative_element_migration_v1_handoff.md).

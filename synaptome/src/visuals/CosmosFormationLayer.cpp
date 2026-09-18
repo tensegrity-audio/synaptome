@@ -197,7 +197,87 @@ void CosmosFormationLayer::configure(const ofJson& config) {
     clampParams();
 }
 
-void CosmosFormationLayer::setup(ParameterRegistry& registry) {
+void CosmosFormationLayer::bindParameters(
+    synaptome::element::ParameterBinder& binder) {
+    binder.bind("alpha", paramAlpha_);
+    binder.bind("particleCount", paramParticleCount_);
+    binder.bind("clusterCount", paramClusterCount_);
+    binder.bind("radius", paramRadius_);
+    binder.bind("originRadius", paramOriginRadius_);
+    binder.bind("expansionRate", paramExpansionRate_);
+    binder.bind("expansionForce", paramExpansionForce_);
+    binder.bind("formationAge", paramFormationAge_);
+    binder.bind("formationTime", paramFormationTime_);
+    binder.bind("evolutionSpeed", paramEvolutionSpeed_);
+    binder.bind("gravity", paramGravity_);
+    binder.bind("gravityDelay", paramGravityDelay_);
+    binder.bind("gravityEmergence", paramGravityEmergence_);
+    binder.bind("clusterSwirl", paramClusterSwirl_);
+    binder.bind("clusterSpread", paramClusterSpread_);
+    binder.bind("clusterDrift", paramClusterDrift_);
+    binder.bind("clusterSoftness", paramClusterSoftness_);
+    binder.bind("substructureAmount", paramSubstructureAmount_);
+    binder.bind("substructureScale", paramSubstructureScale_);
+    binder.bind("substructureGlow", paramSubstructureGlow_);
+    binder.bind("shear", paramShear_);
+    binder.bind("voidPressure", paramVoidPressure_);
+    binder.bind("turbulence", paramTurbulence_);
+    binder.bind("coolingRate", paramCoolingRate_);
+    binder.bind("fieldLuminosity", paramFieldLuminosity_);
+    binder.bind("glowPersistence", paramGlowPersistence_);
+    binder.bind("filamentMemory", paramFilamentMemory_);
+    binder.bind("matterSize", paramMatterSize_);
+    binder.bind("matterGlow", paramMatterGlow_);
+    binder.bind("trailAlpha", paramTrailAlpha_);
+    binder.bind("trailThickness", paramTrailThickness_);
+    binder.bind("haloAlpha", paramHaloAlpha_);
+    binder.bind("haloRadius", paramHaloRadius_);
+    binder.bind("shockwaveCount", paramShockwaveCount_);
+    binder.bind("shockwaveAlpha", paramShockwaveAlpha_);
+    binder.bind("shockwaveWidth", paramShockwaveWidth_);
+    binder.bind("shockwaveSpeed", paramShockwaveSpeed_);
+    binder.bind("pressureAmount", paramPressureAmount_);
+    binder.bind("audioAmount", paramAudioAmount_);
+    binder.bind("audioAccretion", paramAudioAccretion_);
+    binder.bind("audioGlow", paramAudioGlow_);
+    binder.bind("audioTwinkle", paramAudioTwinkle_);
+    binder.bind("bassExpansion", paramBassExpansion_);
+    binder.bind("midsTurbulence", paramMidsTurbulence_);
+    binder.bind("highsSparkle", paramHighsSparkle_);
+    binder.bind("waveformWarp", paramWaveformWarp_);
+    binder.bind("peakBangThreshold", paramPeakBangThreshold_);
+    binder.bind("peakImpulse", paramPeakImpulse_);
+    binder.bind("beatImpulse", paramBeatImpulse_);
+    binder.bind("audioSmoothing", paramAudioSmoothing_);
+    binder.bind("seed", paramSeed_);
+    binder.bind("bgAlpha", paramBgAlpha_);
+    binder.bind("bgR", paramBgR_);
+    binder.bind("bgG", paramBgG_);
+    binder.bind("bgB", paramBgB_);
+    binder.bind("hotR", paramHotR_);
+    binder.bind("hotG", paramHotG_);
+    binder.bind("hotB", paramHotB_);
+    binder.bind("matterR", paramMatterR_);
+    binder.bind("matterG", paramMatterG_);
+    binder.bind("matterB", paramMatterB_);
+    binder.bind("coolR", paramCoolR_);
+    binder.bind("coolG", paramCoolG_);
+    binder.bind("coolB", paramCoolB_);
+    binder.bind("clusterR", paramClusterR_);
+    binder.bind("clusterG", paramClusterG_);
+    binder.bind("clusterB", paramClusterB_);
+    binder.bind("waveR", paramWaveR_);
+    binder.bind("waveG", paramWaveG_);
+    binder.bind("waveB", paramWaveB_);
+    binder.bind("visible", paramEnabled_);
+    binder.bind("autoAdvance", paramAutoAdvance_);
+    binder.bind("bang", paramBangRequested_);
+    binder.bind("reseed", paramReseedRequested_);
+}
+
+void CosmosFormationLayer::setup(ParameterRegistry& publishedRegistry) {
+    (void)publishedRegistry;
+    ParameterRegistry registry;
     const std::string prefix = (registryPrefix().empty() || registryPrefix() == "layer")
         ? "generative.cosmosFormation"
         : registryPrefix();

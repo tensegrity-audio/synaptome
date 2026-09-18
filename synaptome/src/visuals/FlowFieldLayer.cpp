@@ -114,7 +114,59 @@ void FlowFieldLayer::configure(const ofJson& config) {
     }
 }
 
-void FlowFieldLayer::setup(ParameterRegistry& registry) {
+void FlowFieldLayer::bindParameters(
+    synaptome::element::ParameterBinder& binder) {
+    binder.bind("speed", paramSpeed_);
+    binder.bind("bpmMultiplier", paramBpmMultiplier_);
+    binder.bind("alpha", paramAlpha_);
+    binder.bind("autoReseedEveryBeats", paramAutoReseedEveryBeats_);
+    binder.bind("particleCount", paramParticleCount_);
+    binder.bind("particleLife", paramParticleLife_);
+    binder.bind("respawnRate", paramRespawnRate_);
+    binder.bind("spawnRadius", paramSpawnRadius_);
+    binder.bind("fieldScale", paramFieldScale_);
+    binder.bind("fieldStrength", paramFieldStrength_);
+    binder.bind("flowSpeed", paramFlowSpeed_);
+    binder.bind("curlAmount", paramCurlAmount_);
+    binder.bind("turbulence", paramTurbulence_);
+    binder.bind("stepSize", paramStepSize_);
+    binder.bind("inertia", paramInertia_);
+    binder.bind("centerPull", paramCenterPull_);
+    binder.bind("driftX", paramDriftX_);
+    binder.bind("driftY", paramDriftY_);
+    binder.bind("trailFade", paramTrailFade_);
+    binder.bind("trailDeposit", paramTrailDeposit_);
+    binder.bind("trailBoost", paramTrailBoost_);
+    binder.bind("backgroundAlpha", paramBackgroundAlpha_);
+    binder.bind("trailAlpha", paramTrailAlpha_);
+    binder.bind("pointSize", paramPointSize_);
+    binder.bind("vectorSpacing", paramVectorSpacing_);
+    binder.bind("vectorScale", paramVectorScale_);
+    binder.bind("vectorAlpha", paramVectorAlpha_);
+    binder.bind("colorBias", paramColorBias_);
+    binder.bind("paletteRate", paramPaletteRate_);
+    binder.bind("bgR", paramBgR_);
+    binder.bind("bgG", paramBgG_);
+    binder.bind("bgB", paramBgB_);
+    binder.bind("colorAR", paramColorAR_);
+    binder.bind("colorAG", paramColorAG_);
+    binder.bind("colorAB", paramColorAB_);
+    binder.bind("colorBR", paramColorBR_);
+    binder.bind("colorBG", paramColorBG_);
+    binder.bind("colorBB", paramColorBB_);
+    binder.bind("visible", paramEnabled_);
+    binder.bind("bpmSync", paramBpmSync_);
+    binder.bind("reseed", paramReseedRequested_);
+    binder.bind("autoReseed", paramAutoReseed_);
+    binder.bind("edgeWrap", paramEdgeWrap_);
+    binder.bind("mirrorX", paramMirrorX_);
+    binder.bind("mirrorY", paramMirrorY_);
+    binder.bind("vectorOverlay", paramVectorOverlay_);
+}
+
+void FlowFieldLayer::setup(ParameterRegistry& publishedRegistry) {
+    (void)publishedRegistry;
+    ParameterRegistry registry;
     const std::string prefix = registryPrefix().empty() ? "layer.flowField" : registryPrefix();
     clampParams();
 

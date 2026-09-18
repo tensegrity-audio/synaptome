@@ -1,9 +1,13 @@
 #pragma once
 
 #include "Layer.h"
+#include <synaptome/element/ParameterBinding.h>
 
-class GeodesicLayer : public Layer {
+class GeodesicLayer : public Layer,
+    public synaptome::element::ParameterBindable {
 public:
+    void bindParameters(
+        synaptome::element::ParameterBinder& binder) override;
     void setup(ParameterRegistry& registry) override;
     void registerActions(
         synaptome::element::ActionRegistrar& registrar) override;

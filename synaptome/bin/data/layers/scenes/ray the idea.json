@@ -54,7 +54,7 @@
           "console.layer1.aliveR": 0.8999999761581421,
           "console.layer1.alpha": 1.0,
           "console.layer1.autoReseed": true,
-          "console.layer1.autoReseedEveryBeats": 128.0,
+          "console.layer1.autoReseedEveryBeats": 64.0,
           "console.layer1.bpmMultiplier": 4.0,
           "console.layer1.bpmSync": true,
           "console.layer1.deadAlpha": 0.8999999761581421,
@@ -62,11 +62,12 @@
           "console.layer1.deadG": 0.5,
           "console.layer1.deadR": 1.0,
           "console.layer1.density": 0.4000000059604645,
-          "console.layer1.fadeFrames": 64.0,
+          "console.layer1.fadeFrames": 32.0,
           "console.layer1.paused": false,
           "console.layer1.preset": 1.0,
           "console.layer1.reseed": false,
           "console.layer1.reseedQuantizeBeats": 4.0,
+          "console.layer1.seed": 1618.0,
           "console.layer1.speed": 2.0,
           "console.layer1.wrap": true
         }
@@ -121,6 +122,17 @@
       "cellSize": 16.0,
       "route": 0.0
     },
+    "mirror": {
+      "angle": 180.0,
+      "detail": 0.0,
+      "mix": 1.0,
+      "mode": 0.0,
+      "originX": 0.5,
+      "originY": 0.5,
+      "route": 0.0,
+      "segments": 1.0,
+      "zoom": 1.0
+    },
     "motion": {
       "alphaMix": 0.0,
       "blur": 1.0,
@@ -144,10 +156,7 @@
   },
   "globals": {
     "camera.dist": 700.0,
-    "fx.master": {
-      "base": 0.0,
-      "modifiers": []
-    },
+    "fx.master": 0.0,
     "globals.speed": 1.0,
     "overlay.text.bottomLeft": "",
     "overlay.text.bottomRight": "",
@@ -163,6 +172,7 @@
     "transport.bpm": 120.0
   },
   "mappings": {
+    "activeBank": "home",
     "router": {
       "cc": [],
       "osc": [
@@ -272,7 +282,7 @@
     }
   },
   "scene": {
-    "savedAt": "2026-06-21T19:21:20-0400",
+    "savedAt": "2026-07-27T11:42:01-0400",
     "schemaVersion": 2,
     "source": {
       "name": "ray the idea",

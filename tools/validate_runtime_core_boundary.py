@@ -591,13 +591,17 @@ def main() -> int:
     for token in (
         "builtinElementParameterDeclarations(typeId)",
         "ParameterBindingMode::",
-        "LegacySetupAdapter",
+        "ParameterBindingMode::Explicit",
     ):
         if token not in builtin_elements:
             errors.append(
                 "built-in registration is missing authoritative generated "
                 "parameter declarations: " + token
             )
+    if "LegacySetupAdapter" in builtin_elements:
+        errors.append(
+            "built-in registration still selects the legacy setup adapter"
+        )
     for token in (
         "builtinElementParameterDeclarations(",
         "builtinElementParameterTypeIds()",
